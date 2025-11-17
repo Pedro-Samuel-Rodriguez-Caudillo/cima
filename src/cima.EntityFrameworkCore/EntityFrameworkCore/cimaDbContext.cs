@@ -14,6 +14,7 @@ using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
+using cima.Domain.Entities;
 
 namespace cima.EntityFrameworkCore;
 
@@ -25,8 +26,9 @@ public class cimaDbContext :
     ITenantManagementDbContext,
     IIdentityDbContext
 {
-    /* Add DbSet properties for your Aggregate Roots / Entities here. */
-
+    public DbSet<Property> Properties { get; set; }
+    public DbSet<Architect> Architects { get; set; }
+    public DbSet<ContactRequest> ContactRequests { get; set; }
 
     #region Entities from the modules
 
@@ -81,11 +83,52 @@ public class cimaDbContext :
         
         /* Configure your own tables/entities inside here */
 
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(cimaConsts.DbTablePrefix + "YourEntities", cimaConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
+        builder.Entity<Property>(b =>
+        {
+            b.ToTable("Properties");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            b.Property(x => x.Description).HasMaxLength(5000);
+            b.Property(x => x.Location).IsRequired().HasMaxLength(500);
+            b.Property(x => x.Price).HasPrecision(18, 2);
+            b.Property(x => x.Area).HasPrecision(10, 2);
+            b.HasIndex(x => new { x.Status, x.ArchitectId });
+            b.HasIndex(x => x.CreatedAt);
+            b.HasOne(x => x.Architect)
+                .WithMany(a => a.Properties)
+                .HasForeignKey(x => x.ArchitectId)
+                .OnDelete(DeleteBehavior.Restrict);
+            b.OwnsMany(x => x.Images, ib =>
+            {
+                ib.ToTable("PropertyImages");
+                ib.WithOwner().HasForeignKey("PropertyId");
+                ib.HasKey("PropertyId", "ImageId");
+            });
+        });
+
+        builder.Entity<Architect>(b =>
+        {
+            b.ToTable("Architects");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Bio).HasMaxLength(2000);
+            b.Property(x => x.PortfolioUrl).HasMaxLength(500);
+            b.HasIndex(x => x.UserId).IsUnique();
+        });
+
+        builder.Entity<ContactRequest>(b =>
+        {
+            b.ToTable("ContactRequests");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            b.Property(x => x.Email).IsRequired().HasMaxLength(256);
+            b.Property(x => x.Phone).HasMaxLength(20);
+            b.Property(x => x.Message).IsRequired().HasMaxLength(5000);
+            b.HasIndex(x => new { x.Status, x.CreatedAt });
+            b.HasIndex(x => x.PropertyId);
+            b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Architect).WithMany().HasForeignKey(x => x.ArchitectId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }
