@@ -44,7 +44,7 @@ Esta carpeta `/docs` contiene toda la documentación técnica y operacional para *
 - **Cuándo consultar:** Durante desarrollo (referencia permanente)
 - **Audiencia:** Desarrollador, code reviews, onboarding nuevos devs
 
-### **4. ?? AGENTS.md** (Guía para Agentes IA - NUEVO)
+### **4. ?? AGENTS.md** (Guía para Agentes IA)
 - **Propósito:** Convenciones y protocolos para Copilot, Gemini, Codex
 - **Contenido:**
   - Dominios de responsabilidad por IA
@@ -52,10 +52,11 @@ Esta carpeta `/docs` contiene toda la documentación técnica y operacional para *
   - Normas de PR y code quality
   - Patrones de colaboración
   - Archivos críticos (no modificar sin coordinación)
+  - **REGLA: Sin emojis en código, logs, comentarios**
 - **Cuándo consultar:** Al usar cualquier IA en el proyecto
 - **Audiencia:** Copilot, Gemini, Codex, desarrolladores
 
-### **5. ?? AGENTS_COPILOT.md** (Especialización Backend - NUEVO)
+### **5. ?? AGENTS_COPILOT.md** (Especialización Backend)
 - **Propósito:** Guía dedicada para GitHub Copilot
 - **Scope:** C#, .NET, Domain-Driven Design, EF Core, API REST
 - **Contenido:**
@@ -67,7 +68,7 @@ Esta carpeta `/docs` contiene toda la documentación técnica y operacional para *
   - Checklist pre-commit
 - **Audiencia:** GitHub Copilot (backend specialist)
 
-### **6. ?? AGENTS_GEMINI.md** (Especialización Frontend - NUEVO)
+### **6. ?? AGENTS_GEMINI.md** (Especialización Frontend)
 - **Propósito:** Guía dedicada para Google Gemini
 - **Scope:** Blazor, Razor components, UX, CSS, Accesibilidad
 - **Contenido:**
@@ -80,7 +81,7 @@ Esta carpeta `/docs` contiene toda la documentación técnica y operacional para *
   - Lighthouse audit checklist
 - **Audiencia:** Google Gemini (frontend specialist)
 
-### **7. ?? AGENTS_CODEX.md** (Especialización DevOps - NUEVO)
+### **7. ?? AGENTS_CODEX.md** (Especialización DevOps)
 - **Propósito:** Guía dedicada para OpenAI Codex
 - **Scope:** Docker, CI/CD, GitHub Actions, deployment, scripts
 - **Contenido:**
@@ -91,6 +92,46 @@ Esta carpeta `/docs` contiene toda la documentación técnica y operacional para *
   - Seguridad (secrets, non-root users, backups)
   - Troubleshooting común
 - **Audiencia:** OpenAI Codex (DevOps specialist)
+
+### **8. ?? COMMIT_CONVENTIONS.md** (Convenciones de Commits)
+- **Propósito:** Formato semántico de commits en español
+- **Contenido:**
+  - Formato: type(scope): descripción
+  - Types: feat, fix, refactor, docs, test, chore, style, perf
+  - Scopes recomendados
+  - Ejemplos por agente
+  - Malos vs buenos commits
+- **Audiencia:** Todos los desarrolladores e IAs
+
+### **9. ??? NAVIGATION_MAP.md** (Mapa de Navegación)
+- **Propósito:** Guía visual para encontrar información
+- **Contenido:**
+  - Flujos de lectura recomendados
+  - Búsqueda por objetivo
+  - Acceso por dispositivo
+  - Tabla de tiempos
+- **Audiencia:** Todos
+
+### **10. ?? SETUP_SIN_MULTITENANCY.md** (Recrear sin Multi-Tenancy)
+- **Propósito:** Comandos y pasos para eliminar multi-tenancy del proyecto
+- **Contenido:**
+  - Comandos ABP para crear proyecto limpio
+  - Pasos para desactivar multi-tenancy
+  - Scripts para limpiar módulos relacionados
+  - Verificación de eliminación exitosa
+  - **REGLA: Sin emojis en código/logs/comentarios**
+- **Audiencia:** DevOps, Desarrolladores
+
+### **11. ?? REGLA_NO_EMOJIS.md** (Regla Crítica - SIN EMOJIS)
+- **Propósito:** Especificar dónde se PROHIBEN emojis
+- **Contenido:**
+  - Regla universal: No emojis en código/logs/comentarios
+  - Dónde SÍ (solo en Markdown)
+  - Dónde NO (código, logs, commits, variables, métodos)
+  - Ejemplos CORRECTO vs INCORRECTO
+  - Control de calidad y checklists
+  - CI/CD validation
+- **Audiencia:** TODOS los agents (Copilot, Gemini, Codex)
 
 ---
 
@@ -184,6 +225,12 @@ MIÉRCOLES+ (Application Services ? Frontend ? DevOps)
 ### **¿Cómo debo hacer commits?**
 ? lee **COMMIT_CONVENTIONS.md** (Completo - formato semántico en español)
 
+### **¿Cuál es la regla sobre emojis?**
+? Lee **REGLA_NO_EMOJIS.md** (SIN emojis en código, logs, comentarios)
+
+### **¿Cómo recreo el proyecto sin multi-tenancy?**
+? Lee **SETUP_SIN_MULTITENANCY.md** (Comandos y pasos)
+
 ### **¿Qué debe hacer cada IA (Copilot, Gemini, Codex)?**
 ? lee **AGENTS.md** § "Dominios de Responsabilidad"
 
@@ -221,7 +268,7 @@ MIÉRCOLES+ (Application Services ? Frontend ? DevOps)
 |-----|----------|-----------|-----|
 | **L** | Catálogo UI | Página responsive | PLAN/Día 6, AGENTS_GEMINI |
 | **M** | Admin CRUD UI | Panel funcional | PLAN/Día 7, AGENTS_GEMINI |
-| **X** | Portafolios + Estadísticas | Dashboard KPI | PLAN/Día 8, AGENTS_GEMINI |
+| **X** | Portafolios + Estadísticas | Dashboard KPI | PLAN/Dia 8, AGENTS_GEMINI |
 | **J** | Docker + CI/CD | Deploys automatizados | PLAN/Día 9, AGENTS_CODEX |
 | **V** | QA + Documentación | MVP pulido | PLAN/Día 10, Todos |
 
@@ -285,14 +332,18 @@ Lee cada sección del día en PLAN_2_SEMANAS.md
 ```
 docs/
 ?? README.md (este archivo - índice maestro)
+?? INICIO.md (resumen ejecutivo)
 ?? PLAN_2_SEMANAS.md (plan maestro 10 días)
-?? DIA_1_GUIDA_EJECUTIVA.md (guía lunes detallada)
+?? DIA_1_GUIA_EJECUTIVA.md (guía lunes detallada)
 ?? ARQUITECTURA_TECNICA.md (referencia técnica permanente)
 ?? AGENTS.md (guía maestro para IAs - convenciones, protocolos)
 ?? AGENTS_COPILOT.md (guía especializada - Backend, .NET, DDD)
 ?? AGENTS_GEMINI.md (guía especializada - Frontend, Blazor, UX)
 ?? AGENTS_CODEX.md (guía especializada - DevOps, Docker, CI/CD)
 ?? COMMIT_CONVENTIONS.md (convenciones de commits semánticos)
+?? NAVIGATION_MAP.md (mapa visual de documentación)
+?? SETUP_SIN_MULTITENANCY.md (comandos para recrear sin MT)
+?? REGLA_NO_EMOJIS.md (regla crítica: sin emojis en código)
 ?
 ?? (PRÓXIMAMENTE - Fase 2+)
 ? ?? API.md (documentación endpoints completa)
@@ -367,6 +418,8 @@ docs/
 ? **AGENTS_CODEX.md** - Especialización: DevOps, Docker, CI/CD  
 ? **COMMIT_CONVENTIONS.md** - Convenciones de commits semánticos en español  
 ? **NAVIGATION_MAP.md** - Mapa visual de navegación de documentos  
+? **SETUP_SIN_MULTITENANCY.md** - Documentación para recrear sin multi-tenancy
+? **REGLA_NO_EMOJIS.md** - Documentación de regla crítica para el uso de emojis
 
 ---
 
