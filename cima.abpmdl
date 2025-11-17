@@ -1,0 +1,112 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.BasicTheme": {
+      "version": "9.3.6",
+      "isInstalled": true
+    },
+    "Volo.Abp.Account": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "9.3.6",
+      "isInstalled": true,
+      "creationTime": "11/17/2025 16:02:15 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {},
+      "test": {}
+    }
+  },
+  "packages": {
+    "cima.Application": {
+      "path": "src/cima.Application/cima.Application.abppkg",
+      "folder": "src"
+    },
+    "cima.Application.Tests": {
+      "path": "test/cima.Application.Tests/cima.Application.Tests.abppkg",
+      "folder": "test"
+    },
+    "cima.Domain.Shared": {
+      "path": "src/cima.Domain.Shared/cima.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "cima.Application.Contracts": {
+      "path": "src/cima.Application.Contracts/cima.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "cima.HttpApi": {
+      "path": "src/cima.HttpApi/cima.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "cima.HttpApi.Client": {
+      "path": "src/cima.HttpApi.Client/cima.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "cima.EntityFrameworkCore.Tests": {
+      "path": "test/cima.EntityFrameworkCore.Tests/cima.EntityFrameworkCore.Tests.abppkg",
+      "folder": "test"
+    },
+    "cima.EntityFrameworkCore": {
+      "path": "src/cima.EntityFrameworkCore/cima.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "cima.TestBase": {
+      "path": "test/cima.TestBase/cima.TestBase.abppkg",
+      "folder": "test"
+    },
+    "cima.Domain.Tests": {
+      "path": "test/cima.Domain.Tests/cima.Domain.Tests.abppkg",
+      "folder": "test"
+    },
+    "cima.HttpApi.Client.ConsoleTestApp": {
+      "path": "test/cima.HttpApi.Client.ConsoleTestApp/cima.HttpApi.Client.ConsoleTestApp.abppkg",
+      "folder": "test"
+    },
+    "cima.DbMigrator": {
+      "path": "src/cima.DbMigrator/cima.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "cima.Blazor": {
+      "path": "src/cima.Blazor/cima.Blazor.abppkg",
+      "folder": "src"
+    },
+    "cima.Blazor.Client": {
+      "path": "src/cima.Blazor.Client/cima.Blazor.Client.abppkg",
+      "folder": "src"
+    },
+    "cima.Domain": {
+      "path": "src/cima.Domain/cima.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

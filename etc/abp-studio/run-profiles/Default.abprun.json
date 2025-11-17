@@ -1,0 +1,31 @@
+﻿{
+  "applications": {
+    "cima.Blazor": {
+      "type": "dotnet-project",
+      "launchUrl": "https://localhost:44350",
+      "path": "../../../src/cima.Blazor/cima.Blazor.csproj",
+      "healthCheckEndpoint": "/",
+      "kubernetesService": ".*-blazorwebapp$",
+      "execution": {
+        "order": 2
+      }
+}
+  },
+  "containers": {
+    "serviceName": "cima-Containers",
+  },
+  "tasks":{
+    "Initialize Solution":{
+    "type": "cli",
+    "runOnSolutionOpen": true,
+    "startCommand": "etc/scripts/initialize-solution.ps1",
+    "workingDirectory": "../../../"
+    },
+    "Migrate Database":{
+    "type": "cli",
+    "runOnSolutionOpen": false,
+    "startCommand": "etc/scripts/migrate-database.ps1",
+    "workingDirectory": "../../../"
+    }
+  }
+}
