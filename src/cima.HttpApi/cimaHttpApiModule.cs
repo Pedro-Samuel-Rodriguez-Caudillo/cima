@@ -8,6 +8,7 @@ using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement.HttpApi;
 using Volo.Abp.Localization;
 using Volo.Abp.TenantManagement;
+using Volo.Abp.AspNetCore.Mvc;
 
 namespace cima;
 
@@ -24,7 +25,16 @@ public class cimaHttpApiModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        ConfigureConventionalControllers();
         ConfigureLocalization();
+    }
+
+    private void ConfigureConventionalControllers()
+    {
+        Configure<AbpAspNetCoreMvcOptions>(options =>
+        {
+            options.ConventionalControllers.Create(typeof(cimaApplicationContractsModule).Assembly);
+        });
     }
 
     private void ConfigureLocalization()
