@@ -12,7 +12,12 @@ namespace cima.Domain.Shared.Dtos
         public string UserName { get; set; }
     }
 
-    public class CreateUpdateArchitectDto
+    public class CreateArchitectDto
+    {
+        public string Bio { get; set; }
+        public string PortfolioUrl { get; set; }
+    }
+    public class UpdateArchitectDto
     {
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; }
