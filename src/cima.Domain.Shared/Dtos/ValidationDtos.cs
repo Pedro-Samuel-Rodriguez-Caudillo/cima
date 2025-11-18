@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace cima.Domain.Shared.Dtos
@@ -30,7 +31,7 @@ namespace cima.Domain.Shared.Dtos
         public int Bathrooms { get; set; }
 
         [Required(ErrorMessage = "El arquitecto es requerido")]
-        public string ArchitectId { get; set; }
+        public Guid ArchitectId { get; set; }
     }
 
     public class CreateContactRequestDtoValidation
@@ -40,7 +41,7 @@ namespace cima.Domain.Shared.Dtos
         public string Name { get; set; }
 
         [Required(ErrorMessage = "El email es requerido")]
-        [EmailAddress(ErrorMessage = "El email no es valido")]
+        [EmailAddress(ErrorMessage = "El email no es valida")]
         public string Email { get; set; }
 
         [Phone(ErrorMessage = "El telefono no es valido")]
@@ -51,7 +52,7 @@ namespace cima.Domain.Shared.Dtos
         public string Message { get; set; }
 
         [Required(ErrorMessage = "La propiedad es requerida")]
-        public string PropertyId { get; set; }
+        public Guid PropertyId { get; set; }
     }
 
     public class CreateArchitectDtoValidation

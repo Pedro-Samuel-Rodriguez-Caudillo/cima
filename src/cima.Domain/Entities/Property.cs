@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Volo.Abp.Domain.Entities;
+using cima.Domain.Shared;
 
 namespace cima.Domain.Entities
 {
@@ -28,12 +29,5 @@ namespace cima.Domain.Entities
         public ICollection<PropertyImage> Images { get; set; } = new List<PropertyImage>();
         public virtual Architect Architect { get; set; }
         #endregion
-    }
-
-    public enum PropertyStatus
-    {
-        Draft = 0,
-        Published = 1,
-        Archived = 2
     }
 }
