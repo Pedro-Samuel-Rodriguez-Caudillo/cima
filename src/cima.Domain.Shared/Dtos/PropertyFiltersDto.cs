@@ -1,8 +1,44 @@
 using System;
 using System.Collections.Generic;
+using cima.Domain.Shared;
 
 namespace cima.Domain.Shared.Dtos
 {
+    /// <summary>
+    /// DTO para filtrar y paginar propiedades
+    /// Usado en GetListAsync de PropertyAppService
+    /// </summary>
+    public class PropertyFiltersDto
+    {
+        // Busqueda de texto
+        public string SearchTerm { get; set; }
+
+        // Filtros de estado
+        public PropertyStatus? Status { get; set; }
+
+        // Filtros de precio
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+
+        // Filtros de habitaciones
+        public int? MinBedrooms { get; set; }
+        public int? MinBathrooms { get; set; }
+
+        // Filtro por arquitecto
+        public Guid? ArchitectId { get; set; }
+
+        // Ordenamiento
+        public string SortBy { get; set; }  // "price", "area", "createdat"
+        public bool SortDescending { get; set; } = false;
+
+        // Paginacion
+        public int SkipCount { get; set; } = 0;
+        public int MaxResultCount { get; set; } = 10;
+    }
+
+    /// <summary>
+    /// DTO para filtros basicos (backward compatibility)
+    /// </summary>
     public class PropertyFilterDto
     {
         public string Title { get; set; }
