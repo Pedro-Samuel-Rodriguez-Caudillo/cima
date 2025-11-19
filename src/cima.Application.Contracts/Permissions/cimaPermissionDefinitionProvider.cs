@@ -47,9 +47,9 @@ public class cimaPermissionDefinitionProvider : PermissionDefinitionProvider
         architectsPermission.AddChild(
             cimaPermissions.Architects.Create, L("Permission:Architects.Create"));
         architectsPermission.AddChild(
-          cimaPermissions.Architects.Create, L("Permission:Architects.Edit"));
+          cimaPermissions.Architects.Edit, L("Permission:Architects.Edit"));
         architectsPermission.AddChild(
-          cimaPermissions.Architects.Create, L("Permission:Architects.Delete"));
+          cimaPermissions.Architects.Delete, L("Permission:Architects.Delete"));
 
         // Peticiones de contacto
         var contactRequestsPermission = cimaGroup.AddPermission(
