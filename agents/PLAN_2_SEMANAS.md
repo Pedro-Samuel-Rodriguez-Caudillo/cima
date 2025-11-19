@@ -1,89 +1,89 @@
 # ?? PLAN DE DESARROLLO: PLATAFORMA INMOBILIARIA CIMA (2 Semanas)
 
-**Fecha inicio:** Próximo lunes  
-**Duración:** 10 días laborales (2 semanas)  
+**Fecha inicio:** Prï¿½ximo lunes  
+**Duraciï¿½n:** 10 dï¿½as laborales (2 semanas)  
 **Stack:** .NET 9 + Blazor Web App + PostgreSQL + ABP 9.3.6  
 **Equipo:** 1 desarrollador full-stack
 
 ---
 
-## ?? ÍNDICE
+## ?? ï¿½NDICE
 
-1. [Visión del Proyecto](#visión-del-proyecto)
+1. [Visiï¿½n del Proyecto](#visiï¿½n-del-proyecto)
 2. [Scope Funcional](#scope-funcional)
-3. [Arquitectura Técnica](#arquitectura-técnica)
+3. [Arquitectura Tï¿½cnica](#arquitectura-tï¿½cnica)
 4. [Timeline Detallado (2 Semanas)](#timeline-detallado-2-semanas)
-5. [Día 1: Setup & Infraestructura](#día-1-setup--infraestructura)
+5. [Dï¿½a 1: Setup & Infraestructura](#dï¿½a-1-setup--infraestructura)
 6. [Entregables Finales](#entregables-finales)
 7. [Backlog & Fases Futuras](#backlog--fases-futuras)
 
 ---
 
-## ?? VISIÓN DEL PROYECTO
+## ?? VISIï¿½N DEL PROYECTO
 
-**Objetivo:** Diseñar y entregar una plataforma inmobiliaria moderna, escalable y operativa en 2 semanas.
+**Objetivo:** Diseï¿½ar y entregar una plataforma inmobiliaria moderna, escalable y operativa en 2 semanas.
 
 **Usuarios finales:**
-- **Público:** Visitantes buscando propiedades
+- **Pï¿½blico:** Visitantes buscando propiedades
 - **Arquitectos:** Proveedores que publican sus proyectos
-- **Moderadores:** Gestión de contenido
-- **Admin:** Administración completa del sistema
+- **Moderadores:** Gestiï¿½n de contenido
+- **Admin:** Administraciï¿½n completa del sistema
 
-**KPIs de éxito:**
+**KPIs de ï¿½xito:**
 - ? MVP 100% funcional y deployable
-- ? Zero deuda técnica crítica
-- ? Documentación lista para handoff
-- ? Base sólida para escalar
+- ? Zero deuda tï¿½cnica crï¿½tica
+- ? Documentaciï¿½n lista para handoff
+- ? Base sï¿½lida para escalar
 
 ---
 
 ## ?? SCOPE FUNCIONAL
 
-### **Catálogo Público (Sin login)**
-- Listado de propiedades publicadas con paginación
-- Filtros: título, dormitorios, baños, rango de precio, área
-- Página de detalle con galería de imágenes
-- Información de arquitecto responsable
+### **Catï¿½logo Pï¿½blico (Sin login)**
+- Listado de propiedades publicadas con paginaciï¿½n
+- Filtros: tï¿½tulo, dormitorios, baï¿½os, rango de precio, ï¿½rea
+- Pï¿½gina de detalle con galerï¿½a de imï¿½genes
+- Informaciï¿½n de arquitecto responsable
 - Formulario de contacto por propiedad
 
 ### **Portafolios de Arquitectos**
-- Página: `/architects` ? Listado de arquitectos
-- Página: `/architects/{id}` ? Perfil con bio y proyectos
+- Pï¿½gina: `/architects` ? Listado de arquitectos
+- Pï¿½gina: `/architects/{id}` ? Perfil con bio y proyectos
 - Grid de propiedades publicadas del arquitecto
 
-### **Panel de Administración (Con login)**
+### **Panel de Administraciï¿½n (Con login)**
 
-#### Gestión de Propiedades
+#### Gestiï¿½n de Propiedades
 - CRUD completo (Crear, Leer, Actualizar, Eliminar)
 - Estados: Borrador, Publicada, Archivada
-- Carga de múltiples imágenes (max 10, max 5MB c/u)
-- Edición de orden de imágenes
+- Carga de mï¿½ltiples imï¿½genes (max 10, max 5MB c/u)
+- Ediciï¿½n de orden de imï¿½genes
 
-#### Gestión de Usuarios
+#### Gestiï¿½n de Usuarios
 - Listado de usuarios por rol
-- Edición de datos de arquitecto (bio, portfolio URL)
-- Asignación de propiedades a arquitectos
+- Ediciï¿½n de datos de arquitecto (bio, portfolio URL)
+- Asignaciï¿½n de propiedades a arquitectos
 
-#### Gestión de Solicitudes
+#### Gestiï¿½n de Solicitudes
 - Listado de solicitudes de contacto
 - Filtro por estado (Nueva, Respondida, Cerrada)
 - Marcar como respondida/cerrada
 - Visualizar email y mensaje
 
-#### Estadísticas
+#### Estadï¿½sticas
 - Dashboard KPI: Total propiedades, estados, arquitectos, solicitudes
-- Gráficos: Propiedades por estado, solicitudes por mes (últimos 3 meses)
+- Grï¿½ficos: Propiedades por estado, solicitudes por mes (ï¿½ltimos 3 meses)
 - Tabla de solicitudes recientes sin responder
 
-### **Autenticación & Autorización**
+### **Autenticaciï¿½n & Autorizaciï¿½n**
 - Login con identidad propia (OpenIddict)
 - Roles: Admin, Moderator, Architect
 - Permisos granulares por rol
-- Auditoría de acciones críticas
+- Auditorï¿½a de acciones crï¿½ticas
 
 ### **Exclusiones (Fuera de MVP)**
 - ? Multi-tenancy
-- ? Pagos en línea
+- ? Pagos en lï¿½nea
 - ? CRM integrado
 - ? Notificaciones push
 - ? Integraciones externas complejas
@@ -91,20 +91,20 @@
 
 ---
 
-## ??? ARQUITECTURA TÉCNICA
+## ??? ARQUITECTURA Tï¿½CNICA
 
 ### **Stack Seleccionado**
 
-| Capa | Tecnología | Versión |
+| Capa | Tecnologï¿½a | Versiï¿½n |
 |------|-----------|---------|
 | **Frontend (SSR)** | Blazor Web App (Interactive Server) | .NET 9 |
 | **Frontend (WASM)** | Blazor WebAssembly (Interactive) | .NET 9 |
 | **Backend** | ASP.NET Core + ABP Framework | 9.3.6 |
 | **ORM** | Entity Framework Core | 9.0 |
 | **Base Datos** | PostgreSQL | 16-alpine |
-| **Autenticación** | OpenIddict + ABP Identity | 9.3.6 |
+| **Autenticaciï¿½n** | OpenIddict + ABP Identity | 9.3.6 |
 | **UI Components** | Blazorise | 1.8.1 |
-| **Validación** | FluentValidation | 11.x |
+| **Validaciï¿½n** | FluentValidation | 11.x |
 | **Mapeo** | AutoMapper | 13.x |
 | **Logging** | Serilog | 9.x |
 | **DI/IoC** | Autofac | 7.x |
@@ -115,17 +115,17 @@
 
 ```
 src/
-??? cima.Domain                          ? Entidades, agregados, lógica de dominio
+??? cima.Domain                          ? Entidades, agregados, lï¿½gica de dominio
 ??? cima.Domain.Shared                   ? DTOs, constantes, enums compartidos
-??? cima.Application                     ? Servicios de aplicación (CRUD, lógica business)
+??? cima.Application                     ? Servicios de aplicaciï¿½n (CRUD, lï¿½gica business)
 ??? cima.Application.Contracts           ? Interfaces de servicios (abstracciones)
 ??? cima.EntityFrameworkCore             ? DbContext, migraciones, seeders
 ??? cima.HttpApi                         ? Controllers REST (sin vistas)
 ??? cima.HttpApi.Client                  ? Cliente HTTP tipado (consumo de API)
-??? cima.Blazor                          ? App Web principal (SSR + orquestación)
+??? cima.Blazor                          ? App Web principal (SSR + orquestaciï¿½n)
 ??? cima.Blazor.Client                   ? Componentes interactivos (WASM)
-??? cima.DbMigrator                      ? Utilidad de migración de BD
-??? cima.Web                             (si aplica) ? Configuración web
+??? cima.DbMigrator                      ? Utilidad de migraciï¿½n de BD
+??? cima.Web                             (si aplica) ? Configuraciï¿½n web
 
 Database/
 ??? cima ? Base de datos PostgreSQL
@@ -136,33 +136,33 @@ Database/
 ```
 AGREGADOS:
 
-Property (Raíz de Agregado)
-  ?? PropertyId: Guid
+Listing (Raï¿½z de Agregado)
+  ?? ListingId: Guid
   ?? Title: string
   ?? Description: string (largo)
   ?? Location: string
   ?? Price: decimal
-  ?? Area: decimal (m²)
+  ?? Area: decimal (mï¿½)
   ?? Bedrooms: int
   ?? Bathrooms: int
-  ?? Status: PropertyStatus (Draft, Published, Archived)
+  ?? Status: ListingStatus (Draft, Published, Archived)
   ?? ArchitectId: Guid (FK)
   ?? CreatedAt: DateTime
   ?? CreatedBy: Guid
   ?? LastModifiedAt: DateTime
   ?? LastModifiedBy: Guid
-  ?? PropertyImages: List<PropertyImage> (Objeto de Valor)
+  ?? ListingImages: List<ListingImage> (Objeto de Valor)
 
-Architect (Raíz de Agregado)
+Architect (Raï¿½z de Agregado)
   ?? ArchitectId: Guid
   ?? UserId: Guid (FK ? Identity.User)
   ?? Bio: string
   ?? PortfolioUrl: string
-  ?? Properties: ICollection<Property> (navegación)
+  ?? Listings: ICollection<Listing> (navegaciï¿½n)
 
-ContactRequest (Raíz de Agregado)
+ContactRequest (Raï¿½z de Agregado)
   ?? ContactRequestId: Guid
-  ?? PropertyId: Guid (FK)
+  ?? ListingId: Guid (FK)
   ?? ArchitectId: Guid (FK)
   ?? Name: string
   ?? Email: string
@@ -172,7 +172,7 @@ ContactRequest (Raíz de Agregado)
   ?? CreatedAt: DateTime
   ?? ReplyNotes: string (opcional)
 
-PropertyImage (Objeto de Valor)
+ListingImage (Objeto de Valor)
   ?? ImageId: Guid
   ?? Url: string (path relativo)
   ?? DisplayOrder: int
@@ -183,19 +183,19 @@ PropertyImage (Objeto de Valor)
 
 ### **Flujos Principales**
 
-#### Flujo 1: Visitante ve catálogo
+#### Flujo 1: Visitante ve catï¿½logo
 ```
 Visitante
-  ? [GET /properties?filter]
-API (PropertiesController)
+  ? [GET /Listings?filter]
+API (ListingsController)
   ? [GetPublishedAsync]
-PropertyAppService
+ListingAppService
   ? [Query DB]
-PropertyRepository
+ListingRepository
   ? [EF Core query]
-Database (SELECT * FROM Properties WHERE Status='Published')
-  ? [PropertyDto[]]
-Blazor UI (Properties/Index.razor)
+Database (SELECT * FROM Listings WHERE Status='Published')
+  ? [ListingDto[]]
+Blazor UI (Listings/Index.razor)
   ? [Renderizado SSR]
 HTML + CSS
 ```
@@ -206,26 +206,26 @@ Admin Login
   ? [POST /auth/login]
 OpenIddict
   ? [JWT token + refresh token]
-Admin (Properties/Create.razor)
-  ? [POST /api/properties + imágenes]
-PropertiesController
+Admin (Listings/Create.razor)
+  ? [POST /api/Listings + imï¿½genes]
+ListingsController
   ? [CreateAsync + authorization]
-PropertyAppService
+ListingAppService
   ? [Validar + mapear]
-Property (dominio)
+Listing (dominio)
   ? [SaveAsync]
 EF Core DbContext
   ? [INSERT + ADD images]
 PostgreSQL
-  ? [Confirmación]
+  ? [Confirmaciï¿½n]
 Respuesta
-  ? [PropertyDto + redirect]
-Admin (Properties/Detail.razor)
+  ? [ListingDto + redirect]
+Admin (Listings/Detail.razor)
 ```
 
 #### Flujo 3: Visitante contacta arquitecto
 ```
-Visitante (Properties/Detail.razor)
+Visitante (Listings/Detail.razor)
   ? [Click "Contactar"]
 ContactForm Modal
   ? [POST /api/contact-requests + sin auth]
@@ -249,43 +249,43 @@ Admin (ContactRequests/Index.razor)
 
 ### **SEMANA 1: Infraestructura & Backend Core**
 
-| Día | Focus | Duración | Resultado |
+| Dï¿½a | Focus | Duraciï¿½n | Resultado |
 |-----|-------|----------|-----------|
 | **Lunes** | Setup, modelo de dominio, BD | 8h | Proyectos listos, migraciones, seeders |
 | **Martes** | EF Core, DbContext, migrations | 8h | BD con esquema, datos de prueba |
-| **Miércoles** | Application Services, validación | 8h | CRUD services, permisos, mapeos |
+| **Miï¿½rcoles** | Application Services, validaciï¿½n | 8h | CRUD services, permisos, mapeos |
 | **Jueves** | API REST, Swagger, CORS | 8h | Controllers documentados, testeable |
 | **Viernes** | Auth, OpenIddict, seguridad | 8h | Usuarios, roles, permisos funcionales |
 
 ### **SEMANA 2: Frontend & Deployment**
 
-| Día | Focus | Duración | Resultado |
+| Dï¿½a | Focus | Duraciï¿½n | Resultado |
 |-----|-------|----------|-----------|
-| **Lunes** | Catálogo público UI | 8h | Listado, filtros, detalle, responsive |
-| **Martes** | Admin CRUD, upload imágenes | 8h | Panel funcional, gestión properties |
-| **Miércoles** | Portafolios, estadísticas | 8h | Perfiles arquitectos, dashboard KPI |
+| **Lunes** | Catï¿½logo pï¿½blico UI | 8h | Listado, filtros, detalle, responsive |
+| **Martes** | Admin CRUD, upload imï¿½genes | 8h | Panel funcional, gestiï¿½n Listings |
+| **Miï¿½rcoles** | Portafolios, estadï¿½sticas | 8h | Perfiles arquitectos, dashboard KPI |
 | **Jueves** | Docker, CI/CD, deployment | 8h | Contenedores, GitHub Actions, VPS ready |
-| **Viernes** | QA, bugs, documentación | 8h | MVP pulido, docs completas, handoff |
+| **Viernes** | QA, bugs, documentaciï¿½n | 8h | MVP pulido, docs completas, handoff |
 
 ---
 
-## ?? DÍA 1: SETUP & INFRAESTRUCTURA (LUNES)
+## ?? Dï¿½A 1: SETUP & INFRAESTRUCTURA (LUNES)
 
-### **Objetivo del Día**
-Al finalizar viernes tendrás:
-- ? Solución compilada sin errores
+### **Objetivo del Dï¿½a**
+Al finalizar viernes tendrï¿½s:
+- ? Soluciï¿½n compilada sin errores
 - ? Base de datos PostgreSQL corriendo localmente
 - ? Modelo de dominio implementado
 - ? Migrations iniciales
-- ? Data seeders básicos
+- ? Data seeders bï¿½sicos
 - ? Repositorios de lectura-escritura
 
 ### **Tareas Detalladas (Con Tiempos)**
 
 #### **08:00 - 09:00 | 1. Validar Setup Existente**
 
-**Qué hacer:**
-1. Abrir solución `cima.sln`
+**Quï¿½ hacer:**
+1. Abrir soluciï¿½n `cima.sln`
 2. Verificar proyectos existentes:
    ```
    ? cima.Blazor (Servidor Web App)
@@ -315,7 +315,7 @@ Al finalizar viernes tendrás:
    - Confirmar: `.AddInteractiveServerComponents()` + `.AddInteractiveWebAssemblyComponents()`
 
 **Checklist:**
-- [ ] Solución abre sin errores
+- [ ] Soluciï¿½n abre sin errores
 - [ ] .NET 9 SDK instalado (`dotnet --version`)
 - [ ] Proyectos compilables (`dotnet build`)
 
@@ -323,7 +323,7 @@ Al finalizar viernes tendrás:
 
 #### **09:00 - 10:30 | 2. Configurar PostgreSQL Local (Docker)**
 
-**Qué hacer:**
+**Quï¿½ hacer:**
 
 1. **Levantar contenedor** (PowerShell/Terminal):
 ```powershell
@@ -339,7 +339,7 @@ docker run --name cima-postgres `
 docker start cima-postgres
 ```
 
-2. **Verificar conexión** (usando pgAdmin o DBeaver):
+2. **Verificar conexiï¿½n** (usando pgAdmin o DBeaver):
    - Host: `localhost`
    - Port: `5432`
    - User: `postgres`
@@ -364,9 +364,9 @@ docker start cima-postgres
 
 #### **10:30 - 12:00 | 3. Definir Modelo de Dominio**
 
-**Qué hacer:**
+**Quï¿½ hacer:**
 
-1. **Crear archivo** `src/cima.Domain/Entities/Property.cs`:
+1. **Crear archivo** `src/cima.Domain/Entities/Listing.cs`:
 ```csharp
 using System;
 using System.Collections.Generic;
@@ -374,16 +374,16 @@ using Volo.Abp.Domain.Entities;
 
 namespace cima.Domain.Entities
 {
-    public class Property : AggregateRoot<Guid>
+    public class Listing : AggregateRoot<Guid>
     {
         public string Title { get; set; }
         public string Description { get; set; }
         public string Location { get; set; }
         public decimal Price { get; set; }
-        public decimal Area { get; set; } // m²
+        public decimal Area { get; set; } // mï¿½
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
-        public PropertyStatus Status { get; set; } // Draft, Published, Archived
+        public ListingStatus Status { get; set; } // Draft, Published, Archived
         public Guid ArchitectId { get; set; }
         
         public DateTime CreatedAt { get; set; }
@@ -391,14 +391,14 @@ namespace cima.Domain.Entities
         public DateTime? LastModifiedAt { get; set; }
         public Guid? LastModifiedBy { get; set; }
 
-        // Colección de imágenes
-        public ICollection<PropertyImage> Images { get; set; } = new List<PropertyImage>();
+        // Colecciï¿½n de imï¿½genes
+        public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();
 
-        // Navegación
+        // Navegaciï¿½n
         public virtual Architect Architect { get; set; }
     }
 
-    public enum PropertyStatus
+    public enum ListingStatus
     {
         Draft = 0,
         Published = 1,
@@ -421,8 +421,8 @@ namespace cima.Domain.Entities
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; }
 
-        // Navegación
-        public virtual ICollection<Property> Properties { get; set; } = new List<Property>();
+        // Navegaciï¿½n
+        public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>();
     }
 }
 ```
@@ -436,7 +436,7 @@ namespace cima.Domain.Entities
 {
     public class ContactRequest : AggregateRoot<Guid>
     {
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -447,8 +447,8 @@ namespace cima.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public string ReplyNotes { get; set; }
 
-        // Navegación
-        public virtual Property Property { get; set; }
+        // Navegaciï¿½n
+        public virtual Listing Listing { get; set; }
         public virtual Architect Architect { get; set; }
     }
 
@@ -461,17 +461,17 @@ namespace cima.Domain.Entities
 }
 ```
 
-4. **Crear archivo** `src/cima.Domain/Entities/PropertyImage.cs`:
+4. **Crear archivo** `src/cima.Domain/Entities/ListingImage.cs`:
 ```csharp
 using System;
 using Volo.Abp.Domain.Entities;
 
 namespace cima.Domain.Entities
 {
-    public class PropertyImage : ValueObject
+    public class ListingImage : ValueObject
     {
         public Guid ImageId { get; set; }
-        public string Url { get; set; } // Ruta relativa: /images/properties/...
+        public string Url { get; set; } // Ruta relativa: /images/Listings/...
         public int DisplayOrder { get; set; }
         public string AltText { get; set; }
         public long FileSize { get; set; } // bytes
@@ -489,8 +489,8 @@ namespace cima.Domain.Entities
 
 **Checklist:**
 - [ ] Archivos creados en `src/cima.Domain/Entities/`
-- [ ] Enums definidos (`PropertyStatus`, `ContactRequestStatus`)
-- [ ] Compilación sin errores (`dotnet build`)
+- [ ] Enums definidos (`ListingStatus`, `ContactRequestStatus`)
+- [ ] Compilaciï¿½n sin errores (`dotnet build`)
 
 ---
 
@@ -500,9 +500,9 @@ namespace cima.Domain.Entities
 
 #### **13:00 - 14:30 | 4. Crear DTOs en Domain.Shared**
 
-**Qué hacer:**
+**Quï¿½ hacer:**
 
-1. **Crear archivo** `src/cima.Domain.Shared/Dtos/PropertyDto.cs`:
+1. **Crear archivo** `src/cima.Domain.Shared/Dtos/ListingDto.cs`:
 ```csharp
 using System;
 using System.Collections.Generic;
@@ -510,7 +510,7 @@ using cima.Domain.Entities;
 
 namespace cima.Domain.Shared.Dtos
 {
-    public class PropertyDto
+    public class ListingDto
     {
         public Guid Id { get; set; }
         public string Title { get; set; }
@@ -520,14 +520,14 @@ namespace cima.Domain.Shared.Dtos
         public decimal Area { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
-        public PropertyStatus Status { get; set; }
+        public ListingStatus Status { get; set; }
         public Guid ArchitectId { get; set; }
         public ArchitectDto Architect { get; set; }
-        public List<PropertyImageDto> Images { get; set; } = new();
+        public List<ListingImageDto> Images { get; set; } = new();
         public DateTime CreatedAt { get; set; }
     }
 
-    public class CreateUpdatePropertyDto
+    public class CreateUpdateListingDto
     {
         public string Title { get; set; }
         public string Description { get; set; }
@@ -539,7 +539,7 @@ namespace cima.Domain.Shared.Dtos
         public Guid ArchitectId { get; set; }
     }
 
-    public class PropertyImageDto
+    public class ListingImageDto
     {
         public Guid ImageId { get; set; }
         public string Url { get; set; }
@@ -582,7 +582,7 @@ namespace cima.Domain.Shared.Dtos
     public class ContactRequestDto
     {
         public Guid Id { get; set; }
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -594,7 +594,7 @@ namespace cima.Domain.Shared.Dtos
 
     public class CreateContactRequestDto
     {
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
@@ -605,13 +605,13 @@ namespace cima.Domain.Shared.Dtos
 
 **Checklist:**
 - [ ] Todos los DTOs creados
-- [ ] Compilación OK
+- [ ] Compilaciï¿½n OK
 
 ---
 
 #### **14:30 - 16:00 | 5. Configurar DbContext (EF Core)**
 
-**Qué hacer:**
+**Quï¿½ hacer:**
 
 1. **Crear archivo** `src/cima.EntityFrameworkCore/CimaDbContext.cs`:
 ```csharp
@@ -626,7 +626,7 @@ namespace cima.EntityFrameworkCore
     [ConnectionStringName("Default")]
     public class CimaDbContext : AbpDbContext<CimaUser>
     {
-        public DbSet<Property> Properties { get; set; }
+        public DbSet<Listing> Listings { get; set; }
         public DbSet<Architect> Architects { get; set; }
         public DbSet<ContactRequest> ContactRequests { get; set; }
 
@@ -639,35 +639,35 @@ namespace cima.EntityFrameworkCore
         {
             base.OnModelCreating(builder);
 
-            // Tabla: Properties
-            builder.Entity<Property>(b =>
+            // Tabla: Listings
+            builder.Entity<Listing>(b =>
             {
-                b.ToTable("Properties");
+                b.ToTable("Listings");
                 b.HasKey(x => x.Id);
 
-                b.Property(x => x.Title).IsRequired().HasMaxLength(200);
-                b.Property(x => x.Description).HasMaxLength(5000);
-                b.Property(x => x.Location).IsRequired().HasMaxLength(500);
-                b.Property(x => x.Price).HasPrecision(18, 2);
-                b.Property(x => x.Area).HasPrecision(10, 2);
-                b.Property(x => x.Status).IsRequired();
+                b.Listing(x => x.Title).IsRequired().HasMaxLength(200);
+                b.Listing(x => x.Description).HasMaxLength(5000);
+                b.Listing(x => x.Location).IsRequired().HasMaxLength(500);
+                b.Listing(x => x.Price).HasPrecision(18, 2);
+                b.Listing(x => x.Area).HasPrecision(10, 2);
+                b.Listing(x => x.Status).IsRequired();
 
-                // Índices
+                // ï¿½ndices
                 b.HasIndex(x => new { x.Status, x.ArchitectId });
                 b.HasIndex(x => x.CreatedAt);
 
                 // Foreign key
                 b.HasOne(x => x.Architect)
-                    .WithMany(a => a.Properties)
+                    .WithMany(a => a.Listings)
                     .HasForeignKey(x => x.ArchitectId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Value Object: PropertyImages
+                // Value Object: ListingImages
                 b.OwnsMany(x => x.Images, ib =>
                 {
-                    ib.ToTable("PropertyImages");
-                    ib.WithOwner().HasForeignKey("PropertyId");
-                    ib.HasKey("PropertyId", "ImageId");
+                    ib.ToTable("ListingImages");
+                    ib.WithOwner().HasForeignKey("ListingId");
+                    ib.HasKey("ListingId", "ImageId");
                 });
             });
 
@@ -677,8 +677,8 @@ namespace cima.EntityFrameworkCore
                 b.ToTable("Architects");
                 b.HasKey(x => x.Id);
 
-                b.Property(x => x.Bio).HasMaxLength(2000);
-                b.Property(x => x.PortfolioUrl).HasMaxLength(500);
+                b.Listing(x => x.Bio).HasMaxLength(2000);
+                b.Listing(x => x.PortfolioUrl).HasMaxLength(500);
 
                 b.HasIndex(x => x.UserId).IsUnique();
             });
@@ -689,17 +689,17 @@ namespace cima.EntityFrameworkCore
                 b.ToTable("ContactRequests");
                 b.HasKey(x => x.Id);
 
-                b.Property(x => x.Name).IsRequired().HasMaxLength(100);
-                b.Property(x => x.Email).IsRequired().HasMaxLength(256);
-                b.Property(x => x.Phone).HasMaxLength(20);
-                b.Property(x => x.Message).IsRequired().HasMaxLength(5000);
-                b.Property(x => x.Status).IsRequired();
+                b.Listing(x => x.Name).IsRequired().HasMaxLength(100);
+                b.Listing(x => x.Email).IsRequired().HasMaxLength(256);
+                b.Listing(x => x.Phone).HasMaxLength(20);
+                b.Listing(x => x.Message).IsRequired().HasMaxLength(5000);
+                b.Listing(x => x.Status).IsRequired();
 
                 b.HasIndex(x => new { x.Status, x.CreatedAt });
-                b.HasIndex(x => x.PropertyId);
+                b.HasIndex(x => x.ListingId);
 
                 // Foreign keys
-                b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId)
+                b.HasOne(x => x.Listing).WithMany().HasForeignKey(x => x.ListingId)
                     .OnDelete(DeleteBehavior.Cascade);
                 b.HasOne(x => x.Architect).WithMany().HasForeignKey(x => x.ArchitectId)
                     .OnDelete(DeleteBehavior.Restrict);
@@ -712,13 +712,13 @@ namespace cima.EntityFrameworkCore
 **Checklist:**
 - [ ] DbContext compilable
 - [ ] Mappeos EF Core correctos
-- [ ] Índices definidos
+- [ ] ï¿½ndices definidos
 
 ---
 
 #### **16:00 - 17:00 | 6. Crear & Ejecutar Migration Inicial**
 
-**Qué hacer:**
+**Quï¿½ hacer:**
 
 1. **Generar migration**:
 ```powershell
@@ -727,7 +727,7 @@ dotnet ef migrations add InitialCreate -o Migrations
 ```
 
 2. **Revisar archivo generado**: `src/cima.EntityFrameworkCore/Migrations/[timestamp]_InitialCreate.cs`
-   - Debe contener tablas: Properties, Architects, ContactRequests, PropertyImages
+   - Debe contener tablas: Listings, Architects, ContactRequests, ListingImages
 
 3. **Ejecutar migration**:
 ```powershell
@@ -746,7 +746,7 @@ dotnet ef database update
 
 ---
 
-### **FIN DÍA 1**
+### **FIN Dï¿½A 1**
 
 **Resumen de lo logrado:**
 - ? Proyectos configurados (.NET 9, ABP 9.3.6)
@@ -757,45 +757,45 @@ dotnet ef database update
 - ? Migration inicial ejecutada
 - ? BD lista con esquema completo
 
-**Próximos pasos (Martes):**
+**Prï¿½ximos pasos (Martes):**
 - Crear data seeders (usuarios, propiedades demo)
 - Implementar repositorios
-- Testing de queries básicas
+- Testing de queries bï¿½sicas
 
 ---
 
-## ?? ENTREGABLES FINALES (después de 2 semanas)
+## ?? ENTREGABLES FINALES (despuï¿½s de 2 semanas)
 
-### **Código & Repositorio**
-- ? Solución compilable, sin warnings críticos
+### **Cï¿½digo & Repositorio**
+- ? Soluciï¿½n compilable, sin warnings crï¿½ticos
 - ? Todas las migraciones versionadas
 - ? Data seeders para desarrollo
 - ? `.gitignore` con secretos excluidos
 - ? `common.props` actualizado
 
 ### **Funcionalidades Completadas**
-- ? Catálogo público (listado, filtros, detalle)
-- ? Panel administrativo (CRUD properties)
-- ? Upload y gestión de imágenes
+- ? Catï¿½logo pï¿½blico (listado, filtros, detalle)
+- ? Panel administrativo (CRUD Listings)
+- ? Upload y gestiï¿½n de imï¿½genes
 - ? Portafolios de arquitectos
 - ? Formularios de contacto
-- ? Gestión de usuarios y roles
-- ? Dashboard de estadísticas
-- ? Autenticación y autorización completa
+- ? Gestiï¿½n de usuarios y roles
+- ? Dashboard de estadï¿½sticas
+- ? Autenticaciï¿½n y autorizaciï¿½n completa
 
 ### **Infraestructura**
 - ? Dockerfile optimizado (multi-stage)
 - ? docker-compose.yml (desarrollo)
-- ? docker-compose.prod.yml (producción)
+- ? docker-compose.prod.yml (producciï¿½n)
 - ? GitHub Actions CI/CD
 - ? Scripts de deployment a VPS
 
-### **Documentación**
-- ? `ARCHITECTURE.md` ? Estructura técnica detallada
-- ? `API.md` ? Documentación de todos los endpoints
+### **Documentaciï¿½n**
+- ? `ARCHITECTURE.md` ? Estructura tï¿½cnica detallada
+- ? `API.md` ? Documentaciï¿½n de todos los endpoints
 - ? `DATABASE.md` ? Esquema, migraciones, backup
-- ? `DEPLOYMENT.md` ? Guía paso a paso de deployment
-- ? `ADMIN_GUIDE.md` ? Manual de operación para cliente
+- ? `DEPLOYMENT.md` ? Guï¿½a paso a paso de deployment
+- ? `ADMIN_GUIDE.md` ? Manual de operaciï¿½n para cliente
 - ? `DEVELOPMENT.md` ? Setup local, debugging, testing
 
 ### **Calidad**
@@ -803,8 +803,8 @@ dotnet ef database update
 - ? Validaciones server-side y client-side
 - ? Manejo robusto de errores
 - ? Logging centralizado (Serilog)
-- ? Accesibilidad básica (labels, alt text)
-- ? Rendimiento optimizado (índices BD, lazy loading)
+- ? Accesibilidad bï¿½sica (labels, alt text)
+- ? Rendimiento optimizado (ï¿½ndices BD, lazy loading)
 
 ---
 
@@ -817,13 +817,13 @@ dotnet ef database update
 - Search avanzado (Elasticsearch, opcional)
 
 ### **Fase 3 (Semanas 5-6)**
-- Galería de fotos avanzada (carousel 360°, lightbox)
-- Búsqueda por ubicación (Google Maps API)
+- Galerï¿½a de fotos avanzada (carousel 360ï¿½, lightbox)
+- Bï¿½squeda por ubicaciï¿½n (Google Maps API)
 - Notificaciones por email (SendGrid)
 - Reportes PDF exportables
 
 ### **Fase 4 (Mes 2)**
-- Pagos en línea (Stripe/PayPal)
+- Pagos en lï¿½nea (Stripe/PayPal)
 - Sistema de favoritos
 - Reviews y ratings
 - Newsletter integrado
@@ -838,15 +838,15 @@ dotnet ef database update
 
 ## ?? NOTAS OPERACIONALES
 
-| Aspecto | Decisión | Justificación |
+| Aspecto | Decisiï¿½n | Justificaciï¿½n |
 |---------|----------|---------------|
-| **Scope MVP** | Solo catálogo + admin + auth | Máximo impacto mínimo en 2 semanas |
+| **Scope MVP** | Solo catï¿½logo + admin + auth | Mï¿½ximo impacto mï¿½nimo en 2 semanas |
 | **DB Sofware** | PostgreSQL (no SQLite) | Escalable, production-ready |
-| **Auth** | OpenIddict (no terceros) | Control total, simple integración ABP |
+| **Auth** | OpenIddict (no terceros) | Control total, simple integraciï¿½n ABP |
 | **UI Framework** | Blazorise sobre Blazor | Componentes premium, ahorra desarrollo |
-| **DevOps** | Docker + GitHub Actions | Standard industry, fácil deployment |
+| **DevOps** | Docker + GitHub Actions | Standard industry, fï¿½cil deployment |
 | **Testing** | Manual en MVP (auto en Fase 2) | Trade-off: velocidad vs cobertura |
-| **Logging** | Serilog estructurado | Debugging eficiente en producción |
+| **Logging** | Serilog estructurado | Debugging eficiente en producciï¿½n |
 
 ---
 
@@ -856,12 +856,12 @@ dotnet ef database update
 - Laptop con: VS 2022 / VS Code + C# extension
 - Docker Desktop (Postgres + app)
 - GitHub repo (CI/CD)
-- VPS staging/prod ($ mínimo) o Railway/Heroku
+- VPS staging/prod ($ mï¿½nimo) o Railway/Heroku
 - Dominio + SSL (Let's Encrypt)
 
 ---
 
-**Última actualización:** [Fecha]  
-**Próxima revisión:** Viernes EOD (después de Semana 1)  
+**ï¿½ltima actualizaciï¿½n:** [Fecha]  
+**Prï¿½xima revisiï¿½n:** Viernes EOD (despuï¿½s de Semana 1)  
 **Contacto:** [Tu email]
 
