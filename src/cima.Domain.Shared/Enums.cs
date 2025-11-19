@@ -1,6 +1,6 @@
 namespace cima.Domain.Shared
 {
-    public enum PropertyStatus
+    public enum ListingStatus
     {
         Draft = 0,
         Published = 1,

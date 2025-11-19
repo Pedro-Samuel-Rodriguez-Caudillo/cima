@@ -13,7 +13,7 @@ namespace cima.Domain.Entities
     /// </summary>
     public class ContactRequest : AggregateRoot<Guid>
     {
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; } // Para responder por correo (medio principal)
@@ -24,7 +24,7 @@ namespace cima.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public string ReplyNotes { get; set; }
 
-        public virtual Property Property { get; set; }
+        public virtual Listing Listing { get; set; }
         public virtual Architect Architect { get; set; }
     }
 }

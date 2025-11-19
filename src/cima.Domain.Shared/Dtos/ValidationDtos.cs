@@ -52,7 +52,7 @@ namespace cima.Domain.Shared.Dtos
         public string Message { get; set; }
 
         [Required(ErrorMessage = "La propiedad es requerida")]
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
     }
 
     public class CreateArchitectDtoValidation

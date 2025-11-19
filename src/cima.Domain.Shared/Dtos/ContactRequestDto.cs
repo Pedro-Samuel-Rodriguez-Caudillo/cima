@@ -6,7 +6,7 @@ namespace cima.Domain.Shared.Dtos
     public class ContactRequestDto
     {
         public Guid Id { get; set; }
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
@@ -19,7 +19,7 @@ namespace cima.Domain.Shared.Dtos
 
     public class CreateContactRequestDto
     {
-        public Guid PropertyId { get; set; }
+        public Guid ListingId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
@@ -29,6 +29,11 @@ namespace cima.Domain.Shared.Dtos
     public class UpdateContactRequestDto
     {
         public ContactRequestStatus Status { get; set; }
+        public string ReplyNotes { get; set; }
+    }
+
+    public class MarkAsRepliedDto
+    {
         public string ReplyNotes { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace cima.Domain.Shared.Dtos
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; }
         public string UserName { get; set; }
-        public List<PropertyListDto> Properties { get; set; } = new();
+        public List<ListingListDto> Listings { get; set; } = new();
     }
 
     public class ArchitectListDto
@@ -39,6 +39,6 @@ namespace cima.Domain.Shared.Dtos
         public string UserName { get; set; }
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; }
-        public int PropertiesCount { get; set; }
+        public int ListingsCount { get; set; }
     }
 }

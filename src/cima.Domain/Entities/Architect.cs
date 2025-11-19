@@ -11,6 +11,6 @@ namespace cima.Domain.Entities
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; } // Enlace al portafolio
 
-        public virtual ICollection<Property> Properties { get; set; } = new List<Property>(); // Enlace a sus casas
+        public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>(); // Enlace a sus casas
     }
 }
