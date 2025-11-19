@@ -26,7 +26,7 @@ public class cimaDbContext :
     ITenantManagementDbContext,
     IIdentityDbContext
 {
-    public DbSet<Property> Properties { get; set; }
+    public DbSet<Listing> Listings { get; set; }
     public DbSet<Architect> Architects { get; set; }
     public DbSet<ContactRequest> ContactRequests { get; set; }
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
@@ -83,9 +83,9 @@ public class cimaDbContext :
         
         /* Configure your own tables/entities inside here */
 
-        builder.Entity<Property>(b =>
+        builder.Entity<Listing>(b =>
         {
-            b.ToTable("Properties");
+            b.ToTable("Listings");
             b.HasKey(x => x.Id);
             b.Property(x => x.Title).IsRequired().HasMaxLength(200);
             b.Property(x => x.Description).HasMaxLength(5000);
@@ -95,14 +95,14 @@ public class cimaDbContext :
             b.HasIndex(x => new { x.Status, x.ArchitectId });
             b.HasIndex(x => x.CreatedAt);
             b.HasOne(x => x.Architect)
-                .WithMany(a => a.Properties)
+                .WithMany(a => a.Listings)
                 .HasForeignKey(x => x.ArchitectId)
                 .OnDelete(DeleteBehavior.Restrict);
             b.OwnsMany(x => x.Images, ib =>
             {
-                ib.ToTable("PropertyImages");
-                ib.WithOwner().HasForeignKey("PropertyId");
-                ib.HasKey("PropertyId", "ImageId");
+                ib.ToTable("ListingImages");
+                ib.WithOwner().HasForeignKey("ListingId");
+                ib.HasKey("ListingId", "ImageId");
             });
         });
 
@@ -124,8 +124,8 @@ public class cimaDbContext :
             b.Property(x => x.Phone).HasMaxLength(20);
             b.Property(x => x.Message).IsRequired().HasMaxLength(5000);
             b.HasIndex(x => new { x.Status, x.CreatedAt });
-            b.HasIndex(x => x.PropertyId);
-            b.HasOne(x => x.Property).WithMany().HasForeignKey(x => x.PropertyId)
+            b.HasIndex(x => x.ListingId);
+            b.HasOne(x => x.Listing).WithMany().HasForeignKey(x => x.ListingId)
                 .OnDelete(DeleteBehavior.Cascade);
             b.HasOne(x => x.Architect).WithMany().HasForeignKey(x => x.ArchitectId)
                 .OnDelete(DeleteBehavior.Restrict);

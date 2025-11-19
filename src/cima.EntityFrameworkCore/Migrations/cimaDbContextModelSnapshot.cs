@@ -1943,6 +1943,9 @@ namespace cima.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
+                    b.Property<Guid>("ListingId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(5000)
@@ -1958,9 +1961,6 @@ namespace cima.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("PropertyId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("ReplyNotes")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1972,14 +1972,14 @@ namespace cima.Migrations
 
                     b.HasIndex("ArchitectId");
 
-                    b.HasIndex("PropertyId");
+                    b.HasIndex("ListingId");
 
                     b.HasIndex("Status", "CreatedAt");
 
                     b.ToTable("ContactRequests", (string)null);
                 });
 
-            modelBuilder.Entity("cima.Domain.Entities.Property", b =>
+            modelBuilder.Entity("cima.Domain.Entities.Listing", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
@@ -2051,7 +2051,7 @@ namespace cima.Migrations
 
                     b.HasIndex("Status", "ArchitectId");
 
-                    b.ToTable("Properties", (string)null);
+                    b.ToTable("Listings", (string)null);
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLogAction", b =>
@@ -2213,28 +2213,28 @@ namespace cima.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("cima.Domain.Entities.Property", "Property")
+                    b.HasOne("cima.Domain.Entities.Listing", "Listing")
                         .WithMany()
-                        .HasForeignKey("PropertyId")
+                        .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Architect");
 
-                    b.Navigation("Property");
+                    b.Navigation("Listing");
                 });
 
-            modelBuilder.Entity("cima.Domain.Entities.Property", b =>
+            modelBuilder.Entity("cima.Domain.Entities.Listing", b =>
                 {
                     b.HasOne("cima.Domain.Entities.Architect", "Architect")
-                        .WithMany("Properties")
+                        .WithMany("Listings")
                         .HasForeignKey("ArchitectId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.OwnsMany("cima.Domain.Entities.PropertyImage", "Images", b1 =>
+                    b.OwnsMany("cima.Domain.Entities.ListingImage", "Images", b1 =>
                         {
-                            b1.Property<Guid>("PropertyId")
+                            b1.Property<Guid>("ListingId")
                                 .HasColumnType("uuid");
 
                             b1.Property<Guid>("ImageId")
@@ -2259,12 +2259,12 @@ namespace cima.Migrations
                                 .IsRequired()
                                 .HasColumnType("text");
 
-                            b1.HasKey("PropertyId", "ImageId");
+                            b1.HasKey("ListingId", "ImageId");
 
-                            b1.ToTable("PropertyImages", (string)null);
+                            b1.ToTable("ListingImages", (string)null);
 
                             b1.WithOwner()
-                                .HasForeignKey("PropertyId");
+                                .HasForeignKey("ListingId");
                         });
 
                     b.Navigation("Architect");
@@ -2314,7 +2314,7 @@ namespace cima.Migrations
 
             modelBuilder.Entity("cima.Domain.Entities.Architect", b =>
                 {
-                    b.Navigation("Properties");
+                    b.Navigation("Listings");
                 });
 #pragma warning restore 612, 618
         }
