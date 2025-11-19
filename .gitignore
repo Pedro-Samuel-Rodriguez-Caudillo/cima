@@ -273,3 +273,56 @@ src/cima.Blazor.Server.Tiered/Logs/*
 # IdentityServer temp files
 tempkey.rsa
 tempkey.jwk
+###################
+# SECRETS & CREDENTIALS - CRITICO
+###################
+# User Secrets (NO subir a Git)
+**/appsettings.secrets.json
+**/appsettings.*.secrets.json
+secrets.json
+*.secrets.json
+
+# OpenIddict certificates
+openiddict.pfx
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# Connection strings personalizadas
+appsettings.Development.json.user
+appsettings.Production.json.user
+
+# User Secrets directory
+**/UserSecrets/
+secrets/
+
+###################
+# ABP FRAMEWORK SPECIFIC
+###################
+# ABP CLI logs
+*.abp.json
+.abp/
+
+# ABP Studio
+.abpstudio/
+
+# ABP Logs
+**/Logs/*.txt
+**/Logs/*.log
+
+###################
+# DOCKER COMPOSE OVERRIDES
+###################
+docker-compose.override.yml
+docker-compose.*.override.yml
+
+###################
+# DATABASE BACKUPS
+###################
+*.sql.bak
+*.backup
+*.dump
