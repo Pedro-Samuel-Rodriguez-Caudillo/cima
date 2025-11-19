@@ -33,6 +33,13 @@ Este directorio contiene scripts de automatización para el proyecto CIMA.
 | `ver-logs.ps1` | Visualiza logs del sistema | `.\etc\scripts\ver-logs.ps1` |
 | `limpiar-logs.ps1` | Limpia archivos de log | `.\etc\scripts\limpiar-logs.ps1` |
 
+### ?? Frontend (Tailwind CSS)
+
+| Script | Propósito | Uso |
+|--------|-----------|-----|
+| `build-tailwind.ps1` | Compila CSS para producción (minificado) | `.\etc\scripts\build-tailwind.ps1` |
+| `start-tailwind-watch.ps1` | Inicia Tailwind en modo watch (desarrollo) | `.\etc\scripts\start-tailwind-watch.ps1` |
+
 ## Guías de Uso
 
 ### Setup Inicial (Primera Vez)
@@ -46,12 +53,18 @@ Este directorio contiene scripts de automatización para el proyecto CIMA.
 
 # 3. Crear y aplicar migraciones
 .\etc\scripts\reset-database.ps1
+
+# 4. Compilar Tailwind CSS
+.\etc\scripts\build-tailwind.ps1
 ```
 
 ### Desarrollo Diario
 
 ```powershell
-# Ver logs de la aplicación
+# Iniciar Tailwind en modo watch (en una terminal)
+.\etc\scripts\start-tailwind-watch.ps1
+
+# Ver logs de la aplicación (en otra terminal)
 .\etc\scripts\ver-logs.ps1
 
 # Probar API después de cambios
@@ -176,6 +189,18 @@ Muestra logs con colores:
 ### limpiar-logs.ps1
 
 Limpia archivos de log y crea backups automáticos si > 100KB.
+
+**Sin parámetros necesarios**
+
+### build-tailwind.ps1
+
+Compila el CSS de Tailwind para producción. Asegúrate de tener configurado el archivo `tailwind.config.js` correctamente.
+
+**Sin parámetros necesarios**
+
+### start-tailwind-watch.ps1
+
+Inicia el proceso de Tailwind en modo desarrollo. Observa cambios en los archivos y recompila automáticamente.
 
 **Sin parámetros necesarios**
 

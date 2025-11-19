@@ -1,0 +1,160 @@
+@* Ejemplo de componente usando clases Tailwind CIMA *@
+
+<div class="cima-card fade-in">
+    <div class="cima-card-header">
+        <h3 class="text-2xl font-bold">Casa en Venta - Zona Residencial</h3>
+        <span class="cima-badge cima-badge-published">Publicado</span>
+    </div>
+    
+    <div class="cima-card-body">
+        <!-- Imagen de ejemplo -->
+        <div class="aspect-video bg-gray-200 rounded-lg mb-4">
+            <img src="/images/property-placeholder.jpg" 
+                 alt="Propiedad" 
+                 class="w-full h-full object-cover rounded-lg" />
+        </div>
+        
+        <!-- Precio destacado -->
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 mb-1">Precio</p>
+            <p class="cima-price">$2,500,000</p>
+        </div>
+        
+        <!-- Características -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="text-center">
+                <p class="text-2xl font-bold text-cima-primary">3</p>
+                <p class="text-sm text-gray-600">Recámaras</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-cima-primary">2.5</p>
+                <p class="text-sm text-gray-600">Baños</p>
+            </div>
+            <div class="text-center">
+                <p class="text-2xl font-bold text-cima-primary">250</p>
+                <p class="text-sm text-gray-600">m²</p>
+            </div>
+        </div>
+        
+        <!-- Descripción -->
+        <p class="text-gray-700 mb-6">
+            Hermosa casa en zona residencial exclusiva. 
+            Cuenta con todas las comodidades modernas y excelente ubicación.
+        </p>
+        
+        <!-- Botones de acción -->
+        <div class="flex gap-3">
+            <button class="cima-btn-primary flex-1">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Ver Detalles
+            </button>
+            <button class="cima-btn-success flex-1">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Contactar
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Ejemplo de formulario con clases CIMA *@
+<div class="cima-card fade-in mt-6">
+    <div class="cima-card-header">
+        <h3 class="text-xl font-semibold">Búsqueda Avanzada</h3>
+    </div>
+    
+    <div class="cima-card-body">
+        <form class="space-y-4">
+            <!-- Tipo de propiedad -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Propiedad
+                </label>
+                <select class="cima-input">
+                    <option>Casa</option>
+                    <option>Departamento</option>
+                    <option>Terreno</option>
+                    <option>Comercial</option>
+                </select>
+            </div>
+            
+            <!-- Rango de precio -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Precio Mínimo
+                    </label>
+                    <input type="number" 
+                           class="cima-input" 
+                           placeholder="$500,000" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Precio Máximo
+                    </label>
+                    <input type="number" 
+                           class="cima-input" 
+                           placeholder="$5,000,000" />
+                </div>
+            </div>
+            
+            <!-- Ubicación -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Ubicación
+                </label>
+                <input type="text" 
+                       class="cima-input" 
+                       placeholder="Ingresa ciudad o colonia" />
+            </div>
+            
+            <!-- Botones -->
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="cima-btn-primary flex-1">
+                    Buscar Propiedades
+                </button>
+                <button type="reset" class="cima-btn-secondary">
+                    Limpiar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Ejemplo de estadísticas *@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+    <div class="cima-stat-box fade-in">
+        <p class="text-sm text-gray-600 mb-2">Propiedades Disponibles</p>
+        <p class="text-4xl font-bold text-cima-primary">127</p>
+        <p class="text-xs text-gray-500 mt-2">? 12% vs mes anterior</p>
+    </div>
+    
+    <div class="cima-stat-box border-cima-success fade-in" style="animation-delay: 0.1s">
+        <p class="text-sm text-gray-600 mb-2">Ventas Este Mes</p>
+        <p class="text-4xl font-bold text-cima-success">23</p>
+        <p class="text-xs text-gray-500 mt-2">? 8% vs mes anterior</p>
+    </div>
+    
+    <div class="cima-stat-box border-cima-warning fade-in" style="animation-delay: 0.2s">
+        <p class="text-sm text-gray-600 mb-2">Consultas Recibidas</p>
+        <p class="text-4xl font-bold text-cima-warning">456</p>
+        <p class="text-xs text-gray-500 mt-2">? 23% vs mes anterior</p>
+    </div>
+</div>
+
+@* Loading spinner ejemplo *@
+<div class="flex justify-center items-center p-8" style="display: none;">
+    <div class="cima-spinner"></div>
+</div>
+
+@code {
+    // Este sería el código del componente
+    // Por ahora es solo un ejemplo visual
+}
