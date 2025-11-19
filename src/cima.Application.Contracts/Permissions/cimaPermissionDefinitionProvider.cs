@@ -26,19 +26,19 @@ public class cimaPermissionDefinitionProvider : PermissionDefinitionProvider
         var cimaGroup = context.AddGroup(cimaPermissions.GroupName, L("Permission:cima"));
 
         // Propiedades (casas)
-        var propertiesPermission = cimaGroup.AddPermission(
-            cimaPermissions.Properties.Default, L("Permission:Properties"));
+        var listingsPermission = cimaGroup.AddPermission(
+            cimaPermissions.Listings.Default, L("Permission:Listings"));
 
-        propertiesPermission.AddChild(
-            cimaPermissions.Properties.Create, L("Permission:Properties.Create"));
-        propertiesPermission.AddChild(
-            cimaPermissions.Properties.Edit, L("Permission:Properties.Edit"));
-        propertiesPermission.AddChild(
-            cimaPermissions.Properties.Delete, L("Permission:Properties.Delete"));
-        propertiesPermission.AddChild(
-            cimaPermissions.Properties.Publish, L("Permission:Properties.Publish"));
-        propertiesPermission.AddChild(
-            cimaPermissions.Properties.Archive, L("Permission:Properties.Archive"));
+        listingsPermission.AddChild(
+            cimaPermissions.Listings.Create, L("Permission:Listings.Create"));
+        listingsPermission.AddChild(
+            cimaPermissions.Listings.Edit, L("Permission:Listings.Edit"));
+        listingsPermission.AddChild(
+            cimaPermissions.Listings.Delete, L("Permission:Listings.Delete"));
+        listingsPermission.AddChild(
+            cimaPermissions.Listings.Publish, L("Permission:Listings.Publish"));
+        listingsPermission.AddChild(
+            cimaPermissions.Listings.Archive, L("Permission:Listings.Archive"));
 
 
         // Arquitectos

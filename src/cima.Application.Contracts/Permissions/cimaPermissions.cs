@@ -5,7 +5,7 @@ namespace cima.Permissions;
 /// Se tienen los nombres de los permisos, recordatorio de que es un sistema basado en Roles
 /// </summary>
 /// 
-/// Para usarse tendrá que tener una estructura tipo [Authorize (cimaPermissions.Properties.Create)] en los controladores o servicios
+/// Para usarse tendrá que tener una estructura tipo [Authorize (cimaPermissions.Listings.Create)] en los controladores o servicios
 /// 
 public static class cimaPermissions
 {
@@ -13,9 +13,9 @@ public static class cimaPermissions
 
    // Permisos para gestionar las casas
 
-    public static class Properties
+    public static class Listings
     {
-        public const string Default = GroupName + ".Properties";
+        public const string Default = GroupName + ".Listings";
         public const string Create = Default + ".Create";      // Crear propiedad
         public const string Edit = Default + ".Edit";          // Editar propiedad
         public const string Delete = Default + ".Delete";      // Eliminar propiedad
