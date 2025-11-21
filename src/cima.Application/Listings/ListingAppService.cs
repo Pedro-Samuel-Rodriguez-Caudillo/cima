@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 
 
@@ -38,8 +39,9 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// </summary>
     public async Task<PagedResultDto<ListingDto>> GetListAsync(GetListingsInput input)
     {
-        var queryable = await _listingRepository.GetQueryableAsync();
-
+        var queryable = await _listingRepository.WithDetailsAsync(
+            listing => listing.Architect,
+            listing => listing.Images);
 
         // Aplicar filtros
         if (!string.IsNullOrWhiteSpace(input.SearchTerm))
@@ -140,7 +142,18 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// </summary>
     public async Task<ListingDto> GetAsync(Guid id)
     {
-        var listing = await _listingRepository.GetAsync(id);
+        var listingQueryable = await _listingRepository.WithDetailsAsync(
+            l => l.Architect,
+            l => l.Images);
+
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(
+            listingQueryable.Where(l => l.Id == id));
+
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), id);
+        }
+
         return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
@@ -342,7 +355,9 @@ public class ListingAppService : cimaAppService, IListingAppService
     [AllowAnonymous]
     public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
     {
-        var queryable = await _listingRepository.GetQueryableAsync();
+        var queryable = await _listingRepository.WithDetailsAsync(
+            listing => listing.Architect,
+            listing => listing.Images);
 
         // Solo propiedades publicadas
         queryable = queryable.Where(p => p.Status == ListingStatus.Published);
@@ -409,9 +424,11 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
         Guid architectId, int skipCount, int maxResultCount)
     {
-        var queryable = await _listingRepository.GetQueryableAsync();
+        var queryable = await _listingRepository.WithDetailsAsync(
+            listing => listing.Architect,
+            listing => listing.Images);
         queryable = queryable.Where(p => p.ArchitectId == architectId);
-
+        
         var totalCount = await AsyncExecuter.CountAsync(queryable);
         var listings = await AsyncExecuter.ToListAsync(
             queryable
