@@ -35,6 +35,9 @@
     </script>
 </head>
 <body class="@rtl bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+    
+    <AbpScripts BundleName="@BlazorBasicThemeBundles.Scripts.Global" WebAssemblyScriptFiles="GlobalScripts" @rendermode="InteractiveAuto" />
+    
     <div class="min-h-screen flex flex-col">
         <NavBar />
         
@@ -57,8 +60,6 @@
         <a href="" class="reload ml-4 underline">Reload</a>
         <a class="dismiss ml-2 cursor-pointer">✕</a>
     </div>
-    
-    <AbpScripts BundleName="@BlazorBasicThemeBundles.Scripts.Global" WebAssemblyScriptFiles="GlobalScripts" @rendermode="InteractiveAuto" />
 
     <script src="_framework/blazor.web.js"></script>
 
