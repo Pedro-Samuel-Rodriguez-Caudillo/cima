@@ -13,6 +13,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
 
+
 namespace cima.Listings;
 
 /// <summary>
@@ -38,6 +39,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> GetListAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.GetQueryableAsync();
+
 
         // Aplicar filtros
         if (!string.IsNullOrWhiteSpace(input.SearchTerm))
