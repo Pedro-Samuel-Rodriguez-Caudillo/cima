@@ -2,85 +2,165 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos personalizados CIMA */
+/* Estilos personalizados CIMA - Minimalismo Suizo */
+@layer base {
+    :root {
+        --cima-primary: 22 33 51;
+        --cima-bg: 255 255 255;
+        --cima-text: 22 33 51;
+    }
+    
+    .dark {
+        --cima-bg: 22 33 51;
+        --cima-text: 255 255 255;
+    }
+}
+
 @layer components {
+    /* Cards */
     .cima-card {
-        @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+        @apply bg-white dark:bg-gray-800 rounded-none border border-gray-200 dark:border-gray-700 
+               transition-all duration-300 hover:border-cima-accent dark:hover:border-gray-500;
     }
 
     .cima-card-header {
-        @apply bg-gradient-to-r from-cima-primary to-blue-700 text-white p-6;
+        @apply bg-cima-accent dark:bg-gray-900 text-white p-6 border-b border-gray-200 dark:border-gray-700;
     }
 
     .cima-card-body {
-        @apply p-6;
+        @apply p-6 md:p-8;
     }
 
+    /* Badges */
     .cima-badge {
-        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        @apply inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider;
     }
 
     .cima-badge-draft {
-        @apply bg-gray-100 text-gray-800;
+        @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 border border-gray-300 dark:border-gray-600;
     }
 
     .cima-badge-published {
-        @apply bg-green-100 text-green-800;
+        @apply bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700;
     }
 
     .cima-badge-archived {
-        @apply bg-yellow-100 text-yellow-800;
+        @apply bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700;
     }
 
+    /* Buttons */
     .cima-btn {
-        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        @apply px-6 py-3 text-sm font-medium uppercase tracking-wider transition-all duration-200 
+               focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
     .cima-btn-primary {
-        @apply cima-btn bg-cima-primary text-white hover:bg-blue-700 focus:ring-cima-primary;
+        @apply cima-btn bg-cima-accent text-white hover:bg-opacity-90 dark:hover:bg-opacity-80 
+               focus:ring-cima-accent border border-cima-accent;
     }
 
     .cima-btn-secondary {
-        @apply cima-btn bg-cima-secondary text-white hover:bg-gray-700 focus:ring-cima-secondary;
+        @apply cima-btn bg-transparent text-cima-accent dark:text-white border-2 border-cima-accent 
+               dark:border-white hover:bg-cima-accent hover:text-white dark:hover:bg-white dark:hover:text-cima-accent 
+               focus:ring-cima-accent;
     }
 
     .cima-btn-success {
-        @apply cima-btn bg-cima-success text-white hover:bg-green-700 focus:ring-cima-success;
+        @apply cima-btn bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 border border-green-600;
     }
 
     .cima-btn-danger {
-        @apply cima-btn bg-cima-danger text-white hover:bg-red-700 focus:ring-cima-danger;
+        @apply cima-btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 border border-red-600;
     }
 
+    /* Inputs */
     .cima-input {
-        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cima-primary focus:border-transparent transition-all;
+        @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 
+               bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+               focus:ring-2 focus:ring-cima-accent focus:border-transparent 
+               transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500;
     }
 
+    /* Typography */
+    .cima-heading {
+        @apply font-bold tracking-tight text-gray-900 dark:text-white;
+    }
+
+    .cima-subheading {
+        @apply text-gray-600 dark:text-gray-400 tracking-wide;
+    }
+
+    /* Stat Box */
     .cima-stat-box {
-        @apply bg-white p-6 rounded-lg border-l-4 border-cima-primary shadow-sm;
+        @apply bg-white dark:bg-gray-800 p-8 border-l-4 border-cima-accent 
+               shadow-sm hover:shadow-md transition-shadow duration-300;
     }
 
+    /* Price */
     .cima-price {
-        @apply text-3xl font-bold text-cima-primary;
+        @apply text-4xl font-bold text-cima-accent dark:text-white tracking-tight;
     }
 
+    /* Navigation */
+    .nav-link {
+        @apply text-gray-700 dark:text-gray-300 hover:text-cima-accent dark:hover:text-white 
+               transition-colors duration-200 font-medium uppercase tracking-wider text-sm;
+    }
+
+    .nav-link-active {
+        @apply text-cima-accent dark:text-white border-b-2 border-cima-accent dark:border-white;
+    }
+
+    /* Footer */
+    .footer-link {
+        @apply text-gray-400 hover:text-white transition-colors duration-200 text-sm uppercase tracking-wide;
+    }
+
+    /* Animations */
     .fade-in {
-        animation: fadeIn 0.3s ease-in;
+        animation: fadeIn 0.5s ease-in;
     }
 
     @keyframes fadeIn {
         from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(20px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
 
+    /* Loading Spinner */
     .cima-spinner {
-        @apply border-4 border-blue-100 border-t-cima-primary rounded-full w-12 h-12 animate-spin;
+        @apply border-4 border-gray-200 dark:border-gray-700 border-t-cima-accent 
+               rounded-full w-12 h-12 animate-spin;
+    }
+
+    /* Swiss Design Grid System */
+    .swiss-grid {
+        @apply grid grid-cols-12 gap-6;
+    }
+
+    .swiss-section {
+        @apply py-16 md:py-24;
+    }
+
+    /* Typography Scale - Swiss Style */
+    .text-display {
+        @apply text-5xl md:text-6xl lg:text-7xl;
+    }
+
+    .text-headline {
+        @apply text-3xl md:text-4xl lg:text-5xl;
+    }
+
+    .text-title {
+        @apply text-2xl md:text-3xl;
+    }
+
+    .text-body {
+        @apply text-base md:text-lg leading-relaxed;
     }
 }
