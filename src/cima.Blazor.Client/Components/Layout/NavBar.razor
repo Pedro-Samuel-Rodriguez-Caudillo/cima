@@ -1,0 +1,123 @@
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<nav class="bg-white dark:bg-cima-accent border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-20">
+            <!-- Logo -->
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 bg-cima-accent dark:bg-white flex items-center justify-center">
+                    <span class="text-white dark:text-cima-accent font-bold text-xl">C</span>
+                </div>
+                <span class="text-2xl font-bold text-cima-accent dark:text-white tracking-tight uppercase">CIMA</span>
+            </a>
+            
+            <!-- Desktop Menu -->
+            <div class="hidden md:flex items-center gap-8">
+                <a href="/" class="@GetNavLinkClass("/")">Inicio</a>
+                <a href="/properties" class="@GetNavLinkClass("/properties")">Propiedades</a>
+                <a href="/about" class="@GetNavLinkClass("/about")">Acerca de</a>
+                
+                <div class="flex items-center gap-4 ml-4 pl-4 border-l border-gray-300 dark:border-gray-700">
+                    <DarkModeToggle />
+                    @if (isAuthenticated)
+                    {
+                        <button @onclick="Logout" class="cima-btn-secondary text-xs px-4 py-2">
+                            Salir
+                        </button>
+                    }
+                    else
+                    {
+                        <button @onclick="Login" class="cima-btn-primary text-xs px-4 py-2">
+                            Ingresar
+                        </button>
+                    }
+                </div>
+            </div>
+            
+            <!-- Mobile Menu Button -->
+            <div class="flex items-center gap-4 md:hidden">
+                <DarkModeToggle />
+                <button @onclick="ToggleMobileMenu" 
+                        class="p-2 text-gray-600 dark:text-gray-300"
+                        aria-label="Menu">
+                    @if (!showMobileMenu)
+                    {
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    }
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        @if (showMobileMenu)
+        {
+            <div class="md:hidden py-6 border-t border-gray-200 dark:border-gray-700 fade-in">
+                <div class="flex flex-col gap-4">
+                    <a href="/" class="@GetNavLinkClass("/") py-2">Inicio</a>
+                    <a href="/properties" class="@GetNavLinkClass("/properties") py-2">Propiedades</a>
+                    <a href="/about" class="@GetNavLinkClass("/about") py-2">Acerca de</a>
+                    
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        @if (isAuthenticated)
+                        {
+                            <button @onclick="Logout" class="cima-btn-secondary w-full">
+                                Salir
+                            </button>
+                        }
+                        else
+                        {
+                            <button @onclick="Login" class="cima-btn-primary w-full">
+                                Ingresar
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</nav>
+
+@code {
+    private bool showMobileMenu = false;
+    private bool isAuthenticated = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+    
+    private void ToggleMobileMenu()
+    {
+        showMobileMenu = !showMobileMenu;
+    }
+    
+    private string GetNavLinkClass(string path)
+    {
+        var currentPath = new Uri(Navigation.Uri).AbsolutePath;
+        var isActive = currentPath == path || (path != "/" && currentPath.StartsWith(path));
+        
+        return isActive 
+            ? "nav-link nav-link-active" 
+            : "nav-link";
+    }
+    
+    private void Login()
+    {
+        Navigation.NavigateTo("/authentication/login");
+    }
+    
+    private void Logout()
+    {
+        Navigation.NavigateTo("/authentication/logout");
+    }
+}
