@@ -13,7 +13,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CIMA - Plataforma Inmobiliaria</title>
+    <title>cima</title>
     <base href="/" />
 
     <AbpStyles BundleName="@BlazorBasicThemeBundles.Styles.Global" WebAssemblyStyleFiles="GlobalStyles" @rendermode="InteractiveAuto" />
@@ -23,32 +23,14 @@
     <link href="css/app.min.css" rel="stylesheet"/>
     
     <HeadOutlet @rendermode="InteractiveAuto" />
-    
-    <script>
-        // Dark mode initialization
-        (function() {
-            const theme = localStorage.getItem('theme');
-            if (theme === 'dark') {
-                document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
-</head>
-<body class="@rtl bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
-    
-    <AbpScripts BundleName="@BlazorBasicThemeBundles.Scripts.Global" WebAssemblyScriptFiles="GlobalScripts" @rendermode="InteractiveAuto" />
-    
-    <div class="min-h-screen flex flex-col">
-        <NavBar />
-        
-        <main class="flex-1">
-            <Routes @rendermode="InteractiveAuto" />
-        </main>
-        
-        <Footer />
-    </div>
 
-    <div id="blazor-error-ui" class="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded shadow-lg max-w-md">
+    
+</head>
+<body class="abp-application-layout @rtl">
+
+    <Routes @rendermode="InteractiveAuto" />
+
+    <div id="blazor-error-ui">
         @if (Env.IsDevelopment())
         {
             <text>An unhandled exception has occurred. See browser dev tools for details.</text>
@@ -57,9 +39,11 @@
         {
             <text>An error has occurred. This application may no longer respond until reloaded.</text>
         }
-        <a href="" class="reload ml-4 underline">Reload</a>
-        <a class="dismiss ml-2 cursor-pointer">✕</a>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
     </div>
+    
+    <AbpScripts BundleName="@BlazorBasicThemeBundles.Scripts.Global" WebAssemblyScriptFiles="GlobalScripts" @rendermode="InteractiveAuto" />
 
     <script src="_framework/blazor.web.js"></script>
 

@@ -2,9 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos mínimos personalizados CIMA */
+/* Estilos personalizados CIMA */
 @layer components {
-    /* Solo clases esenciales que no existen en Tailwind */
+    .cima-card {
+        @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
+    }
+
+    .cima-card-header {
+        @apply bg-gradient-to-r from-cima-primary to-blue-700 text-white p-6;
+    }
+
+    .cima-card-body {
+        @apply p-6;
+    }
+
+    .cima-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    }
+
+    .cima-badge-draft {
+        @apply bg-gray-100 text-gray-800;
+    }
+
+    .cima-badge-published {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .cima-badge-archived {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .cima-btn {
+        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    }
+
+    .cima-btn-primary {
+        @apply cima-btn bg-cima-primary text-white hover:bg-blue-700 focus:ring-cima-primary;
+    }
+
+    .cima-btn-secondary {
+        @apply cima-btn bg-cima-secondary text-white hover:bg-gray-700 focus:ring-cima-secondary;
+    }
+
+    .cima-btn-success {
+        @apply cima-btn bg-cima-success text-white hover:bg-green-700 focus:ring-cima-success;
+    }
+
+    .cima-btn-danger {
+        @apply cima-btn bg-cima-danger text-white hover:bg-red-700 focus:ring-cima-danger;
+    }
+
+    .cima-input {
+        @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cima-primary focus:border-transparent transition-all;
+    }
+
+    .cima-stat-box {
+        @apply bg-white p-6 rounded-lg border-l-4 border-cima-primary shadow-sm;
+    }
+
+    .cima-price {
+        @apply text-3xl font-bold text-cima-primary;
+    }
+
     .fade-in {
         animation: fadeIn 0.3s ease-in;
     }
@@ -14,9 +73,14 @@
             opacity: 0;
             transform: translateY(10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    .cima-spinner {
+        @apply border-4 border-blue-100 border-t-cima-primary rounded-full w-12 h-12 animate-spin;
     }
 }
