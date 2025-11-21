@@ -14,6 +14,7 @@ namespace cima.Domain.Shared.Dtos
         public string Message { get; set; }
         public ContactRequestStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime? RepliedAt { get; set; } // AGREGADO
         public string ReplyNotes { get; set; }
     }
 

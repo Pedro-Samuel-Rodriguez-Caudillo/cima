@@ -114,6 +114,7 @@ public  class ContactRequestAppService : cimaAppService, IContactRequestAppServi
 
         contactRequest.Status = ContactRequestStatus.Replied;
         contactRequest.ReplyNotes = input.ReplyNotes;
+        contactRequest.RepliedAt = Clock.Now;
 
         await _contactRequestRepository.UpdateAsync(contactRequest);
         return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);

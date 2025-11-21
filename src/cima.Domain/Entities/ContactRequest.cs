@@ -16,12 +16,13 @@ namespace cima.Domain.Entities
         public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
         public string Name { get; set; }
-        public string Email { get; set; } // Para responder por correo (medio principal)
-        public string Phone { get; set; } // Se tendra por si se quiere llamar directamente
+        public string Email { get; set; }
+        public string Phone { get; set; }
         public string Message { get; set; }
         public ContactRequestStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public DateTime? RepliedAt { get; set; }
         public string ReplyNotes { get; set; }
 
         public virtual Listing Listing { get; set; }

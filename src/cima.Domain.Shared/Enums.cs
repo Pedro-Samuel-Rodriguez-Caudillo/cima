@@ -13,4 +13,20 @@ namespace cima.Domain.Shared
         Replied = 1,
         Closed = 2
     }
+
+    public enum PropertyType
+    {
+        House = 0,
+        Apartment = 1,
+        Commercial = 2,
+        Land = 3,
+        Office = 4
+    }
+
+    public enum TransactionType
+    {
+        Sale = 0,
+        Rent = 1,
+        Lease = 2
+    }
 }

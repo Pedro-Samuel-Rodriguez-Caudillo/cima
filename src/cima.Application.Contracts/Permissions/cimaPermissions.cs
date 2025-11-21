@@ -11,7 +11,7 @@ public static class cimaPermissions
 {
     public const string GroupName = "cima";
 
-   // Permisos para gestionar las casas
+    // Permisos para gestionar las casas
 
     public static class Listings
     {
@@ -44,6 +44,11 @@ public static class cimaPermissions
         public const string Reply = Default + ".Reply";        // Marcar como respondida (solo si en un futuro se quiere implementar chat interno)
         public const string Close = Default + ".Close";        // Cerrar solicitud
     
+    }
+    public static class Dashboard
+    {
+        public const string Default = GroupName + ".Dashboard";
+        public const string ViewStats = Default + ".ViewStats";
     }
 
     //Add your own permission names. Example:

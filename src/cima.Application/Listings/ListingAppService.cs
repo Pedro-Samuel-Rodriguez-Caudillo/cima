@@ -7,6 +7,7 @@ using cima.Domain.Shared;
 using cima.Domain.Shared.Dtos;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
@@ -77,26 +78,18 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.ArchitectId == input.ArchitectId.Value);
         }
 
+        if (input.PropertyType.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
+        }
+
+        if (input.TransactionType.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.TransactionType == input.TransactionType.Value);
+        }
+
         // Aplicar ordenamiento
-        if (!string.IsNullOrWhiteSpace(input.Sorting))
-        {
-            // ABP maneja el sorting automaticamente si usamos ApplySorting
-            // Pero podemos personalizarlo
-            queryable = input.Sorting.ToLower() switch
-            {
-                "price" => queryable.OrderBy(p => p.Price),
-                "price desc" => queryable.OrderByDescending(p => p.Price),
-                "area" => queryable.OrderBy(p => p.Area),
-                "area desc" => queryable.OrderByDescending(p => p.Area),
-                "createdat" => queryable.OrderBy(p => p.CreatedAt),
-                "createdat desc" => queryable.OrderByDescending(p => p.CreatedAt),
-                _ => queryable.OrderByDescending(p => p.CreatedAt)
-            };
-        }
-        else
-        {
-            queryable = queryable.OrderByDescending(p => p.CreatedAt);
-        }
+        queryable = ApplySorting(queryable, input.Sorting);
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
 
@@ -110,6 +103,34 @@ public class ListingAppService : cimaAppService, IListingAppService
             totalCount,
             ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
         );
+    }
+
+    /// <summary>
+    /// Aplica ordenamiento a la consulta
+    /// </summary>
+    private IQueryable<Listing> ApplySorting(IQueryable<Listing> queryable, string? sorting)
+    {
+        if (string.IsNullOrWhiteSpace(sorting))
+        {
+            return queryable.OrderByDescending(p => p.CreatedAt);
+        }
+
+        return sorting.ToLower() switch
+        {
+            "price" => queryable.OrderBy(p => p.Price),
+            "price desc" => queryable.OrderByDescending(p => p.Price),
+            "priceasc" => queryable.OrderBy(p => p.Price),
+            "pricedesc" => queryable.OrderByDescending(p => p.Price),
+            "area" => queryable.OrderBy(p => p.Area),
+            "area desc" => queryable.OrderByDescending(p => p.Area),
+            "areaasc" => queryable.OrderBy(p => p.Area),
+            "areadesc" => queryable.OrderByDescending(p => p.Area),
+            "createdat" => queryable.OrderBy(p => p.CreatedAt),
+            "createdat desc" => queryable.OrderByDescending(p => p.CreatedAt),
+            "title" => queryable.OrderBy(p => p.Title),
+            "title desc" => queryable.OrderByDescending(p => p.Title),
+            _ => queryable.OrderByDescending(p => p.CreatedAt)
+        };
     }
 
     /// <summary>
@@ -209,11 +230,17 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");
         }
 
+        // Validar que está en estado Draft
+        if (listing.Status == ListingStatus.Published)
+        {
+            throw new BusinessException("Listing:AlreadyPublished")
+                .WithData("ListingId", id);
+        }
+
         // Warning si no tiene imagenes (pero permite publicar)
         if (listing.Images == null || !listing.Images.Any())
         {
-            // Usando el logger de ABP
-            await Task.CompletedTask; // Para evitar warning
+            Logger.LogWarning($"Publicando propiedad {id} sin imágenes");
         }
 
         listing.Status = ListingStatus.Published;
@@ -232,12 +259,146 @@ public class ListingAppService : cimaAppService, IListingAppService
     {
         var listing = await _listingRepository.GetAsync(id);
 
+        // Validacion de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes archivar tus propias propiedades");
+        }
+
         listing.Status = ListingStatus.Archived;
         listing.LastModifiedAt = Clock.Now;
         listing.LastModifiedBy = CurrentUser.Id;
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
+    }
+
+    /// <summary>
+    /// Reactiva una propiedad archivada a estado Published
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Publish)]
+    public async Task<ListingDto> UnarchiveAsync(Guid id)
+    {
+        var listing = await _listingRepository.GetAsync(id);
+
+        // Validacion de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes desarchivar tus propias propiedades");
+        }
+
+        if (listing.Status != ListingStatus.Archived)
+        {
+            throw new BusinessException("Listing:NotArchived")
+                .WithData("ListingId", id)
+                .WithData("CurrentStatus", listing.Status);
+        }
+
+        listing.Status = ListingStatus.Published;
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+        return ObjectMapper.Map<Listing, ListingDto>(listing);
+    }
+
+    /// <summary>
+    /// Cambia una propiedad publicada de vuelta a Draft
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task<ListingDto> UnpublishAsync(Guid id)
+    {
+        var listing = await _listingRepository.GetAsync(id);
+
+        // Validacion de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes despublicar tus propias propiedades");
+        }
+
+        if (listing.Status != ListingStatus.Published)
+        {
+            throw new BusinessException("Listing:NotPublished")
+                .WithData("ListingId", id)
+                .WithData("CurrentStatus", listing.Status);
+        }
+
+        listing.Status = ListingStatus.Draft;
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+        return ObjectMapper.Map<Listing, ListingDto>(listing);
+    }
+
+    /// <summary>
+    /// Obtiene solo propiedades publicadas (público - sin autenticación)
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
+    {
+        var queryable = await _listingRepository.GetQueryableAsync();
+
+        // Solo propiedades publicadas
+        queryable = queryable.Where(p => p.Status == ListingStatus.Published);
+
+        // Aplicar filtros
+        if (!string.IsNullOrWhiteSpace(input.SearchTerm))
+        {
+            queryable = queryable.Where(p =>
+                p.Title.Contains(input.SearchTerm) ||
+                p.Location.Contains(input.SearchTerm) ||
+                p.Description.Contains(input.SearchTerm));
+        }
+
+        if (input.MinPrice.HasValue)
+        {
+            queryable = queryable.Where(p => p.Price >= input.MinPrice.Value);
+        }
+
+        if (input.MaxPrice.HasValue)
+        {
+            queryable = queryable.Where(p => p.Price <= input.MaxPrice.Value);
+        }
+
+        if (input.MinBedrooms.HasValue)
+        {
+            queryable = queryable.Where(p => p.Bedrooms >= input.MinBedrooms.Value);
+        }
+
+        if (input.MinBathrooms.HasValue)
+        {
+            queryable = queryable.Where(p => p.Bathrooms >= input.MinBathrooms.Value);
+        }
+
+        if (input.PropertyType.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
+        }
+
+        if (input.TransactionType.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.TransactionType == input.TransactionType.Value);
+        }
+
+        // Aplicar ordenamiento
+        queryable = ApplySorting(queryable, input.Sorting);
+
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+        var listings = await AsyncExecuter.ToListAsync(
+            queryable
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+        );
+
+        return new PagedResultDto<ListingDto>(
+            totalCount,
+            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+        );
     }
 
     /// <summary>

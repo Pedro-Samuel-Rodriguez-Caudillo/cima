@@ -32,7 +32,7 @@ public interface IListingAppService : IApplicationService
     Task<ListingDto> UpdateAsync(Guid id, CreateUpdateListingDto input);
     
     /// <summary>
-    /// Elimina propiedad
+    /// Elimina propiedad (soft delete)
     /// </summary>
     Task DeleteAsync(Guid id);
     
@@ -48,12 +48,27 @@ public interface IListingAppService : IApplicationService
     Task<ListingDto> ArchiveAsync(Guid id);
     
     /// <summary>
+    /// Reactiva una propiedad archivada a estado Published
+    /// </summary>
+    Task<ListingDto> UnarchiveAsync(Guid id);
+    
+    /// <summary>
+    /// Cambia una propiedad publicada de vuelta a Draft
+    /// </summary>
+    Task<ListingDto> UnpublishAsync(Guid id);
+    
+    /// <summary>
     /// Obtiene propiedades de un arquitecto especifico
     /// </summary>
     Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
         Guid architectId, 
         int skipCount, 
         int maxResultCount);
+    
+    /// <summary>
+    /// Obtiene solo propiedades publicadas (público)
+    /// </summary>
+    Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input);
 }
 
 /// <summary>
@@ -68,4 +83,6 @@ public class GetListingsInput : PagedAndSortedResultRequestDto
     public int? MinBedrooms { get; set; }
     public int? MinBathrooms { get; set; }
     public Guid? ArchitectId { get; set; }
+    public int? PropertyType { get; set; }
+    public int? TransactionType { get; set; }
 }

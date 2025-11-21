@@ -1,0 +1,51 @@
+feat(listings): implement advanced state management and public query methods
+
+BREAKING CHANGES:
+- Updated IListingAppService interface with new methods
+- Added PropertyType and TransactionType filters to GetListingsInput
+
+NEW FEATURES:
+1. State Management Methods
+   - UnarchiveAsync: Restore archived listings to Published
+   - UnpublishAsync: Revert published listings to Draft
+   - Enhanced PublishAsync with better validations
+   - Enhanced ArchiveAsync with permission checks
+
+2. Public Query Methods
+   - GetPublishedAsync: Anonymous access to published listings
+   - Enhanced GetByArchitectAsync with pagination
+
+3. Advanced Filtering
+   - PropertyType filter (House, Apartment, Commercial, Land, Office)
+   - TransactionType filter (Sale, Rent, Lease)
+   - ApplySorting helper method for reusable sorting logic
+
+4. Business Validations
+   - Owner/Admin-only modifications
+   - State transition validations
+   - Image warning on publish (non-blocking)
+   - Permission verification on every operation
+
+IMPROVEMENTS:
+- Added Microsoft.Extensions.Logging using directive
+- Centralized sorting logic in ApplySorting method
+- Better error messages with BusinessException
+- Logging warnings for edge cases
+
+FILES MODIFIED:
+- src/cima.Application.Contracts/Listings/IListingAppService.cs
+- src/cima.Application/Listings/ListingAppService.cs
+
+DOCUMENTATION:
+- docs/DIA_4_METODOS_LISTING_COMPLETADOS.md (comprehensive guide)
+
+TESTING:
+- Compilation: ? Successful (6.3s)
+- Unit Tests: Pending (Day 5)
+
+NEXT STEPS:
+- Configure CORS policies
+- Improve Swagger documentation
+- Implement FluentValidation
+- Add rate limiting
+- Write unit tests

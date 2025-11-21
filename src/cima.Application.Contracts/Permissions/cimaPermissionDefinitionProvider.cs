@@ -61,6 +61,16 @@ public class cimaPermissionDefinitionProvider : PermissionDefinitionProvider
         contactRequestsPermission.AddChild(
             cimaPermissions.ContactRequests.Close, L("Permission:ContactRequests.Close"));
 
+        // Dashboard
+        var dashboardPermission = cimaGroup.AddPermission(
+            cimaPermissions.Dashboard.Default,
+            L("Permission:Dashboard")
+        );
+        dashboardPermission.AddChild(
+            cimaPermissions.Dashboard.ViewStats,
+            L("Permission:Dashboard.ViewStats")
+        );
+
         //Define your own permissions here. Example:
         //myGroup.AddPermission(cimaPermissions.MyPermission1, L("Permission:MyPermission1"));
     }
