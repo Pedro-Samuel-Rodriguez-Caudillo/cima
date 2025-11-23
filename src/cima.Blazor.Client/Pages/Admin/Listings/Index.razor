@@ -1,0 +1,310 @@
+@page "/admin/listings"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.Application.Dtos
+@using Volo.Abp.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.DataGrid
+@using cima.Listings
+@using cima.Permissions
+@using cima.Domain.Shared
+@using cima.Domain.Shared.Dtos
+@inherits AbpComponentBase
+
+@attribute [Authorize(cimaPermissions.Listings.Default)]
+@inject IListingAppService ListingAppService
+@inject NavigationManager Navigation
+@inject IAuthorizationService AuthorizationService
+
+<Card>
+    <CardHeader>
+        <CardTitle>
+            <h3 class="text-2xl font-bold">Gestión de Propiedades</h3>
+        </CardTitle>
+        <CardActions>
+            @if (canCreate)
+            {
+                <Button Color="Color.Primary" Clicked="NavigateToCreate">
+                    <Icon Name="IconName.Add" /> Nueva Propiedad
+                </Button>
+            }
+        </CardActions>
+    </CardHeader>
+    <CardBody>
+        @* Filtros *@
+        <Row>
+            <Column ColumnSize="ColumnSize.Is3">
+                <Field>
+                    <FieldLabel>Buscar por título</FieldLabel>
+                    <TextEdit Text="@filter.SearchTerm"
+                              Placeholder="Título..."
+                              Debounce="true"
+                              DebounceInterval="500"
+                              TextChanged="OnFilterChanged" />
+                </Field>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <Field>
+                    <FieldLabel>Estado</FieldLabel>
+                    <Select TValue="int?" SelectedValue="@filterStatus" SelectedValueChanged="OnStatusFilterChanged">
+                        <SelectItem TValue="int?" Value="null">Todos</SelectItem>
+                        <SelectItem TValue="int?" Value="@((int)ListingStatus.Draft)">Borrador</SelectItem>
+                        <SelectItem TValue="int?" Value="@((int)ListingStatus.Published)">Publicada</SelectItem>
+                        <SelectItem TValue="int?" Value="@((int)ListingStatus.Archived)">Archivada</SelectItem>
+                    </Select>
+                </Field>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <Field>
+                    <FieldLabel>Precio mínimo</FieldLabel>
+                    <NumericEdit TValue="decimal?" Value="@filter.MinPrice"
+                                 Placeholder="$ Min"
+                                 Debounce="true"
+                                 DebounceInterval="300"
+                                 ValueChanged="OnPriceMinChanged" />
+                </Field>
+            </Column>
+            <Column ColumnSize="ColumnSize.Is3">
+                <Field>
+                    <FieldLabel>Precio máximo</FieldLabel>
+                    <NumericEdit TValue="decimal?" Value="@filter.MaxPrice"
+                                 Placeholder="$ Max"
+                                 Debounce="true"
+                                 DebounceInterval="300"
+                                 ValueChanged="OnPriceMaxChanged" />
+                </Field>
+            </Column>
+        </Row>
+
+        @* Tabla de Listings *@
+        <DataGrid TItem="ListingDto"
+                  Data="@listings"
+                  ReadData="@OnDataGridReadAsync"
+                  TotalItems="@((int)totalCount)"
+                  ShowPager="true"
+                  PageSize="@pageSize"
+                  CurrentPage="@currentPage"
+                  Responsive
+                  Striped
+                  Hoverable>
+            <DataGridColumns>
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Title)" Caption="Título" Sortable />
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Location)" Caption="Ubicación" />
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Price)" Caption="Precio" Sortable>
+                    <DisplayTemplate>
+                        @context.Price.ToString("C0", System.Globalization.CultureInfo.CreateSpecificCulture("es-ES"))
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Area)" Caption="Área (m²)" />
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Bedrooms)" Caption="Dorms" />
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Bathrooms)" Caption="Baños" />
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.Status)" Caption="Estado">
+                    <DisplayTemplate>
+                        <Badge Color="@GetStatusColor(context.Status)">
+                            @GetStatusText(context.Status)
+                        </Badge>
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridColumn TItem="ListingDto" Field="@nameof(ListingDto.CreatedAt)" Caption="Fecha" Sortable>
+                    <DisplayTemplate>
+                        @context.CreatedAt.ToString("dd/MM/yyyy")
+                    </DisplayTemplate>
+                </DataGridColumn>
+                <DataGridCommandColumn TItem="ListingDto" Caption="Acciones">
+                    <DisplayTemplate>
+                        @if (canEdit)
+                        {
+                            <Button Size="Size.Small" Color="Color.Primary" Clicked="() => NavigateToEdit(context.Id)">
+                                <Icon Name="IconName.Edit" />
+                            </Button>
+                        }
+                        @if (canDelete)
+                        {
+                            <Button Size="Size.Small" Color="Color.Danger" Clicked="() => ShowDeleteConfirmation(context.Id)">
+                                <Icon Name="IconName.Delete" />
+                            </Button>
+                        }
+                    </DisplayTemplate>
+                </DataGridCommandColumn>
+            </DataGridColumns>
+        </DataGrid>
+    </CardBody>
+</Card>
+
+@* Modal de confirmación de eliminación *@
+<Modal @ref="deleteModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Confirmar Eliminación</ModalTitle>
+            <CloseButton Clicked="HideDeleteConfirmation" />
+        </ModalHeader>
+        <ModalBody>
+            <p>¿Está seguro de que desea eliminar esta propiedad?</p>
+            <p class="text-danger">Esta acción no se puede deshacer.</p>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="HideDeleteConfirmation">Cancelar</Button>
+            <Button Color="Color.Danger" Clicked="DeleteListingConfirmed">Eliminar</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    private List<ListingDto> listings = new();
+    private long totalCount = 0;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private bool isLoading = false;
+
+    private GetListingsInput filter = new();
+    private int? filterStatus;
+
+    private Modal deleteModal;
+    private Guid listingToDelete;
+
+    // Permisos cacheados
+    private bool canCreate = false;
+    private bool canEdit = false;
+    private bool canDelete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar permisos una sola vez
+        canCreate = await AuthorizationService.IsGrantedAsync(cimaPermissions.Listings.Create);
+        canEdit = await AuthorizationService.IsGrantedAsync(cimaPermissions.Listings.Edit);
+        canDelete = await AuthorizationService.IsGrantedAsync(cimaPermissions.Listings.Delete);
+
+        // Resetear filtros al inicializar para evitar estado residual
+        filter = new GetListingsInput { MaxResultCount = pageSize };
+        await LoadListings();
+    }
+
+    private async Task LoadListings()
+    {
+        isLoading = true;
+        try
+        {
+            // Validar rangos de precios
+            if (filter.MinPrice.HasValue && filter.MaxPrice.HasValue && filter.MinPrice > filter.MaxPrice)
+            {
+                await Message.Warn("El precio mínimo no puede ser mayor al máximo");
+                filter.MaxPrice = filter.MinPrice;
+            }
+
+            filter.SkipCount = (currentPage - 1) * pageSize;
+            filter.MaxResultCount = pageSize;
+
+            var result = await ListingAppService.GetListAsync(filter);
+            listings = result.Items.ToList();
+            totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al cargar propiedades: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnDataGridReadAsync(DataGridReadDataEventArgs<ListingDto> e)
+    {
+        currentPage = e.Page;
+        pageSize = e.PageSize;
+
+        // Manejar múltiples columnas de ordenamiento
+        var sortColumns = e.Columns.Where(c => c.SortDirection != SortDirection.Default).ToList();
+        filter.Sorting = sortColumns.Any()
+            ? string.Join(",", sortColumns.Select(c => $"{c.SortField} {(c.SortDirection == SortDirection.Descending ? "DESC" : "")}").Where(s => !string.IsNullOrEmpty(s)))
+            : null;
+
+        await LoadListings();
+    }
+
+    private async Task OnFilterChanged(string searchTerm)
+    {
+        filter.SearchTerm = searchTerm;
+        currentPage = 1;
+        await LoadListings();
+    }
+
+    private async Task OnPriceMinChanged(decimal? minPrice)
+    {
+        filter.MinPrice = minPrice;
+        currentPage = 1;
+        await LoadListings();
+    }
+
+    private async Task OnPriceMaxChanged(decimal? maxPrice)
+    {
+        filter.MaxPrice = maxPrice;
+        currentPage = 1;
+        await LoadListings();
+    }
+
+    private async Task OnStatusFilterChanged(int? status)
+    {
+        filterStatus = status;
+        filter.Status = status;
+        currentPage = 1;
+        await LoadListings();
+    }
+
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo("/admin/listings/create");
+    }
+
+    private void NavigateToEdit(Guid id)
+    {
+        Navigation.NavigateTo($"/admin/listings/edit/{id}");
+    }
+
+    private async Task ShowDeleteConfirmation(Guid id)
+    {
+        listingToDelete = id;
+        await deleteModal.Show();
+    }
+
+    private async Task HideDeleteConfirmation()
+    {
+        await deleteModal.Hide();
+    }
+
+    private async Task DeleteListingConfirmed()
+    {
+        try
+        {
+            await ListingAppService.DeleteAsync(listingToDelete);
+            await Message.Success("Propiedad eliminada exitosamente");
+            await deleteModal.Hide();
+            await LoadListings();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al eliminar: {ex.Message}");
+        }
+    }
+
+    private Color GetStatusColor(ListingStatus status) => status switch
+    {
+        ListingStatus.Draft => Color.Warning,
+        ListingStatus.Published => Color.Success,
+        ListingStatus.Archived => Color.Secondary,
+        _ => Color.Light
+    };
+
+    private string GetStatusText(ListingStatus status) => status switch
+    {
+        ListingStatus.Draft => "Borrador",
+        ListingStatus.Published => "Publicada",
+        ListingStatus.Archived => "Archivada",
+        _ => "Desconocido"
+    };
+
+    public void Dispose()
+    {
+        deleteModal?.Dispose();
+    }
+}

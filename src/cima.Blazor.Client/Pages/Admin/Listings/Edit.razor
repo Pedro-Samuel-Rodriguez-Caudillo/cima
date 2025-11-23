@@ -1,0 +1,517 @@
+@page "/admin/listings/edit/{Id:guid}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.DataGrid
+@using cima.Listings
+@using cima.Architects
+@using cima.Permissions
+@using cima.Domain.Shared
+@using cima.Domain.Shared.Dtos
+@using Volo.Abp.Application.Dtos
+@inherits AbpComponentBase
+
+@attribute [Authorize(cimaPermissions.Listings.Edit)]
+@inject IListingAppService ListingAppService
+@inject IArchitectAppService ArchitectAppService
+@inject NavigationManager Navigation
+
+@if (isLoading)
+{
+    <div class="text-center p-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3">Cargando propiedad...</p>
+    </div>
+}
+else if (listing == null)
+{
+    <Alert Color="Color.Danger" Visible>
+        <AlertMessage>Error</AlertMessage>
+        <AlertDescription>
+            No se pudo cargar la propiedad. 
+            <Button Color="Color.Link" Clicked="GoBack">Volver al listado</Button>
+        </AlertDescription>
+    </Alert>
+}
+else
+{
+    <Card>
+        <CardHeader>
+            <CardTitle>
+                <h3 class="text-2xl font-bold">Editar Propiedad</h3>
+                <Badge Color="@GetStatusColor(listing.Status)" class="ms-2">
+                    @GetStatusText(listing.Status)
+                </Badge>
+            </CardTitle>
+            <CardActions>
+                <Button Color="Color.Secondary" Clicked="GoBack" Disabled="@isSaving">
+                    <Icon Name="IconName.Times" /> Cancelar
+                </Button>
+                <Button Color="Color.Primary" Clicked="SaveListing" Loading="@isSaving" Disabled="@isSaving">
+                    <Icon Name="IconName.Save" /> Guardar Cambios
+                </Button>
+            </CardActions>
+        </CardHeader>
+        <CardBody>
+            <Validations @ref="validations" Mode="ValidationMode.Manual" ValidateOnLoad="false">
+                <Row>
+                    <Column ColumnSize="ColumnSize.Is8">
+                        @* Información Básica *@
+                        <Card Margin="Margin.Is3.FromBottom">
+                            <CardHeader>
+                                <CardTitle>Información Básica</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <Validation>
+                                    <Field>
+                                        <FieldLabel>Título *</FieldLabel>
+                                        <TextEdit @bind-Text="@model.Title" Placeholder="Ej: Casa moderna con jardín" MaxLength="200">
+                                            <Feedback>
+                                                <ValidationError>El título es obligatorio (máximo 200 caracteres)</ValidationError>
+                                            </Feedback>
+                                        </TextEdit>
+                                    </Field>
+                                </Validation>
+
+                                <Validation>
+                                    <Field>
+                                        <FieldLabel>Descripción *</FieldLabel>
+                                        <MemoEdit @bind-Text="@model.Description" Rows="5" Placeholder="Descripción detallada..." MaxLength="5000">
+                                            <Feedback>
+                                                <ValidationError>La descripción es obligatoria (máximo 5000 caracteres)</ValidationError>
+                                            </Feedback>
+                                        </MemoEdit>
+                                    </Field>
+                                </Validation>
+
+                                <Validation>
+                                    <Field>
+                                        <FieldLabel>Ubicación *</FieldLabel>
+                                        <TextEdit @bind-Text="@model.Location" Placeholder="Dirección completa" MaxLength="500">
+                                            <Feedback>
+                                                <ValidationError>La ubicación es obligatoria (máximo 500 caracteres)</ValidationError>
+                                            </Feedback>
+                                        </TextEdit>
+                                    </Field>
+                                </Validation>
+                            </CardBody>
+                        </Card>
+
+                        @* Características *@
+                        <Card Margin="Margin.Is3.FromBottom">
+                            <CardHeader>
+                                <CardTitle>Características</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <Row>
+                                    <Column ColumnSize="ColumnSize.Is6">
+                                        <Validation>
+                                            <Field>
+                                                <FieldLabel>Precio (USD) *</FieldLabel>
+                                                <NumericEdit TValue="decimal" @bind-Value="@model.Price" 
+                                                            Min="0" 
+                                                            Decimals="2">
+                                                    <Feedback>
+                                                        <ValidationError>El precio debe ser mayor a 0</ValidationError>
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </Field>
+                                        </Validation>
+                                    </Column>
+                                    <Column ColumnSize="ColumnSize.Is6">
+                                        <Validation>
+                                            <Field>
+                                                <FieldLabel>Área (m²) *</FieldLabel>
+                                                <NumericEdit TValue="decimal" @bind-Value="@model.Area" 
+                                                            Min="0" 
+                                                            Decimals="2">
+                                                    <Feedback>
+                                                        <ValidationError>El área debe ser mayor a 0</ValidationError>
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </Field>
+                                        </Validation>
+                                    </Column>
+                                </Row>
+
+                                <Row>
+                                    <Column ColumnSize="ColumnSize.Is6">
+                                        <Validation>
+                                            <Field>
+                                                <FieldLabel>Dormitorios *</FieldLabel>
+                                                <NumericEdit TValue="int" @bind-Value="@model.Bedrooms" Min="0">
+                                                    <Feedback>
+                                                        <ValidationError>Los dormitorios deben ser 0 o más</ValidationError>
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </Field>
+                                        </Validation>
+                                    </Column>
+                                    <Column ColumnSize="ColumnSize.Is6">
+                                        <Validation>
+                                            <Field>
+                                                <FieldLabel>Baños *</FieldLabel>
+                                                <NumericEdit TValue="int" @bind-Value="@model.Bathrooms" Min="0">
+                                                    <Feedback>
+                                                        <ValidationError>Los baños deben ser 0 o más</ValidationError>
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </Field>
+                                        </Validation>
+                                    </Column>
+                                </Row>
+                            </CardBody>
+                        </Card>
+
+                        @* Imágenes *@
+                        <Card Margin="Margin.Is3.FromBottom">
+                            <CardHeader>
+                                <CardTitle>
+                                    Galería de Imágenes
+                                    @if (listing.Images?.Any() == true)
+                                    {
+                                        <Badge Color="Color.Success" class="ms-2">@listing.Images.Count imagen(es)</Badge>
+                                    }
+                                </CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <ImageUploader ListingId="@Id" 
+                                              InitialImages="@listing.Images" 
+                                              ImagesChanged="OnImagesChanged" />
+                            </CardBody>
+                        </Card>
+                    </Column>
+
+                    <Column ColumnSize="ColumnSize.Is4">
+                        @* Arquitecto *@
+                        <Card Margin="Margin.Is3.FromBottom">
+                            <CardHeader>
+                                <CardTitle>Arquitecto Responsable</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <Validation>
+                                    <Field>
+                                        <FieldLabel>Arquitecto *</FieldLabel>
+                                        @if (isLoadingArchitects)
+                                        {
+                                            <div class="text-center">
+                                                <span class="spinner-border spinner-border-sm"></span>
+                                                <span class="ms-2">Cargando...</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <Select TValue="Guid" @bind-SelectedValue="@model.ArchitectId">
+                                                @foreach (var architect in architects)
+                                                {
+                                                    <SelectItem TValue="Guid" Value="@architect.Id">
+                                                        @architect.UserName
+                                                    </SelectItem>
+                                                }
+                                            </Select>
+                                        }
+                                    </Field>
+                                </Validation>
+                            </CardBody>
+                        </Card>
+
+                        @* Acciones de Estado *@
+                        <Card Margin="Margin.Is3.FromBottom">
+                            <CardHeader>
+                                <CardTitle>Gestión de Estado</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <div class="d-grid gap-2">
+                                    @if (listing.Status == ListingStatus.Draft)
+                                    {
+                                        <Button Color="Color.Success" 
+                                                Clicked="PublishListing" 
+                                                Block
+                                                Disabled="@(!listing.Images.Any() || isChangingStatus)">
+                                            <Icon Name="IconName.CheckCircle" /> Publicar
+                                        </Button>
+                                        @if (!listing.Images.Any())
+                                        {
+                                            <small class="text-warning">
+                                                <Icon Name="IconName.ExclamationTriangle" />
+                                                Agregue al menos 1 imagen para publicar
+                                            </small>
+                                        }
+                                    }
+                                    else if (listing.Status == ListingStatus.Published)
+                                    {
+                                        <Button Color="Color.Warning" 
+                                                Clicked="UnpublishListing" 
+                                                Block
+                                                Disabled="@isChangingStatus">
+                                            <Icon Name="IconName.Edit" /> Despublicar
+                                        </Button>
+                                        <Button Color="Color.Secondary" 
+                                                Clicked="ArchiveListing" 
+                                                Block
+                                                Disabled="@isChangingStatus">
+                                            <Icon Name="IconName.Archive" /> Archivar
+                                        </Button>
+                                    }
+                                    else if (listing.Status == ListingStatus.Archived)
+                                    {
+                                        <Button Color="Color.Success" 
+                                                Clicked="UnarchiveListing" 
+                                                Block
+                                                Disabled="@isChangingStatus">
+                                            <Icon Name="IconName.Redo" /> Desarchivar
+                                        </Button>
+                                    }
+                                </div>
+                            </CardBody>
+                        </Card>
+
+                        @* Metadatos *@
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Información del Registro</CardTitle>
+                            </CardHeader>
+                            <CardBody>
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-5">ID:</dt>
+                                    <dd class="col-sm-7"><small class="text-muted">@listing.Id.ToString("N")[..8]...</small></dd>
+
+                                    <dt class="col-sm-5">Creada:</dt>
+                                    <dd class="col-sm-7"><small>@listing.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small></dd>
+
+                                    <dt class="col-sm-5">Estado:</dt>
+                                    <dd class="col-sm-7">
+                                        <Badge Color="@GetStatusColor(listing.Status)">
+                                            @GetStatusText(listing.Status)
+                                        </Badge>
+                                    </dd>
+                                </dl>
+                            </CardBody>
+                        </Card>
+                    </Column>
+                </Row>
+            </Validations>
+        </CardBody>
+    </Card>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private ListingDto listing;
+    private CreateUpdateListingDto model = new();
+    private Validations validations;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isChangingStatus = false;
+    private bool isLoadingArchitects = false;
+    private List<ArchitectDto> architects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadListing();
+        await LoadArchitects();
+    }
+
+    private async Task LoadListing()
+    {
+        isLoading = true;
+        try
+        {
+            listing = await ListingAppService.GetAsync(Id);
+            
+            // Mapear a modelo de edición
+            model = new CreateUpdateListingDto
+            {
+                Title = listing.Title,
+                Description = listing.Description,
+                Location = listing.Location,
+                Price = listing.Price,
+                Area = listing.Area,
+                Bedrooms = listing.Bedrooms,
+                Bathrooms = listing.Bathrooms,
+                ArchitectId = listing.ArchitectId
+            };
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al cargar la propiedad: {ex.Message}");
+            listing = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadArchitects()
+    {
+        isLoadingArchitects = true;
+        try
+        {
+            var result = await ArchitectAppService.GetListAsync(
+                new PagedAndSortedResultRequestDto 
+                { 
+                    MaxResultCount = 100,
+                    Sorting = "UserName"
+                }
+            );
+            architects = result.Items.ToList();
+            
+            // Si ya tenemos el arquitecto actual y no está en la lista, agregarlo
+            if (listing?.Architect != null && !architects.Any(a => a.Id == listing.ArchitectId))
+            {
+                architects.Insert(0, listing.Architect);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al cargar arquitectos: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingArchitects = false;
+        }
+    }
+
+    private async Task SaveListing()
+    {
+        if (!await validations.ValidateAll())
+        {
+            await Message.Error("Por favor complete todos los campos correctamente");
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            await ListingAppService.UpdateAsync(Id, model);
+            await Message.Success("Propiedad actualizada exitosamente");
+            await LoadListing(); // Recargar para mostrar cambios
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al guardar: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task PublishListing()
+    {
+        if (!listing.Images.Any())
+        {
+            await Message.Warn("Debe agregar al menos una imagen antes de publicar");
+            return;
+        }
+
+        isChangingStatus = true;
+        try
+        {
+            await ListingAppService.PublishAsync(Id);
+            await Message.Success("Propiedad publicada exitosamente");
+            await LoadListing();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al publicar: {ex.Message}");
+        }
+        finally
+        {
+            isChangingStatus = false;
+        }
+    }
+
+    private async Task UnpublishListing()
+    {
+        isChangingStatus = true;
+        try
+        {
+            await ListingAppService.UnpublishAsync(Id);
+            await Message.Success("Propiedad despublicada");
+            await LoadListing();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al despublicar: {ex.Message}");
+        }
+        finally
+        {
+            isChangingStatus = false;
+        }
+    }
+
+    private async Task ArchiveListing()
+    {
+        isChangingStatus = true;
+        try
+        {
+            await ListingAppService.ArchiveAsync(Id);
+            await Message.Success("Propiedad archivada");
+            await LoadListing();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al archivar: {ex.Message}");
+        }
+        finally
+        {
+            isChangingStatus = false;
+        }
+    }
+
+    private async Task UnarchiveListing()
+    {
+        isChangingStatus = true;
+        try
+        {
+            await ListingAppService.UnarchiveAsync(Id);
+            await Message.Success("Propiedad desarchivada");
+            await LoadListing();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al desarchivar: {ex.Message}");
+        }
+        finally
+        {
+            isChangingStatus = false;
+        }
+    }
+
+    private async Task OnImagesChanged(List<ListingImageDto> images)
+    {
+        // Actualizar las imágenes en el modelo local
+        if (listing != null)
+        {
+            listing.Images = images;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/listings");
+    }
+
+    private Color GetStatusColor(ListingStatus status) => status switch
+    {
+        ListingStatus.Draft => Color.Warning,
+        ListingStatus.Published => Color.Success,
+        ListingStatus.Archived => Color.Secondary,
+        _ => Color.Light
+    };
+
+    private string GetStatusText(ListingStatus status) => status switch
+    {
+        ListingStatus.Draft => "Borrador",
+        ListingStatus.Published => "Publicada",
+        ListingStatus.Archived => "Archivada",
+        _ => "Desconocido"
+    };
+}

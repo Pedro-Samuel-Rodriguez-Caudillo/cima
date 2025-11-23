@@ -1,0 +1,344 @@
+@page "/admin/listings/create"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Volo.Abp.AspNetCore.Components.Web
+@using Blazorise
+@using Blazorise.DataGrid
+@using cima.Listings
+@using cima.Architects
+@using cima.Permissions
+@using cima.Domain.Shared
+@using cima.Domain.Shared.Dtos
+@using Volo.Abp.Application.Dtos
+@inherits AbpComponentBase
+
+@attribute [Authorize(cimaPermissions.Listings.Create)]
+@inject IListingAppService ListingAppService
+@inject IArchitectAppService ArchitectAppService
+@inject NavigationManager Navigation
+
+<Card>
+    <CardHeader>
+        <CardTitle>
+            <h3 class="text-2xl font-bold">Crear Nueva Propiedad</h3>
+        </CardTitle>
+        <CardActions>
+            <Button Color="Color.Secondary" Clicked="GoBack" Disabled="@isSaving">
+                <Icon Name="IconName.Times" /> Cancelar
+            </Button>
+            <Button Color="Color.Primary" Clicked="SaveListing" Loading="@isSaving" Disabled="@isSaving">
+                <Icon Name="IconName.Save" /> Guardar
+            </Button>
+        </CardActions>
+    </CardHeader>
+    <CardBody>
+        <Validations @ref="validations" Mode="ValidationMode.Manual" ValidateOnLoad="false">
+            <Row>
+                <Column ColumnSize="ColumnSize.Is8">
+                    @* Información Básica *@
+                    <Card Margin="Margin.Is3.FromBottom">
+                        <CardHeader>
+                            <CardTitle>Información Básica</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Validation>
+                                <Field>
+                                    <FieldLabel>Título *</FieldLabel>
+                                    <TextEdit @bind-Text="@model.Title" Placeholder="Ej: Casa moderna con jardín" MaxLength="200">
+                                        <Feedback>
+                                            <ValidationError>El título es obligatorio (máximo 200 caracteres)</ValidationError>
+                                        </Feedback>
+                                    </TextEdit>
+                                    <FieldHelp>Título descriptivo de la propiedad</FieldHelp>
+                                </Field>
+                            </Validation>
+
+                            <Validation>
+                                <Field>
+                                    <FieldLabel>Descripción *</FieldLabel>
+                                    <MemoEdit @bind-Text="@model.Description" Rows="5" Placeholder="Descripción detallada de la propiedad..." MaxLength="5000">
+                                        <Feedback>
+                                            <ValidationError>La descripción es obligatoria (máximo 5000 caracteres)</ValidationError>
+                                        </Feedback>
+                                    </MemoEdit>
+                                    <FieldHelp>Describe las características y ventajas de la propiedad</FieldHelp>
+                                </Field>
+                            </Validation>
+
+                            <Validation>
+                                <Field>
+                                    <FieldLabel>Ubicación *</FieldLabel>
+                                    <TextEdit @bind-Text="@model.Location" Placeholder="Ej: Av. Principal 123, Colonia Centro, Ciudad" MaxLength="500">
+                                        <Feedback>
+                                            <ValidationError>La ubicación es obligatoria (máximo 500 caracteres)</ValidationError>
+                                        </Feedback>
+                                    </TextEdit>
+                                    <FieldHelp>Dirección completa de la propiedad</FieldHelp>
+                                </Field>
+                            </Validation>
+                        </CardBody>
+                    </Card>
+
+                    @* Características *@
+                    <Card Margin="Margin.Is3.FromBottom">
+                        <CardHeader>
+                            <CardTitle>Características</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Row>
+                                <Column ColumnSize="ColumnSize.Is6">
+                                    <Validation>
+                                        <Field>
+                                            <FieldLabel>Precio (USD) *</FieldLabel>
+                                            <NumericEdit TValue="decimal" @bind-Value="@model.Price" 
+                                                        Min="0" 
+                                                        Decimals="2"
+                                                        Placeholder="0.00">
+                                                <Feedback>
+                                                    <ValidationError>El precio debe ser mayor a 0</ValidationError>
+                                                </Feedback>
+                                            </NumericEdit>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.Is6">
+                                    <Validation>
+                                        <Field>
+                                            <FieldLabel>Área (m²) *</FieldLabel>
+                                            <NumericEdit TValue="decimal" @bind-Value="@model.Area" 
+                                                        Min="0" 
+                                                        Decimals="2"
+                                                        Placeholder="0.00">
+                                                <Feedback>
+                                                    <ValidationError>El área debe ser mayor a 0</ValidationError>
+                                                </Feedback>
+                                            </NumericEdit>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+
+                            <Row>
+                                <Column ColumnSize="ColumnSize.Is6">
+                                    <Validation>
+                                        <Field>
+                                            <FieldLabel>Dormitorios *</FieldLabel>
+                                            <NumericEdit TValue="int" @bind-Value="@model.Bedrooms" 
+                                                        Min="0" 
+                                                        Placeholder="0">
+                                                <Feedback>
+                                                    <ValidationError>Los dormitorios deben ser 0 o más</ValidationError>
+                                                </Feedback>
+                                            </NumericEdit>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.Is6">
+                                    <Validation>
+                                        <Field>
+                                            <FieldLabel>Baños *</FieldLabel>
+                                            <NumericEdit TValue="int" @bind-Value="@model.Bathrooms" 
+                                                        Min="0" 
+                                                        Placeholder="0">
+                                                <Feedback>
+                                                    <ValidationError>Los baños deben ser 0 o más</ValidationError>
+                                                </Feedback>
+                                            </NumericEdit>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+                        </CardBody>
+                    </Card>
+                </Column>
+
+                <Column ColumnSize="ColumnSize.Is4">
+                    @* Arquitecto Asignado *@
+                    <Card Margin="Margin.Is3.FromBottom">
+                        <CardHeader>
+                            <CardTitle>Arquitecto Responsable</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Validation>
+                                <Field>
+                                    <FieldLabel>Arquitecto *</FieldLabel>
+                                    @if (isLoadingArchitects)
+                                    {
+                                        <div class="text-center">
+                                            <span class="spinner-border spinner-border-sm" role="status"></span>
+                                            <span class="ms-2">Cargando arquitectos...</span>
+                                        </div>
+                                    }
+                                    else if (!architects.Any())
+                                    {
+                                        <Alert Color="Color.Warning" Visible>
+                                            <AlertMessage>No hay arquitectos disponibles</AlertMessage>
+                                            <AlertDescription>
+                                                Debe crear al menos un perfil de arquitecto antes de crear una propiedad.
+                                            </AlertDescription>
+                                        </Alert>
+                                    }
+                                    else
+                                    {
+                                        <Select TValue="Guid" @bind-SelectedValue="@model.ArchitectId">
+                                            <SelectItem TValue="Guid" Value="Guid.Empty" Disabled>Seleccione un arquitecto</SelectItem>
+                                            @foreach (var architect in architects)
+                                            {
+                                                <SelectItem TValue="Guid" Value="@architect.Id">
+                                                    @architect.UserName
+                                                </SelectItem>
+                                            }
+                                        </Select>
+                                        <Feedback>
+                                            <ValidationError>Debe seleccionar un arquitecto</ValidationError>
+                                        </Feedback>
+                                    }
+                                </Field>
+                            </Validation>
+                        </CardBody>
+                    </Card>
+
+                    @* Información Adicional *@
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Información</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Alert Color="Color.Info" Visible>
+                                <AlertMessage>Estado inicial</AlertMessage>
+                                <AlertDescription>
+                                    La propiedad se creará en estado <strong>Borrador</strong>. 
+                                    Podrá publicarla después de agregar imágenes.
+                                </AlertDescription>
+                            </Alert>
+
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <Icon Name="IconName.InfoCircle" />
+                                    Los campos marcados con * son obligatorios
+                                </small>
+                            </div>
+                        </CardBody>
+                    </Card>
+                </Column>
+            </Row>
+        </Validations>
+    </CardBody>
+</Card>
+
+@code {
+    private CreateUpdateListingDto model = new();
+    private Validations validations;
+    private bool isSaving = false;
+    private bool isLoadingArchitects = false;
+    private List<ArchitectDto> architects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Inicializar modelo con valores por defecto
+        model = new CreateUpdateListingDto
+        {
+            Price = 0,
+            Area = 0,
+            Bedrooms = 0,
+            Bathrooms = 0,
+            ArchitectId = Guid.Empty
+        };
+
+        await LoadArchitects();
+    }
+
+    private async Task LoadArchitects()
+    {
+        isLoadingArchitects = true;
+        try
+        {
+            var result = await ArchitectAppService.GetListAsync(
+                new PagedAndSortedResultRequestDto 
+                { 
+                    MaxResultCount = 100,
+                    Sorting = "UserName"
+                }
+            );
+            architects = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al cargar arquitectos: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingArchitects = false;
+        }
+    }
+
+    private async Task SaveListing()
+    {
+        // Validar formulario
+        if (!await validations.ValidateAll())
+        {
+            await Message.Error("Por favor complete todos los campos obligatorios correctamente");
+            return;
+        }
+
+        // Validaciones adicionales
+        if (model.ArchitectId == Guid.Empty)
+        {
+            await Message.Error("Debe seleccionar un arquitecto");
+            return;
+        }
+
+        if (model.Price <= 0)
+        {
+            await Message.Error("El precio debe ser mayor a 0");
+            return;
+        }
+
+        if (model.Area <= 0)
+        {
+            await Message.Error("El área debe ser mayor a 0");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(model.Title))
+        {
+            await Message.Error("El título es obligatorio");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(model.Description))
+        {
+            await Message.Error("La descripción es obligatoria");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(model.Location))
+        {
+            await Message.Error("La ubicación es obligatoria");
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var created = await ListingAppService.CreateAsync(model);
+            await Message.Success("Propiedad creada exitosamente en estado Borrador");
+            
+            // Navegar a la página de edición para agregar imágenes
+            Navigation.NavigateTo($"/admin/listings/edit/{created.Id}");
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Error al guardar: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/listings");
+    }
+}
