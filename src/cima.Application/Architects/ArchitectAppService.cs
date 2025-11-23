@@ -6,8 +6,11 @@ using cima.Domain.Shared.Dtos;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
+using System.Linq.Dynamic.Core;
 
 namespace cima.Architects;
 
@@ -18,13 +21,57 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 {
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
+    private readonly IIdentityUserRepository _userRepository;
 
     public ArchitectAppService(
         IRepository<Architect, Guid> architectRepository,
-        IRepository<Listing, Guid> listingRepository)
+        IRepository<Listing, Guid> listingRepository,
+        IIdentityUserRepository userRepository)
     {
         _architectRepository = architectRepository;
         _listingRepository = listingRepository;
+        _userRepository = userRepository;
+    }
+
+    /// <summary>
+    /// Obtiene lista paginada de arquitectos (acceso público)
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+    {
+        var queryable = await _architectRepository.GetQueryableAsync();
+        
+        // Contar total de registros
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+        // Aplicar ordenamiento (ABP tiene extensión ApplySorting)
+        if (!string.IsNullOrWhiteSpace(input.Sorting))
+        {
+            // Usar System.Linq.Dynamic.Core para ordenamiento dinámico
+            queryable = queryable.OrderBy(input.Sorting);
+        }
+
+        // Aplicar paginación
+        var architects = await AsyncExecuter.ToListAsync(
+            queryable
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+        );
+
+        // Mapear a DTOs
+        var architectDtos = ObjectMapper.Map<System.Collections.Generic.List<Architect>, System.Collections.Generic.List<ArchitectDto>>(architects);
+
+        // Cargar nombres de usuario
+        foreach (var dto in architectDtos)
+        {
+            var user = await _userRepository.FindAsync(dto.UserId);
+            if (user != null)
+            {
+                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            }
+        }
+
+        return new PagedResultDto<ArchitectDto>(totalCount, architectDtos);
     }
 
     /// <summary>
@@ -36,8 +83,12 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         var architect = await _architectRepository.GetAsync(id);
         var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
         
-        // UserId ya es Guid, no Guid?
-        dto.UserId = architect.UserId;
+        // Cargar nombre de usuario
+        var user = await _userRepository.FindAsync(architect.UserId);
+        if (user != null)
+        {
+            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+        }
         
         return dto;
     }
@@ -61,7 +112,16 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        return ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        
+        // Cargar nombre de usuario
+        var user = await _userRepository.FindAsync(userId);
+        if (user != null)
+        {
+            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+        }
+
+        return dto;
     }
 
     /// <summary>
@@ -70,7 +130,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     [Authorize(cimaPermissions.Architects.Create)]
     public async Task<ArchitectDto> CreateAsync(CreateArchitectDto input)
     {
-        // CurrentUser.Id es Guid?, necesitamos verificar que existe
         if (!CurrentUser.Id.HasValue)
         {
             throw new UserFriendlyException(
@@ -93,7 +152,7 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        // Crear nuevo perfil - El Id se genera automáticamente por ABP
+        // Crear nuevo perfil
         var architect = new Architect
         {
             UserId = CurrentUser.Id.Value,
@@ -103,7 +162,10 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
         await _architectRepository.InsertAsync(architect, autoSave: true);
 
-        return ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        dto.UserName = CurrentUser.UserName ?? CurrentUser.Email ?? "Usuario actual";
+
+        return dto;
     }
 
     /// <summary>
@@ -130,7 +192,16 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
         await _architectRepository.UpdateAsync(architect, autoSave: true);
 
-        return ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
+        
+        // Cargar nombre de usuario
+        var user = await _userRepository.FindAsync(architect.UserId);
+        if (user != null)
+        {
+            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+        }
+
+        return dto;
     }
 
     /// <summary>
@@ -157,4 +228,4 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
         await _architectRepository.DeleteAsync(id, autoSave: true);
     }
-}       
+}

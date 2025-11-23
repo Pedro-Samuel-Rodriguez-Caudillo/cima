@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using cima.Domain.Shared.Dtos;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace cima.Architects;
@@ -10,6 +11,11 @@ namespace cima.Architects;
 /// </summary>
 public interface IArchitectAppService : IApplicationService
 {
+    /// <summary>
+    /// Obtiene lista paginada de arquitectos
+    /// </summary>
+    Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input);
+    
     /// <summary>
     /// Obtiene perfil de arquitecto por Id
     /// </summary>
