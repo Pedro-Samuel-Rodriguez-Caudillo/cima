@@ -450,4 +450,120 @@ public class ListingAppService : cimaAppService, IListingAppService
     {
         return await Task.FromResult(CurrentUser.IsInRole("admin"));
     }
+
+    /// <summary>
+    /// Agrega una imagen a una propiedad
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
+    {
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validar permisos
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes agregar imágenes a tus propias propiedades");
+        }
+
+        // Validar máximo de imágenes (10)
+        if (listing.Images.Count >= 10)
+        {
+            throw new BusinessException("Listing:MaxImagesReached")
+                .WithData("MaxImages", 10);
+        }
+
+        // Crear nueva imagen
+        var newImage = new ListingImage
+        {
+            ImageId = Guid.NewGuid(),
+            Url = input.Url,
+            DisplayOrder = input.DisplayOrder > 0 ? input.DisplayOrder : listing.Images.Count + 1,
+            AltText = input.AltText ?? listing.Title,
+            FileSize = input.FileSize,
+            ContentType = input.ContentType
+        };
+
+        listing.Images.Add(newImage);
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+
+        var imageDto = new ListingImageDto
+        {
+            ImageId = newImage.ImageId,
+            Url = newImage.Url,
+            DisplayOrder = newImage.DisplayOrder,
+            AltText = newImage.AltText
+        };
+
+        return imageDto;
+    }
+
+    /// <summary>
+    /// Elimina una imagen de una propiedad
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task RemoveImageAsync(Guid listingId, Guid imageId)
+    {
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validar permisos
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes eliminar imágenes de tus propias propiedades");
+        }
+
+        var image = listing.Images.FirstOrDefault(i => i.ImageId == imageId);
+        if (image == null)
+        {
+            throw new BusinessException("Image:NotFound")
+                .WithData("ImageId", imageId);
+        }
+
+        listing.Images.Remove(image);
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        // Reordenar imágenes restantes
+        var orderedImages = listing.Images.OrderBy(i => i.DisplayOrder).ToList();
+        for (int i = 0; i < orderedImages.Count; i++)
+        {
+            orderedImages[i].DisplayOrder = i + 1;
+        }
+
+        await _listingRepository.UpdateAsync(listing);
+    }
+
+    /// <summary>
+    /// Actualiza el orden de las imágenes
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
+    {
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validar permisos
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes reordenar imágenes de tus propias propiedades");
+        }
+
+        foreach (var orderDto in input)
+        {
+            var image = listing.Images.FirstOrDefault(i => i.ImageId == orderDto.ImageId);
+            if (image != null)
+            {
+                image.DisplayOrder = orderDto.DisplayOrder;
+            }
+        }
+
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using cima.Domain.Shared.Dtos;
 using Volo.Abp.Application.Dtos;
@@ -69,6 +70,21 @@ public interface IListingAppService : IApplicationService
     /// Obtiene solo propiedades publicadas (público)
     /// </summary>
     Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input);
+    
+    /// <summary>
+    /// Agrega una imagen a una propiedad
+    /// </summary>
+    Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input);
+    
+    /// <summary>
+    /// Elimina una imagen de una propiedad
+    /// </summary>
+    Task RemoveImageAsync(Guid listingId, Guid imageId);
+    
+    /// <summary>
+    /// Actualiza el orden de las imágenes
+    /// </summary>
+    Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 }
 
 /// <summary>
