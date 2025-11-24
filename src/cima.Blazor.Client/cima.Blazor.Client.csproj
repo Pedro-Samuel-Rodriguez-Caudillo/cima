@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\Examples\ListingCardPreview.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.8.1" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.8.1" />
     <PackageReference Include="Blazorise.Components" Version="1.8.1" />
@@ -33,6 +37,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\cima.HttpApi.Client\cima.HttpApi.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Pages\NewFolder1\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Pages\Examples\ListingCardPreview.razor" />
   </ItemGroup>
 
 </Project>
