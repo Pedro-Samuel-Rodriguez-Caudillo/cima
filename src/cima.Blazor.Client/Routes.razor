@@ -2,6 +2,8 @@
 @using Volo.Abp.AspNetCore.Components.Web.Theming.Routing
 @using Microsoft.Extensions.Options
 @inject IOptions<AbpRouterOptions> RouterOptions
+@inject NavigationManager NavigationManager
+
 <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="RouterOptions.Value.AdditionalAssemblies">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
@@ -10,4 +12,23 @@
             </NotAuthorized>
         </AuthorizeRouteView>
     </Found>
+    <NotFound>
+        <PageTitle>Página no encontrada</PageTitle>
+        <LayoutView Layout="typeof(MainLayout)">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-md mx-auto text-center">
+                    <h1 class="text-6xl font-bold text-gray-800 mb-4">404</h1>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">Página no encontrada</h2>
+                    <p class="text-gray-600 mb-8">La página que buscas no existe o ha sido movida.</p>
+                    <a href="/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                        Volver al inicio
+                    </a>
+                    @if (NavigationManager != null)
+                    {
+                        <p class="mt-4 text-sm text-gray-500">Ruta: @NavigationManager.Uri</p>
+                    }
+                </div>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>

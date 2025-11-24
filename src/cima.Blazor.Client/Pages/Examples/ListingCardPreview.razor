@@ -1,14 +1,47 @@
 @page "/examples/listing-card"
-@using Microsoft.AspNetCore.Authorization
-@using cima.Blazor.Client.Components.Public
 @rendermode InteractiveAuto
 @attribute [AllowAnonymous]
 
+<PageTitle>Preview - Tarjeta de Propiedad</PageTitle>
 
-<PageTitle>Preview de ListingCard</PageTitle>
-
-<h3>Preview de ListingCard</h3>
-
-<div class="container my-4">
-    <ListingCard />
+<div class="container mx-auto px-4 py-8">
+    <h3 class="text-2xl font-bold mb-6">Preview de ListingCard</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @* Ejemplo 1: Con datos mockup *@
+        <ListingCard 
+            Title="Casa Moderna en Polanco"
+            Price="12500000"
+            Location="Polanco, CDMX"
+            Bedrooms="4"
+            Bathrooms="3"
+            Area="350"
+            ImageUrl="/images/getting-started/bg-01.png"
+            ListingId="@Guid.NewGuid()"
+        />
+        
+        @* Ejemplo 2: Otra propiedad *@
+        <ListingCard 
+            Title="Departamento en Reforma"
+            Price="8500000"
+            Location="Reforma, CDMX"
+            Bedrooms="2"
+            Bathrooms="2"
+            Area="120"
+            ImageUrl="/images/getting-started/bg-01.png"
+            ListingId="@Guid.NewGuid()"
+        />
+        
+        @* Ejemplo 3: Propiedad económica *@
+        <ListingCard 
+            Title="Casa en Santa Fe"
+            Price="5500000"
+            Location="Santa Fe, CDMX"
+            Bedrooms="3"
+            Bathrooms="2"
+            Area="180"
+            ImageUrl="/images/getting-started/bg-01.png"
+            ListingId="@Guid.NewGuid()"
+        />
+    </div>
 </div>

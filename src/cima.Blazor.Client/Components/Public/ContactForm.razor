@@ -1,0 +1,172 @@
+@using cima.Application.Contracts.ContactRequests
+@inject IContactRequestAppService ContactRequestAppService
+@inject IMessageService MessageService
+
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-2xl font-bold text-gray-800 mb-6">¿Interesado en esta propiedad?</h3>
+    
+    @if (!submitted)
+    {
+        <EditForm Model="@model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+            
+            @* Nombre *@
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre completo <span class="text-red-500">*</span>
+                </label>
+                <InputText @bind-Value="model.Name" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Juan Pérez" />
+                <ValidationMessage For="@(() => model.Name)" class="text-red-500 text-sm mt-1" />
+            </div>
+            
+            @* Email *@
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Correo electrónico <span class="text-red-500">*</span>
+                </label>
+                <InputText @bind-Value="model.Email" 
+                          type="email"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="juan@ejemplo.com" />
+                <ValidationMessage For="@(() => model.Email)" class="text-red-500 text-sm mt-1" />
+            </div>
+            
+            @* Teléfono *@
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Teléfono <span class="text-red-500">*</span>
+                </label>
+                <InputText @bind-Value="model.Phone" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="55 1234 5678" />
+                <ValidationMessage For="@(() => model.Phone)" class="text-red-500 text-sm mt-1" />
+            </div>
+            
+            @* Mensaje *@
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Mensaje <span class="text-red-500">*</span>
+                </label>
+                <InputTextArea @bind-Value="model.Message" 
+                              rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                              placeholder="Me interesa obtener más información sobre esta propiedad..." />
+                <ValidationMessage For="@(() => model.Message)" class="text-red-500 text-sm mt-1" />
+            </div>
+            
+            @* Botón de envío *@
+            <button type="submit" 
+                    disabled="@isSubmitting"
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
+                @if (isSubmitting)
+                {
+                    <span>
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Enviando...
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Enviar consulta
+                    </span>
+                }
+            </button>
+        </EditForm>
+    }
+    else
+    {
+        <div class="text-center py-8">
+            <div class="mb-4">
+                <i class="fas fa-check-circle text-green-500 text-6xl"></i>
+            </div>
+            <h4 class="text-2xl font-bold text-gray-800 mb-2">¡Mensaje enviado!</h4>
+            <p class="text-gray-600 mb-6">
+                Gracias por tu interés. Nos pondremos en contacto contigo pronto.
+            </p>
+            <button @onclick="ResetForm" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                Enviar otro mensaje
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? ListingId { get; set; }
+    [Parameter] public string? PropertyTitle { get; set; }
+    
+    private ContactRequestFormModel model = new();
+    private bool isSubmitting = false;
+    private bool submitted = false;
+    
+    protected override void OnInitialized()
+    {
+        if (ListingId.HasValue && !string.IsNullOrEmpty(PropertyTitle))
+        {
+            model.Message = $"Estoy interesado en la propiedad: {PropertyTitle}";
+        }
+    }
+    
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            
+            var dto = new CreateContactRequestDto
+            {
+                Name = model.Name,
+                Email = model.Email,
+                Phone = model.Phone,
+                Message = model.Message
+            };
+            
+            await ContactRequestAppService.CreateAsync(dto);
+            
+            submitted = true;
+            await MessageService.Success("Tu consulta ha sido enviada exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error($"Error al enviar la consulta: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+    
+    private void ResetForm()
+    {
+        model = new ContactRequestFormModel();
+        submitted = false;
+        
+        if (ListingId.HasValue && !string.IsNullOrEmpty(PropertyTitle))
+        {
+            model.Message = $"Estoy interesado en la propiedad: {PropertyTitle}";
+        }
+    }
+    
+    private class ContactRequestFormModel
+    {
+        [Required(ErrorMessage = "El nombre es obligatorio")]
+        [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
+        public string Name { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "El email es obligatorio")]
+        [EmailAddress(ErrorMessage = "El email no es válido")]
+        public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "El teléfono es obligatorio")]
+        [Phone(ErrorMessage = "El teléfono no es válido")]
+        public string Phone { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "El mensaje es obligatorio")]
+        [StringLength(1000, MinimumLength = 10, ErrorMessage = "El mensaje debe tener entre 10 y 1000 caracteres")]
+        public string Message { get; set; } = string.Empty;
+    }
+}

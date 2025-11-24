@@ -79,7 +79,9 @@
             transform: translateY(0);
         }
     }
-
+    .cima-badge {
+        transition: all 0.2s ease;
+    }
     .cima-spinner {
         @apply border-4 border-blue-100 border-t-cima-primary rounded-full w-12 h-12 animate-spin;
     }

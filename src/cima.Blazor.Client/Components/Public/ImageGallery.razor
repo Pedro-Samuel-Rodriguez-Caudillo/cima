@@ -1,0 +1,127 @@
+@inject IJSRuntime JS
+
+<div class="image-gallery">
+    @* Imagen principal *@
+    <div class="relative mb-4">
+        <img src="@CurrentImage" 
+             alt="Imagen de la propiedad" 
+             class="w-full h-96 object-cover rounded-lg shadow-lg cursor-pointer"
+             @onclick="OpenFullscreen" />
+        
+        @if (Images.Count > 1)
+        {
+            @* Botones de navegación *@
+            <button @onclick="PreviousImage" 
+                    class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-3 rounded-full shadow-lg transition">
+                <i class="fas fa-chevron-left text-gray-800"></i>
+            </button>
+            <button @onclick="NextImage" 
+                    class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-3 rounded-full shadow-lg transition">
+                <i class="fas fa-chevron-right text-gray-800"></i>
+            </button>
+            
+            @* Contador *@
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm">
+                @(currentIndex + 1) / @Images.Count
+            </div>
+        }
+    </div>
+    
+    @* Miniaturas *@
+    @if (Images.Count > 1)
+    {
+        <div class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+            @for (int i = 0; i < Images.Count; i++)
+            {
+                var index = i; // Captura para el closure
+                var isActive = index == currentIndex;
+                <div class="relative cursor-pointer @(isActive ? "ring-2 ring-blue-600" : "")" 
+                     @onclick="() => SetCurrentImage(index)">
+                    <img src="@Images[index]" 
+                         alt="Miniatura @(index + 1)" 
+                         class="w-full h-20 object-cover rounded-lg @(isActive ? "" : "opacity-60 hover:opacity-100") transition" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@* Modal de pantalla completa *@
+@if (showFullscreen)
+{
+    <div class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" @onclick="CloseFullscreen">
+        <button @onclick="CloseFullscreen" 
+                class="absolute top-4 right-4 text-white hover:text-gray-300 text-3xl z-10">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="relative max-w-7xl w-full" @onclick:stopPropagation>
+            <img src="@CurrentImage" 
+                 alt="Imagen ampliada" 
+                 class="w-full max-h-screen object-contain" />
+            
+            @if (Images.Count > 1)
+            {
+                <button @onclick="PreviousImage" 
+                        @onclick:stopPropagation
+                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 p-4 rounded-full transition">
+                    <i class="fas fa-chevron-left text-white text-2xl"></i>
+                </button>
+                <button @onclick="NextImage" 
+                        @onclick:stopPropagation
+                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 p-4 rounded-full transition">
+                    <i class="fas fa-chevron-right text-white text-2xl"></i>
+                </button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<string> Images { get; set; } = new();
+    
+    private int currentIndex = 0;
+    private bool showFullscreen = false;
+    
+    private string CurrentImage => Images.Count > 0 ? Images[currentIndex] : "/images/placeholder.jpg";
+    
+    private void NextImage()
+    {
+        if (Images.Count > 0)
+        {
+            currentIndex = (currentIndex + 1) % Images.Count;
+        }
+    }
+    
+    private void PreviousImage()
+    {
+        if (Images.Count > 0)
+        {
+            currentIndex = currentIndex == 0 ? Images.Count - 1 : currentIndex - 1;
+        }
+    }
+    
+    private void SetCurrentImage(int index)
+    {
+        currentIndex = index;
+    }
+    
+    private void OpenFullscreen()
+    {
+        showFullscreen = true;
+    }
+    
+    private void CloseFullscreen()
+    {
+        showFullscreen = false;
+    }
+    
+    protected override void OnInitialized()
+    {
+        // Si no hay imágenes, agregar una de placeholder
+        if (Images.Count == 0)
+        {
+            Images.Add("/images/placeholder.jpg");
+        }
+    }
+}

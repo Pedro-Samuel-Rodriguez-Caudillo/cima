@@ -1,0 +1,251 @@
+@page "/propiedades"
+@rendermode InteractiveAuto
+@attribute [AllowAnonymous]
+@using cima.Application.Contracts.Listings
+@inject IListingAppService ListingAppService
+
+<PageTitle>Propiedades Disponibles - CIMA</PageTitle>
+
+<div class="min-h-screen bg-gray-50">
+    @* Header de la página *@
+    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold mb-4">Nuestras Propiedades</h1>
+            <p class="text-xl text-blue-100">Encuentra la propiedad de tus sueños</p>
+        </div>
+    </div>
+    
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            @* Filtros laterales *@
+            <div class="lg:w-1/4">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                    <h3 class="text-xl font-bold mb-6">Filtrar propiedades</h3>
+                    
+                    @* Tipo de propiedad *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Tipo de propiedad
+                        </label>
+                        <select @bind="filterType" 
+                                @bind:after="ApplyFilters"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            @foreach (var type in Enum.GetValues<PropertyType>())
+                            {
+                                <option value="@((int)type)">@GetPropertyTypeName(type)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    @* Rango de precio *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Precio máximo
+                        </label>
+                        <input type="number" 
+                               @bind="filterMaxPrice" 
+                               @bind:after="ApplyFilters"
+                               step="100000"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               placeholder="Sin límite" />
+                    </div>
+                    
+                    @* Recámaras *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Recámaras mínimas
+                        </label>
+                        <select @bind="filterBedrooms" 
+                                @bind:after="ApplyFilters"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="0">Todas</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                            <option value="4">4+</option>
+                        </select>
+                    </div>
+                    
+                    @* Botón de limpiar filtros *@
+                    <button @onclick="ClearFilters" 
+                            class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition">
+                        <i class="fas fa-redo mr-2"></i>
+                        Limpiar filtros
+                    </button>
+                </div>
+            </div>
+            
+            @* Listado de propiedades *@
+            <div class="lg:w-3/4">
+                @* Ordenamiento y contador *@
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div class="text-gray-600">
+                        @if (filteredListings != null)
+                        {
+                            <span class="font-semibold">@filteredListings.Count</span>
+                            <span> propiedades encontradas</span>
+                        }
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600">Ordenar por:</label>
+                        <select @bind="sortBy" 
+                                @bind:after="ApplyFilters"
+                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="newest">Más recientes</option>
+                            <option value="price-low">Precio: Menor a mayor</option>
+                            <option value="price-high">Precio: Mayor a menor</option>
+                            <option value="area-large">Área: Mayor a menor</option>
+                        </select>
+                    </div>
+                </div>
+                
+                @if (isLoading)
+                {
+                    <div class="text-center py-12">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                        <p class="text-gray-600">Cargando propiedades...</p>
+                    </div>
+                }
+                else if (filteredListings == null || !filteredListings.Any())
+                {
+                    <div class="text-center py-12">
+                        <i class="fas fa-search text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-2xl font-semibold text-gray-700 mb-2">No se encontraron propiedades</h3>
+                        <p class="text-gray-600 mb-4">Intenta ajustar tus filtros de búsqueda</p>
+                        <button @onclick="ClearFilters" 
+                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            Ver todas las propiedades
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        @foreach (var listing in filteredListings)
+                        {
+                            <ListingCard 
+                                Title="@listing.Title"
+                                Price="@listing.Price.ToString()"
+                                Location="@listing.Location"
+                                Bedrooms="@listing.Bedrooms.ToString()"
+                                Bathrooms="@listing.Bathrooms.ToString()"
+                                Area="@listing.Area.ToString()"
+                                ImageUrl="@GetMainImage(listing)"
+                                ListingId="@listing.Id" />
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ListingDto>? allListings;
+    private List<ListingDto>? filteredListings;
+    private bool isLoading = true;
+    
+    // Filtros
+    private string filterType = "";
+    private decimal? filterMaxPrice = null;
+    private int filterBedrooms = 0;
+    private string sortBy = "newest";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadListings();
+    }
+    
+    private async Task LoadListings()
+    {
+        try
+        {
+            isLoading = true;
+            var result = await ListingAppService.GetListAsync(new PagedAndSortedResultRequestDto
+            {
+                MaxResultCount = 1000
+            });
+            
+            allListings = result.Items.ToList();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading listings: {ex.Message}");
+            allListings = new List<ListingDto>();
+            filteredListings = new List<ListingDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private void ApplyFilters()
+    {
+        if (allListings == null)
+        {
+            filteredListings = new List<ListingDto>();
+            return;
+        }
+        
+        var query = allListings.AsEnumerable();
+        
+        // Filtro por tipo
+        if (!string.IsNullOrEmpty(filterType) && int.TryParse(filterType, out var typeValue))
+        {
+            query = query.Where(l => (int)l.Type == typeValue);
+        }
+        
+        // Filtro por precio
+        if (filterMaxPrice.HasValue && filterMaxPrice.Value > 0)
+        {
+            query = query.Where(l => l.Price <= filterMaxPrice.Value);
+        }
+        
+        // Filtro por recámaras
+        if (filterBedrooms > 0)
+        {
+            query = query.Where(l => l.Bedrooms >= filterBedrooms);
+        }
+        
+        // Ordenamiento
+        query = sortBy switch
+        {
+            "price-low" => query.OrderBy(l => l.Price),
+            "price-high" => query.OrderByDescending(l => l.Price),
+            "area-large" => query.OrderByDescending(l => l.Area),
+            _ => query.OrderByDescending(l => l.CreatedAt)
+        };
+        
+        filteredListings = query.ToList();
+    }
+    
+    private void ClearFilters()
+    {
+        filterType = "";
+        filterMaxPrice = null;
+        filterBedrooms = 0;
+        sortBy = "newest";
+        ApplyFilters();
+    }
+    
+    private string GetPropertyTypeName(PropertyType type)
+    {
+        return type switch
+        {
+            PropertyType.House => "Casa",
+            PropertyType.Apartment => "Departamento",
+            PropertyType.Land => "Terreno",
+            PropertyType.Commercial => "Comercial",
+            _ => type.ToString()
+        };
+    }
+    
+    private string GetMainImage(ListingDto listing)
+    {
+        return listing.Images?.FirstOrDefault()?.Url ?? "/images/getting-started/bg-01.png";
+    }
+}

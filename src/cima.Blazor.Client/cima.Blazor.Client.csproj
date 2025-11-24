@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Pages\Examples\ListingCardPreview.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.8.1" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.8.1" />
     <PackageReference Include="Blazorise.Components" Version="1.8.1" />

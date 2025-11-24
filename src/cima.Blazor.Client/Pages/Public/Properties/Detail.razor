@@ -1,0 +1,264 @@
+@page "/propiedades/{Id:guid}"
+@rendermode InteractiveAuto
+@attribute [AllowAnonymous]
+@using cima.Application.Contracts.Listings
+@inject IListingAppService ListingAppService
+@inject NavigationManager Navigation
+
+<PageTitle>@(listing?.Title ?? "Cargando...") - CIMA</PageTitle>
+
+@if (isLoading)
+{
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin text-6xl text-blue-600 mb-4"></i>
+            <p class="text-xl text-gray-600">Cargando propiedad...</p>
+        </div>
+    </div>
+}
+else if (listing == null)
+{
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-4"></i>
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Propiedad no encontrada</h2>
+            <p class="text-gray-600 mb-8">La propiedad que buscas no existe o ha sido removida.</p>
+            <a href="/propiedades" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                Ver todas las propiedades
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="min-h-screen bg-gray-50">
+        @* Breadcrumb *@
+        <div class="bg-white border-b">
+            <div class="container mx-auto px-4 py-4">
+                <nav class="flex text-sm text-gray-600">
+                    <a href="/" class="hover:text-blue-600">Inicio</a>
+                    <span class="mx-2">/</span>
+                    <a href="/propiedades" class="hover:text-blue-600">Propiedades</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-gray-900">@listing.Title</span>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                @* Columna principal *@
+                <div class="lg:col-span-2">
+                    @* Galería de imágenes *@
+                    <div class="mb-8">
+                        <ImageGallery Images="@GetPropertyImages()" />
+                    </div>
+                    
+                    @* Información principal *@
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-900 mb-2">@listing.Title</h1>
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    <span>@listing.Location</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold text-blue-600">
+                                    @listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                                </div>
+                                <span class="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                    @GetPropertyTypeName(listing.Type)
+                                </span>
+                            </div>
+                        </div>
+                        
+                        @* Características destacadas *@
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 py-6 border-y border-gray-200">
+                            <div class="text-center">
+                                <i class="fas fa-bed text-2xl text-gray-600 mb-2"></i>
+                                <div class="text-2xl font-bold text-gray-900">@listing.Bedrooms</div>
+                                <div class="text-sm text-gray-600">Recámaras</div>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-bath text-2xl text-gray-600 mb-2"></i>
+                                <div class="text-2xl font-bold text-gray-900">@listing.Bathrooms</div>
+                                <div class="text-sm text-gray-600">Baños</div>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-ruler-combined text-2xl text-gray-600 mb-2"></i>
+                                <div class="text-2xl font-bold text-gray-900">@listing.Area</div>
+                                <div class="text-sm text-gray-600">m² totales</div>
+                            </div>
+                        </div>
+                        
+                        @* Descripción *@
+                        <div class="mt-6">
+                            <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
+                            <div class="text-gray-700 leading-relaxed whitespace-pre-line">
+                                @listing.Description
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @* Características adicionales *@
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Características</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                <span>Superficie: @listing.Area m²</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                <span>Tipo: @GetPropertyTypeName(listing.Type)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                <span>Estado: @GetStatusName(listing.Status)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                <span>Transacción: @GetTransactionTypeName(listing.TransactionType)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @* Mapa (placeholder) *@
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">Ubicación</h2>
+                        <div class="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
+                            <div class="text-center text-gray-600">
+                                <i class="fas fa-map-marked-alt text-4xl mb-2"></i>
+                                <p>Mapa de ubicación</p>
+                                <p class="text-sm">@listing.Location</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                @* Sidebar - Formulario de contacto *@
+                <div class="lg:col-span-1">
+                    <div class="sticky top-4">
+                        <ContactForm ListingId="@listing.Id" PropertyTitle="@listing.Title" />
+                        
+                        @* Información del agente (placeholder) *@
+                        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">Agente</h3>
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                    <i class="fas fa-user text-3xl text-gray-600"></i>
+                                </div>
+                                <h4 class="font-semibold text-gray-900">Agente CIMA</h4>
+                                <p class="text-sm text-gray-600 mb-4">Asesor inmobiliario</p>
+                                <div class="space-y-2">
+                                    <a href="tel:+525512345678" class="block text-blue-600 hover:text-blue-700">
+                                        <i class="fas fa-phone mr-2"></i>
+                                        +52 55 1234 5678
+                                    </a>
+                                    <a href="mailto:contacto@cima.com" class="block text-blue-600 hover:text-blue-700">
+                                        <i class="fas fa-envelope mr-2"></i>
+                                        contacto@cima.com
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @* Compartir *@
+                        <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                            <h3 class="text-xl font-bold text-gray-900 mb-4">Compartir</h3>
+                            <div class="flex gap-2">
+                                <button class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+                                    <i class="fab fa-facebook-f"></i>
+                                </button>
+                                <button class="flex-1 bg-sky-500 text-white py-2 rounded-lg hover:bg-sky-600 transition">
+                                    <i class="fab fa-twitter"></i>
+                                </button>
+                                <button class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
+                                <button class="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    
+    private ListingDto? listing;
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadListing();
+    }
+    
+    private async Task LoadListing()
+    {
+        try
+        {
+            isLoading = true;
+            listing = await ListingAppService.GetAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading listing: {ex.Message}");
+            listing = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private List<string> GetPropertyImages()
+    {
+        if (listing?.Images != null && listing.Images.Any())
+        {
+            return listing.Images.OrderBy(i => i.DisplayOrder).Select(i => i.Url).ToList();
+        }
+        
+        return new List<string> { "/images/getting-started/bg-01.png" };
+    }
+    
+    private string GetPropertyTypeName(PropertyType type)
+    {
+        return type switch
+        {
+            PropertyType.House => "Casa",
+            PropertyType.Apartment => "Departamento",
+            PropertyType.Land => "Terreno",
+            PropertyType.Commercial => "Comercial",
+            _ => type.ToString()
+        };
+    }
+    
+    private string GetStatusName(ListingStatus status)
+    {
+        return status switch
+        {
+            ListingStatus.Draft => "Borrador",
+            ListingStatus.Published => "Publicada",
+            ListingStatus.Unavailable => "No disponible",
+            _ => status.ToString()
+        };
+    }
+    
+    private string GetTransactionTypeName(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.Sale => "Venta",
+            TransactionType.Rent => "Renta",
+            _ => type.ToString()
+        };
+    }
+}

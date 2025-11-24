@@ -15,10 +15,16 @@ namespace cima.Domain.Shared.Dtos
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }
+        public PropertyType Type { get; set; }
+        public TransactionType TransactionType { get; set; }
         public Guid ArchitectId { get; set; }
         public ArchitectDto Architect { get; set; }
         public List<ListingImageDto> Images { get; set; } = new();
         public DateTime CreatedAt { get; set; }
+        
+        // Propiedades de conveniencia
+        public string Address => Location; // Alias para compatibilidad
+        public DateTime CreationTime => CreatedAt; // Alias para compatibilidad
     }
 
     public class CreateUpdateListingDto
@@ -30,6 +36,8 @@ namespace cima.Domain.Shared.Dtos
         public decimal Area { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
+        public PropertyType Type { get; set; } = PropertyType.House;
+        public TransactionType TransactionType { get; set; } = TransactionType.Sale;
         public Guid ArchitectId { get; set; }
     }
 
