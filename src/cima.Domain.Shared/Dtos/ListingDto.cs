@@ -15,7 +15,11 @@ namespace cima.Domain.Shared.Dtos
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }
+        
+        // Normalización de tipos de propiedad
+        public PropertyCategory Category { get; set; }
         public PropertyType Type { get; set; }
+        
         public TransactionType TransactionType { get; set; }
         public Guid ArchitectId { get; set; }
         public ArchitectDto Architect { get; set; }
@@ -36,7 +40,11 @@ namespace cima.Domain.Shared.Dtos
         public decimal Area { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
+        
+        // Normalización de tipos de propiedad
+        public PropertyCategory Category { get; set; } = PropertyCategory.Residential;
         public PropertyType Type { get; set; } = PropertyType.House;
+        
         public TransactionType TransactionType { get; set; } = TransactionType.Sale;
         public Guid ArchitectId { get; set; }
     }
