@@ -30,7 +30,6 @@ public class cimaMenuContributor : IMenuContributor
         {
             await ConfigureMainMenuAsync(context);
         }
-
         else if (context.Menu.Name == StandardMenus.User)
         {
             await ConfigureUserMenuAsync(context);
@@ -41,10 +40,7 @@ public class cimaMenuContributor : IMenuContributor
     {
         var l = context.GetLocalizer<cimaResource>();
         
-        //Administration
-        var administration = context.Menu.GetAdministration();
-        administration.Order = 6;
-
+        // Public menu items (always visible)
         context.Menu.AddItem(new ApplicationMenuItem(
             cimaMenus.Home,
             l["Menu:Home"],
@@ -52,7 +48,47 @@ public class cimaMenuContributor : IMenuContributor
             icon: "fas fa-home",
             order: 1
         ));
+
+        context.Menu.AddItem(new ApplicationMenuItem(
+            cimaMenus.Properties,
+            l["Menu:Properties"],
+            PublicRoutes.Properties.Index,
+            icon: "fas fa-building",
+            order: 2
+        ));
+
+        // Admin menu items (only for authenticated users with permissions)
+        context.Menu.AddItem(new ApplicationMenuItem(
+            cimaMenus.AdminListings,
+            l["Menu:AdminListings"],
+            "/admin/listings",
+            icon: "fas fa-list",
+            order: 3,
+            requiredPermissionName: cimaPermissions.Listings.Default
+        ));
+
+        context.Menu.AddItem(new ApplicationMenuItem(
+            cimaMenus.Architects,
+            l["Menu:Architects"],
+            "/admin/architects",
+            icon: "fas fa-user-tie",
+            order: 4,
+            requiredPermissionName: cimaPermissions.Architects.Default
+        ));
+
+        context.Menu.AddItem(new ApplicationMenuItem(
+            cimaMenus.ContactRequests,
+            l["Menu:ContactRequests"],
+            "/admin/contact-requests",
+            icon: "fas fa-envelope",
+            order: 5,
+            requiredPermissionName: cimaPermissions.ContactRequests.Default
+        ));
         
+        // Administration menu
+        var administration = context.Menu.GetAdministration();
+        administration.Order = 6;
+
         if (MultiTenancyConsts.IsEnabled)
         {
             administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
@@ -64,25 +100,28 @@ public class cimaMenuContributor : IMenuContributor
 
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
         administration.SetSubItemOrder(SettingManagementMenus.GroupName, 3);
+
+        await Task.CompletedTask;
     }
     
     private async Task ConfigureUserMenuAsync(MenuConfigurationContext context)
     {
         if (OperatingSystem.IsBrowser())
         {
-            //Blazor wasm menu items
-
+            // Blazor wasm menu items
             var authServerUrl = _configuration["AuthServer:Authority"] ?? "";
             var accountResource = context.GetLocalizer<AccountResource>();
 
-            context.Menu.AddItem(new ApplicationMenuItem("Account.Manage", accountResource["MyAccount"], $"{authServerUrl.EnsureEndsWith('/')}Account/Manage", icon: "fa fa-cog", order: 900,  target: "_blank").RequireAuthenticated());
-
+            context.Menu.AddItem(new ApplicationMenuItem(
+                "Account.Manage", 
+                accountResource["MyAccount"], 
+                $"{authServerUrl.EnsureEndsWith('/')}Account/Manage", 
+                icon: "fa fa-cog", 
+                order: 900,  
+                target: "_blank"
+            ).RequireAuthenticated());
         }
-        else
-        {
-            //Blazor server menu items
 
-        }
         await Task.CompletedTask;
     }
 }
