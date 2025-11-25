@@ -135,4 +135,36 @@ public partial class ListingClientProxy : ClientProxyBase<IListingAppService>, I
             { typeof(List<UpdateImageOrderDto>), input }
         });
     }
+
+    public virtual async Task<ListingDto> MoveToPortfolioAsync(Guid id)
+    {
+        return await RequestAsync<ListingDto>(nameof(MoveToPortfolioAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id }
+        });
+    }
+
+    public virtual async Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto)
+    {
+        return await RequestAsync<PagedResultDto<ListingDto>>(nameof(SearchAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(PropertySearchDto), searchDto }
+        });
+    }
+
+    public virtual async Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input)
+    {
+        return await RequestAsync<PagedResultDto<ListingDto>>(nameof(GetPortfolioAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(GetListingsInput), input }
+        });
+    }
+
+    public virtual async Task<List<LocationSuggestionDto>> GetLocationSuggestionsAsync(string searchTerm)
+    {
+        return await RequestAsync<List<LocationSuggestionDto>>(nameof(GetLocationSuggestionsAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(string), searchTerm }
+        });
+    }
 }
