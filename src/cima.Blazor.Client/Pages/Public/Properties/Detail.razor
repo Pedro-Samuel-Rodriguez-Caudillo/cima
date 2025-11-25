@@ -1,7 +1,7 @@
 @page "/propiedades/{Id:guid}"
 @rendermode InteractiveAuto
 @attribute [AllowAnonymous]
-@using cima.Application.Contracts.Listings
+@using cima.Listings
 @inject IListingAppService ListingAppService
 @inject NavigationManager Navigation
 
@@ -247,7 +247,6 @@ else
         {
             ListingStatus.Draft => "Borrador",
             ListingStatus.Published => "Publicada",
-            ListingStatus.Unavailable => "No disponible",
             _ => status.ToString()
         };
     }

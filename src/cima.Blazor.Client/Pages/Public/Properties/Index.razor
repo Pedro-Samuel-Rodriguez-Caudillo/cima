@@ -1,8 +1,9 @@
 @page "/propiedades"
 @rendermode InteractiveAuto
 @attribute [AllowAnonymous]
-@using cima.Application.Contracts.Listings
+@using cima.Listings
 @inject IListingAppService ListingAppService
+@using cima.Domain.Shared.Dtos
 
 <PageTitle>Propiedades Disponibles - CIMA</PageTitle>
 
@@ -146,28 +147,32 @@
     private List<ListingDto>? allListings;
     private List<ListingDto>? filteredListings;
     private bool isLoading = true;
-    
+
     // Filtros
     private string filterType = "";
     private decimal? filterMaxPrice = null;
     private int filterBedrooms = 0;
     private string sortBy = "newest";
-    
+
     protected override async Task OnInitializedAsync()
     {
         await LoadListings();
     }
-    
+
     private async Task LoadListings()
     {
         try
         {
             isLoading = true;
-            var result = await ListingAppService.GetListAsync(new PagedAndSortedResultRequestDto
+            var input = new GetListingsInput
             {
-                MaxResultCount = 1000
-            });
-            
+                SkipCount = 0,
+                MaxResultCount = 1000,
+                Sorting = "createdAt desc"
+            };
+
+            var result = await ListingAppService.GetPublishedAsync(input);
+
             allListings = result.Items.ToList();
             ApplyFilters();
         }

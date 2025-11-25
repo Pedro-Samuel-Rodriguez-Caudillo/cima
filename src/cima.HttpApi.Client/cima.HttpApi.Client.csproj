@@ -29,4 +29,8 @@
     <Content Remove="**\*generate-proxy.json" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ClientProxies\cima\" />
+  </ItemGroup>
+
 </Project>

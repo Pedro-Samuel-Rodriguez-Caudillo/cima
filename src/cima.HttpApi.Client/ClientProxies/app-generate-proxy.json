@@ -1,0 +1,2152 @@
+{
+  "modules": {
+    "app": {
+      "rootPath": "app",
+      "remoteServiceName": "Default",
+      "controllers": {
+        "cima.Architects.ArchitectAppService": {
+          "controllerName": "Architect",
+          "controllerGroupName": "Architect",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Architects.ArchitectAppService",
+          "interfaces": [
+            {
+              "type": "cima.Architects.IArchitectAppService",
+              "name": "IArchitectAppService",
+              "methods": [
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto, Volo.Abp.Ddd.Application.Contracts",
+                      "type": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                      "typeSimple": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ArchitectDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ArchitectDto>"
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+                  }
+                },
+                {
+                  "name": "GetByUserIdAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "userId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.CreateArchitectDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.UpdateArchitectDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/architect",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto, Volo.Abp.Ddd.Application.Contracts",
+                  "type": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                  "typeSimple": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ArchitectDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ArchitectDto>"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/architect/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "GetByUserIdAsyncByUserId": {
+              "uniqueName": "GetByUserIdAsyncByUserId",
+              "name": "GetByUserIdAsync",
+              "httpMethod": "GET",
+              "url": "api/app/architect/by-user-id/{userId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "userId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "userId",
+                  "name": "userId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/architect",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.CreateArchitectDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateArchitectDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/architect/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.UpdateArchitectDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.UpdateArchitectDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ArchitectDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ArchitectDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/architect/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            }
+          }
+        },
+        "cima.ContactRequests.ContactRequestAppService": {
+          "controllerName": "ContactRequest",
+          "controllerGroupName": "ContactRequest",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.ContactRequests.ContactRequestAppService",
+          "interfaces": [
+            {
+              "type": "cima.ContactRequests.IContactRequestAppService",
+              "name": "IContactRequestAppService",
+              "methods": [
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.CreateContactRequestDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "skipCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "maxResultCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>"
+                  }
+                },
+                {
+                  "name": "GetByArchitectAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "architectId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "skipCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "maxResultCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>"
+                  }
+                },
+                {
+                  "name": "MarkAsRepliedAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.MarkAsRepliedDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+                  }
+                },
+                {
+                  "name": "CloseAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/contact-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.CreateContactRequestDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateContactRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "GetListAsyncBySkipCountAndMaxResultCount": {
+              "uniqueName": "GetListAsyncBySkipCountAndMaxResultCount",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/contact-request",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "skipCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "maxResultCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "skipCount",
+                  "name": "skipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "maxResultCount",
+                  "name": "maxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "GetByArchitectAsyncByArchitectIdAndSkipCountAndMaxResultCount": {
+              "uniqueName": "GetByArchitectAsyncByArchitectIdAndSkipCountAndMaxResultCount",
+              "name": "GetByArchitectAsync",
+              "httpMethod": "GET",
+              "url": "api/app/contact-request/by-architect/{architectId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "architectId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "skipCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "maxResultCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "architectId",
+                  "name": "architectId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "skipCount",
+                  "name": "skipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "maxResultCount",
+                  "name": "maxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ContactRequestDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "MarkAsRepliedAsyncByIdAndInput": {
+              "uniqueName": "MarkAsRepliedAsyncByIdAndInput",
+              "name": "MarkAsRepliedAsync",
+              "httpMethod": "POST",
+              "url": "api/app/contact-request/{id}/mark-as-replied",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.MarkAsRepliedDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.MarkAsRepliedDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "CloseAsyncById": {
+              "uniqueName": "CloseAsyncById",
+              "name": "CloseAsync",
+              "httpMethod": "POST",
+              "url": "api/app/contact-request/{id}/close",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/contact-request/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ContactRequestDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            }
+          }
+        },
+        "cima.Listings.ListingAppService": {
+          "controllerName": "Listing",
+          "controllerGroupName": "Listing",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Listings.ListingAppService",
+          "interfaces": [
+            {
+              "type": "cima.Listings.IListingAppService",
+              "name": "IListingAppService",
+              "methods": [
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Listings.GetListingsInput, cima.Application.Contracts",
+                      "type": "cima.Listings.GetListingsInput",
+                      "typeSimple": "cima.Listings.GetListingsInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.CreateUpdateListingDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.CreateUpdateListingDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "PublishAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "ArchiveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "UnarchiveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "UnpublishAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+                  }
+                },
+                {
+                  "name": "GetByArchitectAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "architectId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "skipCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "maxResultCount",
+                      "typeAsString": "System.Int32, System.Private.CoreLib",
+                      "type": "System.Int32",
+                      "typeSimple": "number",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+                  }
+                },
+                {
+                  "name": "GetPublishedAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Listings.GetListingsInput, cima.Application.Contracts",
+                      "type": "cima.Listings.GetListingsInput",
+                      "typeSimple": "cima.Listings.GetListingsInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+                  }
+                },
+                {
+                  "name": "AddImageAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "listingId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Domain.Shared.Dtos.CreateListingImageDto, cima.Domain.Shared",
+                      "type": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                      "typeSimple": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingImageDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingImageDto"
+                  }
+                },
+                {
+                  "name": "RemoveImageAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "listingId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "imageId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "UpdateImagesOrderAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "listingId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "System.Collections.Generic.List`1[[cima.Domain.Shared.Dtos.UpdateImageOrderDto, cima.Domain.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib",
+                      "type": "System.Collections.Generic.List<cima.Domain.Shared.Dtos.UpdateImageOrderDto>",
+                      "typeSimple": "[cima.Domain.Shared.Dtos.UpdateImageOrderDto]",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/listing",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Listings.GetListingsInput, cima.Application.Contracts",
+                  "type": "cima.Listings.GetListingsInput",
+                  "typeSimple": "cima.Listings.GetListingsInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "SearchTerm",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Status",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinPrice",
+                  "jsonName": null,
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxPrice",
+                  "jsonName": null,
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinBedrooms",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinBathrooms",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ArchitectId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "PropertyType",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "TransactionType",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/listing/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.CreateUpdateListingDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/listing/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.CreateUpdateListingDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateUpdateListingDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/listing/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "PublishAsyncById": {
+              "uniqueName": "PublishAsyncById",
+              "name": "PublishAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/{id}/publish",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "ArchiveAsyncById": {
+              "uniqueName": "ArchiveAsyncById",
+              "name": "ArchiveAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/{id}/archive",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "UnarchiveAsyncById": {
+              "uniqueName": "UnarchiveAsyncById",
+              "name": "UnarchiveAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/{id}/unarchive",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "UnpublishAsyncById": {
+              "uniqueName": "UnpublishAsyncById",
+              "name": "UnpublishAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/{id}/unpublish",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "GetPublishedAsyncByInput": {
+              "uniqueName": "GetPublishedAsyncByInput",
+              "name": "GetPublishedAsync",
+              "httpMethod": "GET",
+              "url": "api/app/listing/published",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Listings.GetListingsInput, cima.Application.Contracts",
+                  "type": "cima.Listings.GetListingsInput",
+                  "typeSimple": "cima.Listings.GetListingsInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "SearchTerm",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Status",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinPrice",
+                  "jsonName": null,
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxPrice",
+                  "jsonName": null,
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinBedrooms",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MinBathrooms",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ArchitectId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "PropertyType",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "TransactionType",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "GetByArchitectAsyncByArchitectIdAndSkipCountAndMaxResultCount": {
+              "uniqueName": "GetByArchitectAsyncByArchitectIdAndSkipCountAndMaxResultCount",
+              "name": "GetByArchitectAsync",
+              "httpMethod": "GET",
+              "url": "api/app/listing/by-architect/{architectId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "architectId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "skipCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "maxResultCount",
+                  "typeAsString": "System.Int32, System.Private.CoreLib",
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "architectId",
+                  "name": "architectId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "skipCount",
+                  "name": "skipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "maxResultCount",
+                  "name": "maxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Domain.Shared.Dtos.ListingDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "AddImageAsyncByListingIdAndInput": {
+              "uniqueName": "AddImageAsyncByListingIdAndInput",
+              "name": "AddImageAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/image/{listingId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "listingId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Domain.Shared.Dtos.CreateListingImageDto, cima.Domain.Shared",
+                  "type": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "listingId",
+                  "name": "listingId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                  "typeSimple": "cima.Domain.Shared.Dtos.CreateListingImageDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingImageDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingImageDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "RemoveImageAsyncByListingIdAndImageId": {
+              "uniqueName": "RemoveImageAsyncByListingIdAndImageId",
+              "name": "RemoveImageAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/listing/image",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "listingId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "imageId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "listingId",
+                  "name": "listingId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "imageId",
+                  "name": "imageId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "UpdateImagesOrderAsyncByListingIdAndInput": {
+              "uniqueName": "UpdateImagesOrderAsyncByListingIdAndInput",
+              "name": "UpdateImagesOrderAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/listing/images-order/{listingId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "listingId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "System.Collections.Generic.List`1[[cima.Domain.Shared.Dtos.UpdateImageOrderDto, cima.Domain.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib",
+                  "type": "System.Collections.Generic.List<cima.Domain.Shared.Dtos.UpdateImageOrderDto>",
+                  "typeSimple": "[cima.Domain.Shared.Dtos.UpdateImageOrderDto]",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "listingId",
+                  "name": "listingId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "System.Collections.Generic.List<cima.Domain.Shared.Dtos.UpdateImageOrderDto>",
+                  "typeSimple": "[cima.Domain.Shared.Dtos.UpdateImageOrderDto]",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            }
+          }
+        },
+        "cima.Statistics.StatisticsAppService": {
+          "controllerName": "Statistics",
+          "controllerGroupName": "Statistics",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Statistics.StatisticsAppService",
+          "interfaces": [
+            {
+              "type": "cima.Statistics.IStatisticsAppService",
+              "name": "IStatisticsAppService",
+              "methods": [
+                {
+                  "name": "GetDashboardAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.DashboardStatsDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.DashboardStatsDto"
+                  }
+                },
+                {
+                  "name": "GetListingStatsAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ListingStatsDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ListingStatsDto"
+                  }
+                },
+                {
+                  "name": "GetContactRequestStatsAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "cima.Domain.Shared.Dtos.ContactRequestStatsDto",
+                    "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestStatsDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetDashboardAsync": {
+              "uniqueName": "GetDashboardAsync",
+              "name": "GetDashboardAsync",
+              "httpMethod": "GET",
+              "url": "api/app/statistics/dashboard",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.DashboardStatsDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.DashboardStatsDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Statistics.IStatisticsAppService"
+            },
+            "GetListingStatsAsync": {
+              "uniqueName": "GetListingStatsAsync",
+              "name": "GetListingStatsAsync",
+              "httpMethod": "GET",
+              "url": "api/app/statistics/ing-stats",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ListingStatsDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ListingStatsDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Statistics.IStatisticsAppService"
+            },
+            "GetContactRequestStatsAsync": {
+              "uniqueName": "GetContactRequestStatsAsync",
+              "name": "GetContactRequestStatsAsync",
+              "httpMethod": "GET",
+              "url": "api/app/statistics/contact-request-stats",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Domain.Shared.Dtos.ContactRequestStatsDto",
+                "typeSimple": "cima.Domain.Shared.Dtos.ContactRequestStatsDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Statistics.IStatisticsAppService"
+            }
+          }
+        }
+      }
+    }
+  },
+  "types": {}
+}
