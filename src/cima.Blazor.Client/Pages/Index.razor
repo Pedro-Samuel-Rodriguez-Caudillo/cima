@@ -5,28 +5,52 @@
 
 <PageTitle>CIMA - @L["Home"]</PageTitle>
 
-@* Hero Section con búsqueda *@
-<HeroSection />
+@* Remover todos los gaps y padding entre secciones *@
+<div class="no-section-gap">
+    @* Hero Section con búsqueda - Fullscreen *@
+    <section class="cima-hero no-section-gap">
+        <HeroSection />
+    </section>
 
-@* Propiedades Destacadas *@
-<FeaturedPropertiesSection PageSize="6" />
-
-@* Sección de Contacto *@
-<section class="py-16 bg-white">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                    @L["Contact:Title"]
-                </h2>
-                <p class="text-lg text-gray-600">
-                    @L["Contact:Subtitle"]
-                </p>
-            </div>
-            <ContactForm />
+    @* Propiedades Destacadas - Fullscreen con fondo gris claro *@
+    <section class="cima-section-fullscreen cima-bg-light no-section-gap">
+        <div class="cima-container w-full">
+            <FeaturedPropertiesSection PageSize="6" />
         </div>
-    </div>
-</section>
+    </section>
+
+    @* Sección de Contacto - Fullscreen con fondo blanco *@
+    <section class="cima-section-fullscreen bg-white no-section-gap">
+        <div class="cima-container">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-12 cima-fade-in">
+                    <h2 class="cima-heading-2 mb-4">
+                        @L["Contact:Title"]
+                    </h2>
+                    <p class="cima-subtitle">
+                        @L["Contact:Subtitle"]
+                    </p>
+                </div>
+                <div class="cima-slide-up">
+                    <ContactForm />
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    /* Asegurar que no haya gaps ni márgenes */
+    :global(body) {
+        margin: 0;
+        padding: 0;
+    }
+
+    .no-section-gap section {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+</style>
 
 @code {
     

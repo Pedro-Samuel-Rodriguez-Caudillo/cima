@@ -2,8 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos personalizados CIMA */
+/* =================================
+   ESTILOS GLOBALES CIMA
+   ================================= */
+
+@layer base {
+    /* Reset de márgenes para secciones fullscreen */
+    body, html {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
+    /* Remover gaps entre secciones */
+    section {
+        margin: 0;
+        padding: 0;
+    }
+}
+
 @layer components {
+    /* =================================
+       SECCIONES Y LAYOUTS
+       ================================= */
+    
+    /* Sección fullscreen (100vh) */
+    .cima-section-fullscreen {
+        min-height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* Sección con padding estándar */
+    .cima-section {
+        @apply py-16 px-4 sm:px-6 lg:px-8 w-full;
+    }
+
+    /* Contenedor responsivo */
+    .cima-container {
+        @apply container mx-auto max-w-7xl;
+    }
+
+    /* =================================
+       CARDS Y COMPONENTES
+       ================================= */
+    
     .cima-card {
         @apply bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1;
     }
@@ -16,8 +62,17 @@
         @apply p-6;
     }
 
+    /* Card con glassmorphism */
+    .cima-card-glass {
+        @apply bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20;
+    }
+
+    /* =================================
+       BADGES Y ETIQUETAS
+       ================================= */
+    
     .cima-badge {
-        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-all;
     }
 
     .cima-badge-draft {
@@ -32,12 +87,20 @@
         @apply bg-yellow-100 text-yellow-800;
     }
 
+    .cima-badge-portfolio {
+        @apply bg-purple-100 text-purple-800;
+    }
+
+    /* =================================
+       BOTONES
+       ================================= */
+    
     .cima-btn {
-        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+        @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
     .cima-btn-primary {
-        @apply cima-btn bg-cima-primary text-white hover:bg-blue-700 focus:ring-cima-primary;
+        @apply cima-btn bg-gradient-to-r from-cima-primary to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 focus:ring-cima-primary shadow-md hover:shadow-lg;
     }
 
     .cima-btn-secondary {
@@ -52,55 +115,235 @@
         @apply cima-btn bg-cima-danger text-white hover:bg-red-700 focus:ring-cima-danger;
     }
 
+    .cima-btn-outline {
+        @apply cima-btn border-2 border-cima-primary text-cima-primary hover:bg-cima-primary hover:text-white;
+    }
+
+    .cima-btn-ghost {
+        @apply cima-btn text-gray-700 hover:bg-gray-100;
+    }
+
+    /* =================================
+       FORMS E INPUTS
+       ================================= */
+    
     .cima-input {
         @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cima-primary focus:border-transparent transition-all;
     }
 
-    .cima-stat-box {
-        @apply bg-white p-6 rounded-lg border-l-4 border-cima-primary shadow-sm;
+    .cima-label {
+        @apply block text-sm font-medium text-gray-700 mb-2;
+    }
+
+    .cima-input-group {
+        @apply mb-4;
+    }
+
+    /* =================================
+       HERO SECTIONS
+       ================================= */
+    
+    .cima-hero {
+        @apply relative min-h-screen flex items-center justify-center overflow-hidden w-full;
+    }
+
+    .cima-hero-overlay {
+        @apply absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/75 to-blue-700/70;
+    }
+
+    .cima-hero-content {
+        @apply relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    /* =================================
+       GRID SYSTEMS
+       ================================= */
+    
+    .cima-grid-properties {
+        @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+    }
+
+    .cima-grid-portfolio {
+        @apply grid grid-cols-1 md:grid-cols-2 gap-8;
+    }
+
+    /* =================================
+       BACKGROUNDS
+       ================================= */
+    
+    .cima-bg-gradient-primary {
+        @apply bg-gradient-to-r from-blue-600 to-blue-800;
+    }
+
+    .cima-bg-gradient-secondary {
+        @apply bg-gradient-to-r from-gray-800 to-gray-900;
+    }
+
+    .cima-bg-light {
+        @apply bg-gray-50;
+    }
+
+    .cima-bg-dark {
+        @apply bg-gray-900;
+    }
+
+    /* =================================
+       TEXTOS Y TIPOGRAFÍA
+       ================================= */
+    
+    .cima-heading-1 {
+        @apply text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900;
+    }
+
+    .cima-heading-2 {
+        @apply text-3xl sm:text-4xl font-bold text-gray-900;
+    }
+
+    .cima-heading-3 {
+        @apply text-2xl sm:text-3xl font-bold text-gray-900;
+    }
+
+    .cima-subtitle {
+        @apply text-lg sm:text-xl text-gray-600;
     }
 
     .cima-price {
         @apply text-3xl font-bold text-cima-primary;
     }
 
-    .fade-in {
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .cima-badge {
-        transition: all 0.2s ease;
+    /* =================================
+       UTILIDADES ESPECIALES
+       ================================= */
+    
+    .cima-stat-box {
+        @apply bg-white p-6 rounded-lg border-l-4 border-cima-primary shadow-sm hover:shadow-md transition-shadow;
     }
 
     .cima-spinner {
         @apply border-4 border-blue-100 border-t-cima-primary rounded-full w-12 h-12 animate-spin;
     }
 
-    /* Hero scroll indicator animation */
-    .hero-scroll-indicator {
-        animation: bounce 2s infinite;
+    .cima-skeleton {
+        @apply animate-pulse bg-gray-200 rounded;
     }
 
-    @keyframes bounce {
-        0%,
-        100% {
-            transform: translateX(-50%) translateY(0);
-        }
+    /* Fade in animation */
+    .cima-fade-in {
+        animation: cimaFadeIn 0.5s ease-in;
+    }
 
-        50% {
-            transform: translateX(-50%) translateY(-10px);
-        }
+    /* Slide up animation */
+    .cima-slide-up {
+        animation: cimaSlideUp 0.5s ease-out;
+    }
+
+    /* =================================
+       SCROLL INDICATOR
+       ================================= */
+    
+    .cima-scroll-indicator {
+        @apply absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10;
+        animation: cimaScrollBounce 2s infinite;
+    }
+}
+
+/* =================================
+   ANIMACIONES KEYFRAMES
+   ================================= */
+
+@keyframes cimaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cimaSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes cimaScrollBounce {
+    0%, 100% {
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+/* =================================
+   UTILIDADES PERSONALIZADAS
+   ================================= */
+
+@layer utilities {
+    /* Eliminar gaps entre secciones */
+    .no-section-gap {
+        margin: 0 !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Full width sin padding */
+    .full-bleed {
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+    }
+
+    /* Aspect ratios */
+    .aspect-video {
+        aspect-ratio: 16 / 9;
+    }
+
+    .aspect-square {
+        aspect-ratio: 1 / 1;
+    }
+
+    .aspect-portrait {
+        aspect-ratio: 3 / 4;
+    }
+}
+
+/* =================================
+   RESPONSIVE ADJUSTMENTS
+   ================================= */
+
+@media (max-width: 768px) {
+    .cima-section-fullscreen {
+        min-height: auto;
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+    }
+
+    .cima-hero {
+        min-height: 100vh;
+    }
+}
+
+/* =================================
+   PRINT STYLES
+   ================================= */
+
+@media print {
+    .cima-hero,
+    .cima-scroll-indicator,
+    .cima-btn {
+        display: none !important;
+    }
+
+    .cima-card {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
     }
 }

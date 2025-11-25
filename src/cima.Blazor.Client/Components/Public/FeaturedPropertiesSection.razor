@@ -6,96 +6,94 @@
 @inject IFeaturedListingAppService FeaturedListingAppService
 @inject NavigationManager Navigation
 
-<section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        @* Header *@
-        <div class="text-center mb-12">
-            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-                @L["Properties:Featured"]
-            </h2>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                @L["Properties:Subtitle"]
-            </p>
+<div class="w-full">
+    @* Header *@
+    <div class="text-center mb-12 cima-fade-in">
+        <h2 class="cima-heading-2 mb-4">
+            @L["Properties:Featured"]
+        </h2>
+        <p class="cima-subtitle max-w-2xl mx-auto">
+            @L["Properties:Subtitle"]
+        </p>
+    </div>
+
+    @* Loading state *@
+    @if (isLoading)
+    {
+        <div class="flex justify-center items-center py-20">
+            <div class="text-center">
+                <div class="cima-spinner mx-auto mb-4"></div>
+                <p class="text-gray-600">@L["Common:Loading"]</p>
+            </div>
+        </div>
+    }
+    else if (featuredProperties == null || !featuredProperties.Any())
+    {
+        @* No hay propiedades destacadas *@
+        <div class="text-center py-20">
+            <i class="fas fa-home text-6xl text-gray-300 mb-4"></i>
+            <p class="text-xl text-gray-600">@L["Search:NoResults"]</p>
+        </div>
+    }
+    else
+    {
+        @* Grid de propiedades destacadas *@
+        <div class="cima-grid-properties mb-12 cima-slide-up">
+            @foreach (var property in GetCurrentPageProperties())
+            {
+                <ListingCard 
+                    Title="@property.Title"
+                    Price="@property.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))"
+                    Location="@property.Location"
+                    Bedrooms="@property.Bedrooms.ToString()"
+                    Bathrooms="@property.Bathrooms.ToString()"
+                    Area="@property.Area.ToString("N0")"
+                    ImageUrl="@GetMainImage(property)"
+                    ListingId="@property.Id" />
+            }
         </div>
 
-        @* Loading state *@
-        @if (isLoading)
+        @* Paginación *@
+        @if (totalPages > 1)
         {
-            <div class="flex justify-center items-center py-12">
-                <div class="text-center">
-                    <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4"></i>
-                    <p class="text-gray-600">@L["Common:Loading"]</p>
+            <div class="flex justify-center items-center gap-4 mb-8">
+                <button @onclick="PreviousPage" 
+                        disabled="@(currentPage == 0)"
+                        class="cima-btn-outline">
+                    <i class="fas fa-chevron-left mr-2"></i>
+                    @L["Common:Previous"]
+                </button>
+
+                <div class="flex gap-2">
+                    @for (int i = 0; i < totalPages; i++)
+                    {
+                        var pageIndex = i;
+                        <button @onclick="() => GoToPage(pageIndex)"
+                                class="@GetPageButtonClass(pageIndex)">
+                            @(pageIndex + 1)
+                        </button>
+                    }
                 </div>
+
+                <button @onclick="NextPage" 
+                        disabled="@(currentPage >= totalPages - 1)"
+                        class="cima-btn-outline">
+                    @L["Common:Next"]
+                    <i class="fas fa-chevron-right ml-2"></i>
+                </button>
             </div>
         }
-        else if (featuredProperties == null || !featuredProperties.Any())
-        {
-            @* No hay propiedades destacadas *@
-            <div class="text-center py-12">
-                <i class="fas fa-home text-6xl text-gray-300 mb-4"></i>
-                <p class="text-xl text-gray-600">@L["Search:NoResults"]</p>
-            </div>
-        }
-        else
-        {
-            @* Grid de propiedades destacadas *@
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                @foreach (var property in GetCurrentPageProperties())
-                {
-                    <ListingCard 
-                        Title="@property.Title"
-                        Price="@property.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))"
-                        Location="@property.Location"
-                        Bedrooms="@property.Bedrooms.ToString()"
-                        Bathrooms="@property.Bathrooms.ToString()"
-                        Area="@property.Area.ToString("N0")"
-                        ImageUrl="@GetMainImage(property)"
-                        ListingId="@property.Id" />
-                }
-            </div>
 
-            @* Paginación *@
-            @if (totalPages > 1)
-            {
-                <div class="flex justify-center items-center gap-4">
-                    <button @onclick="PreviousPage" 
-                            disabled="@(currentPage == 0)"
-                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <i class="fas fa-chevron-left"></i>
-                        @L["Common:Previous"]
-                    </button>
-
-                    <div class="flex gap-2">
-                        @for (int i = 0; i < totalPages; i++)
-                        {
-                            var pageIndex = i;
-                            <button @onclick="() => GoToPage(pageIndex)"
-                                    class="@GetPageButtonClass(pageIndex)">
-                                @(pageIndex + 1)
-                            </button>
-                        }
-                    </div>
-
-                    <button @onclick="NextPage" 
-                            disabled="@(currentPage >= totalPages - 1)"
-                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        @L["Common:Next"]
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            }
-
-            @* Botón ver todas *@
-            <div class="text-center mt-8">
-                <a href="/propiedades" 
-                   class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg">
-                    @L["Properties:ViewAll"]
-                    <i class="fas fa-arrow-right ml-2"></i>
-                </a>
-            </div>
-        }
-    </div>
-</section>
+        @* Botón ver todas *@
+        <div class="text-center">
+            <a href="/propiedades" 
+               class="cima-btn-primary inline-flex items-center gap-2 px-8 py-4 text-lg">
+                @L["Properties:ViewAll"]
+                <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public int PageSize { get; set; } = 6;
@@ -164,12 +162,12 @@
 
     private string GetPageButtonClass(int pageIndex)
     {
-        var baseClass = "w-10 h-10 flex items-center justify-center rounded-lg transition-colors ";
+        var baseClass = "w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-200 ";
         if (pageIndex == currentPage)
         {
-            return baseClass + "bg-blue-600 text-white font-bold";
+            return baseClass + "bg-blue-600 text-white font-bold shadow-md";
         }
-        return baseClass + "border border-gray-300 hover:bg-gray-50";
+        return baseClass + "border border-gray-300 text-gray-700 hover:bg-gray-50";
     }
 
     private string GetMainImage(ListingDto listing)
