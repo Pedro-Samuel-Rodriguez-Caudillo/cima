@@ -29,7 +29,8 @@ public class cimaDbContext :
     public DbSet<Listing> Listings { get; set; }
     public DbSet<Architect> Architects { get; set; }
     public DbSet<ContactRequest> ContactRequests { get; set; }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+    public DbSet<FeaturedListing> FeaturedListings { get; set; }
+
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -129,6 +130,18 @@ public class cimaDbContext :
                 .OnDelete(DeleteBehavior.Cascade);
             b.HasOne(x => x.Architect).WithMany().HasForeignKey(x => x.ArchitectId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<FeaturedListing>(b =>
+        {
+            b.ToTable("FeaturedListings");
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.ListingId).IsUnique(); // Solo una vez por listing
+            b.HasIndex(x => x.DisplayOrder);
+            b.HasOne(x => x.Listing)
+                .WithMany()
+                .HasForeignKey(x => x.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -17,7 +17,11 @@ namespace cima.Domain.Entities
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }
+        
+        // Normalización de tipos de propiedad
+        public PropertyCategory Category { get; set; }
         public PropertyType Type { get; set; }
+        
         public TransactionType TransactionType { get; set; }
         public Guid ArchitectId { get; set; }
 
