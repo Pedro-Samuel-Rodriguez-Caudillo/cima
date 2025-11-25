@@ -79,10 +79,28 @@
             transform: translateY(0);
         }
     }
+
     .cima-badge {
         transition: all 0.2s ease;
     }
+
     .cima-spinner {
         @apply border-4 border-blue-100 border-t-cima-primary rounded-full w-12 h-12 animate-spin;
+    }
+
+    /* Hero scroll indicator animation */
+    .hero-scroll-indicator {
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%,
+        100% {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        50% {
+            transform: translateX(-50%) translateY(-10px);
+        }
     }
 }

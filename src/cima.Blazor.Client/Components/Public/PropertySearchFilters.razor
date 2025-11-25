@@ -1,0 +1,359 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@using cima.Domain.Shared
+@using cima.Domain.Shared.Dtos
+@using cima.Listings
+@using System.Threading
+@inject IStringLocalizer<cimaResource> L
+@inject NavigationManager Navigation
+@inject IListingAppService ListingAppService
+
+<div class="property-search-filters">
+    @* Tabs para tipo de transacción *@
+    <div class="mb-6">
+        <div class="flex border-b border-gray-200">
+            <button @onclick="() => SelectTransactionType(TransactionType.Sale)"
+                    class="@GetTabClass(TransactionType.Sale)">
+                <i class="fas fa-home mr-2"></i>
+                @L["TransactionType:Sale"]
+            </button>
+            <button @onclick="() => SelectTransactionType(TransactionType.Rent)"
+                    class="@GetTabClass(TransactionType.Rent)">
+                <i class="fas fa-key mr-2"></i>
+                @L["TransactionType:Rent"]
+            </button>
+            <button @onclick="() => SelectTransactionType(TransactionType.Lease)"
+                    class="@GetTabClass(TransactionType.Lease)">
+                <i class="fas fa-file-contract mr-2"></i>
+                @L["TransactionType:Lease"]
+            </button>
+        </div>
+    </div>
+
+    @* Filtros básicos *@
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        @* Categoría *@
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                @L["Search:PropertyCategory"]
+            </label>
+            <select @bind="selectedCategory" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">@L["Common:All"]</option>
+                @foreach (var category in Enum.GetValues<PropertyCategory>())
+                {
+                    <option value="@((int)category)">@GetCategoryName(category)</option>
+                }
+            </select>
+        </div>
+
+        @* Ubicación con autocompletado y debounce *@
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                @L["Search:Location"]
+            </label>
+            <div class="relative">
+                <input type="text" 
+                       value="@location"
+                       @oninput="HandleLocationInput"
+                       placeholder="@L["Hero:SearchPlaceholder"]"
+                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                <i class="fas fa-map-marker-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                
+                @* Indicador de carga *@
+                @if (isLoadingSuggestions)
+                {
+                    <i class="fas fa-spinner fa-spin absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                }
+                
+                @* Sugerencias de autocompletado *@
+                @if (showSuggestions && locationSuggestions.Any())
+                {
+                    <div class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        @foreach (var suggestion in locationSuggestions)
+                        {
+                            <button type="button"
+                                    @onclick="() => SelectLocation(suggestion.Location)"
+                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors flex justify-between items-center">
+                                <span>
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+                                    @suggestion.Location
+                                </span>
+                                <span class="text-xs text-gray-500">@suggestion.Count propiedades</span>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Botón de filtros avanzados *@
+    <div class="mb-4">
+        <button @onclick="ToggleAdvancedFilters" 
+                class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2">
+            <i class="fas @(showAdvancedFilters ? "fa-chevron-up" : "fa-chevron-down")"></i>
+            @(showAdvancedFilters ? L["Search:HideAdvanced"] : L["Search:ShowAdvanced"])
+        </button>
+    </div>
+
+    @* Filtros avanzados (expandible) *@
+    @if (showAdvancedFilters)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+            @* Rango de precio *@
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    @L["Search:PriceRange"]
+                </label>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="number" 
+                           @bind="minPrice" 
+                           placeholder="@L["Search:MinPrice"]"
+                           step="10000"
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                    <input type="number" 
+                           @bind="maxPrice" 
+                           placeholder="@L["Search:MaxPrice"]"
+                           step="10000"
+                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                </div>
+            </div>
+
+            @* Recámaras *@
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    @L["Search:Bedrooms"]
+                </label>
+                <input type="number" 
+                       @bind="minBedrooms" 
+                       min="0" 
+                       max="10"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            @* Baños *@
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    @L["Search:Bathrooms"]
+                </label>
+                <input type="number" 
+                       @bind="minBathrooms" 
+                       min="0" 
+                       max="10"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+
+            @* Área mínima *@
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    @L["Search:MinArea"]
+                </label>
+                <input type="number" 
+                       @bind="minArea" 
+                       step="10"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+            </div>
+        </div>
+    }
+
+    @* Botón de búsqueda *@
+    <div class="flex gap-4">
+        <button @onclick="PerformSearch" 
+                class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+            <i class="fas fa-search"></i>
+            @L["Search:SearchButton"]
+        </button>
+
+        @if (HasActiveFilters())
+        {
+            <button @onclick="ClearFilters" 
+                    class="px-6 py-4 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded-lg transition-all duration-200">
+                @L["Search:ClearFilters"]
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    // Estado de búsqueda
+    private TransactionType selectedTransactionType = TransactionType.Sale;
+    private string selectedCategory = "";
+    private string location = "";
+    private decimal? minPrice;
+    private decimal? maxPrice;
+    private int? minBedrooms;
+    private int? minBathrooms;
+    private decimal? minArea;
+
+    // UI state
+    private bool showAdvancedFilters = false;
+    private bool showSuggestions = false;
+    private bool isLoadingSuggestions = false;
+    private List<LocationSuggestionDto> locationSuggestions = new();
+
+    // Debounce
+    private CancellationTokenSource? _debounceTokenSource;
+    private const int DEBOUNCE_DELAY_MS = 500;
+
+    private void SelectTransactionType(TransactionType type)
+    {
+        selectedTransactionType = type;
+    }
+
+    private string GetTabClass(TransactionType type)
+    {
+        var baseClass = "flex-1 px-6 py-3 font-semibold transition-all duration-200 border-b-2 ";
+        if (type == selectedTransactionType)
+        {
+            return baseClass + "border-blue-600 text-blue-600 bg-blue-50";
+        }
+        return baseClass + "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50";
+    }
+
+    private string GetCategoryName(PropertyCategory category)
+    {
+        return category switch
+        {
+            PropertyCategory.Residential => L["PropertyCategory:Residential"],
+            PropertyCategory.Commercial => L["PropertyCategory:Commercial"],
+            PropertyCategory.Mixed => L["PropertyCategory:Mixed"],
+            PropertyCategory.Land => L["PropertyCategory:Land"],
+            _ => category.ToString()
+        };
+    }
+
+    private void ToggleAdvancedFilters()
+    {
+        showAdvancedFilters = !showAdvancedFilters;
+    }
+
+    private async Task HandleLocationInput(ChangeEventArgs e)
+    {
+        location = e.Value?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(location) || location.Length < 2)
+        {
+            showSuggestions = false;
+            locationSuggestions.Clear();
+            return;
+        }
+
+        // Cancelar búsqueda anterior
+        _debounceTokenSource?.Cancel();
+        _debounceTokenSource = new CancellationTokenSource();
+
+        var token = _debounceTokenSource.Token;
+
+        try
+        {
+            isLoadingSuggestions = true;
+            
+            // Esperar 500ms antes de hacer la búsqueda
+            await Task.Delay(DEBOUNCE_DELAY_MS, token);
+
+            if (!token.IsCancellationRequested)
+            {
+                locationSuggestions = await ListingAppService.GetLocationSuggestionsAsync(location);
+                showSuggestions = locationSuggestions.Any();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Búsqueda cancelada, ignorar
+        }
+        catch
+        {
+            showSuggestions = false;
+            locationSuggestions.Clear();
+        }
+        finally
+        {
+            isLoadingSuggestions = false;
+        }
+    }
+
+    private void SelectLocation(string selectedLocation)
+    {
+        location = selectedLocation;
+        showSuggestions = false;
+        locationSuggestions.Clear();
+    }
+
+    private void PerformSearch()
+    {
+        var queryParams = new List<string>();
+
+        // Tipo de transacción
+        queryParams.Add($"transactionType={selectedTransactionType}");
+
+        // Categoría
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            queryParams.Add($"category={selectedCategory}");
+        }
+
+        // Ubicación
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            queryParams.Add($"location={Uri.EscapeDataString(location)}");
+        }
+
+        // Filtros avanzados
+        if (minPrice.HasValue)
+        {
+            queryParams.Add($"minPrice={minPrice}");
+        }
+        if (maxPrice.HasValue)
+        {
+            queryParams.Add($"maxPrice={maxPrice}");
+        }
+        if (minBedrooms.HasValue)
+        {
+            queryParams.Add($"minBedrooms={minBedrooms}");
+        }
+        if (minBathrooms.HasValue)
+        {
+            queryParams.Add($"minBathrooms={minBathrooms}");
+        }
+        if (minArea.HasValue)
+        {
+            queryParams.Add($"minArea={minArea}");
+        }
+
+        var queryString = string.Join("&", queryParams);
+        Navigation.NavigateTo($"/propiedades?{queryString}");
+    }
+
+    private void ClearFilters()
+    {
+        selectedTransactionType = TransactionType.Sale;
+        selectedCategory = "";
+        location = "";
+        minPrice = null;
+        maxPrice = null;
+        minBedrooms = null;
+        minBathrooms = null;
+        minArea = null;
+        showAdvancedFilters = false;
+    }
+
+    private bool HasActiveFilters()
+    {
+        return !string.IsNullOrEmpty(selectedCategory) ||
+               !string.IsNullOrWhiteSpace(location) ||
+               minPrice.HasValue ||
+               maxPrice.HasValue ||
+               minBedrooms.HasValue ||
+               minBathrooms.HasValue ||
+               minArea.HasValue;
+    }
+
+    public void Dispose()
+    {
+        _debounceTokenSource?.Cancel();
+        _debounceTokenSource?.Dispose();
+    }
+}
+
+@implements IDisposable

@@ -1,0 +1,52 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@using cima.Domain.Shared
+@inject IStringLocalizer<cimaResource> L
+@inject NavigationManager Navigation
+
+<section class="relative h-screen flex items-center justify-center overflow-hidden">
+    @* Imagen de fondo con overlay *@
+    <div class="absolute inset-0">
+        <img src="/images/getting-started/bg-01.png" 
+             alt="Hero background" 
+             class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/75 to-blue-700/70"></div>
+    </div>
+    
+    @* Contenido principal *@
+    <div class="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        @* Card central con búsqueda *@
+        <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 w-full lg:w-[70%] mx-auto">
+            @* Título de bienvenida *@
+            <div class="text-center mb-8">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+                    @L["Hero:WelcomeCard"]
+                </h1>
+                <p class="text-lg sm:text-xl text-gray-600">
+                    @L["Hero:Subtitle"]
+                </p>
+            </div>
+            
+            @* Componente de búsqueda *@
+            <PropertySearchFilters />
+        </div>
+    </div>
+    
+    @* Indicador de scroll *@
+    <div class="hero-scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        <button @onclick="ScrollToProperties" 
+                class="text-white hover:text-blue-200 transition-colors"
+                aria-label="Scroll to properties">
+            <i class="fas fa-chevron-down text-3xl"></i>
+        </button>
+    </div>
+</section>
+
+@code {
+    private async Task ScrollToProperties()
+    {
+        // Scroll suave a la sección de propiedades destacadas
+        await Task.CompletedTask;
+        // TODO: Implementar scroll con JS si es necesario
+    }
+}
