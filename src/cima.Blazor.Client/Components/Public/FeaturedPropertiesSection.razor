@@ -1,0 +1,179 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@using cima.Domain.Shared.Dtos
+@using cima.Listings
+@inject IStringLocalizer<cimaResource> L
+@inject IFeaturedListingAppService FeaturedListingAppService
+@inject NavigationManager Navigation
+
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        @* Header *@
+        <div class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                @L["Properties:Featured"]
+            </h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                @L["Properties:Subtitle"]
+            </p>
+        </div>
+
+        @* Loading state *@
+        @if (isLoading)
+        {
+            <div class="flex justify-center items-center py-12">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4"></i>
+                    <p class="text-gray-600">@L["Common:Loading"]</p>
+                </div>
+            </div>
+        }
+        else if (featuredProperties == null || !featuredProperties.Any())
+        {
+            @* No hay propiedades destacadas *@
+            <div class="text-center py-12">
+                <i class="fas fa-home text-6xl text-gray-300 mb-4"></i>
+                <p class="text-xl text-gray-600">@L["Search:NoResults"]</p>
+            </div>
+        }
+        else
+        {
+            @* Grid de propiedades destacadas *@
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                @foreach (var property in GetCurrentPageProperties())
+                {
+                    <ListingCard 
+                        Title="@property.Title"
+                        Price="@property.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))"
+                        Location="@property.Location"
+                        Bedrooms="@property.Bedrooms.ToString()"
+                        Bathrooms="@property.Bathrooms.ToString()"
+                        Area="@property.Area.ToString("N0")"
+                        ImageUrl="@GetMainImage(property)"
+                        ListingId="@property.Id" />
+                }
+            </div>
+
+            @* Paginación *@
+            @if (totalPages > 1)
+            {
+                <div class="flex justify-center items-center gap-4">
+                    <button @onclick="PreviousPage" 
+                            disabled="@(currentPage == 0)"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <i class="fas fa-chevron-left"></i>
+                        @L["Common:Previous"]
+                    </button>
+
+                    <div class="flex gap-2">
+                        @for (int i = 0; i < totalPages; i++)
+                        {
+                            var pageIndex = i;
+                            <button @onclick="() => GoToPage(pageIndex)"
+                                    class="@GetPageButtonClass(pageIndex)">
+                                @(pageIndex + 1)
+                            </button>
+                        }
+                    </div>
+
+                    <button @onclick="NextPage" 
+                            disabled="@(currentPage >= totalPages - 1)"
+                            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        @L["Common:Next"]
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            }
+
+            @* Botón ver todas *@
+            <div class="text-center mt-8">
+                <a href="/propiedades" 
+                   class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg">
+                    @L["Properties:ViewAll"]
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public int PageSize { get; set; } = 6;
+    
+    private List<ListingDto> featuredProperties = new();
+    private bool isLoading = true;
+    private int currentPage = 0;
+    private int totalPages = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeaturedProperties();
+    }
+
+    private async Task LoadFeaturedProperties()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Cargar todas las propiedades destacadas (máximo 12)
+            featuredProperties = await FeaturedListingAppService.GetForHomepageAsync(12);
+            
+            // Calcular paginación
+            totalPages = (int)Math.Ceiling((double)featuredProperties.Count / PageSize);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading featured properties: {ex.Message}");
+            featuredProperties = new List<ListingDto>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private List<ListingDto> GetCurrentPageProperties()
+    {
+        return featuredProperties
+            .Skip(currentPage * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 0)
+        {
+            currentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages - 1)
+        {
+            currentPage++;
+        }
+    }
+
+    private void GoToPage(int pageIndex)
+    {
+        currentPage = pageIndex;
+    }
+
+    private string GetPageButtonClass(int pageIndex)
+    {
+        var baseClass = "w-10 h-10 flex items-center justify-center rounded-lg transition-colors ";
+        if (pageIndex == currentPage)
+        {
+            return baseClass + "bg-blue-600 text-white font-bold";
+        }
+        return baseClass + "border border-gray-300 hover:bg-gray-50";
+    }
+
+    private string GetMainImage(ListingDto listing)
+    {
+        return listing.Images?.FirstOrDefault()?.Url ?? "/images/getting-started/bg-01.png";
+    }
+}
