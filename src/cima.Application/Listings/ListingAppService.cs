@@ -566,4 +566,213 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         await _listingRepository.UpdateAsync(listing);
     }
+
+    /// <summary>
+    /// Cambia una propiedad a estado Portfolio (showcase de proyectos completados)
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task<ListingDto> MoveToPortfolioAsync(Guid id)
+    {
+        var listing = await _listingRepository.GetAsync(id);
+
+        // Validacion de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        {
+            throw new AbpAuthorizationException("Solo puedes mover a portafolio tus propias propiedades");
+        }
+
+        listing.Status = ListingStatus.Portfolio;
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+        return ObjectMapper.Map<Listing, ListingDto>(listing);
+    }
+
+    /// <summary>
+    /// Búsqueda avanzada de propiedades con filtros
+    /// Incluye validación automática por DataAnnotations de ABP
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto)
+    {
+        var queryable = await _listingRepository.WithDetailsAsync(
+            listing => listing.Architect,
+            listing => listing.Images);
+
+        // Solo propiedades publicadas para búsqueda pública
+        queryable = queryable.Where(p => p.Status == ListingStatus.Published);
+
+        // Filtro por tipo de transacción
+        if (searchDto.TransactionType.HasValue)
+        {
+            queryable = queryable.Where(p => p.TransactionType == searchDto.TransactionType.Value);
+        }
+
+        // Filtro por categoría
+        if (searchDto.Category.HasValue)
+        {
+            queryable = queryable.Where(p => p.Category == searchDto.Category.Value);
+        }
+
+        // Filtro por tipo de propiedad
+        if (searchDto.Type.HasValue)
+        {
+            queryable = queryable.Where(p => p.Type == searchDto.Type.Value);
+        }
+
+        // Filtro por ubicación (ya validado por RegEx en DTO)
+        if (!string.IsNullOrWhiteSpace(searchDto.Location))
+        {
+            queryable = queryable.Where(p => p.Location.Contains(searchDto.Location));
+        }
+
+        // Rango de precio
+        if (searchDto.MinPrice.HasValue)
+        {
+            queryable = queryable.Where(p => p.Price >= searchDto.MinPrice.Value);
+        }
+        if (searchDto.MaxPrice.HasValue)
+        {
+            queryable = queryable.Where(p => p.Price <= searchDto.MaxPrice.Value);
+        }
+
+        // Filtros de recámaras y baños
+        if (searchDto.MinBedrooms.HasValue)
+        {
+            queryable = queryable.Where(p => p.Bedrooms >= searchDto.MinBedrooms.Value);
+        }
+        if (searchDto.MinBathrooms.HasValue)
+        {
+            queryable = queryable.Where(p => p.Bathrooms >= searchDto.MinBathrooms.Value);
+        }
+
+        // Rango de área
+        if (searchDto.MinArea.HasValue)
+        {
+            queryable = queryable.Where(p => p.Area >= searchDto.MinArea.Value);
+        }
+        if (searchDto.MaxArea.HasValue)
+        {
+            queryable = queryable.Where(p => p.Area <= searchDto.MaxArea.Value);
+        }
+
+        // Aplicar ordenamiento
+        queryable = searchDto.SortBy?.ToLower() switch
+        {
+            "price-low" => queryable.OrderBy(p => p.Price),
+            "price-high" => queryable.OrderByDescending(p => p.Price),
+            "area-large" => queryable.OrderByDescending(p => p.Area),
+            "area-small" => queryable.OrderBy(p => p.Area),
+            "newest" => queryable.OrderByDescending(p => p.CreatedAt),
+            "oldest" => queryable.OrderBy(p => p.CreatedAt),
+            _ => queryable.OrderByDescending(p => p.CreatedAt)
+        };
+
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+        var skipCount = searchDto.PageNumber * searchDto.PageSize;
+        var listings = await AsyncExecuter.ToListAsync(
+            queryable
+                .Skip(skipCount)
+                .Take(searchDto.PageSize)
+        );
+
+        return new PagedResultDto<ListingDto>(
+            totalCount,
+            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+        );
+    }
+
+    /// <summary>
+    /// Obtiene propiedades en portafolio (proyectos completados/showcase)
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input)
+    {
+        var queryable = await _listingRepository.WithDetailsAsync(
+            listing => listing.Architect,
+            listing => listing.Images);
+
+        // Solo propiedades en estado Portfolio
+        queryable = queryable.Where(p => p.Status == ListingStatus.Portfolio);
+
+        // Aplicar filtros básicos
+        if (!string.IsNullOrWhiteSpace(input.SearchTerm))
+        {
+            queryable = queryable.Where(p =>
+                p.Title.Contains(input.SearchTerm) ||
+                p.Location.Contains(input.SearchTerm));
+        }
+
+        if (input.PropertyType.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
+        }
+
+        if (input.PropertyCategory.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.Category == input.PropertyCategory.Value);
+        }
+
+        // Ordenamiento
+        queryable = ApplySorting(queryable, input.Sorting);
+
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+        var listings = await AsyncExecuter.ToListAsync(
+            queryable
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+        );
+
+        return new PagedResultDto<ListingDto>(
+            totalCount,
+            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+        );
+    }
+
+    /// <summary>
+    /// Obtiene sugerencias de ubicaciones para autocompletado
+    /// Basado en ubicaciones existentes en propiedades publicadas
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<List<LocationSuggestionDto>> GetLocationSuggestionsAsync(string searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+        {
+            return new List<LocationSuggestionDto>();
+        }
+
+        // Sanitizar input (ABP ya valida, pero doble seguridad)
+        searchTerm = searchTerm.Trim();
+
+        var queryable = await _listingRepository.GetQueryableAsync();
+
+        // Solo propiedades publicadas o en portafolio
+        queryable = queryable.Where(p => 
+            p.Status == ListingStatus.Published || 
+            p.Status == ListingStatus.Portfolio);
+
+        // Filtrar por ubicaciones que contengan el término de búsqueda
+        queryable = queryable.Where(p => p.Location.Contains(searchTerm));
+
+        // Agrupar por ubicación y contar
+        var locations = await AsyncExecuter.ToListAsync(queryable);
+
+        var suggestions = locations
+            .GroupBy(p => p.Location)
+            .Select(g => new LocationSuggestionDto
+            {
+                Location = g.Key,
+                Count = g.Count()
+            })
+            .OrderByDescending(s => s.Count)
+            .ThenBy(s => s.Location)
+            .Take(10)
+            .ToList();
+
+        return suggestions;
+    }
 }

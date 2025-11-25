@@ -59,6 +59,11 @@ public interface IListingAppService : IApplicationService
     Task<ListingDto> UnpublishAsync(Guid id);
     
     /// <summary>
+    /// Cambia una propiedad a estado Portfolio (showcase)
+    /// </summary>
+    Task<ListingDto> MoveToPortfolioAsync(Guid id);
+    
+    /// <summary>
     /// Obtiene propiedades de un arquitecto especifico
     /// </summary>
     Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
@@ -70,6 +75,23 @@ public interface IListingAppService : IApplicationService
     /// Obtiene solo propiedades publicadas (público)
     /// </summary>
     Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input);
+    
+    /// <summary>
+    /// Búsqueda avanzada de propiedades con filtros
+    /// Incluye validación contra inyecciones SQL/XSS
+    /// </summary>
+    Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto);
+    
+    /// <summary>
+    /// Obtiene propiedades en portafolio (proyectos completados)
+    /// </summary>
+    Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input);
+    
+    /// <summary>
+    /// Obtiene sugerencias de ubicaciones para autocompletado
+    /// Basado en ubicaciones existentes en propiedades publicadas
+    /// </summary>
+    Task<List<LocationSuggestionDto>> GetLocationSuggestionsAsync(string searchTerm);
     
     /// <summary>
     /// Agrega una imagen a una propiedad
@@ -100,5 +122,6 @@ public class GetListingsInput : PagedAndSortedResultRequestDto
     public int? MinBathrooms { get; set; }
     public Guid? ArchitectId { get; set; }
     public int? PropertyType { get; set; }
+    public int? PropertyCategory { get; set; }
     public int? TransactionType { get; set; }
 }

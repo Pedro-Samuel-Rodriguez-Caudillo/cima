@@ -25,6 +25,10 @@ public class cimaApplicationAutoMapperProfile : Profile
             
         CreateMap<ListingImage, ListingImageDto>();
 
+        // Featured Listings
+        CreateMap<FeaturedListing, FeaturedListingDto>()
+            .ForMember(dest => dest.Listing, opt => opt.MapFrom(src => src.Listing));
+
         // Contact Requests
         CreateMap<ContactRequest, ContactRequestDto>();
         CreateMap<CreateContactRequestDto, ContactRequest>();
