@@ -52,7 +52,7 @@ public class cimaMenuContributor : IMenuContributor
         context.Menu.AddItem(new ApplicationMenuItem(
             cimaMenus.Properties,
             l["Menu:Properties"],
-            PublicRoutes.Properties.Index,
+            PublicRoutes.Properties,
             icon: "fas fa-building",
             order: 2
         ));
