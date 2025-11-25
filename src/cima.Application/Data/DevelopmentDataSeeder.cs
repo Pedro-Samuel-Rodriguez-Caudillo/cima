@@ -291,15 +291,14 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         {
             listing.Images = new[]
             {
-                new ListingImage
-                {
-                    ImageId = _guidGenerator.Create(),
-                    Url = "/images/getting-started/bg-01.png",
-                    DisplayOrder = 1,
-                    AltText = $"Imagen de {title}",
-                    FileSize = 500000,
-                    ContentType = "image/png"
-                }
+                new ListingImage(
+                    imageId: _guidGenerator.Create(),
+                    url: "/images/getting-started/bg-01.png",
+                    displayOrder: 1,
+                    altText: $"Imagen de {title}",
+                    fileSize: 500000,
+                    contentType: "image/png"
+                )
             };
         }
 

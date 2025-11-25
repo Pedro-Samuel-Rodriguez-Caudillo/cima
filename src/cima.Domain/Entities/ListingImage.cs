@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Values;
 
 namespace cima.Domain.Entities
@@ -9,25 +8,54 @@ namespace cima.Domain.Entities
     /// Represents an image associated with a listing, including metadata such as display order, alternative text, and
     /// file information.
     /// </summary>
-    /// <remarks>This class is typically used to store and manage images for listing listings, enabling
+    /// <remarks>This class is an immutable value object used to store and manage images for listings, enabling
     /// features such as image galleries, accessibility via alternative text, and ordering for display purposes.
-    /// Instances of this class are considered value objects and are compared based on their atomic values.</remarks>
-    /// 
-    /// O en palabras más sencillas son metadatos.
+    /// Instances are compared based on their atomic values.</remarks>
     public class ListingImage : ValueObject
     {
-        public Guid ImageId { get; set; }
-        public string Url { get; set; }
-        public int DisplayOrder { get; set; }
-        public string AltText { get; set; } // Texto alternativo para accesibilidad (No quiero penalizaciones de CEO)
-        public long FileSize { get; set; }
-        public string ContentType { get; set; } // Tipo de contenido (e.g., "image/jpeg", "image/png")
+        public Guid ImageId { get; private set; }
+        public string Url { get; private set; }
+        public int DisplayOrder { get; private set; }
+        public string AltText { get; private set; }
+        public long FileSize { get; private set; }
+        public string ContentType { get; private set; }
+
+        // Constructor privado para EF Core
+        private ListingImage()
+        {
+        }
+
+        // Constructor público para crear instancias
+        public ListingImage(
+            Guid imageId,
+            string url,
+            int displayOrder,
+            string altText,
+            long fileSize,
+            string contentType)
+        {
+            ImageId = imageId;
+            Url = url ?? throw new ArgumentNullException(nameof(url));
+            DisplayOrder = displayOrder;
+            AltText = altText ?? string.Empty;
+            FileSize = fileSize;
+            ContentType = contentType ?? "image/jpeg";
+        }
+
+        // Método para actualizar DisplayOrder (permite reordenamiento)
+        public ListingImage WithDisplayOrder(int newDisplayOrder)
+        {
+            return new ListingImage(ImageId, Url, newDisplayOrder, AltText, FileSize, ContentType);
+        }
 
         protected override IEnumerable<object> GetAtomicValues()
         {
             yield return ImageId;
             yield return Url;
             yield return DisplayOrder;
+            yield return AltText;
+            yield return FileSize;
+            yield return ContentType;
         }
     }
 }

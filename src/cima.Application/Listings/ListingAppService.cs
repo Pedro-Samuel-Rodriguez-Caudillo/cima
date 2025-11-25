@@ -195,7 +195,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes editar tus propias propiedades");
         }
 
-        // Mapear solo los campos editables (sin ArchitectId)
+        // Mapear todos los campos editables
         listing.Title = input.Title;
         listing.Description = input.Description;
         listing.Location = input.Location;
@@ -203,6 +203,9 @@ public class ListingAppService : cimaAppService, IListingAppService
         listing.Area = input.Area;
         listing.Bedrooms = input.Bedrooms;
         listing.Bathrooms = input.Bathrooms;
+        listing.Category = input.Category;
+        listing.Type = input.Type;
+        listing.TransactionType = input.TransactionType;
         
         listing.LastModifiedAt = Clock.Now;
         listing.LastModifiedBy = CurrentUser.Id;
@@ -457,7 +460,14 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
-        var listing = await _listingRepository.GetAsync(listingId);
+        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(
+            listingQueryable.Where(l => l.Id == listingId));
+
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), listingId);
+        }
 
         // Validar permisos
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
@@ -473,16 +483,15 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .WithData("MaxImages", 10);
         }
 
-        // Crear nueva imagen
-        var newImage = new ListingImage
-        {
-            ImageId = Guid.NewGuid(),
-            Url = input.Url,
-            DisplayOrder = input.DisplayOrder > 0 ? input.DisplayOrder : listing.Images.Count + 1,
-            AltText = input.AltText ?? listing.Title,
-            FileSize = input.FileSize,
-            ContentType = input.ContentType
-        };
+        // Crear nueva imagen usando el constructor
+        var newImage = new ListingImage(
+            imageId: Guid.NewGuid(),
+            url: input.Url,
+            displayOrder: input.DisplayOrder > 0 ? input.DisplayOrder : listing.Images.Count + 1,
+            altText: input.AltText ?? listing.Title,
+            fileSize: input.FileSize,
+            contentType: input.ContentType
+        );
 
         listing.Images.Add(newImage);
         listing.LastModifiedAt = Clock.Now;
@@ -507,7 +516,14 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveImageAsync(Guid listingId, Guid imageId)
     {
-        var listing = await _listingRepository.GetAsync(listingId);
+        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(
+            listingQueryable.Where(l => l.Id == listingId));
+
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), listingId);
+        }
 
         // Validar permisos
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
@@ -527,11 +543,12 @@ public class ListingAppService : cimaAppService, IListingAppService
         listing.LastModifiedAt = Clock.Now;
         listing.LastModifiedBy = CurrentUser.Id;
 
-        // Reordenar imágenes restantes
+        // Reordenar imágenes restantes usando el método WithDisplayOrder
         var orderedImages = listing.Images.OrderBy(i => i.DisplayOrder).ToList();
+        listing.Images.Clear();
         for (int i = 0; i < orderedImages.Count; i++)
         {
-            orderedImages[i].DisplayOrder = i + 1;
+            listing.Images.Add(orderedImages[i].WithDisplayOrder(i + 1));
         }
 
         await _listingRepository.UpdateAsync(listing);
@@ -543,7 +560,14 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
     {
-        var listing = await _listingRepository.GetAsync(listingId);
+        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(
+            listingQueryable.Where(l => l.Id == listingId));
+
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), listingId);
+        }
 
         // Validar permisos
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
@@ -552,13 +576,22 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes reordenar imágenes de tus propias propiedades");
         }
 
+        // Crear nueva colección con el orden actualizado usando WithDisplayOrder
+        var updatedImages = new List<ListingImage>();
         foreach (var orderDto in input)
         {
             var image = listing.Images.FirstOrDefault(i => i.ImageId == orderDto.ImageId);
             if (image != null)
             {
-                image.DisplayOrder = orderDto.DisplayOrder;
+                updatedImages.Add(image.WithDisplayOrder(orderDto.DisplayOrder));
             }
+        }
+
+        // Reemplazar colección
+        listing.Images.Clear();
+        foreach (var img in updatedImages.OrderBy(i => i.DisplayOrder))
+        {
+            listing.Images.Add(img);
         }
 
         listing.LastModifiedAt = Clock.Now;

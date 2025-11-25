@@ -36,6 +36,31 @@ public  class ContactRequestAppService : cimaAppService, IContactRequestAppServi
     [AllowAnonymous]
     public async Task<ContactRequestDto> CreateAsync(CreateContactRequestDto input)
     {
+        // Normalizar datos de entrada
+        var normalizedName = input.Name?.Trim();
+        var normalizedEmail = input.Email?.Trim().ToLowerInvariant();
+        var normalizedPhone = input.Phone?.Trim();
+        var normalizedMessage = input.Message?.Trim();
+
+        // Validaciones adicionales (ABP ya valida DataAnnotations)
+        if (string.IsNullOrWhiteSpace(normalizedName))
+        {
+            throw new BusinessException("ContactRequest:NameRequired")
+                .WithData("Field", "Name");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            throw new BusinessException("ContactRequest:EmailRequired")
+                .WithData("Field", "Email");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedMessage))
+        {
+            throw new BusinessException("ContactRequest:MessageRequired")
+                .WithData("Field", "Message");
+        }
+
         // VALIDACION: Propiedad existe?
         var property = await _propertyRepository.FindAsync(input.ListingId);
         if (property == null)
@@ -47,10 +72,10 @@ public  class ContactRequestAppService : cimaAppService, IContactRequestAppServi
         var contactRequest = new ContactRequest
         {
             ListingId = input.ListingId,
-            Name = input.Name,
-            Email = input.Email,
-            Phone = input.Phone ?? string.Empty,
-            Message = input.Message,
+            Name = normalizedName,
+            Email = normalizedEmail,
+            Phone = normalizedPhone ?? string.Empty,
+            Message = normalizedMessage,
             ArchitectId = property.ArchitectId,
             CreatedAt = Clock.Now,
             Status = ContactRequestStatus.New,

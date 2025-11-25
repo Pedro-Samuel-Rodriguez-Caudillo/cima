@@ -178,7 +178,7 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
         // Verificar que solo el propietario o admin pueda actualizar
         if (architect.UserId != CurrentUser.Id && 
-            !await AuthorizationService.IsGrantedAsync(cimaPermissions.Architects.Delete))
+            !await AuthorizationService.IsGrantedAsync(cimaPermissions.Architects.Edit))
         {
             throw new UserFriendlyException(
                 "Solo el propietario del perfil puede actualizarlo",
