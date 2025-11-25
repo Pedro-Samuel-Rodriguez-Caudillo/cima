@@ -2,7 +2,11 @@
 @rendermode InteractiveAuto
 @attribute [AllowAnonymous]
 @using cima.Listings
+@using cima.Domain.Shared
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.WebUtilities
 @inject IListingAppService ListingAppService
+@inject NavigationManager Navigation
 @using cima.Domain.Shared.Dtos
 
 <PageTitle>Propiedades Disponibles - CIMA</PageTitle>
@@ -23,6 +27,38 @@
                 <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
                     <h3 class="text-xl font-bold mb-6">Filtrar propiedades</h3>
                     
+                    @* Tipo de transacción *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Tipo de transacción
+                        </label>
+                        <select @bind="filterTransactionType" 
+                                @bind:after="ApplyFilters"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            @foreach (var type in Enum.GetValues<TransactionType>())
+                            {
+                                <option value="@((int)type)">@GetTransactionTypeName(type)</option>
+                            }
+                        </select>
+                    </div>
+
+                    @* Categoría *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Categoría
+                        </label>
+                        <select @bind="filterCategory" 
+                                @bind:after="ApplyFilters"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Todas</option>
+                            @foreach (var category in Enum.GetValues<PropertyCategory>())
+                            {
+                                <option value="@((int)category)">@GetCategoryName(category)</option>
+                            }
+                        </select>
+                    </div>
+                    
                     @* Tipo de propiedad *@
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -37,6 +73,18 @@
                                 <option value="@((int)type)">@GetPropertyTypeName(type)</option>
                             }
                         </select>
+                    </div>
+
+                    @* Ubicación *@
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Ubicación
+                        </label>
+                        <input type="text" 
+                               @bind="filterLocation" 
+                               @bind:after="ApplyFilters"
+                               placeholder="Buscar por ubicación"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
                     </div>
                     
                     @* Rango de precio *@
@@ -149,13 +197,50 @@
     private bool isLoading = true;
 
     // Filtros
+    private string filterTransactionType = "";
+    private string filterCategory = "";
     private string filterType = "";
+    private string filterLocation = "";
     private decimal? filterMaxPrice = null;
     private int filterBedrooms = 0;
     private string sortBy = "newest";
 
     protected override async Task OnInitializedAsync()
     {
+        // Leer query parameters
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var queryParams = QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("transactionType", out var transactionType))
+        {
+            filterTransactionType = transactionType.ToString();
+        }
+
+        if (queryParams.TryGetValue("category", out var category))
+        {
+            filterCategory = category.ToString();
+        }
+
+        if (queryParams.TryGetValue("location", out var location))
+        {
+            filterLocation = location.ToString();
+        }
+
+        if (queryParams.TryGetValue("minPrice", out var minPrice) && decimal.TryParse(minPrice, out var minPriceValue))
+        {
+            // Guardar para futura implementación
+        }
+
+        if (queryParams.TryGetValue("maxPrice", out var maxPrice) && decimal.TryParse(maxPrice, out var maxPriceValue))
+        {
+            filterMaxPrice = maxPriceValue;
+        }
+
+        if (queryParams.TryGetValue("minBedrooms", out var bedrooms) && int.TryParse(bedrooms, out var bedroomsValue))
+        {
+            filterBedrooms = bedroomsValue;
+        }
+
         await LoadListings();
     }
 
@@ -197,11 +282,29 @@
         }
         
         var query = allListings.AsEnumerable();
+
+        // Filtro por tipo de transacción
+        if (!string.IsNullOrEmpty(filterTransactionType) && int.TryParse(filterTransactionType, out var transactionTypeValue))
+        {
+            query = query.Where(l => (int)l.TransactionType == transactionTypeValue);
+        }
+
+        // Filtro por categoría
+        if (!string.IsNullOrEmpty(filterCategory) && int.TryParse(filterCategory, out var categoryValue))
+        {
+            query = query.Where(l => (int)l.Category == categoryValue);
+        }
         
         // Filtro por tipo
         if (!string.IsNullOrEmpty(filterType) && int.TryParse(filterType, out var typeValue))
         {
             query = query.Where(l => (int)l.Type == typeValue);
+        }
+
+        // Filtro por ubicación
+        if (!string.IsNullOrWhiteSpace(filterLocation))
+        {
+            query = query.Where(l => l.Location.Contains(filterLocation, StringComparison.OrdinalIgnoreCase));
         }
         
         // Filtro por precio
@@ -230,21 +333,66 @@
     
     private void ClearFilters()
     {
+        filterTransactionType = "";
+        filterCategory = "";
         filterType = "";
+        filterLocation = "";
         filterMaxPrice = null;
         filterBedrooms = 0;
         sortBy = "newest";
         ApplyFilters();
+    }
+
+    private string GetTransactionTypeName(TransactionType type)
+    {
+        return type switch
+        {
+            TransactionType.Sale => "Venta",
+            TransactionType.Rent => "Renta",
+            TransactionType.Lease => "Arrendamiento",
+            _ => type.ToString()
+        };
+    }
+
+    private string GetCategoryName(PropertyCategory category)
+    {
+        return category switch
+        {
+            PropertyCategory.Residential => "Residencial",
+            PropertyCategory.Commercial => "Comercial",
+            PropertyCategory.Mixed => "Uso Mixto",
+            PropertyCategory.Land => "Terreno",
+            _ => category.ToString()
+        };
     }
     
     private string GetPropertyTypeName(PropertyType type)
     {
         return type switch
         {
+            // Residenciales
             PropertyType.House => "Casa",
             PropertyType.Apartment => "Departamento",
-            PropertyType.Land => "Terreno",
-            PropertyType.Commercial => "Comercial",
+            PropertyType.Condo => "Condominio",
+            PropertyType.Townhouse => "Casa Adosada",
+            PropertyType.Villa => "Villa",
+            
+            // Comerciales
+            PropertyType.Office => "Oficina",
+            PropertyType.Warehouse => "Bodega",
+            PropertyType.RetailSpace => "Local Comercial",
+            PropertyType.Restaurant => "Restaurante",
+            PropertyType.Hotel => "Hotel",
+            
+            // Mixtos
+            PropertyType.MixedUseBuilding => "Edificio de Uso Mixto",
+            PropertyType.LiveWorkSpace => "Espacio Vive-Trabaja",
+            
+            // Terrenos
+            PropertyType.ResidentialLand => "Terreno Residencial",
+            PropertyType.CommercialLand => "Terreno Comercial",
+            PropertyType.AgriculturalLand => "Terreno Agrícola",
+            
             _ => type.ToString()
         };
     }

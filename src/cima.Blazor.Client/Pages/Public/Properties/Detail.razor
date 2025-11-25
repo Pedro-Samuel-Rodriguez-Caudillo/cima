@@ -233,10 +233,29 @@ else
     {
         return type switch
         {
+            // Residenciales
             PropertyType.House => "Casa",
             PropertyType.Apartment => "Departamento",
-            PropertyType.Land => "Terreno",
-            PropertyType.Commercial => "Comercial",
+            PropertyType.Condo => "Condominio",
+            PropertyType.Townhouse => "Casa Adosada",
+            PropertyType.Villa => "Villa",
+            
+            // Comerciales
+            PropertyType.Office => "Oficina",
+            PropertyType.Warehouse => "Bodega",
+            PropertyType.RetailSpace => "Local Comercial",
+            PropertyType.Restaurant => "Restaurante",
+            PropertyType.Hotel => "Hotel",
+            
+            // Mixtos
+            PropertyType.MixedUseBuilding => "Edificio de Uso Mixto",
+            PropertyType.LiveWorkSpace => "Espacio Vive-Trabaja",
+            
+            // Terrenos
+            PropertyType.ResidentialLand => "Terreno Residencial",
+            PropertyType.CommercialLand => "Terreno Comercial",
+            PropertyType.AgriculturalLand => "Terreno Agrícola",
+            
             _ => type.ToString()
         };
     }

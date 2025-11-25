@@ -1,89 +1,77 @@
-﻿@inject NavigationManager Navigation
+﻿@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
+@inject NavigationManager Navigation
 
-<div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-     @onclick="NavigateToDetail">
-    
-    @* Imagen de la propiedad *@
-    <div class="relative h-64 overflow-hidden">
-        @if (!string.IsNullOrEmpty(ImageUrl))
-        {
-            <img src="@ImageUrl" alt="@Title" class="w-full h-full object-cover transition-transform duration-300 hover:scale-110" />
-        }
-        else
-        {
-            <div class="w-full h-full bg-gray-300 flex items-center justify-center">
-                <span class="text-gray-500 text-4xl">
-                    <i class="fas fa-home"></i>
-                </span>
-            </div>
-        }
+<div class="cima-card cursor-pointer group" @onclick="NavigateToDetail">
+    @* Imagen principal con lazy loading *@
+    <div class="relative h-64 overflow-hidden bg-gray-200">
+        <img src="@ImageUrl" 
+             alt="@Title" 
+             loading="lazy"
+             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
         
-        @* Badge del precio *@
-        <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
-            <span class="text-lg font-bold">@FormattedPrice</span>
+        @* Badge de precio *@
+        <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold">
+            @FormatPrice(Price)
         </div>
     </div>
-    
-    @* Contenido de la tarjeta *@
-    <div class="p-5">
+
+    @* Contenido *@
+    <div class="p-6">
         @* Título *@
-        <h3 class="text-xl font-semibold text-gray-800 mb-2 line-clamp-2 h-14">
+        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
             @Title
         </h3>
-        
+
         @* Ubicación *@
         <div class="flex items-center text-gray-600 mb-4">
-            <i class="fas fa-map-marker-alt mr-2"></i>
-            <span class="text-sm">@Location</span>
+            <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>
+            <span class="text-sm line-clamp-1">@Location</span>
         </div>
-        
+
         @* Características *@
-        <div class="flex items-center justify-between text-gray-700 pt-4 border-t border-gray-200">
-            <div class="flex items-center">
-                <i class="fas fa-bed mr-1"></i>
-                <span class="text-sm">@Bedrooms</span>
+        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+            <div class="text-center">
+                <i class="fas fa-bed text-gray-400 mb-1"></i>
+                <div class="text-sm font-semibold text-gray-900">@Bedrooms</div>
+                <div class="text-xs text-gray-500">@L["Properties:Bedrooms"]</div>
             </div>
-            <div class="flex items-center">
-                <i class="fas fa-bath mr-1"></i>
-                <span class="text-sm">@Bathrooms</span>
+            <div class="text-center">
+                <i class="fas fa-bath text-gray-400 mb-1"></i>
+                <div class="text-sm font-semibold text-gray-900">@Bathrooms</div>
+                <div class="text-xs text-gray-500">@L["Properties:Bathrooms"]</div>
             </div>
-            <div class="flex items-center">
-                <i class="fas fa-ruler-combined mr-1"></i>
-                <span class="text-sm">@Area m²</span>
+            <div class="text-center">
+                <i class="fas fa-ruler-combined text-gray-400 mb-1"></i>
+                <div class="text-sm font-semibold text-gray-900">@Area</div>
+                <div class="text-xs text-gray-500">m²</div>
             </div>
         </div>
-        
-        @* Botón de acción *@
-        <button class="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Ver detalles
-        </button>
     </div>
 </div>
 
 @code {
-    [Parameter] public string Title { get; set; } = "Propiedad sin título";
-    [Parameter] public string Price { get; set; } = "0";
-    [Parameter] public string Location { get; set; } = "Ubicación no disponible";
-    [Parameter] public string Bedrooms { get; set; } = "0";
-    [Parameter] public string Bathrooms { get; set; } = "0";
-    [Parameter] public string Area { get; set; } = "0";
-    [Parameter] public string? ImageUrl { get; set; }
-    [Parameter] public Guid ListingId { get; set; }
-    
-    private string FormattedPrice
-    {
-        get
-        {
-            if (decimal.TryParse(Price, out var priceValue))
-            {
-                return priceValue.ToString("C0", new System.Globalization.CultureInfo("es-MX"));
-            }
-            return "$0";
-        }
-    }
-    
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Price { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Location { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Bedrooms { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Bathrooms { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Area { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string ImageUrl { get; set; } = "/images/getting-started/bg-01.png";
+    [Parameter, EditorRequired] public Guid ListingId { get; set; }
+
     private void NavigateToDetail()
     {
-        Navigation.NavigateTo(PublicRoutes.GetPropertyDetailRoute(ListingId));
+        Navigation.NavigateTo($"/propiedades/{ListingId}");
+    }
+
+    private string FormatPrice(string price)
+    {
+        if (decimal.TryParse(price, out var priceValue))
+        {
+            return priceValue.ToString("C0", new System.Globalization.CultureInfo("es-MX"));
+        }
+        return price;
     }
 }
