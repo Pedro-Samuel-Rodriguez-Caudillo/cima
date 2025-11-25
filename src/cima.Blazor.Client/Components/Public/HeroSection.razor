@@ -3,6 +3,7 @@
 @using cima.Domain.Shared
 @inject IStringLocalizer<cimaResource> L
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <div class="cima-hero">
     @* Imagen de fondo con overlay *@
@@ -39,7 +40,7 @@
         <button @onclick="ScrollToProperties" 
                 class="text-white hover:text-blue-200 transition-colors focus:outline-none"
                 aria-label="Scroll to properties">
-            <i class="fas fa-chevron-down text-3xl"></i>
+            <i class="fas fa-chevron-down text-3xl animate-bounce"></i>
         </button>
     </div>
 </div>
@@ -47,8 +48,22 @@
 @code {
     private async Task ScrollToProperties()
     {
-        // Scroll suave a la sección de propiedades destacadas
-        await Task.CompletedTask;
-        // TODO: Implementar scroll con JS si es necesario
+        try
+        {
+            // Scroll suave a la sección de propiedades destacadas usando el ID
+            await JS.InvokeVoidAsync("eval", @"
+                const featuredSection = document.getElementById('featured-properties');
+                if (featuredSection) {
+                    featuredSection.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }
+            ");
+        }
+        catch (Exception)
+        {
+            // Fallback silencioso si falla el scroll
+        }
     }
 }

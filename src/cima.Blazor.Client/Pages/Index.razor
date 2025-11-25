@@ -5,22 +5,21 @@
 
 <PageTitle>CIMA - @L["Home"]</PageTitle>
 
-@* Remover todos los gaps y padding entre secciones *@
-<div class="no-section-gap">
+<div class="m-0 p-0 space-y-0">
     @* Hero Section con búsqueda - Fullscreen *@
-    <section class="cima-hero no-section-gap">
+    <section class="cima-hero m-0 p-0">
         <HeroSection />
     </section>
 
     @* Propiedades Destacadas - Fullscreen con fondo gris claro *@
-    <section class="cima-section-fullscreen cima-bg-light no-section-gap">
+    <section id="featured-properties" class="cima-section-fullscreen cima-bg-light m-0 p-0">
         <div class="cima-container w-full">
             <FeaturedPropertiesSection PageSize="6" />
         </div>
     </section>
 
     @* Sección de Contacto - Fullscreen con fondo blanco *@
-    <section class="cima-section-fullscreen bg-white no-section-gap">
+    <section class="cima-section-fullscreen bg-white m-0 p-0">
         <div class="cima-container">
             <div class="max-w-4xl mx-auto">
                 <div class="text-center mb-12 cima-fade-in">
@@ -38,19 +37,6 @@
         </div>
     </section>
 </div>
-
-<style>
-    /* Asegurar que no haya gaps ni márgenes */
-    :global(body) {
-        margin: 0;
-        padding: 0;
-    }
-
-    .no-section-gap section {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-</style>
 
 @code {
     
