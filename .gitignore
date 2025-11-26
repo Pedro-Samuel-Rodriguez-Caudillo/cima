@@ -289,9 +289,11 @@ openiddict.pfx
 # Environment variables
 .env
 .env.local
-.env.development
-.env.production
 .env.*.local
+# Permitir archivos de ejemplo
+!.env.development.example
+!.env.staging.example
+!.env.production.example
 
 # Connection strings personalizadas
 appsettings.Development.json.user

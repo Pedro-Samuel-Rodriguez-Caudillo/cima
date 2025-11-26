@@ -1,0 +1,72 @@
+fix(cicd): corregir Docker build y eliminar dependencia de secrets.json en CI
+
+PROBLEMAS CORREGIDOS:
+
+1. DOCKERFILE - Rutas Incorrectas
+   - ERROR: "failed to build: exit code: 1"
+   - CAUSA: WORKDIR "/src/src/cima.Blazor" pero COPY . . pone archivos en /src
+   - FIX: Usar ruta absoluta en dotnet publish
+
+2. GITHUB ACTIONS - appsettings.secrets.json
+   - ERROR: "MSB3030: Could not copy file because it was not found"
+   - CAUSA: Archivos secrets.json no están en repositorio (gitignored)
+   - FIX: Agregar Condition="Exists()" en .csproj de tests
+
+ARCHIVOS MODIFICADOS:
+
+Docker:
+- src/cima.Blazor/Dockerfile
+  * Corregida ruta en stage publish
+  * RUN dotnet publish "/src/src/cima.Blazor/cima.Blazor.csproj"
+
+Tests:
+- test/cima.HttpApi.Client.ConsoleTestApp/cima.HttpApi.Client.ConsoleTestApp.csproj
+  * Content Include con Condition="Exists('appsettings.secrets.json')"
+- test/cima.TestBase/cima.TestBase.csproj
+  * Content Include con Condition="Exists('appsettings.secrets.json')"
+
+Git:
+- .gitignore
+  * Permitir explícitamente archivos .env.*.example
+
+NUEVOS ARCHIVOS:
+
+Scripts:
+- etc/scripts/test-docker-build.ps1
+  * Script para probar Docker build localmente
+  * Opciones: -Run, -Clean, -NoBuild
+  * Incluye health check test
+
+Documentación:
+- docs/DIA_8_FIX_CICD.md
+  * Explicación detallada de problemas
+  * Guía de testing local y CI/CD
+  * Troubleshooting completo
+  * Comandos útiles
+
+TESTING:
+
+Local:
+- dotnet build: OK
+- test-docker-build.ps1: PENDIENTE (requiere Docker)
+
+CI/CD:
+- GitHub Actions: PENDIENTE (después de push)
+- Workflows afectados:
+  * ci-build-test.yml
+  * cd-deploy-staging.yml
+  * cd-deploy-production.yml
+
+IMPACTO:
+
+? CI build ya no falla por secrets.json faltantes
+? Docker build usa rutas correctas
+? Tests pueden ejecutarse sin archivos secrets localmente
+? Script de testing Docker para validación pre-push
+
+BREAKING CHANGES: Ninguno
+
+PRÓXIMO PASO:
+1. Push a master
+2. Verificar GitHub Actions pasa
+3. Monitorear workflow de CD

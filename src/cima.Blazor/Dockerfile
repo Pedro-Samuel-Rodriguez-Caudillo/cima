@@ -42,8 +42,7 @@ RUN dotnet build "cima.Blazor.csproj" -c $BUILD_CONFIGURATION -o /app/build
 # Stage 3: Publish
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-WORKDIR "/src/src/cima.Blazor"
-RUN dotnet publish "cima.Blazor.csproj" \
+RUN dotnet publish "/src/src/cima.Blazor/cima.Blazor.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
     /p:UseAppHost=false
@@ -60,4 +59,4 @@ RUN mkdir -p /app/wwwroot/images/listings
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
+ENTRYPOINT ["dotnet", "cima.Blazor.dll"]ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
