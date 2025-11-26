@@ -1,0 +1,185 @@
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to deploy'
+        required: true
+        default: 'v1.0.0'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Production Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=prod-
+          type=raw,value=latest
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: src/cima.Blazor/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to Production Server
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: https://cima.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Create backup script
+      run: |
+        cat > backup.sh << 'EOF'
+        #!/bin/bash
+        BACKUP_DIR="/opt/cima/backups/production"
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        
+        mkdir -p $BACKUP_DIR
+        
+        # Backup database
+        docker exec cima-postgres-prod pg_dump -U $POSTGRES_USER $POSTGRES_DB > $BACKUP_DIR/db_backup_$TIMESTAMP.sql
+        
+        # Backup images
+        tar -czf $BACKUP_DIR/images_backup_$TIMESTAMP.tar.gz /opt/cima/production/images
+        
+        echo "Backup completed: $TIMESTAMP"
+        EOF
+        chmod +x backup.sh
+    
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.PRODUCTION_HOST }}
+        username: ${{ secrets.PRODUCTION_USER }}
+        key: ${{ secrets.PRODUCTION_SSH_KEY }}
+        port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+        script: |
+          set -e
+          
+          cd /opt/cima/production
+          
+          # Create backup before deployment
+          ./backup.sh
+          
+          # Pull latest changes
+          git pull origin master
+          
+          # Update environment variables (manual step required first time)
+          if [ ! -f .env.production ]; then
+            echo "ERROR: .env.production file not found. Please create it manually."
+            exit 1
+          fi
+          
+          # Pull new Docker images
+          docker-compose -f docker-compose.prod.yml pull
+          
+          # Stop old containers gracefully
+          docker-compose -f docker-compose.prod.yml down --timeout 30
+          
+          # Start new containers
+          docker-compose -f docker-compose.prod.yml up -d
+          
+          # Clean up unused images (keep last 3 versions)
+          docker image prune -a -f --filter "until=72h"
+          
+          # Wait for services to be healthy
+          echo "Waiting for services to be healthy..."
+          sleep 30
+          
+          # Health check
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f http://localhost:8082/health; then
+              echo "Health check passed"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              echo "Health check attempt $RETRY_COUNT/$MAX_RETRIES failed, retrying..."
+              sleep 10
+            fi
+          done
+          
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Health check failed after $MAX_RETRIES attempts"
+            echo "Rolling back to previous version..."
+            docker-compose -f docker-compose.prod.yml down
+            docker-compose -f docker-compose.prod.yml up -d --force-recreate
+            exit 1
+          fi
+    
+    - name: Notify deployment status
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const status = '${{ job.status }}';
+          const message = status === 'success' 
+            ? ':white_check_mark: Production deployment successful'
+            : ':x: Production deployment failed';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          });
+    
+    - name: Create GitHub Release
+      if: success() && startsWith(github.ref, 'refs/tags/')
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false

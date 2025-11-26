@@ -1,0 +1,60 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ master, develop, feature/** ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Restore dependencies
+      run: dotnet restore cima.sln
+    
+    - name: Build solution
+      run: dotnet build cima.sln --configuration Release --no-restore
+    
+    - name: Install NPM dependencies (Tailwind CSS)
+      working-directory: src/cima.Blazor.Client
+      run: npm install
+    
+    - name: Build Tailwind CSS
+      working-directory: src/cima.Blazor.Client
+      run: npm run build:css
+    
+    - name: Run unit tests
+      run: dotnet test cima.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: '**/test-results.trx'
+    
+    - name: Publish application
+      run: dotnet publish src/cima.Blazor/cima.Blazor.csproj -c Release -o ./publish --no-build
+    
+    - name: Upload publish artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: blazor-app
+        path: ./publish
+        retention-days: 7

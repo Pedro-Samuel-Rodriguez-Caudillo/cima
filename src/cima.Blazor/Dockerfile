@@ -42,6 +42,7 @@ RUN dotnet build "cima.Blazor.csproj" -c $BUILD_CONFIGURATION -o /app/build
 # Stage 3: Publish
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
+WORKDIR "/src/src/cima.Blazor"
 RUN dotnet publish "cima.Blazor.csproj" \
     -c $BUILD_CONFIGURATION \
     -o /app/publish \
