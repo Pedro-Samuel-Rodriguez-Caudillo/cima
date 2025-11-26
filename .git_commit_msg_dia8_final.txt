@@ -1,0 +1,65 @@
+feat(devops): dia 8 completado - deployment infrastructure completa
+
+COMPLETADO:
+- Health check endpoints (/health, /ping, /ready)
+- Dockerfile multi-stage con HEALTHCHECK corregido
+- Docker Compose para 3 ambientes (dev, staging, prod)
+- GitHub Actions CI/CD workflows completos
+- Nginx reverse proxy con SSL configurado
+- Scripts de utilidad y testing automatizado
+- Deployment Guide completo (1000+ lineas)
+- Tests automaticos implementados
+
+ARCHIVOS MODIFICADOS:
+- src/cima.Blazor/Dockerfile
+  * Agregado HEALTHCHECK instruction
+  * Instalacion de curl para health checks
+
+ARCHIVOS NUEVOS:
+- docs/DEPLOYMENT_GUIDE.md
+  * Guia completa de deployment paso a paso
+  * Troubleshooting detallado
+  * Rollback procedures
+  * Comandos rapidos de referencia
+  * Arquitectura de deployment
+  * Flujo CI/CD explicado
+
+- docs/DIA_8_DEVOPS_COMPLETADO.md
+  * Resumen ejecutivo completo
+  * 33 archivos creados en total
+  * Metricas de exito
+  * Proximos pasos claros
+
+- etc/scripts/test-local-deployment.ps1
+  * 27+ tests automaticos
+  * Validacion de archivos Docker
+  * Validacion de GitHub Actions
+  * Validacion de Nginx config
+  * Validacion de HealthController
+  * Tests opcionales de Docker build
+
+TESTING:
+- Build exitoso verificado
+- 27+ tests automaticos implementados
+- Script de testing completo
+
+INFRAESTRUCTURA LISTA:
+- Docker containerizacion completa
+- CI/CD automatizado
+- 3 ambientes configurados
+- Health checks en 3 niveles
+- Nginx con SSL preparado
+- Scripts de utilidad completos
+- Documentacion exhaustiva
+
+PENDIENTE (requiere dominio):
+- Configurar dominio real
+- Setup DNS
+- Obtener certificados SSL
+- Deploy a staging
+- Deploy a production
+
+Ver:
+- docs/DEPLOYMENT_GUIDE.md para deployment
+- docs/CONFIGURACION_DOMINIO_PENDIENTE.md para configuracion de dominio
+- etc/scripts/test-local-deployment.ps1 para testing

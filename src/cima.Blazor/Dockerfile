@@ -51,6 +51,10 @@ RUN dotnet publish "cima.Blazor.csproj" \
 # Stage 4: Final runtime image
 FROM base AS final
 WORKDIR /app
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 
 # Create directories for uploaded images
@@ -59,5 +63,9 @@ RUN mkdir -p /app/wwwroot/images/listings
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
