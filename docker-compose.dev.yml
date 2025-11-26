@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: cima-postgres-dev
+    environment:
+      POSTGRES_DB: cima_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - cima-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Blazor Application
+  blazor-dev:
+    build:
+      context: .
+      dockerfile: src/cima.Blazor/Dockerfile
+      args:
+        BUILD_CONFIGURATION: Debug
+    container_name: cima-blazor-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=cima_dev;Username=postgres;Password=postgres_dev_password
+      - App__SelfUrl=http://localhost:8080
+      - AuthServer__Authority=http://localhost:8080
+      - AuthServer__RequireHttpsMetadata=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cima-dev-network
+    volumes:
+      - ./src/cima.Blazor/wwwroot/images:/app/wwwroot/images
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+    driver: local
+
+networks:
+  cima-dev-network:
+    driver: bridge

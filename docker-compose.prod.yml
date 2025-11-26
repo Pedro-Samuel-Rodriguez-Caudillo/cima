@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: cima-postgres-prod
+    environment:
+      POSTGRES_DB: cima_prod
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./etc/backups/production:/backups
+    networks:
+      - cima-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Blazor Application
+  blazor-prod:
+    image: ${DOCKER_REGISTRY}/cima:${BUILD_NUMBER}
+    container_name: cima-blazor-prod
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Host=postgres;Port=5432;Database=cima_prod;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - App__SelfUrl=${APP_SELF_URL}
+      - AuthServer__Authority=${APP_SELF_URL}
+      - AuthServer__RequireHttpsMetadata=true
+      - Redis__Configuration=${REDIS_CONNECTION}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cima-prod-network
+    volumes:
+      - prod_images:/app/wwwroot/images
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # Nginx Reverse Proxy (opcional para SSL)
+  nginx:
+    image: nginx:alpine
+    container_name: cima-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./etc/nginx/ssl:/etc/nginx/ssl:ro
+      - prod_images:/usr/share/nginx/html/images:ro
+    depends_on:
+      - blazor-prod
+    networks:
+      - cima-prod-network
+    restart: always
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  prod_images:
+    driver: local
+
+networks:
+  cima-prod-network:
+    driver: bridge

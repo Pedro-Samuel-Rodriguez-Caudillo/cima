@@ -1,0 +1,67 @@
+# Git
+.git
+.github
+.gitignore
+.gitattributes
+
+# IDEs
+.vs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin
+**/obj
+**/out
+**/publish
+**/dist
+
+# Node
+**/node_modules
+**/npm-debug.log
+**/yarn-error.log
+**/.npm
+**/.yarn
+
+# Secrets and environment files
+**/*.secrets.json
+**/*.Secrets.json
+**/appsettings.Secrets.json
+**/appsettings.secrets.json
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Logs
+**/logs
+**/*.log
+
+# Temporary files
+**/tmp
+**/temp
+**/.cache
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Documentation
+**/docs
+**/README.md
+**/CHANGELOG.md
+
+# Scripts
+**/etc/scripts
+
+# Test results
+**/TestResults
+**/coverage
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates

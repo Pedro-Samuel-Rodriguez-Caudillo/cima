@@ -327,3 +327,13 @@ docker-compose.*.override.yml
 *.sql.bak
 *.backup
 *.dump
+
+# Docker environment files
+.env.development
+.env.staging
+.env.production
+docker-compose.override.yml
+
+# Docker volumes
+postgres_*_data/
+*_images/
