@@ -69,6 +69,15 @@ public  class ContactRequestAppService : cimaAppService, IContactRequestAppServi
                 .WithData("ListingId", input.ListingId);
         }
 
+        // VALIDACION: Propiedad debe estar Published o en Portfolio
+        if (property.Status != ListingStatus.Published && property.Status != ListingStatus.Portfolio)
+        {
+            throw new BusinessException("ContactRequest:ListingNotAvailable")
+                .WithData("ListingId", input.ListingId)
+                .WithData("CurrentStatus", property.Status)
+                .WithData("RequiredStatus", $"{ListingStatus.Published} or {ListingStatus.Portfolio}");
+        }
+
         var contactRequest = new ContactRequest
         {
             ListingId = input.ListingId,

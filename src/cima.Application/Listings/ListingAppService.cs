@@ -7,6 +7,7 @@ using cima.Domain.Shared;
 using cima.Domain.Shared.Dtos;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -25,13 +26,17 @@ public class ListingAppService : cimaAppService, IListingAppService
 {
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly IDistributedCache _distributedCache;
+    private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
         IRepository<Listing, Guid> listingRepository,
-        IRepository<Architect, Guid> architectRepository)
+        IRepository<Architect, Guid> architectRepository,
+        IDistributedCache distributedCache)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
+        _distributedCache = distributedCache;
     }
 
     /// <summary>
@@ -163,6 +168,44 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Create)]
     public async Task<ListingDto> CreateAsync(CreateUpdateListingDto input)
     {
+        // Normalizar datos de entrada
+        var normalizedTitle = input.Title?.Trim();
+        var normalizedDescription = input.Description?.Trim();
+        var normalizedLocation = input.Location?.Trim();
+
+        // Validaciones adicionales
+        if (string.IsNullOrWhiteSpace(normalizedTitle))
+        {
+            throw new BusinessException("Listing:TitleRequired")
+                .WithData("Field", "Title");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedDescription))
+        {
+            throw new BusinessException("Listing:DescriptionRequired")
+                .WithData("Field", "Description");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedLocation))
+        {
+            throw new BusinessException("Listing:LocationRequired")
+                .WithData("Field", "Location");
+        }
+
+        if (input.Price <= 0)
+        {
+            throw new BusinessException("Listing:InvalidPrice")
+                .WithData("Price", input.Price)
+                .WithData("MinPrice", 0.01);
+        }
+
+        if (input.Area <= 0)
+        {
+            throw new BusinessException("Listing:InvalidArea")
+                .WithData("Area", input.Area)
+                .WithData("MinArea", 1);
+        }
+
         // Validar que el arquitecto existe
         var architectExists = await _architectRepository.AnyAsync(a => a.Id == input.ArchitectId);
         if (!architectExists)
@@ -171,10 +214,23 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .WithData("ArchitectId", input.ArchitectId);
         }
 
-        var listing = ObjectMapper.Map<CreateUpdateListingDto, Listing>(input);
-        listing.CreatedAt = Clock.Now;
-        listing.CreatedBy = CurrentUser.Id;
-        listing.Status = ListingStatus.Draft;
+        var listing = new Listing
+        {
+            Title = normalizedTitle,
+            Description = normalizedDescription,
+            Location = normalizedLocation,
+            Price = input.Price,
+            Area = input.Area,
+            Bedrooms = input.Bedrooms,
+            Bathrooms = input.Bathrooms,
+            Category = input.Category,
+            Type = input.Type,
+            TransactionType = input.TransactionType,
+            ArchitectId = input.ArchitectId,
+            CreatedAt = Clock.Now,
+            CreatedBy = CurrentUser.Id,
+            Status = ListingStatus.Draft
+        };
 
         await _listingRepository.InsertAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -195,10 +251,48 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes editar tus propias propiedades");
         }
 
-        // Mapear todos los campos editables
-        listing.Title = input.Title;
-        listing.Description = input.Description;
-        listing.Location = input.Location;
+        // Normalizar datos de entrada
+        var normalizedTitle = input.Title?.Trim();
+        var normalizedDescription = input.Description?.Trim();
+        var normalizedLocation = input.Location?.Trim();
+
+        // Validaciones adicionales
+        if (string.IsNullOrWhiteSpace(normalizedTitle))
+        {
+            throw new BusinessException("Listing:TitleRequired")
+                .WithData("Field", "Title");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedDescription))
+        {
+            throw new BusinessException("Listing:DescriptionRequired")
+                .WithData("Field", "Description");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedLocation))
+        {
+            throw new BusinessException("Listing:LocationRequired")
+                .WithData("Field", "Location");
+        }
+
+        if (input.Price <= 0)
+        {
+            throw new BusinessException("Listing:InvalidPrice")
+                .WithData("Price", input.Price)
+                .WithData("MinPrice", 0.01);
+        }
+
+        if (input.Area <= 0)
+        {
+            throw new BusinessException("Listing:InvalidArea")
+                .WithData("Area", input.Area)
+                .WithData("MinArea", 1);
+        }
+
+        // Mapear TODOS los campos editables con datos normalizados
+        listing.Title = normalizedTitle;
+        listing.Description = normalizedDescription;
+        listing.Location = normalizedLocation;
         listing.Price = input.Price;
         listing.Area = input.Area;
         listing.Bedrooms = input.Bedrooms;
