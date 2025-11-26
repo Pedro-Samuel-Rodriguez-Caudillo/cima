@@ -9,7 +9,7 @@ using System.Linq;
 namespace cima.Blazor.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [AllowAnonymous] // Permitir acceso sin autenticacion para Docker health checks
     public class HealthController : ControllerBase
     {
@@ -21,6 +21,7 @@ namespace cima.Blazor.Controllers
         }
 
         [HttpGet]
+        [Route("/api/health")]
         public async Task<IActionResult> Get()
         {
             try
@@ -74,17 +75,20 @@ namespace cima.Blazor.Controllers
         }
 
         [HttpGet("ping")]
+        [Route("/api/health/ping")]
         public IActionResult Ping()
         {
             return Ok(new
             {
                 status = "alive",
                 timestamp = DateTime.UtcNow,
-                message = "pong"
+                message = "pong",
+                application = "cima.Blazor"
             });
         }
 
         [HttpGet("ready")]
+        [Route("/api/health/ready")]
         public async Task<IActionResult> Ready()
         {
             try

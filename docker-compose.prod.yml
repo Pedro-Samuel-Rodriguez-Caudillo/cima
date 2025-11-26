@@ -54,7 +54,7 @@ services:
       - prod_images:/app/wwwroot/images
     restart: always
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health/ping || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

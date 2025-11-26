@@ -10,11 +10,13 @@ using cima.MultiTenancy;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -174,6 +176,7 @@ public class cimaBlazorModule : AbpModule
         ConfigureBlazorise(context);
         ConfigureRouter(context);
         ConfigureMenu(context);
+        ConfigureHealthChecks(context, configuration);
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -312,6 +315,19 @@ public class cimaBlazorModule : AbpModule
         });
     }
 
+    private void ConfigureHealthChecks(ServiceConfigurationContext context, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("Default");
+        
+        context.Services.AddHealthChecks()
+            .AddNpgSql(
+                connectionString: connectionString,
+                name: "postgresql",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { "db", "ready" }
+            );
+    }
+
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         var env = context.GetEnvironment();
@@ -376,6 +392,7 @@ public class cimaBlazorModule : AbpModule
         app.UseDynamicClaims();
         app.UseAntiforgery();
         app.UseAuthorization();
+
         app.UseSwagger();
         app.UseAbpSwaggerUI(options =>
         {
@@ -383,13 +400,40 @@ public class cimaBlazorModule : AbpModule
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
-
-        app.UseConfiguredEndpoints(builder =>
+        app.UseConfiguredEndpoints(endpoints =>
         {
-            builder.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode()
-                .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(builder.ServiceProvider.GetRequiredService<IOptions<AbpRouterOptions>>().Value.AdditionalAssemblies.ToArray());
+            endpoints.MapControllers();
+            
+            endpoints.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = async (context, report) =>
+                {
+                    context.Response.ContentType = "application/json";
+                    var result = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        status = report.Status.ToString(),
+                        timestamp = DateTime.UtcNow,
+                        checks = report.Entries.Select(e => new
+                        {
+                            name = e.Key,
+                            status = e.Value.Status.ToString(),
+                            description = e.Value.Description,
+                            duration = e.Value.Duration.TotalMilliseconds
+                        })
+                    });
+                    await context.Response.WriteAsync(result);
+                }
+            });
+            
+            endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = check => check.Tags.Contains("ready")
+            });
+            
+            endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false
+            });
         });
     }
 }
