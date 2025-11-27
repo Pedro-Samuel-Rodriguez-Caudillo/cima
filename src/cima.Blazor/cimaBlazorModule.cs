@@ -100,7 +100,9 @@ public class cimaBlazorModule : AbpModule
             });
         });
 
-        if (!hostingEnvironment.IsDevelopment())
+        // Solo usar certificado de producción en ambiente Production
+        // En Staging, usar certificados temporales (development)
+        if (hostingEnvironment.IsProduction())
         {
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
             {
@@ -110,6 +112,19 @@ public class cimaBlazorModule : AbpModule
             PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
             {
                 serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["AuthServer:CertificatePassPhrase"]!);
+                serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
+            });
+        }
+        else if (hostingEnvironment.IsStaging())
+        {
+            // En Staging, usar certificados de desarrollo temporales
+            PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
+            {
+                options.AddDevelopmentEncryptionAndSigningCertificate = true;
+            });
+
+            PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
+            {
                 serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
             });
         }
