@@ -445,6 +445,12 @@ public class cimaBlazorModule : AbpModule
         app.UseAbpSerilogEnrichers();
         app.UseConfiguredEndpoints(endpoints =>
         {
+            // Mapear Razor Components para Blazor Web App
+            endpoints.MapRazorComponents<Components.App>()
+                .AddInteractiveServerRenderMode()
+                .AddInteractiveWebAssemblyRenderMode()
+                .AddAdditionalAssemblies(typeof(cimaBlazorClientModule).Assembly);
+            
             endpoints.MapControllers();
             
             endpoints.MapHealthChecks("/health", new HealthCheckOptions

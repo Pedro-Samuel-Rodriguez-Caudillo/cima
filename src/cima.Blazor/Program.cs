@@ -22,15 +22,32 @@ public class Program
         {
             Log.Information("Starting web host.");
             var builder = WebApplication.CreateBuilder(args);
+            
+            // Solo configurar puerto dinámico si estamos en producción/deployment
+            // En desarrollo, launchSettings.json configurará el puerto
             var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
-            if (string.IsNullOrWhiteSpace(urls))
+            var port = Environment.GetEnvironmentVariable("PORT");
+            
+            if (!string.IsNullOrWhiteSpace(port) && string.IsNullOrWhiteSpace(urls))
             {
-                var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+                // Configuración para Railway/Docker/Cloud donde se especifica PORT
                 builder.WebHost.ConfigureKestrel(options =>
                 {
                     options.ListenAnyIP(int.Parse(port));
                 });
+                Log.Information($"Using dynamic port from PORT env var: {port}");
             }
+            else if (!string.IsNullOrWhiteSpace(urls))
+            {
+                // ASPNETCORE_URLS tiene prioridad
+                Log.Information($"Using ASPNETCORE_URLS: {urls}");
+            }
+            else
+            {
+                // En desarrollo, launchSettings.json configurará applicationUrl
+                Log.Information("Using launchSettings.json configuration (development)");
+            }
+            
             builder.Host
                 .AddAppSettingsSecretsJson()
                 .UseAutofac()

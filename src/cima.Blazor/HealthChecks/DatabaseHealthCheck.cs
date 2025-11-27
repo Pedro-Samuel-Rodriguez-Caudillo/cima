@@ -4,21 +4,21 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using cima.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace cima.Blazor.HealthChecks
 {
     /// <summary>
-    /// Health check que verifica la conexion a PostgreSQL
-    /// y que las migraciones esten aplicadas
+    /// Health check que verifica migraciones pendientes de la base de datos
+    /// Usa connection string directa en lugar de DbContext para evitar requerir UoW
     /// </summary>
     public class DatabaseHealthCheck : IHealthCheck
     {
-        private readonly cimaDbContext _dbContext;
+        private readonly IConfiguration _configuration;
 
-        public DatabaseHealthCheck(cimaDbContext dbContext)
+        public DatabaseHealthCheck(IConfiguration configuration)
         {
-            _dbContext = dbContext;
+            _configuration = configuration;
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(
@@ -27,31 +27,41 @@ namespace cima.Blazor.HealthChecks
         {
             try
             {
-                // 1. Verificar conexion a la base de datos
-                var canConnect = await _dbContext.Database.CanConnectAsync(cancellationToken);
+                var connectionString = _configuration.GetConnectionString("Default");
                 
-                if (!canConnect)
+                if (string.IsNullOrWhiteSpace(connectionString))
                 {
-                    return HealthCheckResult.Unhealthy(
-                        "No se puede conectar a la base de datos PostgreSQL");
+                    return HealthCheckResult.Unhealthy("Connection string 'Default' no esta configurada");
                 }
 
-                // 2. Verificar que no hay migraciones pendientes
-                var pendingMigrations = await _dbContext.Database
+                // Crear un DbContext temporal solo para verificar migraciones
+                // No usa UoW porque es standalone
+                var optionsBuilder = new DbContextOptionsBuilder<EntityFrameworkCore.cimaDbContext>();
+                optionsBuilder.UseNpgsql(connectionString);
+
+                using var dbContext = new EntityFrameworkCore.cimaDbContext(optionsBuilder.Options);
+                
+                // Verificar que no hay migraciones pendientes
+                var pendingMigrations = await dbContext.Database
                     .GetPendingMigrationsAsync(cancellationToken);
                 
                 if (pendingMigrations.Any())
                 {
                     return HealthCheckResult.Degraded(
-                        $"Hay {pendingMigrations.Count()} migraciones pendientes: {string.Join(", ", pendingMigrations)}");
+                        $"Hay {pendingMigrations.Count()} migraciones pendientes: {string.Join(", ", pendingMigrations.Take(3))}...");
                 }
 
-                // 3. Verificar que podemos ejecutar queries (opcional)
-                var listingCount = await _dbContext.Listings
-                    .CountAsync(cancellationToken);
+                // Verificar que hay al menos una migración aplicada
+                var appliedMigrations = await dbContext.Database
+                    .GetAppliedMigrationsAsync(cancellationToken);
+                
+                if (!appliedMigrations.Any())
+                {
+                    return HealthCheckResult.Degraded("No hay migraciones aplicadas a la base de datos");
+                }
 
                 return HealthCheckResult.Healthy(
-                    $"Base de datos conectada. {listingCount} listings en la base de datos");
+                    $"Base de datos OK. {appliedMigrations.Count()} migraciones aplicadas, 0 pendientes");
             }
             catch (Exception ex)
             {
