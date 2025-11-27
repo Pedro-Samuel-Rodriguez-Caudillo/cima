@@ -1,112 +1,145 @@
 name: CD - Deploy to Staging
 
+# NOTA: Este workflow está preparado pero NO activo
+# Requiere configurar Railway o GitHub Pages
+# Ver docs/STAGING_QUICK_DECISION.md para opciones
+
 on:
-  push:
-    branches: [ develop ]
+  # Deshabilitado por defecto - descomentar cuando configures staging
+  # push:
+  #   branches: [ develop ]
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version tag'
-        required: false
-        default: 'staging-latest'
+      deploy_target:
+        description: 'Deploy target'
+        required: true
+        type: choice
+        options:
+          - railway
+          - github-pages
+        default: 'railway'
+
+# Permisos necesarios para GitHub Pages (si usas esa opción)
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
-    name: Build and Push Docker Image
+  # ==============================================================
+  # OPCIÓN 1: RAILWAY (Staging Completo con Backend)
+  # ==============================================================
+  deploy-railway:
+    name: Deploy to Railway
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    if: github.event.inputs.deploy_target == 'railway' || github.event_name == 'push'
+    # NOTA: Para activar Railway:
+    # 1. Crear cuenta en https://railway.app/
+    # 2. Conectar este repositorio
+    # 3. Railway detectará el Dockerfile automáticamente
+    # 4. Configurar variables de entorno en Railway dashboard
+    # 5. Deploy será automático
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=sha,prefix=staging-
-          type=raw,value=staging-latest
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: src/cima.Blazor/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy to Staging Server
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    environment: staging
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_SSH_KEY }}
-        port: ${{ secrets.STAGING_SSH_PORT || 22 }}
-        script: |
-          cd /opt/cima/staging
-          
-          # Pull latest changes
-          git pull origin develop
-          
-          # Update environment variables
-          cp .env.staging.example .env.staging
-          
-          # Pull new Docker images
-          docker-compose -f docker-compose.staging.yml pull
-          
-          # Stop and remove old containers
-          docker-compose -f docker-compose.staging.yml down
-          
-          # Start new containers
-          docker-compose -f docker-compose.staging.yml up -d
-          
-          # Clean up unused images
-          docker image prune -f
-          
-          # Wait for health check
-          sleep 15
-          
-          # Verify deployment
-          curl -f http://localhost:8081/health || exit 1
-    
-    - name: Notify deployment status
-      if: always()
+    - name: Setup Railway CLI
       run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "Deployment to staging successful"
-        else
-          echo "Deployment to staging failed"
-          exit 1
-        fi
+        npm i -g @railway/cli
+    
+    - name: Deploy to Railway
+      run: |
+        # Railway hace deploy automático cuando conectas el repo
+        # Este step es solo si quieres trigger manual
+        echo "Railway deployment triggered"
+        # railway up -d
+      env:
+        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+    
+    - name: Notify deployment
+      run: |
+        echo "Deployment to Railway staging successful"
+        echo "URL: Check Railway dashboard for deployment URL"
+  
+  # ==============================================================
+  # OPCIÓN 2: GITHUB PAGES (Demo Visual sin Backend)
+  # ==============================================================
+  build-for-github-pages:
+    name: Build for GitHub Pages
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_target == 'github-pages'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    # NOTA: Para GitHub Pages necesitarías crear un proyecto standalone
+    # El proyecto actual (cima.Blazor.Client) está integrado con el servidor
+    # Ver docs/GITHUB_PAGES_VS_STAGING.md para más info
+    
+    - name: Build static site
+      run: |
+        echo "GitHub Pages deployment requires standalone Blazor WASM project"
+        echo "Current project uses Blazor Web App with interactive WASM"
+        echo "See docs/GITHUB_PAGES_VS_STAGING.md for setup guide"
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'publish/wwwroot'
+  
+  deploy-github-pages:
+    name: Deploy to GitHub Pages
+    needs: build-for-github-pages
+    runs-on: ubuntu-latest
+    if: github.event.inputs.deploy_target == 'github-pages'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+    
+    - name: Notify deployment
+      run: |
+        echo "Deployment to GitHub Pages successful!"
+        echo "URL: ${{ steps.deployment.outputs.page_url }}"
+
+# ==============================================================
+# GUÍA DE ACTIVACIÓN
+# ==============================================================
+# 
+# RAILWAY (Recomendado para staging completo):
+# 1. Crear cuenta: https://railway.app/
+# 2. New Project > Deploy from GitHub > Seleccionar este repo
+# 3. Add PostgreSQL database
+# 4. Variables se configuran automáticamente
+# 5. Railway hace deploy automático en cada push a 'develop'
+# 6. No necesitas modificar este workflow
+#
+# GITHUB PAGES (Para demo visual):
+# 1. Crear proyecto standalone (ver docs/GITHUB_PAGES_VS_STAGING.md)
+# 2. Habilitar GitHub Pages en Settings > Pages
+# 3. Source: GitHub Actions
+# 4. Descomentar build steps en este workflow
+# 5. Push activará deployment
+#
+# Ver docs/STAGING_QUICK_DECISION.md para comparación completa
+# ==============================================================

@@ -1,10 +1,15 @@
 name: CD - Deploy to Production
 
+# NOTA: Este workflow está preparado pero NO activo
+# Requiere servidor de producción configurado
+# Ver docs/CI_CD_PLAN_REALISTA.md
+
 on:
-  push:
-    branches: [ master ]
-    tags:
-      - 'v*.*.*'
+  # Deshabilitado por defecto - descomentar cuando tengas servidor
+  # push:
+  #   branches: [ master ]
+  #   tags:
+  #     - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
@@ -66,9 +71,15 @@ jobs:
     name: Deploy to Production Server
     needs: build-and-push
     runs-on: ubuntu-latest
+    # REQUIERE: Servidor configurado + secretos en GitHub
+    # Secretos necesarios:
+    #   - PRODUCTION_HOST: IP o dominio del servidor
+    #   - PRODUCTION_USER: Usuario SSH
+    #   - PRODUCTION_SSH_KEY: Clave privada SSH
+    #   - PRODUCTION_SSH_PORT: Puerto SSH (default: 22)
     environment: 
       name: production
-      url: https://cima.com
+      url: https://cima.com  # Cambiar por tu dominio real
     
     steps:
     - name: Checkout code
@@ -138,7 +149,7 @@ jobs:
           RETRY_COUNT=0
           
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            if curl -f http://localhost:8082/health; then
+            if curl -f http://localhost:8082/api/health/ping; then
               echo "Health check passed"
               break
             else
@@ -166,10 +177,10 @@ jobs:
             ? ':white_check_mark: Production deployment successful'
             : ':x: Production deployment failed';
           
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
+          github.rest.repos.createCommitComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
+            commit_sha: context.sha,
             body: message
           });
     
@@ -183,3 +194,58 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
+
+# ==============================================================
+# GUÍA DE ACTIVACIÓN
+# ==============================================================
+#
+# REQUISITOS PREVIOS:
+# 1. Servidor Linux con Docker y Docker Compose
+# 2. Dominio apuntando al servidor
+# 3. Certificado SSL configurado
+# 4. PostgreSQL configurado
+#
+# PASOS PARA ACTIVAR:
+#
+# 1. CONFIGURAR SERVIDOR:
+#    - Instalar Docker y Docker Compose
+#    - Clonar repositorio en /opt/cima/production
+#    - Crear .env.production con variables de entorno
+#    - Configurar nginx con SSL (ver etc/nginx/conf.d/cima.conf)
+#
+# 2. CONFIGURAR SECRETOS EN GITHUB:
+#    Settings > Secrets and variables > Actions > New repository secret
+#    
+#    Secretos necesarios:
+#    - PRODUCTION_HOST: IP o dominio del servidor
+#    - PRODUCTION_USER: Usuario SSH (ej: deploy)
+#    - PRODUCTION_SSH_KEY: Clave privada SSH completa
+#    - PRODUCTION_SSH_PORT: 22 (o puerto SSH personalizado)
+#
+# 3. CREAR ENVIRONMENT EN GITHUB:
+#    Settings > Environments > New environment > "production"
+#    - Agregar protection rules (opcional):
+#      * Required reviewers
+#      * Wait timer
+#      * Deployment branches
+#
+# 4. PRIMERA EJECUCIÓN MANUAL:
+#    - Ir a Actions > CD - Deploy to Production
+#    - Run workflow
+#    - Enter version (ej: v1.0.0)
+#    - Monitorear logs
+#
+# 5. ACTIVAR DEPLOY AUTOMÁTICO:
+#    Descomentar líneas 6-9 en este archivo:
+#    push:
+#      branches: [ master ]
+#      tags:
+#        - 'v*.*.*'
+#
+# TROUBLESHOOTING:
+# - Ver logs en Actions tab
+# - SSH al servidor y verificar logs: docker-compose -f docker-compose.prod.yml logs
+# - Verificar health checks: curl http://localhost:8082/api/health/ping
+#
+# Ver documentación completa: docs/DEPLOYMENT_GUIDE.md
+# ==============================================================
