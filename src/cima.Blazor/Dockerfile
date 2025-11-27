@@ -55,8 +55,9 @@ COPY --from=publish /app/publish .
 # Create directories for uploaded images
 RUN mkdir -p /app/wwwroot/images/listings
 
-# Set environment variables
-# No hardcodear el puerto - Railway inyecta PORT dinámicamente
-ENV ASPNETCORE_ENVIRONMENT=Production
+# Set environment variables for STAGING
+ENV ASPNETCORE_ENVIRONMENT=Staging
+ENV ASPNETCORE_URLS=http://+:8080
+ENV Kestrel__Endpoints__Http__Url=http://0.0.0.0:8080
 
 ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
