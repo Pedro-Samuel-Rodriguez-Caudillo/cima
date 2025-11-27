@@ -43,4 +43,15 @@
     <None Include="Pages\Examples\ListingCardPreview.razor" />
   </ItemGroup>
 
+	<ItemGroup>
+		<Content Remove="package.json" />
+		<Content Remove="package-lock.json" />
+		<None Include="package.json">
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+		<None Include="package-lock.json">
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+	
 </Project>
