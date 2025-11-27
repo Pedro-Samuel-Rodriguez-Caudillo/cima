@@ -386,7 +386,23 @@ public class cimaBlazorModule : AbpModule
             }
 
             await next();
-        });       
+        });
+        
+        // Permitir Railway healthchecks - debe ir ANTES de cualquier middleware de autenticación
+        app.Use(async (ctx, next) =>
+        {
+            // Railway healthcheck bypass - permitir sin autenticación ni CORS
+            if (ctx.Request.Path.StartsWithSegments("/api/health/ping") ||
+                ctx.Request.Path.StartsWithSegments("/health"))
+            {
+                // Permitir cualquier host para healthchecks (incluyendo healthcheck.railway.app)
+                ctx.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                await next();
+                return;
+            }
+            
+            await next();
+        });
 
         if (env.IsDevelopment())
         {

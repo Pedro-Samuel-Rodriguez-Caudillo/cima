@@ -56,7 +56,7 @@ COPY --from=publish /app/publish .
 RUN mkdir -p /app/wwwroot/images/listings
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080
+# No hardcodear el puerto - Railway inyecta PORT dinámicamente
 ENV ASPNETCORE_ENVIRONMENT=Production
 
 ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
