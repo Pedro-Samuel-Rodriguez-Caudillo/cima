@@ -1,0 +1,27 @@
+fix(railway): mejorar logging y corregir ejecucion de migraciones
+
+Problema:
+- Las migraciones no se ejecutaban en Railway
+- PostgreSQL mostraba error: relation "__EFMigrationsHistory" does not exist
+- Logs indicaban exito pero no habia tablas creadas
+
+Cambios:
+
+1. cimaBlazorModule.cs:
+   - Eliminada llamada duplicada a ExecutarMigracionesAsync()
+   - Mejorado logging con mensajes detallados
+   - Agregado logging de excepciones completas (mensaje + stack)
+   - Lanzar excepcion para que Railway detecte fallos criticos
+
+2. EntityFrameworkCorecimaDbSchemaMigrator.cs:
+   - Agregado logging de connection string (con password enmascarado)
+   - Mostrar migraciones pendientes antes de ejecutar
+   - Mostrar migraciones aplicadas despues de ejecutar
+   - Logging con prefijo [MIGRATION] para facil busqueda
+
+Resultado esperado:
+- Railway mostrara exactamente que migraciones se ejecutan
+- En caso de error, se vera el stack trace completo
+- Verificable que las 5 migraciones se apliquen correctamente
+
+Fixes: #railway-migrations

@@ -518,8 +518,6 @@ public class cimaBlazorModule : AbpModule
                 Predicate = check => check.Tags.Contains("live")
             });
         });
-
-        ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
     }
 
     private async Task ExecutarMigracionesAsync(IServiceProvider serviceProvider, IWebHostEnvironment env)
@@ -533,20 +531,33 @@ public class cimaBlazorModule : AbpModule
         
         try
         {
-            logger.LogInformation("=== INICIANDO MIGRACIONES AUTOMÁTICAS ===");
+            logger.LogInformation("=== INICIANDO MIGRACIONES AUTOMATICAS ===");
             
             using (var scope = serviceProvider.CreateScope())
             {
                 var migrator = scope.ServiceProvider.GetRequiredService<IcimaDbSchemaMigrator>();
+                
+                logger.LogInformation("Ejecutando MigrateAsync()...");
                 await migrator.MigrateAsync();
+                logger.LogInformation("MigrateAsync() completado");
             }
             
             logger.LogInformation("=== MIGRACIONES COMPLETADAS EXITOSAMENTE ===");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "ERROR al ejecutar migraciones automáticas");
-            // No lanzar - permitir que la app inicie
+            logger.LogError(ex, "ERROR CRITICO al ejecutar migraciones automaticas");
+            logger.LogError("Mensaje: {Message}", ex.Message);
+            logger.LogError("Stack: {Stack}", ex.StackTrace);
+            
+            if (ex.InnerException != null)
+            {
+                logger.LogError("Inner Exception: {InnerMessage}", ex.InnerException.Message);
+                logger.LogError("Inner Stack: {InnerStack}", ex.InnerException.StackTrace);
+            }
+            
+            // LANZAR LA EXCEPCION para que Railway vea el fallo
+            throw;
         }
     }
 }
