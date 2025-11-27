@@ -193,24 +193,8 @@ public class cimaBlazorModule : AbpModule
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
-        ConfigureMvcLibs(hostingEnvironment);
     }
     
-    private void ConfigureMvcLibs(IWebHostEnvironment hostingEnvironment)
-    {
-        // Deshabilitar verificacion de wwwroot/libs en staging/production
-        // En produccion los assets se sirven empaquetados, no necesitamos libs individuales
-        if (hostingEnvironment.IsStaging() || hostingEnvironment.IsProduction())
-        {
-            // ABP verifica libs por defecto, deshabilitamos en prod/staging
-            // Los assets estan empaquetados en bundling, no necesitamos carpeta libs
-            Configure<AbpBundlingOptions>(options =>
-            {
-                // Ya configurado arriba, solo agregar flag
-            });
-        }
-    }
-
     private void ConfigureAuthentication(ServiceConfigurationContext context)
     {
         context.Services.ForwardIdentityAuthenticationForBearer(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
