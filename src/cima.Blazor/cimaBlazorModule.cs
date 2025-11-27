@@ -101,7 +101,7 @@ public class cimaBlazorModule : AbpModule
             });
         });
 
-        if (!hostingEnvironment.IsDevelopment())
+        if (hostingEnvironment.IsProduction())
         {
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
             {
@@ -111,6 +111,18 @@ public class cimaBlazorModule : AbpModule
             PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
             {
                 serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["AuthServer:CertificatePassPhrase"]!);
+                serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
+            });
+        }
+        else if (hostingEnvironment.IsStaging())
+        {
+            PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
+            {
+                options.AddDevelopmentEncryptionAndSigningCertificate = true;
+            });
+
+            PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
+            {
                 serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
             });
         }
