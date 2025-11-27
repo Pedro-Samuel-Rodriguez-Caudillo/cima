@@ -4,6 +4,7 @@ using Blazorise.Icons.FontAwesome;
 using cima.Blazor.Client;
 using cima.Blazor.Client.Navigation;
 using cima.Blazor.Components;
+using cima.Blazor.HealthChecks;
 using cima.EntityFrameworkCore;
 using cima.Localization;
 using cima.MultiTenancy;
@@ -318,30 +319,56 @@ public class cimaBlazorModule : AbpModule
     private void ConfigureHealthChecks(ServiceConfigurationContext context, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Default");
-        var healthChecks = context.Services.AddHealthChecks();
+        
+        // Registrar health check de startup como singleton
+        context.Services.AddSingleton<HealthChecks.StartupHealthCheck>();
+        
+        // Registrar background service que marca cuando la app esta lista
+        context.Services.AddHostedService<HealthChecks.StartupBackgroundService>();
+        
+        var healthChecksBuilder = context.Services.AddHealthChecks();
+
+        // 1. LIVENESS CHECK - Verifica que la app esta viva
+        //    No requiere dependencias externas
+        healthChecksBuilder.AddCheck(
+            "self",
+            () => HealthCheckResult.Healthy("Aplicacion esta corriendo"),
+            tags: new[] { "live" }
+        );
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            // Evita que el host falle al iniciar por falta de cadena de conexión
-            healthChecks.AddCheck(
+            // Si no hay connection string, marcar como unhealthy en readiness
+            healthChecksBuilder.AddCheck(
                 "database-configuration",
-                () => HealthCheckResult.Unhealthy("Default connection string is missing"),
-                tags: new[] { "db", "ready" }
-            );
-
-            healthChecks.AddCheck(
-                "self",
-                () => HealthCheckResult.Healthy("Application is running"),
-                tags: new[] { "live" }
+                () => HealthCheckResult.Unhealthy("Connection string 'Default' no esta configurada"),
+                tags: new[] { "ready" }
             );
             return;
         }
 
-        healthChecks.AddNpgSql(
+        // 2. READINESS CHECK - Verifica que la app esta lista para recibir trafico
+        
+        // a) Verifica que completo el startup
+        healthChecksBuilder.AddCheck<HealthChecks.StartupHealthCheck>(
+            "startup",
+            tags: new[] { "ready" }
+        );
+        
+        // b) Verifica PostgreSQL connection
+        healthChecksBuilder.AddNpgSql(
             connectionString: connectionString,
-            name: "postgresql",
+            name: "postgresql-connection",
             failureStatus: HealthStatus.Unhealthy,
-            tags: new[] { "db", "ready" }
+            tags: new[] { "ready", "db" },
+            timeout: TimeSpan.FromSeconds(3)
+        );
+        
+        // c) Verifica base de datos y migraciones
+        healthChecksBuilder.AddCheck<HealthChecks.DatabaseHealthCheck>(
+            "database-migrations",
+            failureStatus: HealthStatus.Degraded,
+            tags: new[] { "ready", "db" }
         );
     }
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
