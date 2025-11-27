@@ -1,145 +1,75 @@
 name: CD - Deploy to Staging
 
-# NOTA: Este workflow está preparado pero NO activo
-# Requiere configurar Railway o GitHub Pages
-# Ver docs/STAGING_QUICK_DECISION.md para opciones
-
+# Deploy automático cuando hay push a develop
 on:
-  # Deshabilitado por defecto - descomentar cuando configures staging
-  # push:
-  #   branches: [ develop ]
+  push:
+    branches: [ develop ]
   workflow_dispatch:
-    inputs:
-      deploy_target:
-        description: 'Deploy target'
-        required: true
-        type: choice
-        options:
-          - railway
-          - github-pages
-        default: 'railway'
 
-# Permisos necesarios para GitHub Pages (si usas esa opción)
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
+  packages: write
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ==============================================================
-  # OPCIÓN 1: RAILWAY (Staging Completo con Backend)
-  # ==============================================================
-  deploy-railway:
-    name: Deploy to Railway
+  # Railway hace deploy automático cuando detecta cambios en develop
+  # Este workflow solo notifica y verifica
+  notify-deployment:
+    name: Notify Railway Deployment
     runs-on: ubuntu-latest
-    if: github.event.inputs.deploy_target == 'railway' || github.event_name == 'push'
-    # NOTA: Para activar Railway:
-    # 1. Crear cuenta en https://railway.app/
-    # 2. Conectar este repositorio
-    # 3. Railway detectará el Dockerfile automáticamente
-    # 4. Configurar variables de entorno en Railway dashboard
-    # 5. Deploy será automático
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Railway CLI
+    - name: Get commit info
+      id: commit
       run: |
-        npm i -g @railway/cli
+        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
     
-    - name: Deploy to Railway
+    - name: Notify deployment started
       run: |
-        # Railway hace deploy automático cuando conectas el repo
-        # Este step es solo si quieres trigger manual
-        echo "Railway deployment triggered"
-        # railway up -d
-      env:
-        RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        echo "?? Railway Deployment Triggered"
+        echo "Branch: develop"
+        echo "Commit: ${{ steps.commit.outputs.sha_short }}"
+        echo "Message: ${{ steps.commit.outputs.message }}"
+        echo ""
+        echo "Railway will automatically deploy to staging environment"
+        echo "Monitor deployment: https://railway.app/dashboard"
     
-    - name: Notify deployment
+    - name: Wait for Railway deployment
       run: |
-        echo "Deployment to Railway staging successful"
-        echo "URL: Check Railway dashboard for deployment URL"
-  
-  # ==============================================================
-  # OPCIÓN 2: GITHUB PAGES (Demo Visual sin Backend)
-  # ==============================================================
-  build-for-github-pages:
-    name: Build for GitHub Pages
-    runs-on: ubuntu-latest
-    if: github.event.inputs.deploy_target == 'github-pages'
+        echo "Waiting 30 seconds for Railway to start deployment..."
+        sleep 30
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup .NET 9
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    
-    # NOTA: Para GitHub Pages necesitarías crear un proyecto standalone
-    # El proyecto actual (cima.Blazor.Client) está integrado con el servidor
-    # Ver docs/GITHUB_PAGES_VS_STAGING.md para más info
-    
-    - name: Build static site
+    - name: Display next steps
       run: |
-        echo "GitHub Pages deployment requires standalone Blazor WASM project"
-        echo "Current project uses Blazor Web App with interactive WASM"
-        echo "See docs/GITHUB_PAGES_VS_STAGING.md for setup guide"
-    
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: 'publish/wwwroot'
-  
-  deploy-github-pages:
-    name: Deploy to GitHub Pages
-    needs: build-for-github-pages
-    runs-on: ubuntu-latest
-    if: github.event.inputs.deploy_target == 'github-pages'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
-    steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-    
-    - name: Notify deployment
-      run: |
-        echo "Deployment to GitHub Pages successful!"
-        echo "URL: ${{ steps.deployment.outputs.page_url }}"
+        echo "? Deployment notification complete"
+        echo ""
+        echo "Next steps:"
+        echo "1. Check Railway dashboard for deployment status"
+        echo "2. Monitor logs in Railway"
+        echo "3. Test staging URL when deployment completes"
+        echo "4. If successful, create PR to master for production"
 
 # ==============================================================
-# GUÍA DE ACTIVACIÓN
+# NOTAS:
 # ==============================================================
 # 
-# RAILWAY (Recomendado para staging completo):
-# 1. Crear cuenta: https://railway.app/
-# 2. New Project > Deploy from GitHub > Seleccionar este repo
-# 3. Add PostgreSQL database
-# 4. Variables se configuran automáticamente
-# 5. Railway hace deploy automático en cada push a 'develop'
-# 6. No necesitas modificar este workflow
+# Railway detecta automáticamente los cambios en la rama develop
+# y hace deploy sin necesidad de este workflow.
+# 
+# Este workflow es solo para notificación y registro.
+# 
+# Para deploy manual desde Railway CLI:
+#   npm install -g @railway/cli
+#   railway login
+#   railway link
+#   railway up
 #
-# GITHUB PAGES (Para demo visual):
-# 1. Crear proyecto standalone (ver docs/GITHUB_PAGES_VS_STAGING.md)
-# 2. Habilitar GitHub Pages en Settings > Pages
-# 3. Source: GitHub Actions
-# 4. Descomentar build steps en este workflow
-# 5. Push activará deployment
-#
-# Ver docs/STAGING_QUICK_DECISION.md para comparación completa
+# Ver docs/RAILWAY_STAGING_CONFIG.md para más información
 # ==============================================================
