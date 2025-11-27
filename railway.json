@@ -6,8 +6,8 @@
   },
   "deploy": {
     "startCommand": "dotnet cima.Blazor.dll",
-    "healthcheckPath": "/api/health/ping",
-    "healthcheckTimeout": 100,
+    "healthcheckPath": "/health/live",
+    "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

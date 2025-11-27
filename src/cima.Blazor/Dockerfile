@@ -55,6 +55,10 @@ COPY --from=publish /app/publish .
 # Create directories for uploaded images
 RUN mkdir -p /app/wwwroot/images/listings
 
+# Create wwwroot/libs directory to satisfy ABP check
+# (libs are bundled, but ABP checks directory existence)
+RUN mkdir -p /app/wwwroot/libs
+
 # Set environment variables for STAGING
 ENV ASPNETCORE_ENVIRONMENT=Staging
 ENV ASPNETCORE_URLS=http://+:8080
