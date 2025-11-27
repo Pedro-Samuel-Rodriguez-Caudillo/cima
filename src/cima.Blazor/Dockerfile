@@ -59,4 +59,4 @@ RUN mkdir -p /app/wwwroot/images/listings
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-ENTRYPOINT ["dotnet", "cima.Blazor.dll"]ENTRYPOINT ["dotnet", "cima.Blazor.dll"]
+ENTRYPOINT ["dotnet", "cima.Blazor.dll"]

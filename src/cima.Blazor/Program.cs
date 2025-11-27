@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -21,6 +22,15 @@ public class Program
         {
             Log.Information("Starting web host.");
             var builder = WebApplication.CreateBuilder(args);
+            var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+            if (string.IsNullOrWhiteSpace(urls))
+            {
+                var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.ListenAnyIP(int.Parse(port));
+                });
+            }
             builder.Host
                 .AddAppSettingsSecretsJson()
                 .UseAutofac()

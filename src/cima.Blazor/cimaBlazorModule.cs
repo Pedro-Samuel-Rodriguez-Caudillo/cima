@@ -100,9 +100,7 @@ public class cimaBlazorModule : AbpModule
             });
         });
 
-        // Solo usar certificado de producción en ambiente Production
-        // En Staging, usar certificados temporales (development)
-        if (hostingEnvironment.IsProduction())
+        if (!hostingEnvironment.IsDevelopment())
         {
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
             {
@@ -112,19 +110,6 @@ public class cimaBlazorModule : AbpModule
             PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
             {
                 serverBuilder.AddProductionEncryptionAndSigningCertificate("openiddict.pfx", configuration["AuthServer:CertificatePassPhrase"]!);
-                serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
-            });
-        }
-        else if (hostingEnvironment.IsStaging())
-        {
-            // En Staging, usar certificados de desarrollo temporales
-            PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
-            {
-                options.AddDevelopmentEncryptionAndSigningCertificate = true;
-            });
-
-            PreConfigure<OpenIddictServerBuilder>(serverBuilder =>
-            {
                 serverBuilder.SetIssuer(new Uri(configuration["AuthServer:Authority"]!));
             });
         }
@@ -333,16 +318,32 @@ public class cimaBlazorModule : AbpModule
     private void ConfigureHealthChecks(ServiceConfigurationContext context, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("Default");
-        
-        context.Services.AddHealthChecks()
-            .AddNpgSql(
-                connectionString: connectionString,
-                name: "postgresql",
-                failureStatus: HealthStatus.Unhealthy,
+        var healthChecks = context.Services.AddHealthChecks();
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            // Evita que el host falle al iniciar por falta de cadena de conexión
+            healthChecks.AddCheck(
+                "database-configuration",
+                () => HealthCheckResult.Unhealthy("Default connection string is missing"),
                 tags: new[] { "db", "ready" }
             );
-    }
 
+            healthChecks.AddCheck(
+                "self",
+                () => HealthCheckResult.Healthy("Application is running"),
+                tags: new[] { "live" }
+            );
+            return;
+        }
+
+        healthChecks.AddNpgSql(
+            connectionString: connectionString,
+            name: "postgresql",
+            failureStatus: HealthStatus.Unhealthy,
+            tags: new[] { "db", "ready" }
+        );
+    }
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         var env = context.GetEnvironment();
@@ -447,7 +448,7 @@ public class cimaBlazorModule : AbpModule
             
             endpoints.MapHealthChecks("/health/live", new HealthCheckOptions
             {
-                Predicate = _ => false
+                Predicate = check => check.Tags.Contains("live")
             });
         });
     }
