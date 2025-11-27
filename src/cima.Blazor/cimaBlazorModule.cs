@@ -5,6 +5,7 @@ using cima.Blazor.Client;
 using cima.Blazor.Client.Navigation;
 using cima.Blazor.Components;
 using cima.Blazor.HealthChecks;
+using cima.Data;
 using cima.EntityFrameworkCore;
 using cima.Localization;
 using cima.MultiTenancy;
@@ -19,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using OpenIddict.Server.AspNetCore;
@@ -27,6 +29,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Components.Server.BasicTheme;
@@ -387,7 +390,10 @@ public class cimaBlazorModule : AbpModule
     {
         var env = context.GetEnvironment();
         var app = context.GetApplicationBuilder();
-
+        
+        // EJECUTAR MIGRACIONES (BLOQUEA HASTA COMPLETAR)
+        ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
+        
         app.Use(async (ctx, next) =>
         {
             /* Converting to https to be able to include https URLs in `/.well-known/openid-configuration` endpoint.
@@ -512,5 +518,35 @@ public class cimaBlazorModule : AbpModule
                 Predicate = check => check.Tags.Contains("live")
             });
         });
+
+        ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
+    }
+
+    private async Task ExecutarMigracionesAsync(IServiceProvider serviceProvider, IWebHostEnvironment env)
+    {
+        if (!env.IsStaging() && !env.IsProduction())
+        {
+            return; // Solo en staging/production
+        }
+        
+        var logger = serviceProvider.GetRequiredService<ILogger<cimaBlazorModule>>();
+        
+        try
+        {
+            logger.LogInformation("=== INICIANDO MIGRACIONES AUTOMÁTICAS ===");
+            
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var migrator = scope.ServiceProvider.GetRequiredService<IcimaDbSchemaMigrator>();
+                await migrator.MigrateAsync();
+            }
+            
+            logger.LogInformation("=== MIGRACIONES COMPLETADAS EXITOSAMENTE ===");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "ERROR al ejecutar migraciones automáticas");
+            // No lanzar - permitir que la app inicie
+        }
     }
 }
