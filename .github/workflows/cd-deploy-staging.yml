@@ -28,8 +28,9 @@ jobs:
     - name: Get commit info
       id: commit
       run: |
-        echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-        echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+        echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        COMMIT_MSG=$(git log -1 --pretty=%B | head -n 1 | tr -d '\n\r')
+        echo "message=${COMMIT_MSG}" >> "$GITHUB_OUTPUT"
     
     - name: Notify deployment started
       run: |
