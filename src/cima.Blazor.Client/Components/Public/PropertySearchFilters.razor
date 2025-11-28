@@ -1,359 +1,230 @@
-@using Microsoft.Extensions.Localization
-@using cima.Localization
-@using cima.Domain.Shared
 @using cima.Domain.Shared.Dtos
-@using cima.Listings
-@using System.Threading
-@inject IStringLocalizer<cimaResource> L
-@inject NavigationManager Navigation
-@inject IListingAppService ListingAppService
+@using cima.Domain.Shared
+@using cima.Blazor.Client.Services
+@inject EnumLocalizationService EnumLocalizer
+@inherits cimaComponentBase
 
-<div class="property-search-filters">
-    @* Tabs para tipo de transacción *@
-    <div class="mb-6">
-        <div class="flex border-b border-gray-200">
-            <button @onclick="() => SelectTransactionType(TransactionType.Sale)"
-                    class="@GetTabClass(TransactionType.Sale)">
-                <i class="fas fa-home mr-2"></i>
-                @L["TransactionType:Sale"]
-            </button>
-            <button @onclick="() => SelectTransactionType(TransactionType.Rent)"
-                    class="@GetTabClass(TransactionType.Rent)">
-                <i class="fas fa-key mr-2"></i>
-                @L["TransactionType:Rent"]
-            </button>
-            <button @onclick="() => SelectTransactionType(TransactionType.Lease)"
-                    class="@GetTabClass(TransactionType.Lease)">
-                <i class="fas fa-file-contract mr-2"></i>
-                @L["TransactionType:Lease"]
-            </button>
-        </div>
-    </div>
+@*
+    Componente de filtros de búsqueda de propiedades
+    Incluye búsqueda rápida y filtros avanzados colapsables
+*@
 
-    @* Filtros básicos *@
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        @* Categoría *@
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                @L["Search:PropertyCategory"]
-            </label>
-            <select @bind="selectedCategory" 
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="">@L["Common:All"]</option>
-                @foreach (var category in Enum.GetValues<PropertyCategory>())
-                {
-                    <option value="@((int)category)">@GetCategoryName(category)</option>
-                }
-            </select>
-        </div>
-
-        @* Ubicación con autocompletado y debounce *@
-        <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-                @L["Search:Location"]
-            </label>
-            <div class="relative">
-                <input type="text" 
-                       value="@location"
-                       @oninput="HandleLocationInput"
-                       placeholder="@L["Hero:SearchPlaceholder"]"
-                       class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                <i class="fas fa-map-marker-alt absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                
-                @* Indicador de carga *@
-                @if (isLoadingSuggestions)
-                {
-                    <i class="fas fa-spinner fa-spin absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                }
-                
-                @* Sugerencias de autocompletado *@
-                @if (showSuggestions && locationSuggestions.Any())
-                {
-                    <div class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        @foreach (var suggestion in locationSuggestions)
-                        {
-                            <button type="button"
-                                    @onclick="() => SelectLocation(suggestion.Location)"
-                                    class="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors flex justify-between items-center">
-                                <span>
-                                    <i class="fas fa-map-marker-alt text-gray-400 mr-2"></i>
-                                    @suggestion.Location
-                                </span>
-                                <span class="text-xs text-gray-500">@suggestion.Count propiedades</span>
-                            </button>
-                        }
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    @* Botón de filtros avanzados *@
-    <div class="mb-4">
-        <button @onclick="ToggleAdvancedFilters" 
-                class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2">
-            <i class="fas @(showAdvancedFilters ? "fa-chevron-up" : "fa-chevron-down")"></i>
-            @(showAdvancedFilters ? L["Search:HideAdvanced"] : L["Search:ShowAdvanced"])
-        </button>
-    </div>
-
-    @* Filtros avanzados (expandible) *@
-    @if (showAdvancedFilters)
-    {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-            @* Rango de precio *@
-            <div class="md:col-span-2 lg:col-span-3">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["Search:PriceRange"]
-                </label>
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="number" 
-                           @bind="minPrice" 
-                           placeholder="@L["Search:MinPrice"]"
-                           step="10000"
-                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                    <input type="number" 
-                           @bind="maxPrice" 
-                           placeholder="@L["Search:MaxPrice"]"
-                           step="10000"
-                           class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+<div class="cima-card p-6">
+    <EditForm Model="@SearchModel" OnValidSubmit="HandleSubmit">
+        @* Búsqueda Rápida *@
+        <div class="flex flex-col md:flex-row gap-4 mb-4">
+            <div class="flex-1">
+                <label for="search-term" class="sr-only">@L["Search:QuickSearch"]</label>
+                <div class="relative">
+                    <input 
+                        id="search-term"
+                        type="search"
+                        class="cima-input pl-10"
+                        placeholder="@L["Hero:SearchPlaceholder"]"
+                        @bind="SearchModel.Location"
+                        @bind:event="oninput" />
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" 
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </div>
             </div>
-
-            @* Recámaras *@
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["Search:Bedrooms"]
-                </label>
-                <input type="number" 
-                       @bind="minBedrooms" 
-                       min="0" 
-                       max="10"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            @* Baños *@
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["Search:Bathrooms"]
-                </label>
-                <input type="number" 
-                       @bind="minBathrooms" 
-                       min="0" 
-                       max="10"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            @* Área mínima *@
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["Search:MinArea"]
-                </label>
-                <input type="number" 
-                       @bind="minArea" 
-                       step="10"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-            </div>
-        </div>
-    }
-
-    @* Botón de búsqueda *@
-    <div class="flex gap-4">
-        <button @onclick="PerformSearch" 
-                class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-            <i class="fas fa-search"></i>
-            @L["Search:SearchButton"]
-        </button>
-
-        @if (HasActiveFilters())
-        {
-            <button @onclick="ClearFilters" 
-                    class="px-6 py-4 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded-lg transition-all duration-200">
-                @L["Search:ClearFilters"]
+            
+            <button 
+                type="button"
+                @onclick="ToggleAdvancedFilters"
+                class="cima-btn cima-btn-outline md:w-auto whitespace-nowrap">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                @(ShowAdvanced ? L["Search:HideAdvanced"] : L["Search:ShowAdvanced"])
             </button>
+            
+            <button 
+                type="submit"
+                class="cima-btn cima-btn-primary md:w-auto">
+                @L["Search:SearchButton"]
+            </button>
+        </div>
+
+        @* Filtros Avanzados (Colapsables) *@
+        @if (ShowAdvanced)
+        {
+            <div class="pt-4 border-t border-neutral-200 animate-slide-down">
+                <h3 class="text-sm font-semibold text-neutral-900 mb-4">
+                    @L["Search:AdvancedFilters"]
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @* Tipo de Transacción *@
+                    <div class="cima-form-group">
+                        <label for="transaction-type" class="cima-label">
+                            @L["Search:TransactionType"]
+                        </label>
+                        <select 
+                            id="transaction-type"
+                            class="cima-input"
+                            @bind="SearchModel.TransactionType">
+                            <option value="">@L["Common:All"]</option>
+                            <option value="@cima.Domain.Shared.TransactionType.Sale">@EnumLocalizer.GetTransactionTypeName(cima.Domain.Shared.TransactionType.Sale)</option>
+                            <option value="@cima.Domain.Shared.TransactionType.Rent">@EnumLocalizer.GetTransactionTypeName(cima.Domain.Shared.TransactionType.Rent)</option>
+                            <option value="@cima.Domain.Shared.TransactionType.Lease">@EnumLocalizer.GetTransactionTypeName(cima.Domain.Shared.TransactionType.Lease)</option>
+                        </select>
+                    </div>
+
+                    @* Categoría *@
+                    <div class="cima-form-group">
+                        <label for="category" class="cima-label">
+                            @L["Search:PropertyCategory"]
+                        </label>
+                        <select 
+                            id="category"
+                            class="cima-input"
+                            @bind="SearchModel.Category">
+                            <option value="">@L["Common:All"]</option>
+                            <option value="@cima.Domain.Shared.PropertyCategory.Residential">@EnumLocalizer.GetPropertyCategoryName(cima.Domain.Shared.PropertyCategory.Residential)</option>
+                            <option value="@cima.Domain.Shared.PropertyCategory.Commercial">@EnumLocalizer.GetPropertyCategoryName(cima.Domain.Shared.PropertyCategory.Commercial)</option>
+                            <option value="@cima.Domain.Shared.PropertyCategory.Mixed">@EnumLocalizer.GetPropertyCategoryName(cima.Domain.Shared.PropertyCategory.Mixed)</option>
+                            <option value="@cima.Domain.Shared.PropertyCategory.Land">@EnumLocalizer.GetPropertyCategoryName(cima.Domain.Shared.PropertyCategory.Land)</option>
+                        </select>
+                    </div>
+
+                    @* Tipo de Propiedad *@
+                    <div class="cima-form-group">
+                        <label for="property-type" class="cima-label">
+                            @L["Search:PropertyType"]
+                        </label>
+                        <select 
+                            id="property-type"
+                            class="cima-input"
+                            @bind="SearchModel.Type">
+                            <option value="">@L["Common:All"]</option>
+                            @* Residenciales *@
+                            <option value="@cima.Domain.Shared.PropertyType.House">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.House)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.Apartment">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Apartment)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.Condo">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Condo)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.Townhouse">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Townhouse)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.Villa">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Villa)</option>
+                            @* Comerciales *@
+                            <option value="@cima.Domain.Shared.PropertyType.Office">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Office)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.Warehouse">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.Warehouse)</option>
+                            <option value="@cima.Domain.Shared.PropertyType.RetailSpace">@EnumLocalizer.GetPropertyTypeName(cima.Domain.Shared.PropertyType.RetailSpace)</option>
+                        </select>
+                    </div>
+
+                    @* Precio Mínimo *@
+                    <div class="cima-form-group">
+                        <label for="min-price" class="cima-label">
+                            @L["Search:MinPrice"]
+                        </label>
+                        <input 
+                            id="min-price"
+                            type="number"
+                            class="cima-input"
+                            placeholder="$0"
+                            @bind="SearchModel.MinPrice" />
+                    </div>
+
+                    @* Precio Máximo *@
+                    <div class="cima-form-group">
+                        <label for="max-price" class="cima-label">
+                            @L["Search:MaxPrice"]
+                        </label>
+                        <input 
+                            id="max-price"
+                            type="number"
+                            class="cima-input"
+                            placeholder="$999,999,999"
+                            @bind="SearchModel.MaxPrice" />
+                    </div>
+
+                    @* Recámaras Mínimas *@
+                    <div class="cima-form-group">
+                        <label for="min-bedrooms" class="cima-label">
+                            @L["Search:Bedrooms"]
+                        </label>
+                        <select 
+                            id="min-bedrooms"
+                            class="cima-input"
+                            @bind="SearchModel.MinBedrooms">
+                            <option value="">@L["Common:All"]</option>
+                            @for (int i = 1; i <= 10; i++)
+                            {
+                                <option value="@i">@i+</option>
+                            }
+                        </select>
+                    </div>
+
+                    @* Baños Mínimos *@
+                    <div class="cima-form-group">
+                        <label for="min-bathrooms" class="cima-label">
+                            @L["Search:Bathrooms"]
+                        </label>
+                        <select 
+                            id="min-bathrooms"
+                            class="cima-input"
+                            @bind="SearchModel.MinBathrooms">
+                            <option value="">@L["Common:All"]</option>
+                            @for (int i = 1; i <= 10; i++)
+                            {
+                                <option value="@i">@i+</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6 pt-4 border-t border-neutral-200">
+                    <button 
+                        type="button"
+                        @onclick="HandleClear"
+                        class="cima-btn cima-btn-secondary flex-1 md:flex-initial">
+                        @L["Search:ClearFilters"]
+                    </button>
+                    
+                    <button 
+                        type="submit"
+                        class="cima-btn cima-btn-primary flex-1 md:flex-initial">
+                        @L["Search:SearchButton"]
+                    </button>
+                </div>
+            </div>
         }
-    </div>
+    </EditForm>
 </div>
 
 @code {
-    // Estado de búsqueda
-    private TransactionType selectedTransactionType = TransactionType.Sale;
-    private string selectedCategory = "";
-    private string location = "";
-    private decimal? minPrice;
-    private decimal? maxPrice;
-    private int? minBedrooms;
-    private int? minBathrooms;
-    private decimal? minArea;
+    [Parameter]
+    public EventCallback<PropertySearchDto> OnSearch { get; set; }
 
-    // UI state
-    private bool showAdvancedFilters = false;
-    private bool showSuggestions = false;
-    private bool isLoadingSuggestions = false;
-    private List<LocationSuggestionDto> locationSuggestions = new();
+    [Parameter]
+    public EventCallback OnClear { get; set; }
 
-    // Debounce
-    private CancellationTokenSource? _debounceTokenSource;
-    private const int DEBOUNCE_DELAY_MS = 500;
-
-    private void SelectTransactionType(TransactionType type)
-    {
-        selectedTransactionType = type;
-    }
-
-    private string GetTabClass(TransactionType type)
-    {
-        var baseClass = "flex-1 px-6 py-3 font-semibold transition-all duration-200 border-b-2 ";
-        if (type == selectedTransactionType)
-        {
-            return baseClass + "border-blue-600 text-blue-600 bg-blue-50";
-        }
-        return baseClass + "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50";
-    }
-
-    private string GetCategoryName(PropertyCategory category)
-    {
-        return category switch
-        {
-            PropertyCategory.Residential => L["PropertyCategory:Residential"],
-            PropertyCategory.Commercial => L["PropertyCategory:Commercial"],
-            PropertyCategory.Mixed => L["PropertyCategory:Mixed"],
-            PropertyCategory.Land => L["PropertyCategory:Land"],
-            _ => category.ToString()
-        };
-    }
+    private PropertySearchDto SearchModel { get; set; } = new();
+    private bool ShowAdvanced { get; set; }
 
     private void ToggleAdvancedFilters()
     {
-        showAdvancedFilters = !showAdvancedFilters;
+        ShowAdvanced = !ShowAdvanced;
     }
 
-    private async Task HandleLocationInput(ChangeEventArgs e)
+    private async Task HandleSubmit()
     {
-        location = e.Value?.ToString() ?? "";
-
-        if (string.IsNullOrWhiteSpace(location) || location.Length < 2)
+        if (OnSearch.HasDelegate)
         {
-            showSuggestions = false;
-            locationSuggestions.Clear();
-            return;
-        }
-
-        // Cancelar búsqueda anterior
-        _debounceTokenSource?.Cancel();
-        _debounceTokenSource = new CancellationTokenSource();
-
-        var token = _debounceTokenSource.Token;
-
-        try
-        {
-            isLoadingSuggestions = true;
-            
-            // Esperar 500ms antes de hacer la búsqueda
-            await Task.Delay(DEBOUNCE_DELAY_MS, token);
-
-            if (!token.IsCancellationRequested)
-            {
-                locationSuggestions = await ListingAppService.GetLocationSuggestionsAsync(location);
-                showSuggestions = locationSuggestions.Any();
-            }
-        }
-        catch (TaskCanceledException)
-        {
-            // Búsqueda cancelada, ignorar
-        }
-        catch
-        {
-            showSuggestions = false;
-            locationSuggestions.Clear();
-        }
-        finally
-        {
-            isLoadingSuggestions = false;
+            await OnSearch.InvokeAsync(SearchModel);
         }
     }
 
-    private void SelectLocation(string selectedLocation)
+    private async Task HandleClear()
     {
-        location = selectedLocation;
-        showSuggestions = false;
-        locationSuggestions.Clear();
-    }
-
-    private void PerformSearch()
-    {
-        var queryParams = new List<string>();
-
-        // Tipo de transacción
-        queryParams.Add($"transactionType={selectedTransactionType}");
-
-        // Categoría
-        if (!string.IsNullOrEmpty(selectedCategory))
+        SearchModel = new();
+        ShowAdvanced = false;
+        
+        if (OnClear.HasDelegate)
         {
-            queryParams.Add($"category={selectedCategory}");
+            await OnClear.InvokeAsync();
         }
-
-        // Ubicación
-        if (!string.IsNullOrWhiteSpace(location))
-        {
-            queryParams.Add($"location={Uri.EscapeDataString(location)}");
-        }
-
-        // Filtros avanzados
-        if (minPrice.HasValue)
-        {
-            queryParams.Add($"minPrice={minPrice}");
-        }
-        if (maxPrice.HasValue)
-        {
-            queryParams.Add($"maxPrice={maxPrice}");
-        }
-        if (minBedrooms.HasValue)
-        {
-            queryParams.Add($"minBedrooms={minBedrooms}");
-        }
-        if (minBathrooms.HasValue)
-        {
-            queryParams.Add($"minBathrooms={minBathrooms}");
-        }
-        if (minArea.HasValue)
-        {
-            queryParams.Add($"minArea={minArea}");
-        }
-
-        var queryString = string.Join("&", queryParams);
-        Navigation.NavigateTo($"/propiedades?{queryString}");
-    }
-
-    private void ClearFilters()
-    {
-        selectedTransactionType = TransactionType.Sale;
-        selectedCategory = "";
-        location = "";
-        minPrice = null;
-        maxPrice = null;
-        minBedrooms = null;
-        minBathrooms = null;
-        minArea = null;
-        showAdvancedFilters = false;
-    }
-
-    private bool HasActiveFilters()
-    {
-        return !string.IsNullOrEmpty(selectedCategory) ||
-               !string.IsNullOrWhiteSpace(location) ||
-               minPrice.HasValue ||
-               maxPrice.HasValue ||
-               minBedrooms.HasValue ||
-               minBathrooms.HasValue ||
-               minArea.HasValue;
-    }
-
-    public void Dispose()
-    {
-        _debounceTokenSource?.Cancel();
-        _debounceTokenSource?.Dispose();
     }
 }
-
-@implements IDisposable

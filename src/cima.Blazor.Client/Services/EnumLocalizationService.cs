@@ -1,6 +1,7 @@
 using cima.Domain.Shared;
 using cima.Localization;
 using Microsoft.Extensions.Localization;
+using System;
 
 namespace cima.Blazor.Client.Services;
 
@@ -14,6 +15,19 @@ public class EnumLocalizationService
     public EnumLocalizationService(IStringLocalizer<cimaResource> localizer)
     {
         _localizer = localizer;
+    }
+
+    /// <summary>
+    /// Localiza cualquier enum usando el nombre del tipo y el valor
+    /// </summary>
+    public string Localize<TEnum>(TEnum enumValue) where TEnum : struct, System.Enum
+    {
+        var enumType = typeof(TEnum).Name;
+        var enumName = enumValue.ToString();
+        var key = $"{enumType}:{enumName}";
+        
+        var localized = _localizer[key];
+        return localized.ResourceNotFound ? enumName : localized.Value;
     }
 
     public string GetTransactionTypeName(TransactionType type)

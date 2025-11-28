@@ -5,47 +5,103 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<div class="cima-hero">
-    @* Imagen de fondo con overlay *@
-    <div class="absolute inset-0 w-full h-full">
-        <img src="/images/getting-started/bg-01.png" 
-             alt="Hero background" 
-             class="w-full h-full object-cover" />
-        <div class="cima-hero-overlay"></div>
+@inherits cimaComponentBase
+
+<section class="relative bg-gradient-to-br from-navy-700 via-navy-600 to-navy-500 text-white overflow-hidden">
+    @* Patrón decorativo de fondo *@
+    <div class="absolute inset-0 opacity-10">
+        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hero-grid)" />
+        </svg>
     </div>
-    
-    @* Contenido principal *@
-    <div class="cima-hero-content">
-        @* Card central con búsqueda *@
-        <div class="cima-card-glass p-8 lg:p-12 w-full lg:w-[75%] mx-auto cima-fade-in">
-            @* Título de bienvenida *@
-            <div class="text-center mb-8">
-                <h1 class="cima-heading-1 mb-4 text-gray-900">
-                    @L["Hero:WelcomeCard"]
-                </h1>
-                <p class="cima-subtitle">
-                    @L["Hero:Subtitle"]
-                </p>
-            </div>
+
+    <div class="cima-container relative z-10 py-20 md:py-32">
+        <div class="max-w-4xl mx-auto text-center">
+            @* Título principal *@
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 cima-text-balance">
+                @L["Hero:Title"]
+            </h1>
             
-            @* Componente de búsqueda *@
-            <div class="cima-slide-up">
-                <PropertySearchFilters />
+            <p class="text-lg md:text-xl text-navy-100 mb-12 max-w-2xl mx-auto">
+                @L["Hero:Subtitle"]
+            </p>
+
+            @* Card de búsqueda sin sombra *@
+            <div class="bg-white rounded-xl p-6 md:p-8 max-w-2xl mx-auto">
+                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="hero-search" class="sr-only">@L["Hero:SearchPlaceholder"]</label>
+                        <input
+                            id="hero-search"
+                            type="search"
+                            class="cima-input"
+                            placeholder="@L["Hero:SearchPlaceholder"]"
+                            @bind="SearchTerm"
+                            @bind:event="oninput"
+                            aria-label="@L["Hero:SearchPlaceholder"]" />
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        class="cima-btn cima-btn-primary md:px-8">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        @L["Hero:SearchButton"]
+                    </button>
+                </form>
+
+                @* Quick stats o información adicional *@
+                <div class="mt-6 pt-6 border-t border-neutral-200 grid grid-cols-3 gap-4 text-center text-sm">
+                    <div>
+                        <div class="font-semibold text-navy-600 text-lg">500+</div>
+                        <div class="text-neutral-600">@L["Properties:Title"]</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-navy-600 text-lg">50+</div>
+                        <div class="text-neutral-600">@L["Menu:Architects"]</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-navy-600 text-lg">1000+</div>
+                        <div class="text-neutral-600">@L["Portfolio:CompletedProjects"]</div>
+                    </div>
+                </div>
             </div>
+
+            @* Indicador de scroll *@
+            <button 
+                @onclick="ScrollToProperties"
+                class="mt-12 inline-flex flex-col items-center text-white/80 hover:text-white transition-colors group"
+                aria-label="@L["Hero:ScrollToProperties"]">
+                <span class="text-sm mb-2">@L["Hero:ScrollToProperties"]</span>
+                <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+            </button>
         </div>
     </div>
-    
-    @* Indicador de scroll *@
-    <div class="cima-scroll-indicator">
-        <button @onclick="ScrollToProperties" 
-                class="text-white hover:text-blue-200 transition-colors focus:outline-none"
-                aria-label="Scroll to properties">
-            <i class="fas fa-chevron-down text-3xl animate-bounce"></i>
-        </button>
-    </div>
-</div>
+</section>
 
 @code {
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    private string SearchTerm { get; set; } = string.Empty;
+
+    private async Task HandleSubmit()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchTerm) && OnSearch.HasDelegate)
+        {
+            await OnSearch.InvokeAsync(SearchTerm.Trim());
+        }
+    }
+
     private async Task ScrollToProperties()
     {
         try

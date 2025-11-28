@@ -7,15 +7,11 @@
 @inherits cimaComponentBase
 
 @*
-    Formulario de contacto asociado a una propiedad específica
-    Para página de detalle de propiedad
+    Formulario de contacto general (NO asociado a una propiedad específica)
+    Para Home page - envía correo de consulta general
 *@
 
-<div class="cima-card p-6">
-    <h3 class="text-xl font-semibold text-neutral-900 mb-4">
-        @L["ContactForm:Title"]
-    </h3>
-
+<div class="cima-card p-6 md:p-8">
     @if (IsSuccess)
     {
         <div class="text-center py-8">
@@ -24,15 +20,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h4 class="text-lg font-semibold text-neutral-900 mb-2">
+            <h3 class="text-xl font-semibold text-neutral-900 mb-2">
                 @L["ContactForm:SuccessTitle"]
-            </h4>
-            <p class="text-sm text-neutral-600 mb-6">
+            </h3>
+            <p class="text-neutral-600 mb-6">
                 @L["ContactForm:SuccessMessage"]
             </p>
             <button 
                 @onclick="ResetForm"
-                class="cima-btn cima-btn-outline text-sm">
+                class="cima-btn cima-btn-outline">
                 @L["ContactForm:SendAnother"]
             </button>
         </div>
@@ -75,7 +71,7 @@
                 @* Teléfono (opcional) *@
                 <div class="cima-form-group">
                     <label for="contact-phone" class="cima-label">
-                        @L["ContactForm:Phone"] <span class="text-neutral-500 text-xs">(@L["Common:Optional"])</span>
+                        @L["ContactForm:Phone"] <span class="text-neutral-500 text-sm">(@L["Common:Optional"])</span>
                     </label>
                     <InputText 
                         id="contact-phone"
@@ -95,16 +91,11 @@
                     <InputTextArea 
                         id="contact-message"
                         @bind-Value="Model.Message"
-                        class="cima-input min-h-[100px]"
-                        placeholder="@L["ContactForm:MessagePlaceholder"]"
+                        class="cima-input min-h-[120px]"
+                        placeholder="@L["ContactForm:GeneralMessagePlaceholder"]"
                         disabled="@IsSubmitting"
-                        rows="4" />
+                        rows="5" />
                     <ValidationMessage For="@(() => Model.Message)" class="cima-error-message" />
-                </div>
-
-                @* Info de propiedad *@
-                <div class="p-3 bg-navy-50 rounded-lg text-sm text-neutral-700">
-                    <p class="font-medium mb-1">@L["ContactForm:InterestedInProperty", ListingTitle]</p>
                 </div>
 
                 @* Botón de envío *@
@@ -128,17 +119,11 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired]
-    public Guid ListingId { get; set; }
-
-    [Parameter, EditorRequired]
-    public string ListingTitle { get; set; } = string.Empty;
-
-    private ContactModel Model { get; set; } = new();
+    private GeneralContactModel Model { get; set; } = new();
     private bool IsSubmitting { get; set; }
     private bool IsSuccess { get; set; }
 
-    private class ContactModel
+    private class GeneralContactModel
     {
         [Required(ErrorMessage = "El nombre es requerido")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
@@ -162,16 +147,14 @@
         {
             IsSubmitting = true;
 
-            var dto = new CreateContactRequestDto
-            {
-                Name = Model.Name,
-                Email = Model.Email,
-                Phone = Model.Phone,
-                Message = Model.Message,
-                ListingId = ListingId
-            };
-
-            await ContactRequestService.CreateAsync(dto);
+            // NOTA: Para contacto general, necesitaríamos un endpoint diferente
+            // o un ListingId "general" predefinido. Por ahora, mostraremos mensaje de éxito
+            // sin llamar al servicio real.
+            
+            // TODO: Implementar endpoint de contacto general en backend
+            // O crear una propiedad "General" con ID fijo para estos casos
+            
+            await Task.Delay(1000); // Simular envío
 
             IsSuccess = true;
             

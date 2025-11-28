@@ -1,7 +1,8 @@
 {
   "culture": "es",
   "texts": {
-    "AppName": "CIMA Inmobiliaria",
+    "AppName": "4cima",
+    "CompanyName": "4cima",
     "Menu:Home": "Inicio",
     "Menu:Properties": "Propiedades",
     "Menu:Portfolio": "Portafolio",
@@ -12,7 +13,7 @@
     "Menu:Dashboard": "Panel de Control",
     
     "Home": "Inicio",
-    "Welcome": "Bienvenido a CIMA",
+    "Welcome": "Bienvenido a 4cima",
     "LongWelcomeMessage": "Encuentra tu hogar ideal con arquitectura de vanguardia",
     
     "Hero:Title": "Encuentra tu hogar ideal",
@@ -77,6 +78,7 @@
     "Properties:Featured": "Propiedades Destacadas",
     "Properties:ViewAll": "Ver todas las propiedades",
     "Properties:ViewDetails": "Ver Detalles",
+    "Properties:ViewDescription": "Ver descripción",
     "Properties:LoadMore": "Cargar más",
     "Properties:Bedrooms": "Recámaras",
     "Properties:Bathrooms": "Baños",
@@ -110,6 +112,7 @@
     "Contact:ErrorMessage": "Error al enviar el mensaje. Inténtalo de nuevo.",
     
     "ContactForm:Title": "¿Interesado en esta propiedad?",
+    "ContactForm:GeneralTitle": "Envíanos un mensaje",
     "ContactForm:PropertyRequired": "Este formulario requiere una propiedad seleccionada. Por favor, vuelve al listado de propiedades.",
     "ContactForm:Name": "Nombre completo",
     "ContactForm:NamePlaceholder": "Juan Pérez",
@@ -119,6 +122,7 @@
     "ContactForm:PhonePlaceholder": "55 1234 5678",
     "ContactForm:Message": "Mensaje",
     "ContactForm:MessagePlaceholder": "Me interesa obtener más información sobre esta propiedad...",
+    "ContactForm:GeneralMessagePlaceholder": "Cuéntanos en qué podemos ayudarte...",
     "ContactForm:Sending": "Enviando...",
     "ContactForm:Submit": "Enviar consulta",
     "ContactForm:SuccessTitle": "¡Mensaje enviado!",
@@ -132,6 +136,8 @@
     "Portfolio:Title": "Nuestro Portafolio",
     "Portfolio:Subtitle": "Proyectos completados",
     "Portfolio:CompletedProjects": "Proyectos Completados",
+    "Portfolio:FilterByArchitect": "Filtrar por arquitecto",
+    "Portfolio:AllArchitects": "Todos los arquitectos",
     
     "Language": "Idioma",
     "Language:Spanish": "Español",
@@ -152,6 +158,12 @@
     "Common:Required": "Campo requerido",
     "Common:Optional": "Opcional",
     "Common:All": "Todos",
+    "Common:Actions": "Acciones",
+    "Common:Status": "Estado",
+    "Common:CreatedAt": "Fecha de creación",
+    "Common:UpdatedAt": "Última actualización",
+    "Common:Active": "Activo",
+    "Common:Retry": "Reintentar",
     
     "Validation:Required": "Este campo es requerido",
     "Validation:Email": "Ingresa un correo electrónico válido",
@@ -169,6 +181,48 @@
     "Light": "Claro",
     "Unspecified": "Sistema",
     
-    "Permission:Dashboard": "Panel de Control"
+    "Permission:Dashboard": "Panel de Control",
+    
+    "Admin:Title": "Panel Administrativo",
+    "Admin:Listings:Title": "Gestión de Propiedades",
+    "Admin:Listings:Create": "Nueva Propiedad",
+    "Admin:Listings:Edit": "Editar Propiedad",
+    "Admin:Listings:Delete": "Eliminar Propiedad",
+    "Admin:Listings:Publish": "Publicar",
+    "Admin:Listings:Unpublish": "Despublicar",
+    "Admin:Listings:Archive": "Archivar",
+    "Admin:Listings:Unarchive": "Desarchivar",
+    
+    "Admin:Architects:Title": "Gestión de Arquitectos",
+    "Admin:Architects:Create": "Nuevo Arquitecto",
+    "Admin:Architects:Edit": "Editar Arquitecto",
+    
+    "Admin:ContactRequests:Title": "Solicitudes de Contacto",
+    "Admin:ContactRequests:New": "Nuevas",
+    "Admin:ContactRequests:Replied": "Respondidas",
+    "Admin:ContactRequests:Closed": "Cerradas",
+    
+    "Dashboard:Stats": "Estadísticas",
+    "Dashboard:Title": "Panel de Control",
+    "Dashboard:Welcome": "Panel de Control",
+    "Dashboard:Subtitle": "Vista general del sistema",
+    "Dashboard:TotalListings": "Total de propiedades",
+    "Dashboard:PublishedListings": "Publicadas",
+    "Dashboard:DraftListings": "Borradores",
+    "Dashboard:TotalArchitects": "Total de arquitectos",
+    "Dashboard:ContactRequests": "Solicitudes de contacto",
+    "Dashboard:NewListing": "Nueva Propiedad",
+    "Dashboard:NewListingDesc": "Agregar propiedad al catálogo",
+    "Dashboard:NewArchitect": "Nuevo Arquitecto",
+    "Dashboard:NewArchitectDesc": "Registrar arquitecto",
+    "Dashboard:ViewRequests": "Ver Solicitudes",
+    "Dashboard:ViewRequestsDesc": "Gestionar mensajes de contacto",
+    "Dashboard:RecentActivity": "Actividad Reciente",
+    "Dashboard:NoRecentActivity": "No hay actividad reciente",
+    "Dashboard:SystemStatus": "Estado del Sistema",
+    "Dashboard:DatabaseConnection": "Conexión a Base de Datos",
+    "Dashboard:ApiStatus": "Estado de API",
+    "Dashboard:LastUpdate": "Última actualización",
+    "Dashboard:ErrorLoading": "Error al cargar estadísticas"
   }
 }

@@ -1,21 +1,24 @@
-@page "/properties"
+@page "/portfolio"
 @using cima.Domain.Shared.Dtos
 @using cima.Listings
+@using cima.Architects
+@using Microsoft.JSInterop
 @inject IListingAppService ListingService
-@inject NavigationManager NavManager
+@inject IArchitectAppService ArchitectService
+@inject IJSRuntime JS
 @inherits cimaComponentBase
 
-<PageTitle>@L["Properties:Title"] - @L["CompanyName"]</PageTitle>
+<PageTitle>@L["Portfolio:Title"] - @L["CompanyName"]</PageTitle>
 
 <div class="min-h-screen bg-white">
     @* Header Section *@
-    <section class="cima-section bg-navy-600 text-white">
+    <section class="cima-section bg-gradient-to-br from-navy-700 via-navy-600 to-navy-500 text-white">
         <div class="cima-container">
             <h1 class="text-3xl md:text-4xl font-display font-bold mb-4">
-                @L["Properties:Title"]
+                @L["Portfolio:Title"]
             </h1>
             <p class="text-lg text-navy-100 max-w-2xl">
-                @L["Properties:Subtitle"]
+                @L["Portfolio:Subtitle"]
             </p>
         </div>
     </section>
@@ -23,21 +26,34 @@
     @* Filters Section *@
     <section class="cima-section-alt py-6">
         <div class="cima-container">
-            <PropertySearchFilters 
-                OnSearch="HandleSearch"
-                OnClear="HandleClearFilters" />
+            <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
+                    @L["Portfolio:FilterByArchitect"]:
+                </label>
+                
+                <select 
+                    id="architect-filter"
+                    class="cima-input flex-1 md:max-w-md"
+                    value="@SelectedArchitectId"
+                    @onchange="@(e => { SelectedArchitectId = e.Value?.ToString(); HandleArchitectChange(); })">
+                    <option value="">@L["Portfolio:AllArchitects"]</option>
+                    @if (Architects?.Any() == true)
+                    {
+                        @foreach (var architect in Architects)
+                        {
+                            <option value="@architect.Id">@architect.UserName</option>
+                        }
+                    }
+                </select>
+            </div>
         </div>
     </section>
 
-    @* Results Section *@
+    @* Projects Grid *@
     <section class="cima-section">
         <div class="cima-container">
             @if (IsLoading)
             {
-                <div class="mb-6">
-                    <div class="cima-skeleton-text w-48 mb-4"></div>
-                </div>
-                
                 <div class="cima-grid">
                     @for (int i = 0; i < 6; i++)
                     {
@@ -52,26 +68,16 @@
                     }
                 </div>
             }
-            else if (Listings?.Any() == true)
+            else if (PortfolioProjects?.Any() == true)
             {
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div class="mb-6">
                     <p class="text-neutral-600">
-                        @L["Search:ResultsFound", TotalCount]
+                        <span class="font-semibold text-neutral-900">@TotalCount</span> @L["Portfolio:CompletedProjects"]
                     </p>
-                    
-                    <select 
-                        class="cima-input w-full md:w-auto"
-                        value="@SortOption"
-                        @onchange="@(e => { SortOption = e.Value?.ToString() ?? "CreatedAt DESC"; HandleSortChange(); })">
-                        <option value="CreatedAt DESC">@L["Properties:Newest"]</option>
-                        <option value="Price ASC">@L["Properties:PriceLowToHigh"]</option>
-                        <option value="Price DESC">@L["Properties:PriceHighToLow"]</option>
-                        <option value="Area DESC">@L["Properties:AreaLargeToSmall"]</option>
-                    </select>
                 </div>
 
                 <div class="cima-grid">
-                    @foreach (var listing in Listings)
+                    @foreach (var listing in PortfolioProjects)
                     {
                         <ListingCard 
                             Listing="listing" 
@@ -123,19 +129,21 @@
                 <div class="text-center py-16">
                     <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <h3 class="text-xl font-semibold text-neutral-900 mb-2">
-                        @L["Search:NoResults"]
+                        No hay proyectos en portafolio
                     </h3>
-                    <p class="text-neutral-600 mb-6">
-                        Intenta ajustar tus filtros de búsqueda
+                    <p class="text-neutral-600">
+                        @if (!string.IsNullOrEmpty(SelectedArchitectId))
+                        {
+                            <span>Este arquitecto aún no tiene proyectos completados</span>
+                        }
+                        else
+                        {
+                            <span>Pronto agregaremos nuestros proyectos completados</span>
+                        }
                     </p>
-                    <button 
-                        @onclick="HandleClearFilters"
-                        class="cima-btn cima-btn-outline">
-                        @L["Search:ClearFilters"]
-                    </button>
                 </div>
             }
         </div>
@@ -144,7 +152,8 @@
 
 @code {
     private bool IsLoading { get; set; } = true;
-    private List<ListingDto>? Listings { get; set; }
+    private List<ListingDto>? PortfolioProjects { get; set; }
+    private List<ArchitectDto>? Architects { get; set; }
     private int TotalCount { get; set; }
     private int CurrentPage { get; set; } = 1;
     private const int PageSize = 12;
@@ -153,24 +162,34 @@
     private Dictionary<Guid, ListingCard> _cardRefs = new();
     private Guid? _currentFlippedCardId;
     
-    private PropertySearchDto SearchFilters { get; set; } = new();
-    private string SortOption { get; set; } = "CreatedAt DESC";
+    private string? SelectedArchitectId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // Leer parámetros de query string
-        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
-        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        
-        if (queryParams["search"] != null)
-        {
-            SearchFilters.Location = queryParams["search"];
-        }
-
-        await LoadListings();
+        await Task.WhenAll(
+            LoadArchitects(),
+            LoadPortfolio()
+        );
     }
 
-    private async Task LoadListings()
+    private async Task LoadArchitects()
+    {
+        try
+        {
+            var result = await ArchitectService.GetListAsync(new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto
+            {
+                MaxResultCount = 100
+            });
+            
+            Architects = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+    }
+
+    private async Task LoadPortfolio()
     {
         try
         {
@@ -180,19 +199,19 @@
             {
                 SkipCount = (CurrentPage - 1) * PageSize,
                 MaxResultCount = PageSize,
-                Sorting = SortOption,
-                MinPrice = SearchFilters.MinPrice,
-                MaxPrice = SearchFilters.MaxPrice,
-                MinBedrooms = SearchFilters.MinBedrooms,
-                MinBathrooms = SearchFilters.MinBathrooms,
-                PropertyType = SearchFilters.Type.HasValue ? (int)SearchFilters.Type.Value : null,
-                PropertyCategory = SearchFilters.Category.HasValue ? (int)SearchFilters.Category.Value : null,
-                TransactionType = SearchFilters.TransactionType.HasValue ? (int)SearchFilters.TransactionType.Value : null
+                Sorting = "CreatedAt DESC",
+                Status = (int)ListingStatus.Portfolio
             };
 
-            var result = await ListingService.GetPublishedAsync(input);
+            // Filtrar por arquitecto si está seleccionado
+            if (!string.IsNullOrEmpty(SelectedArchitectId) && Guid.TryParse(SelectedArchitectId, out var architectId))
+            {
+                input.ArchitectId = architectId;
+            }
+
+            var result = await ListingService.GetListAsync(input);
             
-            Listings = result.Items.ToList();
+            PortfolioProjects = result.Items.ToList();
             TotalCount = (int)result.TotalCount;
         }
         catch (Exception ex)
@@ -205,29 +224,19 @@
         }
     }
 
-    private async Task HandleSearch(PropertySearchDto filters)
+    private async void HandleArchitectChange()
     {
-        SearchFilters = filters;
         CurrentPage = 1;
-        await LoadListings();
-    }
-
-    private async Task HandleClearFilters()
-    {
-        SearchFilters = new();
-        CurrentPage = 1;
-        await LoadListings();
-    }
-
-    private async void HandleSortChange()
-    {
-        await LoadListings();
+        await LoadPortfolio();
     }
 
     private async Task GoToPage(int page)
     {
         CurrentPage = page;
-        await LoadListings();
+        await LoadPortfolio();
+        
+        // Scroll to top
+        await JS.InvokeVoidAsync("window.scrollTo", new { top = 0, behavior = "smooth" });
     }
 
     private async Task PreviousPage()
