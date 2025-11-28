@@ -1,0 +1,401 @@
+@page "/admin/listings/create"
+@page "/admin/listings/edit/{Id:guid}"
+@using cima.Listings
+@using cima.Architects
+@using cima.Domain.Shared.Dtos
+@using cima.Domain.Shared
+@using cima.Blazor.Client.Services
+@using cima.Permissions
+@attribute [Authorize(cimaPermissions.Listings.Default)]
+@inject IListingAppService ListingService
+@inject IArchitectAppService ArchitectService
+@inject EnumLocalizationService EnumLocalizer
+@inject NavigationManager NavManager
+@inject IUiMessageService MessageService
+@inherits cimaComponentBase
+
+<PageTitle>@PageTitle - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-neutral-50">
+    @* Header *@
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <div class="flex items-center gap-4 mb-2">
+                <a href="/admin/listings" class="cima-btn cima-btn-secondary cima-btn-sm">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    @L["Common:Back"]
+                </a>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
+                @PageTitle
+            </h1>
+        </div>
+    </div>
+
+    @* Content *@
+    <div class="cima-container py-8">
+        @if (IsLoading)
+        {
+            <div class="cima-card p-8">
+                <div class="space-y-6">
+                    @for (int i = 0; i < 8; i++)
+                    {
+                        <div>
+                            <div class="cima-skeleton-text w-32 mb-2"></div>
+                            <div class="cima-skeleton-text w-full h-10"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    @* Main Form *@
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="cima-card p-6">
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">
+                                Información Básica
+                            </h2>
+
+                            <div class="space-y-4">
+                                @* Title *@
+                                <div class="cima-form-group">
+                                    <label for="title" class="cima-label cima-label-required">Título</label>
+                                    <InputText id="title" @bind-Value="Model.Title" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Title)" class="cima-error-message" />
+                                </div>
+
+                                @* Description *@
+                                <div class="cima-form-group">
+                                    <label for="description" class="cima-label cima-label-required">Descripción</label>
+                                    <InputTextArea id="description" @bind-Value="Model.Description" class="cima-input min-h-[150px]" rows="6" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Description)" class="cima-error-message" />
+                                </div>
+
+                                @* Location *@
+                                <div class="cima-form-group">
+                                    <label for="location" class="cima-label cima-label-required">Ubicación</label>
+                                    <InputText id="location" @bind-Value="Model.Location" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Location)" class="cima-error-message" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cima-card p-6">
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">
+                                Detalles
+                            </h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @* Price *@
+                                <div class="cima-form-group">
+                                    <label for="price" class="cima-label cima-label-required">Precio (MXN)</label>
+                                    <InputNumber id="price" @bind-Value="Model.Price" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Price)" class="cima-error-message" />
+                                </div>
+
+                                @* Area *@
+                                <div class="cima-form-group">
+                                    <label for="area" class="cima-label cima-label-required">Área (m²)</label>
+                                    <InputNumber id="area" @bind-Value="Model.Area" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Area)" class="cima-error-message" />
+                                </div>
+
+                                @* Bedrooms *@
+                                <div class="cima-form-group">
+                                    <label for="bedrooms" class="cima-label cima-label-required">Recámaras</label>
+                                    <InputNumber id="bedrooms" @bind-Value="Model.Bedrooms" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Bedrooms)" class="cima-error-message" />
+                                </div>
+
+                                @* Bathrooms *@
+                                <div class="cima-form-group">
+                                    <label for="bathrooms" class="cima-label cima-label-required">Baños</label>
+                                    <InputNumber id="bathrooms" @bind-Value="Model.Bathrooms" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.Bathrooms)" class="cima-error-message" />
+                                </div>
+
+                                @* Category *@
+                                <div class="cima-form-group">
+                                    <label for="category" class="cima-label cima-label-required">Categoría</label>
+                                    <select id="category" @bind="SelectedCategory" class="cima-input" disabled="@IsSubmitting">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="0">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</option>
+                                        <option value="1">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</option>
+                                        <option value="2">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Mixed)</option>
+                                        <option value="3">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Land)</option>
+                                    </select>
+                                    @if (string.IsNullOrEmpty(SelectedCategory))
+                                    {
+                                        <div class="cima-error-message">La categoría es requerida</div>
+                                    }
+                                </div>
+
+                                @* Type *@
+                                <div class="cima-form-group">
+                                    <label for="type" class="cima-label cima-label-required">Tipo</label>
+                                    <select id="type" @bind="SelectedType" class="cima-input" disabled="@IsSubmitting">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="0">@EnumLocalizer.GetPropertyTypeName(PropertyType.House)</option>
+                                        <option value="1">@EnumLocalizer.GetPropertyTypeName(PropertyType.Apartment)</option>
+                                        <option value="2">@EnumLocalizer.GetPropertyTypeName(PropertyType.Condo)</option>
+                                        <option value="3">@EnumLocalizer.GetPropertyTypeName(PropertyType.Townhouse)</option>
+                                        <option value="4">@EnumLocalizer.GetPropertyTypeName(PropertyType.Villa)</option>
+                                        <option value="5">@EnumLocalizer.GetPropertyTypeName(PropertyType.Office)</option>
+                                        <option value="6">@EnumLocalizer.GetPropertyTypeName(PropertyType.Warehouse)</option>
+                                        <option value="7">@EnumLocalizer.GetPropertyTypeName(PropertyType.RetailSpace)</option>
+                                    </select>
+                                    @if (string.IsNullOrEmpty(SelectedType))
+                                    {
+                                        <div class="cima-error-message">El tipo es requerido</div>
+                                    }
+                                </div>
+
+                                @* Transaction Type *@
+                                <div class="cima-form-group">
+                                    <label for="transaction" class="cima-label cima-label-required">Transacción</label>
+                                    <select id="transaction" @bind="SelectedTransaction" class="cima-input" disabled="@IsSubmitting">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="0">@EnumLocalizer.GetTransactionTypeName(TransactionType.Sale)</option>
+                                        <option value="1">@EnumLocalizer.GetTransactionTypeName(TransactionType.Rent)</option>
+                                        <option value="2">@EnumLocalizer.GetTransactionTypeName(TransactionType.Lease)</option>
+                                    </select>
+                                    @if (string.IsNullOrEmpty(SelectedTransaction))
+                                    {
+                                        <div class="cima-error-message">El tipo de transacción es requerido</div>
+                                    }
+                                </div>
+
+                                @* Architect *@
+                                <div class="cima-form-group">
+                                    <label for="architect" class="cima-label cima-label-required">Arquitecto</label>
+                                    <select id="architect" @bind="SelectedArchitectId" class="cima-input" disabled="@IsSubmitting">
+                                        <option value="">Seleccionar arquitecto...</option>
+                                        @if (Architects?.Any() == true)
+                                        {
+                                            @foreach (var architect in Architects)
+                                            {
+                                                <option value="@architect.Id">@architect.UserName</option>
+                                            }
+                                        }
+                                    </select>
+                                    @if (string.IsNullOrEmpty(SelectedArchitectId))
+                                    {
+                                        <div class="cima-error-message">El arquitecto es requerido</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @* Images (Edit Mode Only) *@
+                        @if (IsEditMode && ExistingListing != null && Id.HasValue)
+                        {
+                            <div class="cima-card p-6">
+                                <h2 class="text-xl font-semibold text-neutral-900 mb-6">Imágenes</h2>
+                                <ImageUploader ListingId="@Id.Value" InitialImages="@ExistingListing.Images" ImagesChanged="HandleImagesChanged" />
+                            </div>
+                        }
+                    </div>
+
+                    @* Sidebar *@
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-6 space-y-6">
+                            <div class="cima-card p-6">
+                                <h3 class="font-semibold text-neutral-900 mb-4">Acciones</h3>
+                                <div class="space-y-3">
+                                    <button type="submit" class="cima-btn cima-btn-primary w-full" disabled="@IsSubmitting">
+                                        @if (IsSubmitting)
+                                        {
+                                            <span class="cima-loading-spinner mr-2"></span>
+                                            <span>Guardando...</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@L["Common:Save"]</span>
+                                        }
+                                    </button>
+                                    <a href="/admin/listings" class="cima-btn cima-btn-secondary w-full">@L["Common:Cancel"]</a>
+                                </div>
+                            </div>
+
+                            @if (IsEditMode && ExistingListing != null)
+                            {
+                                <div class="cima-card p-6">
+                                    <h3 class="font-semibold text-neutral-900 mb-4">Vista Previa</h3>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-neutral-600">Estado:</span>
+                                            <span class="@GetStatusBadgeClass(ExistingListing.Status)">
+                                                @EnumLocalizer.GetListingStatusName(ExistingListing.Status)
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-neutral-600">Imágenes:</span>
+                                            <span class="font-medium">@(ExistingListing.Images?.Count ?? 0)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private bool IsEditMode => Id.HasValue && Id.Value != Guid.Empty;
+    private string PageTitle => IsEditMode ? L["Admin:Listings:Edit"] : L["Admin:Listings:Create"];
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsSubmitting { get; set; }
+    
+    private CreateUpdateListingDto Model { get; set; } = new();
+    private List<ArchitectDto>? Architects { get; set; }
+    private ListingDto? ExistingListing { get; set; }
+    
+    private string SelectedCategory { get; set; } = string.Empty;
+    private string SelectedType { get; set; } = string.Empty;
+    private string SelectedTransaction { get; set; } = string.Empty;
+    private string SelectedArchitectId { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadArchitects();
+        if (IsEditMode)
+        {
+            await LoadListing();
+        }
+        IsLoading = false;
+    }
+
+    private async Task LoadArchitects()
+    {
+        try
+        {
+            var result = await ArchitectService.GetListAsync(new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto
+            {
+                MaxResultCount = 100,
+                Sorting = "UserName"
+            });
+            Architects = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+    }
+
+    private async Task LoadListing()
+    {
+        try
+        {
+            if (!Id.HasValue) return;
+
+            ExistingListing = await ListingService.GetAsync(Id.Value);
+            
+            Model = new CreateUpdateListingDto
+            {
+                Title = ExistingListing.Title,
+                Description = ExistingListing.Description,
+                Location = ExistingListing.Location,
+                Price = ExistingListing.Price,
+                Area = ExistingListing.Area,
+                Bedrooms = ExistingListing.Bedrooms,
+                Bathrooms = ExistingListing.Bathrooms,
+                Category = ExistingListing.Category,
+                Type = ExistingListing.Type,
+                TransactionType = ExistingListing.TransactionType,
+                ArchitectId = ExistingListing.ArchitectId
+            };
+            
+            SelectedCategory = ((int)ExistingListing.Category).ToString();
+            SelectedType = ((int)ExistingListing.Type).ToString();
+            SelectedTransaction = ((int)ExistingListing.TransactionType).ToString();
+            SelectedArchitectId = ExistingListing.ArchitectId.ToString();
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+            NavManager.NavigateTo("/admin/listings");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!ValidateForm()) return;
+
+        try
+        {
+            IsSubmitting = true;
+
+            // Convert string selections to enums
+            Model.Category = (PropertyCategory)int.Parse(SelectedCategory);
+            Model.Type = (PropertyType)int.Parse(SelectedType);
+            Model.TransactionType = (TransactionType)int.Parse(SelectedTransaction);
+            Model.ArchitectId = Guid.Parse(SelectedArchitectId);
+
+            if (IsEditMode && Id.HasValue)
+            {
+                await ListingService.UpdateAsync(Id.Value, Model);
+                await MessageService.Success("Propiedad actualizada exitosamente");
+            }
+            else
+            {
+                var created = await ListingService.CreateAsync(Model);
+                await MessageService.Success("Propiedad creada exitosamente");
+                NavManager.NavigateTo($"/admin/listings/edit/{created.Id}");
+                return;
+            }
+
+            NavManager.NavigateTo("/admin/listings");
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private bool ValidateForm()
+    {
+        return !string.IsNullOrEmpty(SelectedCategory) &&
+               !string.IsNullOrEmpty(SelectedType) &&
+               !string.IsNullOrEmpty(SelectedTransaction) &&
+               !string.IsNullOrEmpty(SelectedArchitectId);
+    }
+
+    private void HandleImagesChanged(List<ListingImageDto> images)
+    {
+        if (ExistingListing != null)
+        {
+            ExistingListing.Images = images;
+            StateHasChanged();
+        }
+    }
+
+    private string GetStatusBadgeClass(ListingStatus status)
+    {
+        return status switch
+        {
+            ListingStatus.Published => "px-2 py-1 text-xs font-medium rounded-full bg-success-light text-success",
+            ListingStatus.Draft => "px-2 py-1 text-xs font-medium rounded-full bg-warning-light text-warning",
+            ListingStatus.Archived => "px-2 py-1 text-xs font-medium rounded-full bg-neutral-200 text-neutral-700",
+            ListingStatus.Portfolio => "px-2 py-1 text-xs font-medium rounded-full bg-navy-100 text-navy-700",
+            _ => "px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600"
+        };
+    }
+}
