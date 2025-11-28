@@ -35,8 +35,13 @@ RUN apt-get update && apt-get install -y nodejs npm
 RUN npm install
 RUN npm run build:css
 
-# Build application
+# Install ABP CLI and client-side libs
 WORKDIR "/src/src/cima.Blazor"
+RUN dotnet tool install -g Volo.Abp.Studio.Cli || true
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN abp install-libs || echo "Libs already installed or not needed"
+
+# Build application
 RUN dotnet build "cima.Blazor.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Stage 3: Publish
@@ -54,11 +59,6 @@ COPY --from=publish /app/publish .
 
 # Create directories for uploaded images
 RUN mkdir -p /app/wwwroot/images/listings
-
-# Create wwwroot/libs directory with a .gitkeep file to satisfy ABP check
-# ABP verifies that this folder exists and is not empty
-# The libs are bundled via ABP bundling system, so we don't need actual files
-RUN mkdir -p /app/wwwroot/libs && echo "# This folder is required by ABP Framework but libs are bundled" > /app/wwwroot/libs/.gitkeep
 
 # Set environment variables for STAGING
 ENV ASPNETCORE_ENVIRONMENT=Staging
