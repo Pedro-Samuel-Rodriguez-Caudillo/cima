@@ -1,0 +1,42 @@
+feat(cicd): implement comprehensive CI/CD with quality gates
+
+Updated and created GitHub Actions workflows:
+
+CI Build and Test:
+- Added environment variables for .NET 9 and Node 20
+- Improved logging and step organization
+- Execute 124 Domain tests as quality gate
+- Build Tailwind CSS automatically
+- Code quality job with dotnet format check
+- Upload artifacts for tests and publish
+
+Domain Tests Workflow:
+- Dedicated workflow for Domain tests
+- Cache NuGet packages for speed
+- Test reporter integration
+- Code coverage with OpenCover
+- Visual test summary in GitHub UI
+- Quality gate enforcement
+- Blocks merge if tests fail
+
+Staging Deploy:
+- Quality gate: tests must pass before deploy
+- Run 124 Domain tests before deployment
+- Create deployment summary with test status
+- Deploy to Railway only if tests pass
+- Improved notification and next steps
+
+Features:
+- 124 Domain tests execute automatically
+- Quality gates block merge/deploy if tests fail
+- Test results and coverage uploaded
+- Visual summaries in GitHub
+- Optimized with caching
+
+Benefits:
+- Code quality guaranteed
+- Only tested code can merge
+- Automatic deployment with validation
+- Full visibility of code status
+
+Refs: DIA-10
