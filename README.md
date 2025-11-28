@@ -1,57 +1,120 @@
-﻿# cima
+﻿# CIMA - Plataforma Inmobiliaria
+
+Sistema de gestión inmobiliaria desarrollado con ABP Framework y Blazor WebAssembly.
+
+## 📚 Documentación
+
+- **[docs/INDEX.md](docs/INDEX.md)** - Punto de entrada principal de la documentación
+- **[.github/BRANCHING_STRATEGY.md](.github/BRANCHING_STRATEGY.md)** - Estrategia de branching y flujo de trabajo
+- **[agents/README.md](agents/README.md)** - Guía para agentes IA (Copilot, Gemini, Codex)
+
+### Inicio Rápido
+
+1. **Primera vez en el proyecto?** → [docs/01-getting-started/README.md](docs/01-getting-started/README.md)
+2. **Desarrollar nueva feature?** → [.github/BRANCHING_STRATEGY.md](.github/BRANCHING_STRATEGY.md)
+3. **Configurar ambiente?** → [docs/01-getting-started/setup-inicial.md](docs/01-getting-started/setup-inicial.md)
 
 ## About this solution
 
 This is a layered startup solution based on [Domain Driven Design (DDD)](https://abp.io/docs/latest/framework/architecture/domain-driven-design) practises. All the fundamental ABP modules are already installed. Check the [Application Startup Template](https://abp.io/docs/latest/solution-templates/layered-web-application) documentation for more info.
 
+## Stack Tecnológico
+
+- **.NET 9** - Framework principal
+- **ABP Framework 9.0** - Application framework
+- **Blazor WebAssembly** - Frontend interactivo
+- **Entity Framework Core** - ORM
+- **PostgreSQL** - Base de datos
+- **Tailwind CSS** - Estilos
+- **Docker** - Containerización
+- **Railway** - Hosting staging
+- **GitHub Actions** - CI/CD
+
 ### Pre-requirements
 
 * [.NET9.0+ SDK](https://dotnet.microsoft.com/download/dotnet)
 * [Node v18 or 20](https://nodejs.org/en)
+* [PostgreSQL 14+](https://www.postgresql.org/download/)
 
 ### Configurations
 
 The solution comes with a default configuration that works out of the box. However, you may consider to change the following configuration before running your solution:
-
 
 ### Before running the application
 
 * Run `abp install-libs` command on your solution folder to install client-side package dependencies. This step is automatically done when you create a new solution, if you didn't especially disabled it. However, you should run it yourself if you have first cloned this solution from your source control, or added a new client-side package dependency to your solution.
 * Run `cima.DbMigrator` to create the initial database. This step is also automatically done when you create a new solution, if you didn't especially disabled it. This should be done in the first run. It is also needed if a new database migration is added to the solution later.
 
-#### Generating a Signing Certificate
+## Flujo de Trabajo Git
 
-In the production environment, you need to use a production signing certificate. ABP Framework sets up signing and encryption certificates in your application and expects an `openiddict.pfx` file in your application.
+Seguimos Git Flow simplificado. Ver [.github/BRANCHING_STRATEGY.md](.github/BRANCHING_STRATEGY.md) para detalles completos.
 
-To generate a signing certificate, you can use the following command:
-
+### Desarrollar Nueva Feature
 ```bash
-dotnet dev-certs https -v -ep openiddict.pfx -p 5287ce65-c75c-4274-aece-cdada2a859d2
+git checkout develop
+git pull origin develop
+git checkout -b feature/nombre-feature
+# ... desarrollar ...
+git add .
+git commit -m "feat: descripción"
+git push origin feature/nombre-feature
+# Crear PR en GitHub → develop
 ```
 
-> `5287ce65-c75c-4274-aece-cdada2a859d2` is the password of the certificate, you can change it to any password you want.
+### Deploy a Staging
+```bash
+# Crear PR: develop → staging en GitHub
+# Aprobar y mergear
+# Railway deploya automáticamente
+```
 
-It is recommended to use **two** RSA certificates, distinct from the certificate(s) used for HTTPS: one for encryption, one for signing.
+### Deploy a Producción
+```bash
+git checkout staging
+git checkout -b release/v1.2.3
+# Actualizar versión y changelog
+git push origin release/v1.2.3
+# Crear PR: release/v1.2.3 → main
+# GitHub Actions deploya a producción
+```
 
-For more information, please refer to: [OpenIddict Certificate Configuration](https://documentation.openiddict.com/configuration/encryption-and-signing-credentials.html#registering-a-certificate-recommended-for-production-ready-scenarios)
+## Comandos Útiles
 
-> Also, see the [Configuring OpenIddict](https://abp.io/docs/latest/Deployment/Configuring-OpenIddict#production-environment) documentation for more information.
+Ver [docs/01-getting-started/quick-reference.md](docs/01-getting-started/quick-reference.md) para lista completa.
 
-### Solution structure
+### Desarrollo Local
+```bash
+.\etc\scripts\start-dev-environment.ps1   # Iniciar ambiente
+.\etc\scripts\start-tailwind-watch.ps1    # Watch Tailwind CSS
+```
 
-This is a layered monolith application that consists of the following applications:
+### Base de Datos
+```bash
+.\etc\scripts\actualizar-migraciones.ps1  # Crear migraciones
+.\etc\scripts\reset-database.ps1          # Reset database
+.\etc\scripts\seed-dev-data.ps1           # Seed datos de desarrollo
+```
 
-* `cima.DbMigrator`: A console application which applies the migrations and also seeds the initial data. It is useful on development as well as on production environment.
-* `cima.Blazor`: ASP.NET Core Blazor Web App application that supports server-side prerendering and optional client-side interactivity running on WebAssembly.
+### Testing
+```bash
+.\etc\scripts\test-api.ps1                # Probar API
+.\etc\scripts\verificar-datos.ps1         # Verificar datos
+```
 
+## Contribuir
 
-## Deploying the application
+1. Lee [.github/BRANCHING_STRATEGY.md](.github/BRANCHING_STRATEGY.md)
+2. Sigue [agents/COMMIT_CONVENTIONS.md](agents/COMMIT_CONVENTIONS.md)
+3. Crea PR y espera a que CI pase
+4. No uses emojis en código/logs/comentarios
 
-Deploying an ABP application follows the same process as deploying any .NET or ASP.NET Core application. However, there are important considerations to keep in mind. For detailed guidance, refer to ABP's [deployment documentation](https://abp.io/docs/latest/Deployment/Index).
+## Soporte
 
-### Additional resources
+- **Documentación:** [docs/INDEX.md](docs/INDEX.md)
+- **Issues:** [GitHub Issues](https://github.com/Pedro-Samuel-Rodriguez-Caudillo/cima/issues)
+- **ABP Docs:** [docs.abp.io](https://docs.abp.io)
 
-You can see the following resources to learn more about your solution and the ABP Framework:
+---
 
-* [Web Application Development Tutorial](https://abp.io/docs/latest/tutorials/book-store/part-1)
-* [Application Startup Template](https://abp.io/docs/latest/startup-templates/application/index)
+**Versión:** 2.0  
+**Última actualización:** 2024
