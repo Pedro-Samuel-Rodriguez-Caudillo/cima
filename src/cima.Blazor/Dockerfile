@@ -37,9 +37,10 @@ RUN npm run build:css
 
 # Install ABP CLI and client-side libs
 WORKDIR "/src/src/cima.Blazor"
-RUN dotnet tool install -g Volo.Abp.Studio.Cli || true
+RUN dotnet tool update -g Volo.Abp.Cli || dotnet tool install -g Volo.Abp.Cli
 ENV PATH="$PATH:/root/.dotnet/tools"
-RUN abp install-libs || echo "Libs already installed or not needed"
+RUN abp install-libs
+RUN test -d ./wwwroot/libs && [ -n "$(ls -A ./wwwroot/libs)" ]
 
 # Build application
 RUN dotnet build "cima.Blazor.csproj" -c $BUILD_CONFIGURATION -o /app/build
