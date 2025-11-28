@@ -2,9 +2,15 @@ name: CI - Build and Test
 
 on:
   push:
-    branches: [ master, develop, feature/** ]
+    branches: 
+      - develop
+      - 'feature/**'
+      - 'bugfix/**'
   pull_request:
-    branches: [ master, develop ]
+    branches: 
+      - develop
+      - staging
+      - main
 
 jobs:
   build:

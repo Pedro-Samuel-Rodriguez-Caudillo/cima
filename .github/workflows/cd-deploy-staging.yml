@@ -1,9 +1,9 @@
 name: CD - Deploy to Staging
 
-# Deploy automático cuando hay push a develop
+# Deploy automático cuando hay push a STAGING (no develop)
 on:
   push:
-    branches: [ develop ]
+    branches: [ staging ]
   workflow_dispatch:
 
 permissions:
@@ -15,7 +15,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Railway hace deploy automático cuando detecta cambios en develop
+  # Railway hace deploy automático cuando detecta cambios en staging
   # Este workflow solo notifica y verifica
   notify-deployment:
     name: Notify Railway Deployment
@@ -35,7 +35,7 @@ jobs:
     - name: Notify deployment started
       run: |
         echo "?? Railway Deployment Triggered"
-        echo "Branch: develop"
+        echo "Branch: staging"
         echo "Commit: ${{ steps.commit.outputs.sha_short }}"
         echo "Message: ${{ steps.commit.outputs.message }}"
         echo ""
@@ -55,22 +55,28 @@ jobs:
         echo "1. Check Railway dashboard for deployment status"
         echo "2. Monitor logs in Railway"
         echo "3. Test staging URL when deployment completes"
-        echo "4. If successful, create PR to master for production"
+        echo "4. Perform complete QA testing"
+        echo "5. If successful, create PR staging ? main for production"
 
 # ==============================================================
 # NOTAS:
 # ==============================================================
 # 
-# Railway detecta automáticamente los cambios en la rama develop
+# Railway detecta automáticamente los cambios en la rama staging
 # y hace deploy sin necesidad de este workflow.
 # 
 # Este workflow es solo para notificación y registro.
 # 
+# FLUJO RECOMENDADO:
+# - develop: desarrollo continuo
+# - staging: testing y QA (Railway deploy automático)
+# - main: producción
+#
 # Para deploy manual desde Railway CLI:
 #   npm install -g @railway/cli
 #   railway login
 #   railway link
 #   railway up
 #
-# Ver docs/RAILWAY_STAGING_CONFIG.md para más información
+# Ver .github/BRANCHING_STRATEGY.md para más información
 # ==============================================================

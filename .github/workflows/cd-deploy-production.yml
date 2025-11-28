@@ -1,15 +1,11 @@
 name: CD - Deploy to Production
 
-# NOTA: Este workflow está preparado pero NO activo
-# Requiere servidor de producción configurado
-# Ver docs/CI_CD_PLAN_REALISTA.md
-
+# Deploy automático cuando hay push a MAIN
 on:
-  # Deshabilitado por defecto - descomentar cuando tengas servidor
-  # push:
-  #   branches: [ master ]
-  #   tags:
-  #     - 'v*.*.*'
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
     inputs:
       version:
@@ -127,7 +123,7 @@ jobs:
           ./backup.sh
           
           # Pull latest changes
-          git pull origin master
+          git pull origin main
           
           # Update environment variables (manual step required first time)
           if [ ! -f .env.production ]; then
@@ -231,10 +227,9 @@ jobs:
 #
 # 3. CREAR ENVIRONMENT EN GITHUB:
 #    Settings > Environments > New environment > "production"
-#    - Agregar protection rules (opcional):
-#      * Required reviewers
-#      * Wait timer
-#      * Deployment branches
+#    - Agregar protection rules:
+#      * Required reviewers (mínimo 1)
+#      * Deployment branches: only main
 #
 # 4. PRIMERA EJECUCIÓN MANUAL:
 #    - Ir a Actions > CD - Deploy to Production
@@ -242,17 +237,10 @@ jobs:
 #    - Enter version (ej: v1.0.0)
 #    - Monitorear logs
 #
-# 5. ACTIVAR DEPLOY AUTOMÁTICO:
-#    Descomentar líneas 6-9 en este archivo:
-#    push:
-#      branches: [ master ]
-#      tags:
-#        - 'v*.*.*'
-#
 # TROUBLESHOOTING:
 # - Ver logs en Actions tab
 # - SSH al servidor y verificar logs: docker-compose -f docker-compose.prod.yml logs
 # - Verificar health checks: curl http://localhost:8082/api/health/ping
 #
-# Ver documentación completa: docs/DEPLOYMENT_GUIDE.md
+# Ver documentación completa: .github/BRANCHING_STRATEGY.md
 # ==============================================================
