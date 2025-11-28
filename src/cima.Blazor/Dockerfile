@@ -37,7 +37,7 @@ RUN npm run build:css
 
 # Install ABP CLI and client-side libs
 WORKDIR "/src/src/cima.Blazor"
-RUN dotnet tool update -g Volo.Abp.Cli || dotnet tool install -g Volo.Abp.Cli
+RUN dotnet tool install -g Volo.Abp.Cli --version 9.0.0
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN abp install-libs
 RUN test -d ./wwwroot/libs && [ -n "$(ls -A ./wwwroot/libs)" ]
