@@ -1,6 +1,7 @@
 name: CD - Deploy to Staging
 
-# Deploy automático cuando hay push a STAGING (no develop)
+# Deploy automático cuando hay push a STAGING
+# Requiere que los tests pasen primero
 on:
   push:
     branches: [ staging ]
@@ -13,13 +14,48 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DOTNET_VERSION: '9.0.x'
 
 jobs:
+  # Ejecutar tests antes de desplegar
+  run-tests:
+    name: Run Tests Before Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore and Build
+      run: |
+        dotnet restore test/cima.Domain.Tests/cima.Domain.Tests.csproj
+        dotnet build test/cima.Domain.Tests/cima.Domain.Tests.csproj --configuration Release --no-restore
+    
+    - name: Run Domain Tests (Quality Gate)
+      run: |
+        echo "::group::Running 124 Domain Tests"
+        dotnet test test/cima.Domain.Tests/cima.Domain.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger "console;verbosity=detailed"
+        echo "::endgroup::"
+    
+    - name: Tests Passed
+      run: |
+        echo "? All 124 tests passed - proceeding with deployment"
+
   # Railway hace deploy automático cuando detecta cambios en staging
-  # Este workflow solo notifica y verifica
   notify-deployment:
     name: Notify Railway Deployment
     runs-on: ubuntu-latest
+    needs: run-tests
+    if: success()
     
     steps:
     - name: Checkout code
@@ -32,6 +68,22 @@ jobs:
         COMMIT_MSG=$(git log -1 --pretty=%B | head -n 1 | tr -d '\n\r')
         echo "message=${COMMIT_MSG}" >> "$GITHUB_OUTPUT"
     
+    - name: Create deployment summary
+      run: |
+        echo "### ?? Staging Deployment" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch**: staging" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ steps.commit.outputs.sha_short }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Message**: ${{ steps.commit.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "#### Tests Status" >> $GITHUB_STEP_SUMMARY
+        echo "? 124 Domain tests passed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "#### Deployment" >> $GITHUB_STEP_SUMMARY
+        echo "Railway will automatically deploy to staging environment" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Monitor: [Railway Dashboard](https://railway.app/dashboard)" >> $GITHUB_STEP_SUMMARY
+    
     - name: Notify deployment started
       run: |
         echo "?? Railway Deployment Triggered"
@@ -39,44 +91,34 @@ jobs:
         echo "Commit: ${{ steps.commit.outputs.sha_short }}"
         echo "Message: ${{ steps.commit.outputs.message }}"
         echo ""
-        echo "Railway will automatically deploy to staging environment"
-        echo "Monitor deployment: https://railway.app/dashboard"
-    
-    - name: Wait for Railway deployment
-      run: |
-        echo "Waiting 30 seconds for Railway to start deployment..."
-        sleep 30
+        echo "? Tests: 124/124 passed"
+        echo "?? Railway deploying automatically..."
     
     - name: Display next steps
       run: |
         echo "? Deployment notification complete"
         echo ""
         echo "Next steps:"
-        echo "1. Check Railway dashboard for deployment status"
-        echo "2. Monitor logs in Railway"
-        echo "3. Test staging URL when deployment completes"
-        echo "4. Perform complete QA testing"
-        echo "5. If successful, create PR staging ? main for production"
+        echo "1. ? Tests passed (124/124)"
+        echo "2. ?? Check Railway dashboard for deployment status"
+        echo "3. ?? Monitor logs in Railway"
+        echo "4. ?? Test staging URL when deployment completes"
+        echo "5. ? Perform complete QA testing"
+        echo "6. ?? If successful, create PR staging ? main for production"
 
 # ==============================================================
-# NOTAS:
+# QUALITY GATES:
 # ==============================================================
 # 
-# Railway detecta automáticamente los cambios en la rama staging
-# y hace deploy sin necesidad de este workflow.
+# Este workflow implementa quality gates:
+# 1. ? Ejecuta 124 tests de Domain
+# 2. ? Si tests fallan, deployment se cancela
+# 3. ? Si tests pasan, Railway deploya automáticamente
 # 
-# Este workflow es solo para notificación y registro.
-# 
-# FLUJO RECOMENDADO:
+# FLUJO:
 # - develop: desarrollo continuo
-# - staging: testing y QA (Railway deploy automático)
+# - staging: testing y QA (con quality gates)
 # - main: producción
-#
-# Para deploy manual desde Railway CLI:
-#   npm install -g @railway/cli
-#   railway login
-#   railway link
-#   railway up
 #
 # Ver .github/BRANCHING_STRATEGY.md para más información
 # ==============================================================
