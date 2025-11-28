@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
 using Volo.Abp.Authorization;
 using Volo.Abp.Autofac;
@@ -29,14 +30,19 @@ public class cimaTestBaseModule : AbpModule
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
-        SeedTestData(context);
+        // No ejecutar seeders automáticamente en tests unitarios
+        // Los tests de integración que necesiten datos pueden llamar manualmente a SeedTestData
+        // SeedTestData(context);
     }
 
-    private static void SeedTestData(ApplicationInitializationContext context)
+    /// <summary>
+    /// Método público para que los tests de integración puedan ejecutar seeders manualmente si lo necesitan
+    /// </summary>
+    public static void SeedTestData(IServiceProvider serviceProvider)
     {
         AsyncHelper.RunSync(async () =>
         {
-            using (var scope = context.ServiceProvider.CreateScope())
+            using (var scope = serviceProvider.CreateScope())
             {
                 await scope.ServiceProvider
                     .GetRequiredService<IDataSeeder>()
