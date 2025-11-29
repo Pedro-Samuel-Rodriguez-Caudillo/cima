@@ -1,0 +1,25 @@
+chore: add Day 13 summary and commit templates
+
+Add summary documentation and commit message templates:
+
+Files added:
+- COMMITS_DIA_13.md: Visual summary of Day 13 commits
+  * Features planned and documented
+  * Commits summary with hashes
+  * Checklist for next session
+  * Quick reference for implementation
+
+- .git_commit_msg_summary.txt: Template for summary commits
+  * Reusable template for future documentation commits
+  * Consistent commit message format
+
+Documentation Purpose:
+- Track daily progress and decisions
+- Provide quick reference for team
+- Maintain commit message consistency
+- Facilitate code review process
+
+These files help maintain project documentation and
+provide templates for consistent commit practices.
+
+Ref: Day 13 - Planning session summary

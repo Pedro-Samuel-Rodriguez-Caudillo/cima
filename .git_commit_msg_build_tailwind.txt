@@ -1,0 +1,29 @@
+build: update Tailwind CSS minified build
+
+Update minified CSS build and project references:
+
+Changes:
+- Rebuild Tailwind CSS with latest utility classes
+- Update app.min.css with optimized production bundle
+- Update project file references for new test projects
+
+Tailwind Build:
+- Purged unused CSS for smaller bundle size
+- Optimized for production deployment
+- Includes all custom CIMA utility classes
+- Responsive breakpoints and variants included
+
+Project Updates:
+- Add references to E2E and UI test projects
+- Update build configuration for testing
+
+File sizes:
+- app.min.css: Optimized for production
+- Reduced bundle size by removing unused utilities
+
+Next steps:
+- Configure automatic Tailwind rebuild on CSS changes
+- Add CSS minification to CI/CD pipeline
+- Monitor bundle size in production
+
+Ref: Tailwind CSS production build update
