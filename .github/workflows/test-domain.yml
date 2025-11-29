@@ -17,6 +17,13 @@ on:
       - '**.csproj'
       - '**.cs'
 
+# Permisos necesarios para test-reporter
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  statuses: write
+
 env:
   DOTNET_VERSION: '9.0.x'
 
@@ -50,6 +57,7 @@ jobs:
     
     - name: Run Domain Unit Tests
       id: domain_tests
+      continue-on-error: true
       run: |
         echo "::group::Domain Layer Unit Tests"
         dotnet test test/cima.Domain.Tests/cima.Domain.Tests.csproj \
@@ -61,7 +69,10 @@ jobs:
           --logger "console;verbosity=detailed" \
           --collect:"XPlat Code Coverage" \
           -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        TEST_EXIT_CODE=$?
         echo "::endgroup::"
+        echo "test_exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+        exit $TEST_EXIT_CODE
     
     - name: Test Report
       uses: dorny/test-reporter@v1
@@ -70,7 +81,7 @@ jobs:
         name: Domain Tests Report
         path: '**/domain-test-results.trx'
         reporter: dotnet-trx
-        fail-on-error: true
+        fail-on-error: false
     
     - name: Upload test results
       if: always()
@@ -87,6 +98,12 @@ jobs:
       run: |
         echo "### Domain Tests Summary ??" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.domain_tests.outputs.test_exit_code }}" = "0" ]; then
+          echo "? **Status**: All tests passed!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "? **Status**: Some tests failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
         echo "- **Total Tests**: 124" >> $GITHUB_STEP_SUMMARY
         echo "- **Expected Pass Rate**: 100%" >> $GITHUB_STEP_SUMMARY
         echo "- **Test Duration**: ~7 seconds" >> $GITHUB_STEP_SUMMARY
@@ -99,9 +116,10 @@ jobs:
         echo "- ? ListingImage Value Object (21 tests)" >> $GITHUB_STEP_SUMMARY
     
     - name: Quality Gate
-      if: failure()
+      if: steps.domain_tests.outputs.test_exit_code != '0'
       run: |
         echo "::error::Domain tests failed! All 124 tests must pass."
+        echo "::error::Check the test report for details."
         exit 1
 
   test-status:
