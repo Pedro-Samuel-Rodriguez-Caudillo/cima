@@ -1,0 +1,21 @@
+fix(css): unify Tailwind CSS build process and fix bundle paths
+
+Fix CSS loading issues by unifying the Tailwind build process:
+
+Changes:
+- Update package.json to use main.css as Tailwind input
+- Update app.css to import from main.css
+- Fix CSS paths in App.razor to use _content path
+- Update cimaStyleBundleContributor with correct bundle path
+- Add CSS references to StyleBundles in cimaBlazorModule
+- Rebuild app.min.css with new configuration
+
+This fixes:
+- CSS not loading in development
+- Broken styles in production
+- Tailwind utilities not being applied
+
+All CSS now properly compiled from main.css to app.min.css
+and served through correct _content/cima.Blazor.Client path.
+
+Fixes: CSS loading and Tailwind compilation issues
