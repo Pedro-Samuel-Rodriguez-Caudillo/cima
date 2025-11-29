@@ -1,0 +1,24 @@
+fix(blazor): add localization configuration to resolve translation errors
+
+Fix localization error in Blazor WebAssembly client:
+
+Problem:
+- RegisterClientLocalizationsError: Cannot read properties of undefined
+- main.js failing to load translations
+- Design/UI broken due to missing localization setup
+
+Solution:
+- Add ConfigureLocalization() method to cimaBlazorClientModule
+- Configure cimaResource with proper base types
+- Add supported languages (Spanish and English)
+- Clear and re-add language options
+
+Changes:
+- Added using statements for Localization and cimaResource
+- Configured AbpLocalizationOptions with cimaResource
+- Set Spanish (es) and English (en) as supported languages
+
+This resolves the JavaScript error and ensures proper
+localization initialization in the WebAssembly client.
+
+Fixes: Translation errors breaking UI in development

@@ -6,6 +6,6 @@ public class cimaStyleBundleContributor : BundleContributor
 {
     public override void ConfigureBundle(BundleConfigurationContext context)
     {
-        context.Files.Add(new BundleFile("main.css", true));
+        context.Files.Add(new BundleFile("/_content/cima.Blazor.Client/css/app.min.css", true));
     }
 }

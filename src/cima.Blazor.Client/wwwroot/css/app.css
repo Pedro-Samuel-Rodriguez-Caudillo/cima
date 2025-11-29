@@ -1,2 +1,3 @@
-/* Placeholder para mantener la estructura de archivos esperada por el build */
-/* Los estilos principales están en main.css */
+@import "../main.css";
+
+/* Entrada unificada para Tailwind. main.css contiene todo el diseño y se compila a app.min.css. */

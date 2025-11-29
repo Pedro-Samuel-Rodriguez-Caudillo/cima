@@ -1,0 +1,19 @@
+fix(blazor): correct LanguageInfo constructor and remove invalid base type
+
+Fix compilation errors in localization configuration:
+
+Errors fixed:
+- CS0246: AbpLocalizationResource not found
+- CS1729: LanguageInfo doesn't have 4-argument constructor
+
+Changes:
+- Removed invalid AddBaseTypes call
+- Use correct LanguageInfo constructor with 3 arguments
+- Keep language configuration simple and working
+
+LanguageInfo constructor signature:
+  new LanguageInfo(cultureName, uiCultureName, displayName)
+
+This allows the app to compile and run correctly.
+
+Fixes: Build errors after localization configuration

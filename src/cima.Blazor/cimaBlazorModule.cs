@@ -226,6 +226,7 @@ public class cimaBlazorModule : AbpModule
                 bundle =>
                 {
                     bundle.AddFiles("/global-styles.css");
+                    bundle.AddFiles("/_content/cima.Blazor.Client/css/app.min.css");
                 }
             );
 
@@ -243,6 +244,7 @@ public class cimaBlazorModule : AbpModule
                 bundle =>
                 {
                     bundle.AddFiles("/global-styles.css");
+                    bundle.AddFiles("/_content/cima.Blazor.Client/css/app.min.css");
                 }
             );
         });
