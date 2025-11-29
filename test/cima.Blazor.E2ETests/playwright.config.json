@@ -1,0 +1,17 @@
+{
+  "baseUrl": "http://localhost:5000",
+  "headless": true,
+  "timeout": 30000,
+  "slowMo": 0,
+  "screenshots": {
+    "enabled": true,
+    "path": "test-results/screenshots"
+  },
+  "videos": {
+    "enabled": false,
+    "path": "test-results/videos"
+  },
+  "browsers": ["chromium"],
+  "testMatch": "**/*Tests.cs",
+  "retries": 2
+}
