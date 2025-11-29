@@ -2825,6 +2825,8 @@ input[type="text"]::placeholder,
   }
 }
 
+/* Entrada unificada para Tailwind. main.css contiene todo el dise�o y se compila a app.min.css. */
+
 .hover\:border-navy-500:hover {
   --tw-border-opacity: 1;
   border-color: rgb(0 71 171 / var(--tw-border-opacity, 1));
@@ -3118,4 +3120,3 @@ input[type="text"]::placeholder,
     line-height: 1;
   }
 }
-
