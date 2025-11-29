@@ -68,12 +68,11 @@ public class cimaBlazorClientModule : AbpModule
         Configure<AbpLocalizationOptions>(options =>
         {
             options.Resources
-                .Get<cimaResource>()
-                .AddBaseTypes(typeof(AbpLocalizationResource));
+                .Get<cimaResource>();
 
             options.Languages.Clear();
-            options.Languages.Add(new LanguageInfo("es", "es", "Español", "es"));
-            options.Languages.Add(new LanguageInfo("en", "en", "English", "gb"));
+            options.Languages.Add(new LanguageInfo("es", "es", "Español"));
+            options.Languages.Add(new LanguageInfo("en", "en", "English"));
         });
     }
 
