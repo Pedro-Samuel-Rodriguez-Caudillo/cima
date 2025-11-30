@@ -55,9 +55,11 @@ public class cimaDbMigrationService : ITransientDependency
 
         Logger.LogInformation($"Successfully completed host database migrations.");
 
+        // Multi-tenancy deshabilitado en este proyecto
+        // Si se habilita en el futuro, descomentar este bloque
+        /*
         if (MultiTenancyConsts.IsEnabled)
         {
-            
             var tenants = await _tenantRepository.GetListAsync(includeDetails: true);
 
             var migratedDatabaseSchemas = new HashSet<string>();
@@ -87,6 +89,8 @@ public class cimaDbMigrationService : ITransientDependency
 
             Logger.LogInformation("Successfully completed all database migrations.");
         }
+        */
+        
         Logger.LogInformation("You can safely end this process...");
     }
 

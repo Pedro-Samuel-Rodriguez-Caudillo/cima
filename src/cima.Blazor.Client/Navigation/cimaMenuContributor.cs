@@ -24,19 +24,21 @@ public class cimaMenuContributor : IMenuContributor
         _configuration = configuration;
     }
 
-    public async Task ConfigureMenuAsync(MenuConfigurationContext context)
+    public Task ConfigureMenuAsync(MenuConfigurationContext context)
     {
         if (context.Menu.Name == StandardMenus.Main)
         {
-            await ConfigureMainMenuAsync(context);
+            return ConfigureMainMenuAsync(context);
         }
         else if (context.Menu.Name == StandardMenus.User)
         {
-            await ConfigureUserMenuAsync(context);
+            return ConfigureUserMenuAsync(context);
         }
+
+        return Task.CompletedTask;
     }
 
-    private static async Task ConfigureMainMenuAsync(MenuConfigurationContext context)
+    private static Task ConfigureMainMenuAsync(MenuConfigurationContext context)
     {
         var l = context.GetLocalizer<cimaResource>();
         
@@ -101,10 +103,10 @@ public class cimaMenuContributor : IMenuContributor
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
         administration.SetSubItemOrder(SettingManagementMenus.GroupName, 3);
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
     
-    private async Task ConfigureUserMenuAsync(MenuConfigurationContext context)
+    private Task ConfigureUserMenuAsync(MenuConfigurationContext context)
     {
         if (OperatingSystem.IsBrowser())
         {
@@ -122,6 +124,6 @@ public class cimaMenuContributor : IMenuContributor
             ).RequireAuthenticated());
         }
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

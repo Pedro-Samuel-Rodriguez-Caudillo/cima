@@ -1,77 +1,205 @@
-ï»¿@using Microsoft.Extensions.Localization
-@using cima.Localization
-@inject IStringLocalizer<cimaResource> L
+@using cima.Domain.Shared.Dtos
+@using cima.Blazor.Client.Services
+@using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
+@inject EnumLocalizationService EnumLocalizer
+@inherits cimaComponentBase
 
-<div class="cima-card cursor-pointer group" @onclick="NavigateToDetail">
-    @* Imagen principal con lazy loading *@
-    <div class="relative h-64 overflow-hidden bg-gray-200">
-        <img src="@ImageUrl" 
-             alt="@Title" 
-             loading="lazy"
-             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+@*
+    Card de propiedad con flip para mostrar descripción
+    Responsive: vertical en móvil, horizontal en desktop
+*@
+
+<div class="cima-card-flip-container h-full" @onclick="HandleCardClick">
+    <div class="cima-card-flip @(IsFlipped ? "flipped" : "")" style="height: 100%; min-height: 280px;">
         
-        @* Badge de precio *@
-        <div class="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold">
-            @FormatPrice(Price)
-        </div>
-    </div>
-
-    @* Contenido *@
-    <div class="p-6">
-        @* TÃ­tulo *@
-        <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-            @Title
-        </h3>
-
-        @* UbicaciÃ³n *@
-        <div class="flex items-center text-gray-600 mb-4">
-            <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>
-            <span class="text-sm line-clamp-1">@Location</span>
-        </div>
-
-        @* CaracterÃ­sticas *@
-        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
-            <div class="text-center">
-                <i class="fas fa-bed text-gray-400 mb-1"></i>
-                <div class="text-sm font-semibold text-gray-900">@Bedrooms</div>
-                <div class="text-xs text-gray-500">@L["Properties:Bedrooms"]</div>
+        @* FRENTE: Imagen + Info básica *@
+        <div class="cima-card-flip-front cima-card">
+            <div class="flex flex-col md:flex-row h-full">
+                
+                @* Imagen *@
+                <div class="relative w-full md:w-2/5 aspect-listing-card md:aspect-auto overflow-hidden">
+                    @if (Listing.Images?.Any() == true)
+                    {
+                        @* Obtener primera imagen de la lista enlazada *@
+                        var mainImage = Listing.Images.FirstOrDefault(i => i.PreviousImageId == null) 
+                                     ?? Listing.Images.First();
+                        <img 
+                            src="@mainImage.Url" 
+                            alt="@mainImage.AltText"
+                            class="w-full h-full object-cover cima-responsive-image"
+                            loading="lazy" />
+                    }
+                    else
+                    {
+                        <div class="w-full h-full bg-neutral-200 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </div>
+                    }
+                    
+                    @* Icono de información (i) *@
+                    <button 
+                        class="cima-info-icon absolute top-3 right-3"
+                        @onclick="ToggleFlip"
+                        @onclick:stopPropagation="true"
+                        aria-label="@L["Properties:ViewDescription"]"
+                        title="@L["Properties:ViewDescription"]"
+                        type="button">
+                        i
+                    </button>
+                    
+                    @* Badge de estado (si es destacada o portfolio) *@
+                    @if (Listing.Status == ListingStatus.Portfolio)
+                    {
+                        <span class="cima-badge cima-badge-primary absolute top-3 left-3">
+                            @L["ListingStatus:Portfolio"]
+                        </span>
+                    }
+                </div>
+                
+                @* Información *@
+                <div class="flex-1 p-4 md:p-5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-semibold text-neutral-900 mb-2 cima-truncate-2">
+                            @Listing.Title
+                        </h3>
+                        
+                        <div class="flex items-center text-sm text-neutral-600 mb-3">
+                            <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="truncate">@Listing.Location</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-3 mb-4">
+                            <div class="text-center">
+                                <div class="text-xs text-neutral-500">@L["Properties:Bedrooms"]</div>
+                                <div class="text-lg font-semibold text-navy-600">@Listing.Bedrooms</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-neutral-500">@L["Properties:Bathrooms"]</div>
+                                <div class="text-lg font-semibold text-navy-600">@Listing.Bathrooms</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-neutral-500">@L["Properties:Area"]</div>
+                                <div class="text-lg font-semibold text-navy-600">@Listing.Area.ToString("N0")</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="text-2xl font-bold text-navy-600 mb-1">
+                            @Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                        </div>
+                        <div class="text-xs text-neutral-500">
+                            @EnumLocalizer.GetTransactionTypeName(Listing.TransactionType)
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="text-center">
-                <i class="fas fa-bath text-gray-400 mb-1"></i>
-                <div class="text-sm font-semibold text-gray-900">@Bathrooms</div>
-                <div class="text-xs text-gray-500">@L["Properties:Bathrooms"]</div>
-            </div>
-            <div class="text-center">
-                <i class="fas fa-ruler-combined text-gray-400 mb-1"></i>
-                <div class="text-sm font-semibold text-gray-900">@Area</div>
-                <div class="text-xs text-gray-500">mÂ²</div>
+        </div>
+        
+        @* REVERSO: Descripción *@
+        <div class="cima-card-flip-back cima-card bg-navy-50">
+            <div class="p-5 h-full flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="text-lg font-semibold text-navy-900">
+                        @L["PropertyDetail:Description"]
+                    </h4>
+                    
+                    <button 
+                        class="cima-info-icon bg-navy-500"
+                        @onclick="ToggleFlip"
+                        @onclick:stopPropagation="true"
+                        aria-label="@L["Common:Close"]"
+                        title="@L["Common:Close"]"
+                        type="button">
+                        ?
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto">
+                    <div class="@(IsExpanded ? "" : "cima-truncate-3") text-sm text-neutral-700 leading-relaxed">
+                        @Listing.Description
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Listing.Description) && Listing.Description.Length > 150 && !IsExpanded)
+                    {
+                        <button 
+                            class="text-navy-600 hover:text-navy-700 text-sm font-medium mt-2"
+                            @onclick="ExpandDescription"
+                            @onclick:stopPropagation="true"
+                            type="button">
+                            ...
+                        </button>
+                    }
+                </div>
+                
+                <button 
+                    class="cima-btn cima-btn-primary w-full mt-4"
+                    @onclick="NavigateToDetail"
+                    @onclick:stopPropagation="true"
+                    type="button">
+                    @L["Properties:ViewDetails"]
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @code {
-    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string Price { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string Location { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string Bedrooms { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string Bathrooms { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string Area { get; set; } = string.Empty;
-    [Parameter, EditorRequired] public string ImageUrl { get; set; } = "/images/getting-started/bg-01.png";
-    [Parameter, EditorRequired] public Guid ListingId { get; set; }
+    [Parameter]
+    public ListingDto Listing { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<Guid> OnCardFlipped { get; set; }
+
+    private bool IsFlipped { get; set; }
+    private bool IsExpanded { get; set; }
+
+    private async Task ToggleFlip()
+    {
+        IsFlipped = !IsFlipped;
+        IsExpanded = false; // Reset al voltear
+        
+        if (IsFlipped && OnCardFlipped.HasDelegate)
+        {
+            await OnCardFlipped.InvokeAsync(Listing.Id);
+        }
+    }
+
+    private void ExpandDescription()
+    {
+        IsExpanded = true;
+    }
+
+    private void HandleCardClick()
+    {
+        if (!IsFlipped)
+        {
+            NavigateToDetail();
+        }
+    }
 
     private void NavigateToDetail()
     {
-        Navigation.NavigateTo($"/propiedades/{ListingId}");
+        Navigation.NavigateTo($"/properties/{Listing.Id}");
     }
 
-    private string FormatPrice(string price)
+    // Método público para cerrar desde el componente padre
+    public void Close()
     {
-        if (decimal.TryParse(price, out var priceValue))
+        if (IsFlipped)
         {
-            return priceValue.ToString("C0", new System.Globalization.CultureInfo("es-MX"));
+            IsFlipped = false;
+            IsExpanded = false;
+            StateHasChanged();
         }
-        return price;
     }
 }

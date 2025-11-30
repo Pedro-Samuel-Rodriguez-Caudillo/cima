@@ -7,14 +7,14 @@ namespace cima.Domain.Shared.Dtos
     {
         [Required(ErrorMessage = "El titulo es requerido")]
         [StringLength(200, MinimumLength = 5, ErrorMessage = "El titulo debe tener entre 5 y 200 caracteres")]
-        public string Title { get; set; }
+        public required string Title { get; set; }  // ? required
 
         [StringLength(5000, ErrorMessage = "La descripcion no puede exceder 5000 caracteres")]
-        public string Description { get; set; }
+        public required string Description { get; set; }  // ? required
 
         [Required(ErrorMessage = "La ubicacion es requerida")]
         [StringLength(500, MinimumLength = 3, ErrorMessage = "La ubicacion debe tener entre 3 y 500 caracteres")]
-        public string Location { get; set; }
+        public required string Location { get; set; }  // ? required
 
         [Required(ErrorMessage = "El precio es requerido")]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
@@ -38,18 +38,18 @@ namespace cima.Domain.Shared.Dtos
     {
         [Required(ErrorMessage = "El nombre es requerido")]
         [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
-        public string Name { get; set; }
+        public required string Name { get; set; }  // ? required
 
         [Required(ErrorMessage = "El email es requerido")]
         [EmailAddress(ErrorMessage = "El email no es valida")]
-        public string Email { get; set; }
+        public required string Email { get; set; }  // ? required
 
         [Phone(ErrorMessage = "El telefono no es valido")]
-        public string Phone { get; set; }
+        public required string Phone { get; set; }  // ? required (aunque puede ser nullable en entity)
 
         [Required(ErrorMessage = "El mensaje es requerido")]
         [StringLength(5000, MinimumLength = 10, ErrorMessage = "El mensaje debe tener entre 10 y 5000 caracteres")]
-        public string Message { get; set; }
+        public required string Message { get; set; }  // ? required
 
         [Required(ErrorMessage = "La propiedad es requerida")]
         public Guid ListingId { get; set; }
@@ -58,10 +58,10 @@ namespace cima.Domain.Shared.Dtos
     public class CreateArchitectDtoValidation
     {
         [StringLength(2000, ErrorMessage = "La biografia no puede exceder 2000 caracteres")]
-        public string Bio { get; set; }
+        public string? Bio { get; set; }  // ? nullable
 
         [Url(ErrorMessage = "La URL del portafolio no es valida")]
         [StringLength(500, ErrorMessage = "La URL no puede exceder 500 caracteres")]
-        public string PortfolioUrl { get; set; }
+        public string? PortfolioUrl { get; set; }  // ? nullable (ya eliminado de entidad, mantener por compatibilidad)
     }
 }

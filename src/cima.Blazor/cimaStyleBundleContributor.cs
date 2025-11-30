@@ -6,6 +6,7 @@ public class cimaStyleBundleContributor : BundleContributor
 {
     public override void ConfigureBundle(BundleConfigurationContext context)
     {
-        context.Files.Add(new BundleFile("main.css", true));
+        // El CSS de Tailwind se carga directamente desde /css/app.min.css en App.razor
+        // No es necesario agregarlo al bundle aquí
     }
 }

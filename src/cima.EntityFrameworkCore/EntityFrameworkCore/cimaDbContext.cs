@@ -90,7 +90,7 @@ public class cimaDbContext :
             b.HasKey(x => x.Id);
             b.Property(x => x.Title).IsRequired().HasMaxLength(200);
             b.Property(x => x.Description).HasMaxLength(5000);
-            b.Property(x => x.Location).IsRequired().HasMaxLength(500);
+            b.Property(x => x.Location).HasMaxLength(500);  // Ahora nullable - no IsRequired
             b.Property(x => x.Price).HasPrecision(18, 2);
             b.Property(x => x.Area).HasPrecision(10, 2);
             b.HasIndex(x => new { x.Status, x.ArchitectId });
@@ -104,6 +104,7 @@ public class cimaDbContext :
                 ib.ToTable("ListingImages");
                 ib.WithOwner().HasForeignKey("ListingId");
                 ib.HasKey("ListingId", "ImageId");
+                // Lista enlazada: PreviousImageId y NextImageId configuradas automáticamente
             });
         });
 
@@ -111,8 +112,9 @@ public class cimaDbContext :
         {
             b.ToTable("Architects");
             b.HasKey(x => x.Id);
-            b.Property(x => x.Bio).HasMaxLength(2000);
-            b.Property(x => x.PortfolioUrl).HasMaxLength(500);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(200);  // Nuevo campo Name
+            b.Property(x => x.Bio).HasMaxLength(2000);  // Ahora nullable
+            // PortfolioUrl eliminado - el portafolio es interno con Listings
             b.HasIndex(x => x.UserId).IsUnique();
         });
 
@@ -122,7 +124,7 @@ public class cimaDbContext :
             b.HasKey(x => x.Id);
             b.Property(x => x.Name).IsRequired().HasMaxLength(100);
             b.Property(x => x.Email).IsRequired().HasMaxLength(256);
-            b.Property(x => x.Phone).HasMaxLength(20);
+            b.Property(x => x.Phone).HasMaxLength(20);  // Ahora nullable
             b.Property(x => x.Message).IsRequired().HasMaxLength(5000);
             b.HasIndex(x => new { x.Status, x.CreatedAt });
             b.HasIndex(x => x.ListingId);
@@ -137,7 +139,7 @@ public class cimaDbContext :
             b.ToTable("FeaturedListings");
             b.HasKey(x => x.Id);
             b.HasIndex(x => x.ListingId).IsUnique(); // Solo una vez por listing
-            b.HasIndex(x => x.DisplayOrder);
+            // DisplayOrder eliminado - orden aleatorio en consulta
             b.HasOne(x => x.Listing)
                 .WithMany()
                 .HasForeignKey(x => x.ListingId)

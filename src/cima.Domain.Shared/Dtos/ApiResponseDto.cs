@@ -5,9 +5,9 @@ namespace cima.Domain.Shared.Dtos
 {
     public class ApiResponseDto<T>
     {
-        public T Data { get; set; }
+        public required T Data { get; set; }  // ? required
         public bool Success { get; set; }
-        public string Message { get; set; }
+        public required string Message { get; set; }  // ? required
     }
 
     public class PagedResponseDto<T>
@@ -23,14 +23,14 @@ namespace cima.Domain.Shared.Dtos
 
     public class CreateResultDto<T>
     {
-        public T Data { get; set; }
-        public string Id { get; set; }
+        public required T Data { get; set; }  // ? required
+        public required string Id { get; set; }  // ? required
         public DateTime CreatedAt { get; set; }
     }
 
     public class UpdateResultDto<T>
     {
-        public T Data { get; set; }
+        public required T Data { get; set; }  // ? required
         public DateTime UpdatedAt { get; set; }
     }
 

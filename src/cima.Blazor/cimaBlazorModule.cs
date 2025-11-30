@@ -193,6 +193,13 @@ public class cimaBlazorModule : AbpModule
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
+        ConfigureApplicationServices(context);
+    }
+
+    private void ConfigureApplicationServices(ServiceConfigurationContext context)
+    {
+        // Registrar EnumLocalizationService para renderizado en servidor
+        context.Services.AddTransient<Client.Services.EnumLocalizationService>();
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -247,6 +254,7 @@ public class cimaBlazorModule : AbpModule
             );
         });
 
+        // WebAssembly bundles - aquí se agrega el CSS de Tailwind
         Configure<AbpBundlingOptions>(options =>
         {
             var globalStyles = options.StyleBundles.Get(BlazorWebAssemblyStandardBundles.Styles.Global);
@@ -254,7 +262,6 @@ public class cimaBlazorModule : AbpModule
 
             var globalScripts = options.ScriptBundles.Get(BlazorWebAssemblyStandardBundles.Scripts.Global);
             globalScripts.AddContributors(typeof(cimaScriptBundleContributor));
-            
         });
     }
 
@@ -546,17 +553,7 @@ public class cimaBlazorModule : AbpModule
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "ERROR CRITICO al ejecutar migraciones automaticas");
-            logger.LogError("Mensaje: {Message}", ex.Message);
-            logger.LogError("Stack: {Stack}", ex.StackTrace);
-            
-            if (ex.InnerException != null)
-            {
-                logger.LogError("Inner Exception: {InnerMessage}", ex.InnerException.Message);
-                logger.LogError("Inner Stack: {InnerStack}", ex.InnerException.StackTrace);
-            }
-            
-            // LANZAR LA EXCEPCION para que Railway vea el fallo
+            logger.LogError(ex, "Error durante la migración automática");
             throw;
         }
     }

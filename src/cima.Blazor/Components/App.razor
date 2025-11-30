@@ -18,9 +18,12 @@
 
     <AbpStyles BundleName="@BlazorBasicThemeBundles.Styles.Global" WebAssemblyStyleFiles="GlobalStyles" @rendermode="InteractiveAuto" />
 
+    <!-- Scoped styles primero (menor prioridad) -->
     <link href="cima.Blazor.styles.css" rel="stylesheet"/>
     <link href="cima.Blazor.Client.styles.css" rel="stylesheet"/>
-    <link href="css/app.min.css" rel="stylesheet"/>
+    
+    <!-- Tailwind al final (mayor prioridad - desde wwwroot del servidor) -->
+    <link href="/css/app.min.css" rel="stylesheet"/>
     
     <HeadOutlet @rendermode="InteractiveAuto" />
 
@@ -53,12 +56,12 @@
 @code{
     private List<string> GlobalStyles =>
     [
-        "global.css"
+        // CSS de Tailwind se carga directamente desde wwwroot del servidor
     ];
 
     private List<string> GlobalScripts =>
     [
-        "global.js"
+        "global-scripts.js"
     ];
 
 }

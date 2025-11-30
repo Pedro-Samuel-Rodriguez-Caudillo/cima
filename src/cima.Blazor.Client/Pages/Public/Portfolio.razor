@@ -1,0 +1,282 @@
+@page "/portfolio"
+@using cima.Domain.Shared.Dtos
+@using cima.Listings
+@using cima.Architects
+@using Microsoft.JSInterop
+@inject IListingAppService ListingService
+@inject IArchitectAppService ArchitectService
+@inject IJSRuntime JS
+@inherits cimaComponentBase
+
+<PageTitle>@L["Portfolio:Title"] - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-white">
+    @* Header Section *@
+    <section class="cima-section bg-gradient-to-br from-navy-700 via-navy-600 to-navy-500 text-white">
+        <div class="cima-container">
+            <h1 class="text-3xl md:text-4xl font-display font-bold mb-4">
+                @L["Portfolio:Title"]
+            </h1>
+            <p class="text-lg text-navy-100 max-w-2xl">
+                @L["Portfolio:Subtitle"]
+            </p>
+        </div>
+    </section>
+
+    @* Filters Section *@
+    <section class="cima-section-alt py-6">
+        <div class="cima-container">
+            <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
+                    @L["Portfolio:FilterByArchitect"]:
+                </label>
+                
+                <select 
+                    id="architect-filter"
+                    class="cima-input flex-1 md:max-w-md"
+                    value="@SelectedArchitectId"
+                    @onchange="@(e => { SelectedArchitectId = e.Value?.ToString(); HandleArchitectChange(); })">
+                    <option value="">@L["Portfolio:AllArchitects"]</option>
+                    @if (Architects?.Any() == true)
+                    {
+                        @foreach (var architect in Architects)
+                        {
+                            <option value="@architect.Id">@architect.UserName</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </section>
+
+    @* Projects Grid *@
+    <section class="cima-section">
+        <div class="cima-container">
+            @if (IsLoading)
+            {
+                <div class="cima-grid">
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        <div class="cima-card">
+                            <div class="cima-skeleton-image"></div>
+                            <div class="p-5 space-y-3">
+                                <div class="cima-skeleton-text w-3/4"></div>
+                                <div class="cima-skeleton-text w-1/2"></div>
+                                <div class="cima-skeleton-text w-full"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (PortfolioProjects?.Any() == true)
+            {
+                <div class="mb-6">
+                    <p class="text-neutral-600">
+                        <span class="font-semibold text-neutral-900">@TotalCount</span> @L["Portfolio:CompletedProjects"]
+                    </p>
+                </div>
+
+                <div class="cima-grid">
+                    @foreach (var listing in PortfolioProjects)
+                    {
+                        <ListingCard 
+                            Listing="listing" 
+                            OnCardFlipped="HandleCardFlipped"
+                            @ref="@_cardRefs[listing.Id]" />
+                    }
+                </div>
+
+                @* Paginación *@
+                @if (TotalPages > 1)
+                {
+                    <div class="mt-12 flex justify-center items-center gap-2">
+                        <button 
+                            @onclick="PreviousPage"
+                            disabled="@(CurrentPage == 1)"
+                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+                            @L["Common:Previous"]
+                        </button>
+
+                        <div class="flex gap-1">
+                            @{
+                                var maxVisiblePages = Math.Min(TotalPages, 5);
+                                var startPage = Math.Max(1, CurrentPage - 2);
+                                var endPage = Math.Min(TotalPages, startPage + maxVisiblePages - 1);
+                                
+                                for (int i = startPage; i <= endPage; i++)
+                                {
+                                    var pageNum = i;
+                                    <button 
+                                        @onclick="@(() => GoToPage(pageNum))"
+                                        class="@GetPageButtonClass(pageNum)">
+                                        @pageNum
+                                    </button>
+                                }
+                            }
+                        </div>
+
+                        <button 
+                            @onclick="NextPage"
+                            disabled="@(CurrentPage == TotalPages)"
+                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+                            @L["Common:Next"]
+                        </button>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-16">
+                    <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">
+                        No hay proyectos en portafolio
+                    </h3>
+                    <p class="text-neutral-600">
+                        @if (!string.IsNullOrEmpty(SelectedArchitectId))
+                        {
+                            <span>Este arquitecto aún no tiene proyectos completados</span>
+                        }
+                        else
+                        {
+                            <span>Pronto agregaremos nuestros proyectos completados</span>
+                        }
+                    </p>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private List<ListingDto>? PortfolioProjects { get; set; }
+    private List<ArchitectDto>? Architects { get; set; }
+    private int TotalCount { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private const int PageSize = 12;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    
+    private Dictionary<Guid, ListingCard> _cardRefs = new();
+    private Guid? _currentFlippedCardId;
+    
+    private string? SelectedArchitectId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            LoadArchitects(),
+            LoadPortfolio()
+        );
+    }
+
+    private async Task LoadArchitects()
+    {
+        try
+        {
+            var result = await ArchitectService.GetListAsync(new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto
+            {
+                MaxResultCount = 100
+            });
+            
+            Architects = result.Items.ToList();
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+    }
+
+    private async Task LoadPortfolio()
+    {
+        try
+        {
+            IsLoading = true;
+
+            var input = new GetListingsInput
+            {
+                SkipCount = (CurrentPage - 1) * PageSize,
+                MaxResultCount = PageSize,
+                Sorting = "CreatedAt DESC",
+                Status = (int)ListingStatus.Portfolio
+            };
+
+            // Filtrar por arquitecto si está seleccionado
+            if (!string.IsNullOrEmpty(SelectedArchitectId) && Guid.TryParse(SelectedArchitectId, out var architectId))
+            {
+                input.ArchitectId = architectId;
+            }
+
+            var result = await ListingService.GetListAsync(input);
+            
+            PortfolioProjects = result.Items.ToList();
+            TotalCount = (int)result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async void HandleArchitectChange()
+    {
+        CurrentPage = 1;
+        await LoadPortfolio();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        CurrentPage = page;
+        await LoadPortfolio();
+        
+        // Scroll to top
+        await JS.InvokeVoidAsync("window.scrollTo", new { top = 0, behavior = "smooth" });
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            await GoToPage(CurrentPage - 1);
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            await GoToPage(CurrentPage + 1);
+        }
+    }
+
+    private string GetPageButtonClass(int page)
+    {
+        var baseClass = "px-4 py-2 text-sm font-medium rounded transition-colors";
+        
+        if (page == CurrentPage)
+        {
+            return $"{baseClass} bg-navy-500 text-white";
+        }
+        
+        return $"{baseClass} bg-neutral-100 text-neutral-700 hover:bg-neutral-200";
+    }
+
+    private void HandleCardFlipped(Guid listingId)
+    {
+        // Cerrar card previamente abierta
+        if (_currentFlippedCardId.HasValue && 
+            _currentFlippedCardId != listingId && 
+            _cardRefs.TryGetValue(_currentFlippedCardId.Value, out var prevCard))
+        {
+            prevCard.Close();
+        }
+
+        _currentFlippedCardId = listingId;
+    }
+}

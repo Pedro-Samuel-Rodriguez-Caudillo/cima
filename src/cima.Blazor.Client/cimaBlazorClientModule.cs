@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Globalization;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
@@ -9,11 +10,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using cima.Blazor.Client.Navigation;
+using cima.Blazor.Client.Services;
+using cima.Localization;
 using OpenIddict.Abstractions;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.Autofac.WebAssembly;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
@@ -57,8 +61,28 @@ public class cimaBlazorClientModule : AbpModule
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureAutoMapper(context);
+        ConfigureLocalization();
+        ConfigureApplicationServices(context);
     }
 
+    private void ConfigureApplicationServices(ServiceConfigurationContext context)
+    {
+        // Registrar EnumLocalizationService
+        context.Services.AddTransient<EnumLocalizationService>();
+    }
+
+    private void ConfigureLocalization()
+    {
+        Configure<AbpLocalizationOptions>(options =>
+        {
+            options.Resources
+                .Get<cimaResource>();
+
+            options.Languages.Clear();
+            options.Languages.Add(new LanguageInfo("es", "es", "Español"));
+            options.Languages.Add(new LanguageInfo("en", "en", "English"));
+        });
+    }
 
     private void ConfigureRouter(ServiceConfigurationContext context)
     {

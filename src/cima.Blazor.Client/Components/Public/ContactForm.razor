@@ -1,197 +1,197 @@
+@using cima.Domain.Shared.Dtos
 @using cima.ContactRequests
-@using cima.Localization
-@using Microsoft.Extensions.Localization
-@inject IContactRequestAppService ContactRequestAppService
-@inject IMessageService MessageService
-@inject IStringLocalizer<cimaResource> L
+@using System.ComponentModel.DataAnnotations
+@using Volo.Abp.AspNetCore.Components.Messages
+@inject IContactRequestAppService ContactRequestService
+@inject IUiMessageService MessageService
+@inherits cimaComponentBase
 
-<div class="mx-auto bg-white rounded-lg shadow-md p-6">
-    <h3 class="text-2xl font-bold text-gray-800 mb-6">@L["ContactForm:Title"]</h3>
-    
-    @if (!ListingId.HasValue)
-    {
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-yellow-700">
-                        @L["ContactForm:PropertyRequired"]
-                    </p>
-                </div>
-            </div>
-        </div>
-    }
-    else if (!submitted)
-    {
-        <EditForm Model="@model" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            
-            @* Nombre *@
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["ContactForm:Name"] <span class="text-red-500">*</span>
-                </label>
-                <InputText @bind-Value="model.Name" 
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="@L["ContactForm:NamePlaceholder"]" />
-                <ValidationMessage For="@(() => model.Name)" class="text-red-500 text-sm mt-1" />
-            </div>
-            
-            @* Email *@
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["ContactForm:Email"] <span class="text-red-500">*</span>
-                </label>
-                <InputText @bind-Value="model.Email" 
-                          type="email"
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="@L["ContactForm:EmailPlaceholder"]" />
-                <ValidationMessage For="@(() => model.Email)" class="text-red-500 text-sm mt-1" />
-            </div>
-            
-            @* Teléfono *@
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["ContactForm:Phone"] <span class="text-red-500">*</span>
-                </label>
-                <InputText @bind-Value="model.Phone" 
-                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="@L["ContactForm:PhonePlaceholder"]" />
-                <ValidationMessage For="@(() => model.Phone)" class="text-red-500 text-sm mt-1" />
-            </div>
-            
-            @* Mensaje *@
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    @L["ContactForm:Message"] <span class="text-red-500">*</span>
-                </label>
-                <InputTextArea @bind-Value="model.Message" 
-                              rows="4"
-                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                              placeholder="@L["ContactForm:MessagePlaceholder"]" />
-                <ValidationMessage For="@(() => model.Message)" class="text-red-500 text-sm mt-1" />
-            </div>
-            
-            @* Botón de envío *@
-            <button type="submit" 
-                    disabled="@isSubmitting"
-                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
-                @if (isSubmitting)
-                {
-                    <span>
-                        <i class="fas fa-spinner fa-spin mr-2"></i>
-                        @L["ContactForm:Sending"]
-                    </span>
-                }
-                else
-                {
-                    <span>
-                        <i class="fas fa-paper-plane mr-2"></i>
-                        @L["ContactForm:Submit"]
-                    </span>
-                }
-            </button>
-        </EditForm>
-    }
-    else
+@*
+    Formulario de contacto asociado a una propiedad específica
+    Para página de detalle de propiedad
+*@
+
+<div class="cima-card p-6">
+    <h3 class="text-xl font-semibold text-neutral-900 mb-4">
+        @L["ContactForm:Title"]
+    </h3>
+
+    @if (IsSuccess)
     {
         <div class="text-center py-8">
-            <div class="mb-4">
-                <i class="fas fa-check-circle text-green-500 text-6xl"></i>
+            <div class="w-16 h-16 bg-success-light rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
-            <h4 class="text-2xl font-bold text-gray-800 mb-2">@L["ContactForm:SuccessTitle"]</h4>
-            <p class="text-gray-600 mb-6">
+            <h4 class="text-lg font-semibold text-neutral-900 mb-2">
+                @L["ContactForm:SuccessTitle"]
+            </h4>
+            <p class="text-sm text-neutral-600 mb-6">
                 @L["ContactForm:SuccessMessage"]
             </p>
-            <button @onclick="ResetForm" 
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <button 
+                @onclick="ResetForm"
+                class="cima-btn cima-btn-outline text-sm">
                 @L["ContactForm:SendAnother"]
             </button>
         </div>
     }
+    else
+    {
+        <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="space-y-4">
+                @* Nombre *@
+                <div class="cima-form-group">
+                    <label for="contact-name" class="cima-label cima-label-required">
+                        @L["ContactForm:Name"]
+                    </label>
+                    <InputText 
+                        id="contact-name"
+                        @bind-Value="Model.Name"
+                        class="cima-input"
+                        placeholder="@L["ContactForm:NamePlaceholder"]"
+                        disabled="@IsSubmitting" />
+                    <ValidationMessage For="@(() => Model.Name)" class="cima-error-message" />
+                </div>
+
+                @* Email *@
+                <div class="cima-form-group">
+                    <label for="contact-email" class="cima-label cima-label-required">
+                        @L["ContactForm:Email"]
+                    </label>
+                    <InputText 
+                        id="contact-email"
+                        type="email"
+                        @bind-Value="Model.Email"
+                        class="cima-input"
+                        placeholder="@L["ContactForm:EmailPlaceholder"]"
+                        disabled="@IsSubmitting" />
+                    <ValidationMessage For="@(() => Model.Email)" class="cima-error-message" />
+                </div>
+
+                @* Teléfono (opcional) *@
+                <div class="cima-form-group">
+                    <label for="contact-phone" class="cima-label">
+                        @L["ContactForm:Phone"] <span class="text-neutral-500 text-xs">(@L["Common:Optional"])</span>
+                    </label>
+                    <InputText 
+                        id="contact-phone"
+                        type="tel"
+                        @bind-Value="Model.Phone"
+                        class="cima-input"
+                        placeholder="@L["ContactForm:PhonePlaceholder"]"
+                        disabled="@IsSubmitting" />
+                    <ValidationMessage For="@(() => Model.Phone)" class="cima-error-message" />
+                </div>
+
+                @* Mensaje *@
+                <div class="cima-form-group">
+                    <label for="contact-message" class="cima-label cima-label-required">
+                        @L["ContactForm:Message"]
+                    </label>
+                    <InputTextArea 
+                        id="contact-message"
+                        @bind-Value="Model.Message"
+                        class="cima-input min-h-[100px]"
+                        placeholder="@L["ContactForm:MessagePlaceholder"]"
+                        disabled="@IsSubmitting"
+                        rows="4" />
+                    <ValidationMessage For="@(() => Model.Message)" class="cima-error-message" />
+                </div>
+
+                @* Info de propiedad *@
+                <div class="p-3 bg-navy-50 rounded-lg text-sm text-neutral-700">
+                    <p class="font-medium mb-1">@L["ContactForm:InterestedInProperty", ListingTitle]</p>
+                </div>
+
+                @* Botón de envío *@
+                <button 
+                    type="submit" 
+                    class="cima-btn cima-btn-primary w-full"
+                    disabled="@IsSubmitting">
+                    @if (IsSubmitting)
+                    {
+                        <span class="cima-loading-spinner mr-2"></span>
+                        <span>@L["ContactForm:Sending"]</span>
+                    }
+                    else
+                    {
+                        <span>@L["ContactForm:Submit"]</span>
+                    }
+                </button>
+            </div>
+        </EditForm>
+    }
 </div>
 
 @code {
-    [Parameter] public Guid? ListingId { get; set; }
-    [Parameter] public string? PropertyTitle { get; set; }
-    
-    private ContactRequestFormModel model = new();
-    private bool isSubmitting = false;
-    private bool submitted = false;
-    
-    protected override void OnInitialized()
+    [Parameter, EditorRequired]
+    public Guid ListingId { get; set; }
+
+    [Parameter, EditorRequired]
+    public string ListingTitle { get; set; } = string.Empty;
+
+    private ContactModel Model { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private bool IsSuccess { get; set; }
+
+    private class ContactModel
     {
-        if (ListingId.HasValue && !string.IsNullOrEmpty(PropertyTitle))
-        {
-            model.Message = string.Format(L["ContactForm:InterestedInProperty"], PropertyTitle);
-        }
+        [Required(ErrorMessage = "El nombre es requerido")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
+        public string Name { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El email es requerido")]
+        [EmailAddress(ErrorMessage = "Email inválido")]
+        public string Email { get; set; } = string.Empty;
+
+        [Phone(ErrorMessage = "Teléfono inválido")]
+        public string? Phone { get; set; }
+
+        [Required(ErrorMessage = "El mensaje es requerido")]
+        [StringLength(5000, MinimumLength = 10, ErrorMessage = "El mensaje debe tener entre 10 y 5000 caracteres")]
+        public string Message { get; set; } = string.Empty;
     }
-    
+
     private async Task HandleSubmit()
     {
-        if (!ListingId.HasValue)
-        {
-            await MessageService.Error(L["ContactForm:Error:NoProperty"]);
-            return;
-        }
-
         try
         {
-            isSubmitting = true;
-            
+            IsSubmitting = true;
+
             var dto = new CreateContactRequestDto
             {
-                ListingId = ListingId.Value,
-                Name = model.Name,
-                Email = model.Email,
-                Phone = model.Phone,
-                Message = model.Message
+                Name = Model.Name,
+                Email = Model.Email,
+                Phone = Model.Phone ?? string.Empty,
+                Message = Model.Message,
+                ListingId = ListingId
             };
+
+            await ContactRequestService.CreateAsync(dto);
+
+            IsSuccess = true;
             
-            await ContactRequestAppService.CreateAsync(dto);
-            
-            submitted = true;
             await MessageService.Success(L["ContactForm:Success"]);
         }
         catch (Exception ex)
         {
-            await MessageService.Error(string.Format(L["ContactForm:Error:Submit"], ex.Message));
+            await HandleErrorAsync(ex);
+            await MessageService.Error(L["ContactForm:Error:Submit", ex.Message]);
         }
         finally
         {
-            isSubmitting = false;
+            IsSubmitting = false;
         }
     }
-    
+
     private void ResetForm()
     {
-        model = new ContactRequestFormModel();
-        submitted = false;
-        
-        if (ListingId.HasValue && !string.IsNullOrEmpty(PropertyTitle))
-        {
-            model.Message = string.Format(L["ContactForm:InterestedInProperty"], PropertyTitle);
-        }
-    }
-    
-    private class ContactRequestFormModel
-    {
-        [Required(ErrorMessage = "El nombre es obligatorio")]
-        [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
-        public string Name { get; set; } = string.Empty;
-        
-        [Required(ErrorMessage = "El email es obligatorio")]
-        [EmailAddress(ErrorMessage = "El email no es válido")]
-        public string Email { get; set; } = string.Empty;
-        
-        [Required(ErrorMessage = "El teléfono es obligatorio")]
-        [Phone(ErrorMessage = "El teléfono no es válido")]
-        public string Phone { get; set; } = string.Empty;
-        
-        [Required(ErrorMessage = "El mensaje es obligatorio")]
-        [StringLength(1000, MinimumLength = 10, ErrorMessage = "El mensaje debe tener entre 10 y 1000 caracteres")]
-        public string Message { get; set; } = string.Empty;
+        Model = new();
+        IsSuccess = false;
+        StateHasChanged();
     }
 }

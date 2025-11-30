@@ -1,0 +1,27 @@
+fix(dtos): resolver warnings nullability CS8618 en DTOs
+
+Corregir 48 warnings CS8618 en DTOs agregando 'required' o '?' segun corresponda.
+
+Cambios:
+- Agregar 'required' a propiedades obligatorias en DTOs de entrada
+- Marcar como nullable (?) propiedades opcionales
+- Agregar valores por defecto en DTOs de salida
+- Eliminar GetListingsInput duplicado de PropertySearchDto
+- Inicializar required props en CreateEdit.razor
+
+Archivos modificados (8):
+- ApiResponseDto.cs: Data, Message, Id ? required
+- ValidationDtos.cs: Bio, PortfolioUrl ? nullable
+- ContactRequestDto.cs: Phone, ReplyNotes ? nullable
+- ImageDtos.cs: Url, AltText, ContentType ? required
+- ListingDto.cs: Architect ? nullable, Location ? nullable
+- ListingFiltersDto.cs: Filtros ? nullable
+- PropertySearchDto.cs: Eliminar GetListingsInput duplicado
+- CreateEdit.razor: Inicializar Model con valores
+
+BREAKING CHANGE: DTOs con 'required' ahora deben inicializarse explicitamente.
+Actualizar codigo cliente que crea estos DTOs.
+
+Build: 0 errores, 32 warnings (CS4014 - no criticos)
+
+Refs: #nullability #dtos #cs8618

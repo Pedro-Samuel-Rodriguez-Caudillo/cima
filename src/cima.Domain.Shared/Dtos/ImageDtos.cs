@@ -7,11 +7,11 @@ namespace cima.Domain.Shared.Dtos;
 /// </summary>
 public class CreateListingImageDto
 {
-    public string Url { get; set; }
+    public required string Url { get; set; }  // ? required
     public int DisplayOrder { get; set; }
-    public string AltText { get; set; }
+    public required string AltText { get; set; }  // ? required
     public long FileSize { get; set; }
-    public string ContentType { get; set; }
+    public required string ContentType { get; set; }  // ? required
 }
 
 /// <summary>

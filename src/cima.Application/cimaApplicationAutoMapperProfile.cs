@@ -17,13 +17,16 @@ public class cimaApplicationAutoMapperProfile : Profile
         CreateMap<Listing, ListingListDto>()
             .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src => 
                 src.Images != null && src.Images.Any() 
-                    ? src.Images.OrderBy(i => i.DisplayOrder).FirstOrDefault() 
+                    ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)  // ? Primera imagen de la lista enlazada
                     : null));
                     
         CreateMap<CreateUpdateListingDto, Listing>()
             .ForMember(dest => dest.Images, opt => opt.Ignore());
             
-        CreateMap<ListingImage, ListingImageDto>();
+        // ListingImage - mapeo con lista enlazada
+        CreateMap<ListingImage, ListingImageDto>()
+            .ForMember(dest => dest.PreviousImageId, opt => opt.MapFrom(src => src.PreviousImageId))
+            .ForMember(dest => dest.NextImageId, opt => opt.MapFrom(src => src.NextImageId));
 
         // Featured Listings
         CreateMap<FeaturedListing, FeaturedListingDto>()

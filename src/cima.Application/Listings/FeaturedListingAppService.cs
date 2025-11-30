@@ -39,45 +39,37 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
     /// <summary>
     /// Obtiene todas las propiedades destacadas (para admin)
+    /// En orden aleatorio
     /// </summary>
     [Authorize(cimaPermissions.Listings.Default)]
     public async Task<List<FeaturedListingDto>> GetAllAsync()
     {
-        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing);
+        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing!);  // ? null-forgiving
         var featuredListings = await AsyncExecuter.ToListAsync(
-            queryable.OrderBy(fl => fl.DisplayOrder));
+            queryable.OrderBy(fl => Guid.NewGuid()));  // Orden aleatorio
 
         return ObjectMapper.Map<List<FeaturedListing>, List<FeaturedListingDto>>(featuredListings);
     }
 
     /// <summary>
     /// Obtiene propiedades destacadas con paginación
-    /// Soporta orden aleatorio (default) o manual por DisplayOrder
+    /// Siempre en orden aleatorio
     /// </summary>
     [AllowAnonymous]
     public async Task<PagedResultDto<FeaturedListingDto>> GetPagedAsync(GetFeaturedListingsDto input)
     {
-        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing);
+        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing!);  // ? null-forgiving
 
         // Filtrar solo listings que estén publicados o en portafolio
         queryable = queryable.Where(fl => 
-            fl.Listing.Status == ListingStatus.Published || 
-            fl.Listing.Status == ListingStatus.Portfolio);
+            fl.Listing != null &&  // ? null check
+            (fl.Listing.Status == ListingStatus.Published || 
+             fl.Listing.Status == ListingStatus.Portfolio));
 
         var allFeatured = await AsyncExecuter.ToListAsync(queryable);
 
-        // Ordenar según preferencia
-        IEnumerable<FeaturedListing> orderedFeatured;
-        if (input.RandomOrder)
-        {
-            // Orden aleatorio usando GUID como seed
-            orderedFeatured = allFeatured.OrderBy(x => Guid.NewGuid());
-        }
-        else
-        {
-            // Orden manual por DisplayOrder
-            orderedFeatured = allFeatured.OrderBy(fl => fl.DisplayOrder);
-        }
+        // Orden aleatorio usando GUID como seed
+        var orderedFeatured = allFeatured.OrderBy(x => Guid.NewGuid());
 
         var totalCount = allFeatured.Count;
         var skipCount = input.PageNumber * input.PageSize;
@@ -116,20 +108,22 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         // Si no hay caché, obtener de BD
         var queryable = await _featuredListingRepository.WithDetailsAsync(
             fl => fl.Listing,
-            fl => fl.Listing.Architect,
-            fl => fl.Listing.Images);
+            fl => fl.Listing!.Architect,  // ? null-forgiving operator (sabemos que Listing no es null por WithDetails)
+            fl => fl.Listing!.Images);    // ? null-forgiving operator
 
         // Filtrar solo listings activos
         queryable = queryable.Where(fl => 
-            fl.Listing.Status == ListingStatus.Published || 
-            fl.Listing.Status == ListingStatus.Portfolio);
+            fl.Listing != null &&  // ? null check
+            (fl.Listing.Status == ListingStatus.Published || 
+             fl.Listing.Status == ListingStatus.Portfolio));
 
         var allFeatured = await AsyncExecuter.ToListAsync(queryable);
 
-        // Orden aleatorio
+        // Orden aleatorio - filtrar nulls
         var randomFeatured = allFeatured
+            .Where(fl => fl.Listing != null)  // ? filtrar nulls
             .OrderBy(x => Guid.NewGuid())
-            .Select(fl => fl.Listing)
+            .Select(fl => fl.Listing!)  // ? null-forgiving operator (ya verificado arriba)
             .ToList();
 
         var listings = ObjectMapper.Map<List<Listing>, List<ListingDto>>(randomFeatured);
@@ -182,10 +176,9 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
                 .WithData("CurrentCount", currentCount);
         }
 
-        // Crear featured listing
+        // Crear featured listing (sin DisplayOrder)
         var featuredListing = new FeaturedListing(
             input.ListingId,
-            input.DisplayOrder,
             CurrentUser.Id);
 
         await _featuredListingRepository.InsertAsync(featuredListing);
@@ -194,9 +187,15 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         await _cache.RemoveAsync(CACHE_KEY);
 
         // Cargar con detalles para retornar
-        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing);
+        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing!);  // ? null-forgiving
         var result = await AsyncExecuter.FirstOrDefaultAsync(
             queryable.Where(fl => fl.Id == featuredListing.Id));
+
+        if (result == null)  // ? null check antes de mapear
+        {
+            throw new BusinessException("FeaturedListing:NotFoundAfterCreation")
+                .WithData("Id", featuredListing.Id);
+        }
 
         return ObjectMapper.Map<FeaturedListing, FeaturedListingDto>(result);
     }
@@ -229,23 +228,6 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             // Invalidar caché
             await _cache.RemoveAsync(CACHE_KEY);
         }
-    }
-
-    /// <summary>
-    /// Actualiza el orden de múltiples propiedades destacadas e invalida caché
-    /// </summary>
-    [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task UpdateOrderAsync(List<UpdateFeaturedOrderDto> orders)
-    {
-        foreach (var orderDto in orders)
-        {
-            var featuredListing = await _featuredListingRepository.GetAsync(orderDto.FeaturedListingId);
-            featuredListing.DisplayOrder = orderDto.DisplayOrder;
-            await _featuredListingRepository.UpdateAsync(featuredListing);
-        }
-
-        // Invalidar caché
-        await _cache.RemoveAsync(CACHE_KEY);
     }
 
     /// <summary>

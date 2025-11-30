@@ -1,0 +1,209 @@
+@inherits cimaComponentBase
+
+@*
+    Animación de carga global: Casa construyéndose con líneas CAD
+    Implementación SVG ligera compatible con modo claro/oscuro
+*@
+
+<div class="loader">
+    <div class="cima-loading-container">
+        <svg 
+            class="cima-cad-animation" 
+            viewBox="0 0 200 200" 
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Cargando"
+            role="img">
+            
+            @* Base de la casa *@
+            <path 
+                d="M 40 120 L 160 120" 
+                class="cad-line cad-line-1"
+                stroke-width="2" />
+            
+            @* Pared izquierda *@
+            <path 
+                d="M 40 120 L 40 80" 
+                class="cad-line cad-line-2"
+                stroke-width="2" />
+            
+            @* Pared derecha *@
+            <path 
+                d="M 160 120 L 160 80" 
+                class="cad-line cad-line-3"
+                stroke-width="2" />
+            
+            @* Techo izquierdo *@
+            <path 
+                d="M 40 80 L 100 40" 
+                class="cad-line cad-line-4"
+                stroke-width="2" />
+            
+            @* Techo derecho *@
+            <path 
+                d="M 160 80 L 100 40" 
+                class="cad-line cad-line-5"
+                stroke-width="2" />
+            
+            @* Puerta *@
+            <rect 
+                x="85" 
+                y="95" 
+                width="30" 
+                height="25" 
+                class="cad-line cad-line-6"
+                stroke-width="1.5"
+                fill="none" />
+            
+            @* Ventana izquierda *@
+            <rect 
+                x="50" 
+                y="90" 
+                width="20" 
+                height="20" 
+                class="cad-line cad-line-7"
+                stroke-width="1.5"
+                fill="none" />
+            
+            @* Ventana derecha *@
+            <rect 
+                x="130" 
+                y="90" 
+                width="20" 
+                height="20" 
+                class="cad-line cad-line-8"
+                stroke-width="1.5"
+                fill="none" />
+            
+            @* Cruz ventana izquierda *@
+            <path 
+                d="M 60 90 L 60 110 M 50 100 L 70 100" 
+                class="cad-line cad-line-9"
+                stroke-width="0.5" />
+            
+            @* Cruz ventana derecha *@
+            <path 
+                d="M 140 90 L 140 110 M 130 100 L 150 100" 
+                class="cad-line cad-line-10"
+                stroke-width="0.5" />
+        </svg>
+        
+        <p class="cima-loading-text">
+            Cargando...
+        </p>
+    </div>
+</div>
+
+<style>
+    .cima-loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .cima-cad-animation {
+        width: 120px;
+        height: 120px;
+    }
+
+    .cad-line {
+        stroke: #0047AB; /* navy-500 */
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 200;
+        stroke-dashoffset: 200;
+    }
+
+    /* Modo oscuro */
+    .dark .cad-line {
+        stroke: #4d94ff; /* navy-300 */
+    }
+
+    /* Animaciones escalonadas para efecto de "construcción" */
+    .cad-line-1 {
+        animation: draw 0.4s ease-out 0.1s forwards;
+    }
+
+    .cad-line-2 {
+        animation: draw 0.3s ease-out 0.5s forwards;
+    }
+
+    .cad-line-3 {
+        animation: draw 0.3s ease-out 0.5s forwards;
+    }
+
+    .cad-line-4 {
+        animation: draw 0.3s ease-out 0.8s forwards;
+    }
+
+    .cad-line-5 {
+        animation: draw 0.3s ease-out 0.8s forwards;
+    }
+
+    .cad-line-6 {
+        animation: draw 0.2s ease-out 1.1s forwards;
+    }
+
+    .cad-line-7 {
+        animation: draw 0.2s ease-out 1.3s forwards;
+    }
+
+    .cad-line-8 {
+        animation: draw 0.2s ease-out 1.3s forwards;
+    }
+
+    .cad-line-9 {
+        animation: draw 0.1s ease-out 1.5s forwards;
+    }
+
+    .cad-line-10 {
+        animation: draw 0.1s ease-out 1.5s forwards;
+    }
+
+    @@keyframes draw {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    .cima-loading-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #525252; /* neutral-600 */
+        animation: fade-in 0.3s ease-out 1.6s both;
+    }
+
+    .dark .cima-loading-text {
+        color: #d4d4d4; /* neutral-300 */
+    }
+
+    @@keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Reiniciar animación en loop */
+    .cima-cad-animation {
+        animation: loop-animation 2s linear infinite;
+    }
+
+    @@keyframes loop-animation {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
+</style>
+
+@code {
+    // Componente estático, sin lógica necesaria
+}

@@ -1883,7 +1883,6 @@ namespace cima.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Bio")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
@@ -1899,10 +1898,10 @@ namespace cima.Migrations
                         .HasColumnType("text")
                         .HasColumnName("ExtraProperties");
 
-                    b.Property<string>("PortfolioUrl")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -1957,7 +1956,6 @@ namespace cima.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
@@ -1965,7 +1963,6 @@ namespace cima.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("ReplyNotes")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Status")
@@ -1990,9 +1987,6 @@ namespace cima.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("FeaturedSince")
                         .HasColumnType("timestamp without time zone");
 
@@ -2000,8 +1994,6 @@ namespace cima.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DisplayOrder");
 
                     b.HasIndex("ListingId")
                         .IsUnique();
@@ -2060,7 +2052,6 @@ namespace cima.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Location")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -2299,11 +2290,14 @@ namespace cima.Migrations
                                 .IsRequired()
                                 .HasColumnType("text");
 
-                            b1.Property<int>("DisplayOrder")
-                                .HasColumnType("integer");
-
                             b1.Property<long>("FileSize")
                                 .HasColumnType("bigint");
+
+                            b1.Property<Guid?>("NextImageId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid?>("PreviousImageId")
+                                .HasColumnType("uuid");
 
                             b1.Property<string>("Url")
                                 .IsRequired()

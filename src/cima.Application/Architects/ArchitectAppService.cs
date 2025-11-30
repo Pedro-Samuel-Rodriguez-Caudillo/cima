@@ -152,12 +152,13 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        // Crear nuevo perfil
+        // Crear nuevo perfil con Name requerido
         var architect = new Architect
         {
             UserId = CurrentUser.Id.Value,
-            Bio = input.Bio?.Trim() ?? string.Empty,
-            PortfolioUrl = input.PortfolioUrl?.Trim() ?? string.Empty
+            Name = input.Name?.Trim() ?? CurrentUser.UserName ?? "Arquitecto",  // ✨ Name es required
+            Bio = input.Bio?.Trim()  // ✅ Bio es nullable
+            // PortfolioUrl eliminado - el portafolio es interno con Listings
         };
 
         await _architectRepository.InsertAsync(architect, autoSave: true);
@@ -190,8 +191,12 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         }
 
         // Actualizar campos
-        architect.Bio = input.Bio?.Trim() ?? string.Empty;
-        architect.PortfolioUrl = input.PortfolioUrl?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(input.Name))
+        {
+            architect.Name = input.Name.Trim();  // ✨ Actualizar Name si se proporciona
+        }
+        architect.Bio = input.Bio?.Trim();  // ✅ Bio es nullable, puede ser null
+        // PortfolioUrl eliminado
 
         await _architectRepository.UpdateAsync(architect, autoSave: true);
 

@@ -4,13 +4,32 @@ using Volo.Abp.Domain.Entities;
 
 namespace cima.Domain.Entities
 {
+    /// <summary>
+    /// Entidad que representa a un arquitecto/socio de CIMA.
+    /// Cada arquitecto tiene su perfil y portafolio interno de proyectos.
+    /// </summary>
     public class Architect : AggregateRoot<Guid>
     {
-        // Propiedades de los socios (Arquitectos)
+        /// <summary>
+        /// ID del usuario de Identity vinculado a este arquitecto
+        /// </summary>
         public Guid UserId { get; set; }
-        public string Bio { get; set; }
-        public string PortfolioUrl { get; set; } // Enlace al portafolio
 
-        public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>(); // Enlace a sus casas
+        /// <summary>
+        /// Nombre completo del arquitecto
+        /// </summary>
+        public required string Name { get; set; }
+
+        /// <summary>
+        /// Biografía del arquitecto (opcional)
+        /// Puede llenarse gradualmente durante onboarding
+        /// </summary>
+        public string? Bio { get; set; }
+
+        /// <summary>
+        /// Colección de proyectos/propiedades del arquitecto
+        /// Esto funciona como su portafolio interno
+        /// </summary>
+        public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>();
     }
 }

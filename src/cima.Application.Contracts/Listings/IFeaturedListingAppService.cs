@@ -10,6 +10,7 @@ namespace cima.Listings;
 /// <summary>
 /// Servicio para gestionar propiedades destacadas
 /// Límite máximo: 12 propiedades destacadas
+/// Las propiedades se muestran en orden aleatorio
 /// </summary>
 public interface IFeaturedListingAppService : IApplicationService
 {
@@ -19,8 +20,7 @@ public interface IFeaturedListingAppService : IApplicationService
     Task<List<FeaturedListingDto>> GetAllAsync();
 
     /// <summary>
-    /// Obtiene propiedades destacadas con paginación
-    /// Soporta orden aleatorio (default) o manual por DisplayOrder
+    /// Obtiene propiedades destacadas con paginación y orden aleatorio
     /// </summary>
     Task<PagedResultDto<FeaturedListingDto>> GetPagedAsync(GetFeaturedListingsDto input);
 
@@ -45,11 +45,6 @@ public interface IFeaturedListingAppService : IApplicationService
     /// Remueve una propiedad de destacados por ListingId
     /// </summary>
     Task RemoveByListingIdAsync(Guid listingId);
-
-    /// <summary>
-    /// Actualiza el orden de múltiples propiedades destacadas
-    /// </summary>
-    Task UpdateOrderAsync(List<UpdateFeaturedOrderDto> orders);
 
     /// <summary>
     /// Verifica si una propiedad está en destacados

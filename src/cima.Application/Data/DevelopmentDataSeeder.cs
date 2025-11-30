@@ -79,8 +79,9 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         var architect = new Architect
         {
             UserId = Guid.Empty, // Sin usuario asignado por ahora
-            Bio = "Arquitecto especializado en diseño contemporáneo y sustentable. Más de 15 años de experiencia en proyectos residenciales de lujo.",
-            PortfolioUrl = "https://ejemplo.com/portfolio"
+            Name = "Arquitecto CIMA",  // ? Name es required
+            Bio = "Arquitecto especializado en diseño contemporáneo y sustentable. Más de 15 años de experiencia en proyectos residenciales de lujo."
+            // PortfolioUrl eliminado - el portafolio es interno con Listings
         };
 
         await _architectRepository.InsertAsync(architect);
@@ -289,15 +290,17 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
 
         if (addImage)
         {
+            var imageId = _guidGenerator.Create();
             listing.Images = new[]
             {
                 new ListingImage(
-                    imageId: _guidGenerator.Create(),
+                    imageId: imageId,
                     url: "/images/getting-started/bg-01.png",
-                    displayOrder: 1,
                     altText: $"Imagen de {title}",
                     fileSize: 500000,
-                    contentType: "image/png"
+                    contentType: "image/png",
+                    previousImageId: null,  // ? Primera imagen - lista enlazada
+                    nextImageId: null       // ? Única imagen - lista enlazada
                 )
             };
         }
@@ -314,12 +317,11 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             .Take(6)
             .ToArray();
 
-        for (int i = 0; i < publishedListings.Length; i++)
+        foreach (var listing in publishedListings)
         {
             var featuredListing = new FeaturedListing(
-                publishedListings[i].Id,
-                displayOrder: i + 1,
-                createdBy: null
+                listing.Id,
+                createdBy: null  // ? Sin displayOrder - orden aleatorio
             );
 
             await _featuredListingRepository.InsertAsync(featuredListing);

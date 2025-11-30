@@ -5,7 +5,8 @@ namespace cima.Domain.Entities
 {
     /// <summary>
     /// Entidad para gestionar propiedades destacadas en la página principal.
-    /// Límite máximo: 12 propiedades destacadas con orden aleatorio.
+    /// Las propiedades se muestran en orden aleatorio.
+    /// Límite máximo: 12 propiedades destacadas.
     /// </summary>
     public class FeaturedListing : Entity<Guid>
     {
@@ -20,31 +21,23 @@ namespace cima.Domain.Entities
         public DateTime FeaturedSince { get; set; }
 
         /// <summary>
-        /// Orden manual (opcional, si el admin quiere ordenar)
-        /// Valores bajos = mayor prioridad
-        /// </summary>
-        public int DisplayOrder { get; set; }
-
-        /// <summary>
         /// Usuario que marcó la propiedad como destacada
         /// </summary>
         public Guid? CreatedBy { get; set; }
 
         // Navegación
-        public virtual Listing Listing { get; set; }
+        public virtual Listing? Listing { get; set; }
 
         public FeaturedListing()
         {
             FeaturedSince = DateTime.UtcNow;
-            DisplayOrder = 999; // Por defecto al final
         }
 
-        public FeaturedListing(Guid listingId, int? displayOrder = null, Guid? createdBy = null)
+        public FeaturedListing(Guid listingId, Guid? createdBy = null)
         {
             Id = Guid.NewGuid();
             ListingId = listingId;
             FeaturedSince = DateTime.UtcNow;
-            DisplayOrder = displayOrder ?? 999;
             CreatedBy = createdBy;
         }
     }

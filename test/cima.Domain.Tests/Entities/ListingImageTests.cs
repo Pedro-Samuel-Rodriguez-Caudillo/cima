@@ -7,7 +7,7 @@ using cima.Domain.Entities;
 namespace cima.Entities;
 
 /// <summary>
-/// Tests unitarios para el Value Object ListingImage
+/// Tests unitarios para el Value Object ListingImage con estructura de lista enlazada
 /// </summary>
 public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
 {
@@ -17,7 +17,6 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         // Arrange
         var imageId = Guid.NewGuid();
         var url = "https://storage.example.com/listings/image1.jpg";
-        var displayOrder = 1;
         var altText = "Vista frontal de la propiedad";
         var fileSize = 2048000L; // 2MB
         var contentType = "image/jpeg";
@@ -26,7 +25,6 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         var image = new ListingImage(
             imageId: imageId,
             url: url,
-            displayOrder: displayOrder,
             altText: altText,
             fileSize: fileSize,
             contentType: contentType
@@ -36,116 +34,154 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         image.ShouldNotBeNull();
         image.ImageId.ShouldBe(imageId);
         image.Url.ShouldBe(url);
-        image.DisplayOrder.ShouldBe(displayOrder);
+        image.PreviousImageId.ShouldBeNull();
+        image.NextImageId.ShouldBeNull();
         image.AltText.ShouldBe(altText);
         image.FileSize.ShouldBe(fileSize);
         image.ContentType.ShouldBe(contentType);
     }
 
-    [Theory]
-    [InlineData("https://storage.example.com/listings/image1.jpg", "image/jpeg")]
-    [InlineData("https://cdn.cima.com/properties/abc123.png", "image/png")]
-    [InlineData("/uploads/listings/2024/property-photo.webp", "image/webp")]
-    [InlineData("https://s3.amazonaws.com/bucket/listings/image.jpg", "image/jpeg")]
-    public void Should_Store_Different_Image_Url_And_ContentType_Formats(string url, string contentType)
+    [Fact]
+    public void Should_Create_ListingImage_With_Links()
     {
-        // Arrange & Act
+        // Arrange
+        var imageId = Guid.NewGuid();
+        var previousId = Guid.NewGuid();
+        var nextId = Guid.NewGuid();
+
+        // Act
         var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: url,
-            displayOrder: 1,
+            imageId: imageId,
+            url: "https://example.com/image.jpg",
             altText: "Test image",
             fileSize: 1024000L,
-            contentType: contentType
+            contentType: "image/jpeg",
+            previousImageId: previousId,
+            nextImageId: nextId
         );
 
         // Assert
-        image.Url.ShouldBe(url);
-        image.ContentType.ShouldBe(contentType);
+        image.PreviousImageId.ShouldBe(previousId);
+        image.NextImageId.ShouldBe(nextId);
     }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(5)]
-    [InlineData(10)]
-    [InlineData(20)]
-    public void Should_Set_DisplayOrder_Correctly(int displayOrder)
+    [Fact]
+    public void Should_Create_First_Image_In_List()
     {
-        // Arrange & Act
+        // Arrange
+        var imageId = Guid.NewGuid();
+        var nextId = Guid.NewGuid();
+
+        // Act
         var image = new ListingImage(
+            imageId: imageId,
+            url: "https://example.com/image.jpg",
+            altText: "First image",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: null,
+            nextImageId: nextId
+        );
+
+        // Assert
+        image.PreviousImageId.ShouldBeNull(); // Es la primera
+        image.NextImageId.ShouldBe(nextId);
+    }
+
+    [Fact]
+    public void Should_Create_Last_Image_In_List()
+    {
+        // Arrange
+        var imageId = Guid.NewGuid();
+        var previousId = Guid.NewGuid();
+
+        // Act
+        var image = new ListingImage(
+            imageId: imageId,
+            url: "https://example.com/image.jpg",
+            altText: "Last image",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: previousId,
+            nextImageId: null
+        );
+
+        // Assert
+        image.PreviousImageId.ShouldBe(previousId);
+        image.NextImageId.ShouldBeNull(); // Es la última
+    }
+
+    [Fact]
+    public void Should_Update_Links_Immutably()
+    {
+        // Arrange
+        var originalImage = new ListingImage(
             imageId: Guid.NewGuid(),
             url: "https://example.com/image.jpg",
-            displayOrder: displayOrder,
             altText: "Test",
             fileSize: 1024000L,
             contentType: "image/jpeg"
         );
+        var newPrevId = Guid.NewGuid();
+        var newNextId = Guid.NewGuid();
+
+        // Act
+        var updatedImage = originalImage.WithLinks(newPrevId, newNextId);
 
         // Assert
-        image.DisplayOrder.ShouldBe(displayOrder);
+        updatedImage.ShouldNotBe(originalImage); // Inmutable - nuevo objeto
+        updatedImage.PreviousImageId.ShouldBe(newPrevId);
+        updatedImage.NextImageId.ShouldBe(newNextId);
+        updatedImage.ImageId.ShouldBe(originalImage.ImageId);
+        updatedImage.Url.ShouldBe(originalImage.Url);
+        
+        // Original no cambia
+        originalImage.PreviousImageId.ShouldBeNull();
+        originalImage.NextImageId.ShouldBeNull();
     }
 
-    [Theory]
-    [InlineData("Vista frontal de la propiedad")]
-    [InlineData("Sala de estar con iluminación natural")]
-    [InlineData("Cocina integral moderna")]
-    [InlineData("Jardín trasero")]
-    public void Should_Store_Image_AltText(string altText)
+    [Fact]
+    public void Should_Update_Previous_Link_Only()
     {
-        // Arrange & Act
-        var image = new ListingImage(
+        // Arrange
+        var originalImage = new ListingImage(
             imageId: Guid.NewGuid(),
             url: "https://example.com/image.jpg",
-            displayOrder: 1,
-            altText: altText,
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        // Assert
-        image.AltText.ShouldBe(altText);
-    }
-
-    [Theory]
-    [InlineData(512000L)]    // 500KB
-    [InlineData(1024000L)]   // 1MB
-    [InlineData(2048000L)]   // 2MB
-    [InlineData(5242880L)]   // 5MB
-    public void Should_Store_Different_File_Sizes(long fileSize)
-    {
-        // Arrange & Act
-        var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image.jpg",
-            displayOrder: 1,
-            altText: "Test",
-            fileSize: fileSize,
-            contentType: "image/jpeg"
-        );
-
-        // Assert
-        image.FileSize.ShouldBe(fileSize);
-    }
-
-    [Theory]
-    [InlineData("image/jpeg")]
-    [InlineData("image/png")]
-    [InlineData("image/webp")]
-    [InlineData("image/gif")]
-    public void Should_Store_Different_ContentTypes(string contentType)
-    {
-        // Arrange & Act
-        var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image.jpg",
-            displayOrder: 1,
             altText: "Test",
             fileSize: 1024000L,
-            contentType: contentType
+            contentType: "image/jpeg",
+            nextImageId: Guid.NewGuid()
         );
+        var newPrevId = Guid.NewGuid();
+
+        // Act
+        var updatedImage = originalImage.WithPreviousImage(newPrevId);
 
         // Assert
-        image.ContentType.ShouldBe(contentType);
+        updatedImage.PreviousImageId.ShouldBe(newPrevId);
+        updatedImage.NextImageId.ShouldBe(originalImage.NextImageId); // Mantiene next
+    }
+
+    [Fact]
+    public void Should_Update_Next_Link_Only()
+    {
+        // Arrange
+        var originalImage = new ListingImage(
+            imageId: Guid.NewGuid(),
+            url: "https://example.com/image.jpg",
+            altText: "Test",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: Guid.NewGuid()
+        );
+        var newNextId = Guid.NewGuid();
+
+        // Act
+        var updatedImage = originalImage.WithNextImage(newNextId);
+
+        // Assert
+        updatedImage.NextImageId.ShouldBe(newNextId);
+        updatedImage.PreviousImageId.ShouldBe(originalImage.PreviousImageId); // Mantiene prev
     }
 
     [Fact]
@@ -155,7 +191,6 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         Should.Throw<ArgumentNullException>(() => new ListingImage(
             imageId: Guid.NewGuid(),
             url: null!,
-            displayOrder: 1,
             altText: "Test",
             fileSize: 1024000L,
             contentType: "image/jpeg"
@@ -169,7 +204,6 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         var image = new ListingImage(
             imageId: Guid.NewGuid(),
             url: "https://example.com/image.jpg",
-            displayOrder: 1,
             altText: null!,
             fileSize: 1024000L,
             contentType: "image/jpeg"
@@ -186,7 +220,6 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         var image = new ListingImage(
             imageId: Guid.NewGuid(),
             url: "https://example.com/image.jpg",
-            displayOrder: 1,
             altText: "Test",
             fileSize: 1024000L,
             contentType: null!
@@ -196,194 +229,75 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         image.ContentType.ShouldBe("image/jpeg");
     }
 
-    [Fact]
-    public void Should_Create_New_Instance_With_Updated_DisplayOrder()
+    [Theory]
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("image/webp")]
+    [InlineData("image/gif")]
+    public void Should_Store_Different_ContentTypes(string contentType)
     {
-        // Arrange
-        var originalImage = new ListingImage(
+        // Arrange & Act
+        var image = new ListingImage(
             imageId: Guid.NewGuid(),
             url: "https://example.com/image.jpg",
-            displayOrder: 5,
             altText: "Test",
             fileSize: 1024000L,
+            contentType: contentType
+        );
+
+        // Assert
+        image.ContentType.ShouldBe(contentType);
+    }
+
+    [Theory]
+    [InlineData(512000L)]    // 500KB
+    [InlineData(1024000L)]   // 1MB
+    [InlineData(2048000L)]   // 2MB
+    [InlineData(5242880L)]   // 5MB
+    public void Should_Store_Different_File_Sizes(long fileSize)
+    {
+        // Arrange & Act
+        var image = new ListingImage(
+            imageId: Guid.NewGuid(),
+            url: "https://example.com/image.jpg",
+            altText: "Test",
+            fileSize: fileSize,
             contentType: "image/jpeg"
         );
 
-        // Act
-        var updatedImage = originalImage.WithDisplayOrder(1);
-
         // Assert
-        updatedImage.ShouldNotBe(originalImage); // Nuevo objeto (Value Object inmutable)
-        updatedImage.DisplayOrder.ShouldBe(1);
-        updatedImage.ImageId.ShouldBe(originalImage.ImageId);
-        updatedImage.Url.ShouldBe(originalImage.Url);
-        updatedImage.AltText.ShouldBe(originalImage.AltText);
-        updatedImage.FileSize.ShouldBe(originalImage.FileSize);
-        updatedImage.ContentType.ShouldBe(originalImage.ContentType);
+        image.FileSize.ShouldBe(fileSize);
+    }
+
+    [Fact]
+    public void Should_Create_Linked_List_Chain()
+    {
+        // Arrange
+        var img1Id = Guid.NewGuid();
+        var img2Id = Guid.NewGuid();
+        var img3Id = Guid.NewGuid();
+
+        // Act - Create chain: img1 -> img2 -> img3
+        var img1 = new ListingImage(img1Id, "https://example.com/1.jpg", "First", 1024000L, "image/jpeg", 
+            previousImageId: null, nextImageId: img2Id);
         
-        // Original no debe cambiar (inmutabilidad)
-        originalImage.DisplayOrder.ShouldBe(5);
-    }
-
-    // TODO: El Value Object no está comparando por igualdad de valores correctamente
-    // Esto requiere override de Equals y GetHashCode en ListingImage
-    // [Fact]
-    // public void Should_Be_Equal_When_All_Values_Are_Same()
-    // {
-    //     // Arrange
-    //     var imageId = Guid.NewGuid();
-    //     var image1 = new ListingImage(
-    //         imageId: imageId,
-    //         url: "https://example.com/image.jpg",
-    //         displayOrder: 1,
-    //         altText: "Test",
-    //         fileSize: 1024000L,
-    //         contentType: "image/jpeg"
-    //     );
-
-    //     var image2 = new ListingImage(
-    //         imageId: imageId,
-    //         url: "https://example.com/image.jpg",
-    //         displayOrder: 1,
-    //         altText: "Test",
-    //         fileSize: 1024000L,
-    //         contentType: "image/jpeg"
-    //     );
-
-    //     // Act & Assert - Value Objects con mismos valores son iguales
-    //     image1.ShouldBe(image2);
-    //     (image1 == image2).ShouldBeTrue();
-    // }
-
-    [Fact]
-    public void Should_Not_Be_Equal_When_Values_Differ()
-    {
-        // Arrange
-        var imageId = Guid.NewGuid();
-        var image1 = new ListingImage(
-            imageId: imageId,
-            url: "https://example.com/image1.jpg",
-            displayOrder: 1,
-            altText: "Test",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        var image2 = new ListingImage(
-            imageId: imageId,
-            url: "https://example.com/image2.jpg",
-            displayOrder: 1,
-            altText: "Test",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        // Act & Assert - Value Objects con diferentes valores no son iguales
-        image1.ShouldNotBe(image2);
-        (image1 != image2).ShouldBeTrue();
-    }
-
-    [Theory]
-    [InlineData(1, 2, true)]  // 1 < 2 (orden correcto)
-    [InlineData(2, 1, false)] // 2 > 1 (orden incorrecto)
-    [InlineData(3, 3, false)] // 3 == 3 (mismo orden)
-    public void Should_Compare_DisplayOrder_For_Sorting(int order1, int order2, bool shouldBeFirst)
-    {
-        // Arrange
-        var image1 = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image1.jpg",
-            displayOrder: order1,
-            altText: "Image 1",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        var image2 = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image2.jpg",
-            displayOrder: order2,
-            altText: "Image 2",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        // Act
-        var isFirstInOrder = image1.DisplayOrder < image2.DisplayOrder;
+        var img2 = new ListingImage(img2Id, "https://example.com/2.jpg", "Middle", 1024000L, "image/jpeg",
+            previousImageId: img1Id, nextImageId: img3Id);
+        
+        var img3 = new ListingImage(img3Id, "https://example.com/3.jpg", "Last", 1024000L, "image/jpeg",
+            previousImageId: img2Id, nextImageId: null);
 
         // Assert
-        isFirstInOrder.ShouldBe(shouldBeFirst);
-    }
-
-    [Fact]
-    public void Should_Store_Unique_ImageIds()
-    {
-        // Arrange
-        var imageId1 = Guid.NewGuid();
-        var imageId2 = Guid.NewGuid();
-        var imageId3 = Guid.NewGuid();
-
-        // Act
-        var image1 = new ListingImage(imageId1, "https://example.com/1.jpg", 1, "Test 1", 1024000L, "image/jpeg");
-        var image2 = new ListingImage(imageId2, "https://example.com/2.jpg", 2, "Test 2", 1024000L, "image/jpeg");
-        var image3 = new ListingImage(imageId3, "https://example.com/3.jpg", 3, "Test 3", 1024000L, "image/jpeg");
-
-        // Assert
-        image1.ImageId.ShouldNotBe(image2.ImageId);
-        image2.ImageId.ShouldNotBe(image3.ImageId);
-        image3.ImageId.ShouldNotBe(image1.ImageId);
-    }
-
-    [Fact]
-    public void Should_Handle_Empty_AltText()
-    {
-        // Arrange & Act
-        var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image.jpg",
-            displayOrder: 1,
-            altText: "",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        // Assert
-        image.AltText.ShouldBe(string.Empty);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Should_Allow_Zero_Or_Negative_DisplayOrder(int displayOrder)
-    {
-        // Arrange & Act
-        var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image.jpg",
-            displayOrder: displayOrder,
-            altText: "Test",
-            fileSize: 1024000L,
-            contentType: "image/jpeg"
-        );
-
-        // Assert
-        image.DisplayOrder.ShouldBe(displayOrder);
-    }
-
-    [Fact]
-    public void Should_Allow_Zero_FileSize()
-    {
-        // Arrange & Act
-        var image = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: "https://example.com/image.jpg",
-            displayOrder: 1,
-            altText: "Test",
-            fileSize: 0L,
-            contentType: "image/jpeg"
-        );
-
-        // Assert
-        image.FileSize.ShouldBe(0L);
+        // img1 is first
+        img1.PreviousImageId.ShouldBeNull();
+        img1.NextImageId.ShouldBe(img2Id);
+        
+        // img2 is middle
+        img2.PreviousImageId.ShouldBe(img1Id);
+        img2.NextImageId.ShouldBe(img3Id);
+        
+        // img3 is last
+        img3.PreviousImageId.ShouldBe(img2Id);
+        img3.NextImageId.ShouldBeNull();
     }
 }

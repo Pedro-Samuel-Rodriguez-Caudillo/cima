@@ -1,244 +1,171 @@
+@page "/properties"
 @page "/propiedades"
-@rendermode InteractiveAuto
-@attribute [AllowAnonymous]
-@using cima.Listings
-@using cima.Domain.Shared
-@using Microsoft.AspNetCore.Components
-@using Microsoft.AspNetCore.WebUtilities
-@inject IListingAppService ListingAppService
-@inject NavigationManager Navigation
 @using cima.Domain.Shared.Dtos
+@using cima.Listings
+@inject IListingAppService ListingService
+@inject NavigationManager NavManager
+@inherits cimaComponentBase
 
-<PageTitle>Propiedades Disponibles - CIMA</PageTitle>
+<PageTitle>@L["Properties:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-gray-50">
-    @* Header de la página *@
-    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl font-bold mb-4">Nuestras Propiedades</h1>
-            <p class="text-xl text-blue-100">Encuentra la propiedad de tus sueños</p>
+<div class="min-h-screen bg-white">
+    @* Header Section *@
+    <section class="cima-section bg-navy-600 text-white">
+        <div class="cima-container">
+            <h1 class="text-3xl md:text-4xl font-display font-bold mb-4">
+                @L["Properties:Title"]
+            </h1>
+            <p class="text-lg text-navy-100 max-w-2xl">
+                @L["Properties:Subtitle"]
+            </p>
         </div>
-    </div>
-    
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex flex-col lg:flex-row gap-8">
-            @* Filtros laterales *@
-            <div class="lg:w-1/4">
-                <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                    <h3 class="text-xl font-bold mb-6">Filtrar propiedades</h3>
-                    
-                    @* Tipo de transacción *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de transacción
-                        </label>
-                        <select @bind="filterTransactionType" 
-                                @bind:after="ApplyFilters"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todos</option>
-                            @foreach (var type in Enum.GetValues<TransactionType>())
-                            {
-                                <option value="@((int)type)">@GetTransactionTypeName(type)</option>
-                            }
-                        </select>
-                    </div>
+    </section>
 
-                    @* Categoría *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Categoría
-                        </label>
-                        <select @bind="filterCategory" 
-                                @bind:after="ApplyFilters"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todas</option>
-                            @foreach (var category in Enum.GetValues<PropertyCategory>())
-                            {
-                                <option value="@((int)category)">@GetCategoryName(category)</option>
-                            }
-                        </select>
-                    </div>
-                    
-                    @* Tipo de propiedad *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de propiedad
-                        </label>
-                        <select @bind="filterType" 
-                                @bind:after="ApplyFilters"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="">Todos</option>
-                            @foreach (var type in Enum.GetValues<PropertyType>())
-                            {
-                                <option value="@((int)type)">@GetPropertyTypeName(type)</option>
-                            }
-                        </select>
-                    </div>
+    @* Filters Section *@
+    <section class="cima-section-alt py-6">
+        <div class="cima-container">
+            <PropertySearchFilters 
+                OnSearch="HandleSearch"
+                OnClear="HandleClearFilters" />
+        </div>
+    </section>
 
-                    @* Ubicación *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Ubicación
-                        </label>
-                        <input type="text" 
-                               @bind="filterLocation" 
-                               @bind:after="ApplyFilters"
-                               placeholder="Buscar por ubicación"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    
-                    @* Rango de precio *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Precio máximo
-                        </label>
-                        <input type="number" 
-                               @bind="filterMaxPrice" 
-                               @bind:after="ApplyFilters"
-                               step="100000"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                               placeholder="Sin límite" />
-                    </div>
-                    
-                    @* Recámaras *@
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Recámaras mínimas
-                        </label>
-                        <select @bind="filterBedrooms" 
-                                @bind:after="ApplyFilters"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="0">Todas</option>
-                            <option value="1">1+</option>
-                            <option value="2">2+</option>
-                            <option value="3">3+</option>
-                            <option value="4">4+</option>
-                        </select>
-                    </div>
-                    
-                    @* Botón de limpiar filtros *@
-                    <button @onclick="ClearFilters" 
-                            class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition">
-                        <i class="fas fa-redo mr-2"></i>
-                        Limpiar filtros
-                    </button>
-                </div>
-            </div>
-            
-            @* Listado de propiedades *@
-            <div class="lg:w-3/4">
-                @* Ordenamiento y contador *@
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <div class="text-gray-600">
-                        @if (filteredListings != null)
-                        {
-                            <span class="font-semibold">@filteredListings.Count</span>
-                            <span> propiedades encontradas</span>
-                        }
-                    </div>
-                    
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600">Ordenar por:</label>
-                        <select @bind="sortBy" 
-                                @bind:after="ApplyFilters"
-                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="newest">Más recientes</option>
-                            <option value="price-low">Precio: Menor a mayor</option>
-                            <option value="price-high">Precio: Mayor a menor</option>
-                            <option value="area-large">Área: Mayor a menor</option>
-                        </select>
-                    </div>
+    @* Results Section *@
+    <section class="cima-section">
+        <div class="cima-container">
+            @if (IsLoading)
+            {
+                <div class="mb-6">
+                    <div class="cima-skeleton-text w-48 mb-4"></div>
                 </div>
                 
-                @if (isLoading)
+                <div class="cima-grid">
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        <div class="cima-card">
+                            <div class="cima-skeleton-image"></div>
+                            <div class="p-5 space-y-3">
+                                <div class="cima-skeleton-text w-3/4"></div>
+                                <div class="cima-skeleton-text w-1/2"></div>
+                                <div class="cima-skeleton-text w-full"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Listings?.Any() == true)
+            {
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <p class="text-neutral-600">
+                        @L["Search:ResultsFound", TotalCount]
+                    </p>
+                    
+                    <select 
+                        class="cima-input w-full md:w-auto"
+                        value="@SortOption"
+                        @onchange="@(e => { SortOption = e.Value?.ToString() ?? "CreatedAt DESC"; HandleSortChange(); })">
+                        <option value="CreatedAt DESC">@L["Properties:Newest"]</option>
+                        <option value="Price ASC">@L["Properties:PriceLowToHigh"]</option>
+                        <option value="Price DESC">@L["Properties:PriceHighToLow"]</option>
+                        <option value="Area DESC">@L["Properties:AreaLargeToSmall"]</option>
+                    </select>
+                </div>
+
+                <div class="cima-grid">
+                    @foreach (var listing in Listings)
+                    {
+                        <ListingCard 
+                            Listing="listing" 
+                            OnCardFlipped="HandleCardFlipped"
+                            @ref="@_cardRefs[listing.Id]" />
+                    }
+                </div>
+
+                @* Paginación *@
+                @if (TotalPages > 1)
                 {
-                    <div class="text-center py-12">
-                        <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-                        <p class="text-gray-600">Cargando propiedades...</p>
-                    </div>
-                }
-                else if (filteredListings == null || !filteredListings.Any())
-                {
-                    <div class="text-center py-12">
-                        <i class="fas fa-search text-6xl text-gray-400 mb-4"></i>
-                        <h3 class="text-2xl font-semibold text-gray-700 mb-2">No se encontraron propiedades</h3>
-                        <p class="text-gray-600 mb-4">Intenta ajustar tus filtros de búsqueda</p>
-                        <button @onclick="ClearFilters" 
-                                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                            Ver todas las propiedades
+                    <div class="mt-12 flex justify-center items-center gap-2">
+                        <button 
+                            @onclick="PreviousPage"
+                            disabled="@(CurrentPage == 1)"
+                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+                            @L["Common:Previous"]
+                        </button>
+
+                        <div class="flex gap-1">
+                            @{
+                                var maxVisiblePages = Math.Min(TotalPages, 5);
+                                var startPage = Math.Max(1, CurrentPage - 2);
+                                var endPage = Math.Min(TotalPages, startPage + maxVisiblePages - 1);
+                                
+                                for (int i = startPage; i <= endPage; i++)
+                                {
+                                    var pageNum = i;
+                                    <button 
+                                        @onclick="@(() => GoToPage(pageNum))"
+                                        class="@GetPageButtonClass(pageNum)">
+                                        @pageNum
+                                    </button>
+                                }
+                            }
+                        </div>
+
+                        <button 
+                            @onclick="NextPage"
+                            disabled="@(CurrentPage == TotalPages)"
+                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
+                            @L["Common:Next"]
                         </button>
                     </div>
                 }
-                else
-                {
-                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        @foreach (var listing in filteredListings)
-                        {
-                            <ListingCard 
-                                Title="@listing.Title"
-                                Price="@listing.Price.ToString()"
-                                Location="@listing.Location"
-                                Bedrooms="@listing.Bedrooms.ToString()"
-                                Bathrooms="@listing.Bathrooms.ToString()"
-                                Area="@listing.Area.ToString()"
-                                ImageUrl="@GetMainImage(listing)"
-                                ListingId="@listing.Id" />
-                        }
-                    </div>
-                }
-            </div>
+            }
+            else
+            {
+                <div class="text-center py-16">
+                    <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">
+                        @L["Search:NoResults"]
+                    </h3>
+                    <p class="text-neutral-600 mb-6">
+                        Intenta ajustar tus filtros de búsqueda
+                    </p>
+                    <button 
+                        @onclick="HandleClearFilters"
+                        class="cima-btn cima-btn-outline">
+                        @L["Search:ClearFilters"]
+                    </button>
+                </div>
+            }
         </div>
-    </div>
+    </section>
 </div>
 
 @code {
-    private List<ListingDto>? allListings;
-    private List<ListingDto>? filteredListings;
-    private bool isLoading = true;
-
-    // Filtros
-    private string filterTransactionType = "";
-    private string filterCategory = "";
-    private string filterType = "";
-    private string filterLocation = "";
-    private decimal? filterMaxPrice = null;
-    private int filterBedrooms = 0;
-    private string sortBy = "newest";
+    private bool IsLoading { get; set; } = true;
+    private List<ListingDto>? Listings { get; set; }
+    private int TotalCount { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private const int PageSize = 12;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    
+    private Dictionary<Guid, ListingCard> _cardRefs = new();
+    private Guid? _currentFlippedCardId;
+    
+    private PropertySearchDto SearchFilters { get; set; } = new();
+    private string SortOption { get; set; } = "CreatedAt DESC";
 
     protected override async Task OnInitializedAsync()
     {
-        // Leer query parameters
-        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
-        var queryParams = QueryHelpers.ParseQuery(uri.Query);
-
-        if (queryParams.TryGetValue("transactionType", out var transactionType))
+        // Leer parámetros de query string
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        
+        if (queryParams["search"] != null)
         {
-            filterTransactionType = transactionType.ToString();
-        }
-
-        if (queryParams.TryGetValue("category", out var category))
-        {
-            filterCategory = category.ToString();
-        }
-
-        if (queryParams.TryGetValue("location", out var location))
-        {
-            filterLocation = location.ToString();
-        }
-
-        if (queryParams.TryGetValue("minPrice", out var minPrice) && decimal.TryParse(minPrice, out var minPriceValue))
-        {
-            // Guardar para futura implementación
-        }
-
-        if (queryParams.TryGetValue("maxPrice", out var maxPrice) && decimal.TryParse(maxPrice, out var maxPriceValue))
-        {
-            filterMaxPrice = maxPriceValue;
-        }
-
-        if (queryParams.TryGetValue("minBedrooms", out var bedrooms) && int.TryParse(bedrooms, out var bedroomsValue))
-        {
-            filterBedrooms = bedroomsValue;
+            SearchFilters.Location = queryParams["search"];
         }
 
         await LoadListings();
@@ -248,157 +175,100 @@
     {
         try
         {
-            isLoading = true;
+            IsLoading = true;
+
             var input = new GetListingsInput
             {
-                SkipCount = 0,
-                MaxResultCount = 1000,
-                Sorting = "createdAt desc"
+                SkipCount = (CurrentPage - 1) * PageSize,
+                MaxResultCount = PageSize,
+                Sorting = SortOption,
+                MinPrice = SearchFilters.MinPrice,
+                MaxPrice = SearchFilters.MaxPrice,
+                MinBedrooms = SearchFilters.MinBedrooms,
+                MinBathrooms = SearchFilters.MinBathrooms,
+                PropertyType = SearchFilters.Type.HasValue ? (int)SearchFilters.Type.Value : null,
+                PropertyCategory = SearchFilters.Category.HasValue ? (int)SearchFilters.Category.Value : null,
+                TransactionType = SearchFilters.TransactionType.HasValue ? (int)SearchFilters.TransactionType.Value : null
             };
 
-            var result = await ListingAppService.GetPublishedAsync(input);
-
-            allListings = result.Items.ToList();
-            ApplyFilters();
+            var result = await ListingService.GetPublishedAsync(input);
+            
+            Listings = result.Items.ToList();
+            TotalCount = (int)result.TotalCount;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading listings: {ex.Message}");
-            allListings = new List<ListingDto>();
-            filteredListings = new List<ListingDto>();
+            await HandleErrorAsync(ex);
         }
         finally
         {
-            isLoading = false;
+            IsLoading = false;
         }
-    }
-    
-    private void ApplyFilters()
-    {
-        if (allListings == null)
-        {
-            filteredListings = new List<ListingDto>();
-            return;
-        }
-        
-        var query = allListings.AsEnumerable();
-
-        // Filtro por tipo de transacción
-        if (!string.IsNullOrEmpty(filterTransactionType) && int.TryParse(filterTransactionType, out var transactionTypeValue))
-        {
-            query = query.Where(l => (int)l.TransactionType == transactionTypeValue);
-        }
-
-        // Filtro por categoría
-        if (!string.IsNullOrEmpty(filterCategory) && int.TryParse(filterCategory, out var categoryValue))
-        {
-            query = query.Where(l => (int)l.Category == categoryValue);
-        }
-        
-        // Filtro por tipo
-        if (!string.IsNullOrEmpty(filterType) && int.TryParse(filterType, out var typeValue))
-        {
-            query = query.Where(l => (int)l.Type == typeValue);
-        }
-
-        // Filtro por ubicación
-        if (!string.IsNullOrWhiteSpace(filterLocation))
-        {
-            query = query.Where(l => l.Location.Contains(filterLocation, StringComparison.OrdinalIgnoreCase));
-        }
-        
-        // Filtro por precio
-        if (filterMaxPrice.HasValue && filterMaxPrice.Value > 0)
-        {
-            query = query.Where(l => l.Price <= filterMaxPrice.Value);
-        }
-        
-        // Filtro por recámaras
-        if (filterBedrooms > 0)
-        {
-            query = query.Where(l => l.Bedrooms >= filterBedrooms);
-        }
-        
-        // Ordenamiento
-        query = sortBy switch
-        {
-            "price-low" => query.OrderBy(l => l.Price),
-            "price-high" => query.OrderByDescending(l => l.Price),
-            "area-large" => query.OrderByDescending(l => l.Area),
-            _ => query.OrderByDescending(l => l.CreatedAt)
-        };
-        
-        filteredListings = query.ToList();
-    }
-    
-    private void ClearFilters()
-    {
-        filterTransactionType = "";
-        filterCategory = "";
-        filterType = "";
-        filterLocation = "";
-        filterMaxPrice = null;
-        filterBedrooms = 0;
-        sortBy = "newest";
-        ApplyFilters();
     }
 
-    private string GetTransactionTypeName(TransactionType type)
+    private async Task HandleSearch(PropertySearchDto filters)
     {
-        return type switch
-        {
-            TransactionType.Sale => "Venta",
-            TransactionType.Rent => "Renta",
-            TransactionType.Lease => "Arrendamiento",
-            _ => type.ToString()
-        };
+        SearchFilters = filters;
+        CurrentPage = 1;
+        await LoadListings();
     }
 
-    private string GetCategoryName(PropertyCategory category)
+    private async Task HandleClearFilters()
     {
-        return category switch
-        {
-            PropertyCategory.Residential => "Residencial",
-            PropertyCategory.Commercial => "Comercial",
-            PropertyCategory.Mixed => "Uso Mixto",
-            PropertyCategory.Land => "Terreno",
-            _ => category.ToString()
-        };
+        SearchFilters = new();
+        CurrentPage = 1;
+        await LoadListings();
     }
-    
-    private string GetPropertyTypeName(PropertyType type)
+
+    private async Task HandleSortChange()
     {
-        return type switch
-        {
-            // Residenciales
-            PropertyType.House => "Casa",
-            PropertyType.Apartment => "Departamento",
-            PropertyType.Condo => "Condominio",
-            PropertyType.Townhouse => "Casa Adosada",
-            PropertyType.Villa => "Villa",
-            
-            // Comerciales
-            PropertyType.Office => "Oficina",
-            PropertyType.Warehouse => "Bodega",
-            PropertyType.RetailSpace => "Local Comercial",
-            PropertyType.Restaurant => "Restaurante",
-            PropertyType.Hotel => "Hotel",
-            
-            // Mixtos
-            PropertyType.MixedUseBuilding => "Edificio de Uso Mixto",
-            PropertyType.LiveWorkSpace => "Espacio Vive-Trabaja",
-            
-            // Terrenos
-            PropertyType.ResidentialLand => "Terreno Residencial",
-            PropertyType.CommercialLand => "Terreno Comercial",
-            PropertyType.AgriculturalLand => "Terreno Agrícola",
-            
-            _ => type.ToString()
-        };
+        await LoadListings();
     }
-    
-    private string GetMainImage(ListingDto listing)
+
+    private async Task GoToPage(int page)
     {
-        return listing.Images?.FirstOrDefault()?.Url ?? "/images/getting-started/bg-01.png";
+        CurrentPage = page;
+        await LoadListings();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            await GoToPage(CurrentPage - 1);
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            await GoToPage(CurrentPage + 1);
+        }
+    }
+
+    private string GetPageButtonClass(int page)
+    {
+        var baseClass = "px-4 py-2 text-sm font-medium rounded transition-colors";
+        
+        if (page == CurrentPage)
+        {
+            return $"{baseClass} bg-navy-500 text-white";
+        }
+        
+        return $"{baseClass} bg-neutral-100 text-neutral-700 hover:bg-neutral-200";
+    }
+
+    private void HandleCardFlipped(Guid listingId)
+    {
+        // Cerrar card previamente abierta
+        if (_currentFlippedCardId.HasValue && 
+            _currentFlippedCardId != listingId && 
+            _cardRefs.TryGetValue(_currentFlippedCardId.Value, out var prevCard))
+        {
+            prevCard?.Close();
+        }
+
+        _currentFlippedCardId = listingId;
     }
 }

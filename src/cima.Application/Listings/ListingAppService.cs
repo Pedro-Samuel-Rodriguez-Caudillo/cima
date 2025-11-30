@@ -45,15 +45,15 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> GetListAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect,
-            listing => listing.Images);
+            listing => listing.Architect!,  // ? null-forgiving (WithDetailsAsync garantiza carga)
+            listing => listing.Images!);    // ? null-forgiving
 
         // Aplicar filtros
         if (!string.IsNullOrWhiteSpace(input.SearchTerm))
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                p.Location.Contains(input.SearchTerm) ||
+                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||  // ? null check
                 p.Description.Contains(input.SearchTerm));
         }
 
@@ -148,8 +148,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<ListingDto> GetAsync(Guid id)
     {
         var listingQueryable = await _listingRepository.WithDetailsAsync(
-            l => l.Architect,
-            l => l.Images);
+            l => l.Architect!,  // ? null-forgiving
+            l => l.Images!);    // ? null-forgiving
 
         var listing = await AsyncExecuter.FirstOrDefaultAsync(
             listingQueryable.Where(l => l.Id == id));
@@ -289,7 +289,7 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .WithData("MinArea", 1);
         }
 
-        // Mapear TODOS los campos editables con datos normalizados
+        // Mapear TODOS los campos editables with datos normalizados
         listing.Title = normalizedTitle;
         listing.Description = normalizedDescription;
         listing.Location = normalizedLocation;
@@ -339,7 +339,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
         if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
         {
-            throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");
+            throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");  // ? Usar clase correcta del using
         }
 
         // Validar que está en estado Draft
@@ -453,8 +453,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect,
-            listing => listing.Images);
+            listing => listing.Architect!,  // ? null-forgiving
+            listing => listing.Images!);    // ? null-forgiving
 
         // Solo propiedades publicadas
         queryable = queryable.Where(p => p.Status == ListingStatus.Published);
@@ -464,7 +464,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                p.Location.Contains(input.SearchTerm) ||
+                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||  // ? null check
                 p.Description.Contains(input.SearchTerm));
         }
 
@@ -522,8 +522,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         Guid architectId, int skipCount, int maxResultCount)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect,
-            listing => listing.Images);
+            listing => listing.Architect!,  // ? null-forgiving
+            listing => listing.Images!);    // ? null-forgiving
         queryable = queryable.Where(p => p.ArchitectId == architectId);
         
         var totalCount = await AsyncExecuter.CountAsync(queryable);
@@ -550,148 +550,47 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Agrega una imagen a una propiedad
+    /// TODO: Refactorizar para usar lista enlazada en lugar de DisplayOrder
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
-        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
-        var listing = await AsyncExecuter.FirstOrDefaultAsync(
-            listingQueryable.Where(l => l.Id == listingId));
-
-        if (listing == null)
-        {
-            throw new EntityNotFoundException(typeof(Listing), listingId);
-        }
-
-        // Validar permisos
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
-        {
-            throw new AbpAuthorizationException("Solo puedes agregar imágenes a tus propias propiedades");
-        }
-
-        // Validar máximo de imágenes (10)
-        if (listing.Images.Count >= 10)
-        {
-            throw new BusinessException("Listing:MaxImagesReached")
-                .WithData("MaxImages", 10);
-        }
-
-        // Crear nueva imagen usando el constructor
-        var newImage = new ListingImage(
-            imageId: Guid.NewGuid(),
-            url: input.Url,
-            displayOrder: input.DisplayOrder > 0 ? input.DisplayOrder : listing.Images.Count + 1,
-            altText: input.AltText ?? listing.Title,
-            fileSize: input.FileSize,
-            contentType: input.ContentType
-        );
-
-        listing.Images.Add(newImage);
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        await _listingRepository.UpdateAsync(listing);
-
-        var imageDto = new ListingImageDto
-        {
-            ImageId = newImage.ImageId,
-            Url = newImage.Url,
-            DisplayOrder = newImage.DisplayOrder,
-            AltText = newImage.AltText
-        };
-
-        return imageDto;
+        throw new NotImplementedException("AddImageAsync necesita ser refactorizado para usar lista enlazada");
+        
+        // TODO: Implementar con lista enlazada
+        // 1. Obtener última imagen de la lista (NextImageId == null)
+        // 2. Crear nueva imagen con PreviousImageId = última imagen
+        // 3. Actualizar última imagen para que NextImageId apunte a la nueva
     }
 
     /// <summary>
     /// Elimina una imagen de una propiedad
+    /// TODO: Refactorizar para usar lista enlazada
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveImageAsync(Guid listingId, Guid imageId)
     {
-        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
-        var listing = await AsyncExecuter.FirstOrDefaultAsync(
-            listingQueryable.Where(l => l.Id == listingId));
-
-        if (listing == null)
-        {
-            throw new EntityNotFoundException(typeof(Listing), listingId);
-        }
-
-        // Validar permisos
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
-        {
-            throw new AbpAuthorizationException("Solo puedes eliminar imágenes de tus propias propiedades");
-        }
-
-        var image = listing.Images.FirstOrDefault(i => i.ImageId == imageId);
-        if (image == null)
-        {
-            throw new BusinessException("Image:NotFound")
-                .WithData("ImageId", imageId);
-        }
-
-        listing.Images.Remove(image);
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        // Reordenar imágenes restantes usando el método WithDisplayOrder
-        var orderedImages = listing.Images.OrderBy(i => i.DisplayOrder).ToList();
-        listing.Images.Clear();
-        for (int i = 0; i < orderedImages.Count; i++)
-        {
-            listing.Images.Add(orderedImages[i].WithDisplayOrder(i + 1));
-        }
-
-        await _listingRepository.UpdateAsync(listing);
+        throw new NotImplementedException("RemoveImageAsync necesita ser refactorizado para usar lista enlazada");
+        
+        // TODO: Implementar con lista enlazada
+        // 1. Encontrar la imagen a eliminar
+        // 2. Actualizar imagen anterior para que NextImageId apunte a la siguiente
+        // 3. Actualizar imagen siguiente para que PreviousImageId apunte a la anterior
+        // 4. Eliminar la imagen
     }
 
     /// <summary>
     /// Actualiza el orden de las imágenes
+    /// TODO: Refactorizar para usar lista enlazada
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
     {
-        var listingQueryable = await _listingRepository.WithDetailsAsync(l => l.Images);
-        var listing = await AsyncExecuter.FirstOrDefaultAsync(
-            listingQueryable.Where(l => l.Id == listingId));
-
-        if (listing == null)
-        {
-            throw new EntityNotFoundException(typeof(Listing), listingId);
-        }
-
-        // Validar permisos
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
-        {
-            throw new AbpAuthorizationException("Solo puedes reordenar imágenes de tus propias propiedades");
-        }
-
-        // Crear nueva colección con el orden actualizado usando WithDisplayOrder
-        var updatedImages = new List<ListingImage>();
-        foreach (var orderDto in input)
-        {
-            var image = listing.Images.FirstOrDefault(i => i.ImageId == orderDto.ImageId);
-            if (image != null)
-            {
-                updatedImages.Add(image.WithDisplayOrder(orderDto.DisplayOrder));
-            }
-        }
-
-        // Reemplazar colección
-        listing.Images.Clear();
-        foreach (var img in updatedImages.OrderBy(i => i.DisplayOrder))
-        {
-            listing.Images.Add(img);
-        }
-
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        await _listingRepository.UpdateAsync(listing);
+        throw new NotImplementedException("UpdateImagesOrderAsync necesita ser refactorizado para usar lista enlazada");
+        
+        // TODO: Implementar con lista enlazada
+        // 1. Reconstruir toda la lista enlazada según el nuevo orden
+        // 2. Actualizar PreviousImageId y NextImageId de todas las imágenes
     }
 
     /// <summary>
@@ -725,8 +624,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect,
-            listing => listing.Images);
+            listing => listing.Architect!,  // ? null-forgiving
+            listing => listing.Images!);    // ? null-forgiving
 
         // Solo propiedades publicadas para búsqueda pública
         queryable = queryable.Where(p => p.Status == ListingStatus.Published);
@@ -752,7 +651,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Filtro por ubicación (ya validado por RegEx en DTO)
         if (!string.IsNullOrWhiteSpace(searchDto.Location))
         {
-            queryable = queryable.Where(p => p.Location.Contains(searchDto.Location));
+            queryable = queryable.Where(p => p.Location != null && p.Location.Contains(searchDto.Location));  // ? null check
         }
 
         // Rango de precio
@@ -819,8 +718,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect,
-            listing => listing.Images);
+            listing => listing.Architect!,  // ? null-forgiving
+            listing => listing.Images!);    // ? null-forgiving
 
         // Solo propiedades en estado Portfolio
         queryable = queryable.Where(p => p.Status == ListingStatus.Portfolio);
@@ -830,7 +729,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                p.Location.Contains(input.SearchTerm));
+                (p.Location != null && p.Location.Contains(input.SearchTerm)));  // ? null check
         }
 
         if (input.PropertyType.HasValue)
@@ -883,13 +782,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             p.Status == ListingStatus.Portfolio);
 
         // Filtrar por ubicaciones que contengan el término de búsqueda
-        queryable = queryable.Where(p => p.Location.Contains(searchTerm));
+        queryable = queryable.Where(p => p.Location != null && p.Location.Contains(searchTerm));  // ? null check
 
         // Agrupar por ubicación y contar
         var locations = await AsyncExecuter.ToListAsync(queryable);
 
         var suggestions = locations
-            .GroupBy(p => p.Location)
+            .Where(p => p.Location != null)  // ? filtrar nulls antes de agrupar
+            .GroupBy(p => p.Location!)  // ? null-forgiving operator (ya verificado arriba)
             .Select(g => new LocationSuggestionDto
             {
                 Location = g.Key,

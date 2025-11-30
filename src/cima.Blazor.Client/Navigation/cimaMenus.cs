@@ -1,6 +1,6 @@
 ﻿namespace cima.Blazor.Client.Navigation;
 
-public class cimaMenus
+public static class cimaMenus
 {
     private const string Prefix = "cima";
 

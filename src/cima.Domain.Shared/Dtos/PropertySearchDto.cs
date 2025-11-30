@@ -32,7 +32,7 @@ namespace cima.Domain.Shared.Dtos
         [MaxLength(200)]
         [RegularExpression(@"^[a-zA-Z0-9áéíóúñÁÉÍÓÚÑüÜ\s,.\-#°]*$", 
             ErrorMessage = "La ubicación contiene caracteres no permitidos")]
-        public string Location { get; set; }
+        public string? Location { get; set; }  // ? nullable
 
         /// <summary>
         /// Precio mínimo
@@ -74,7 +74,7 @@ namespace cima.Domain.Shared.Dtos
         /// Ordenamiento: newest, price-low, price-high, area-large, area-small
         /// </summary>
         [MaxLength(50)]
-        public string SortBy { get; set; } = "newest";
+        public string? SortBy { get; set; }  // ? nullable
 
         /// <summary>
         /// Página actual (para paginación)
@@ -90,25 +90,14 @@ namespace cima.Domain.Shared.Dtos
     }
 
     /// <summary>
-    /// DTO simplificado para búsqueda rápida en el hero
-    /// </summary>
-    public class QuickSearchDto
-    {
-        public TransactionType TransactionType { get; set; }
-        
-        public PropertyCategory? Category { get; set; }
-
-        [MaxLength(200)]
-        [RegularExpression(@"^[a-zA-Z0-9áéíóúñÁÉÍÓÚÑüÜ\s,.\-#°]*$")]
-        public string Location { get; set; }
-    }
-
-    /// <summary>
-    /// DTO para sugerencias de autocompletado de ubicaciones
+    /// DTO para sugerencias de ubicación (autocompletado)
     /// </summary>
     public class LocationSuggestionDto
     {
-        public string Location { get; set; }
-        public int Count { get; set; } // Cantidad de propiedades en esa ubicación
+        public required string Location { get; set; }  // ? required
+        public int Count { get; set; }
     }
+
+    // ? GetListingsInput eliminado - usar cima.Listings.GetListingsInput en su lugar
+    // Está definido en IListingAppService.cs y hereda de PagedAndSortedResultRequestDto
 }

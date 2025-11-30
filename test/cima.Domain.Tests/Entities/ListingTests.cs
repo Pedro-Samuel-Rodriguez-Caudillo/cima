@@ -13,23 +13,59 @@ namespace cima.Entities;
 /// </summary>
 public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
 {
+    private static Listing CreateTestListing()
+    {
+        return new Listing
+        {
+            Title = "Casa de prueba",
+            Description = "Descripción de prueba"
+        };
+    }
+
     [Fact]
-    public void Should_Create_Listing_With_Parameterless_Constructor()
+    public void Should_Create_Listing_With_Required_Properties()
     {
         // Arrange & Act
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Assert
         listing.ShouldNotBeNull();
+        listing.Title.ShouldNotBeNullOrEmpty();
+        listing.Description.ShouldNotBeNullOrEmpty();
         listing.Images.ShouldNotBeNull();
         listing.Images.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Should_Allow_Null_Location()
+    {
+        // Arrange & Act
+        var listing = CreateTestListing();
+        listing.Location = null;
+
+        // Assert
+        listing.Location.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Should_Set_Location_When_Provided()
+    {
+        // Arrange
+        var listing = CreateTestListing();
+        var location = "Guadalajara, Jalisco";
+
+        // Act
+        listing.Location = location;
+
+        // Assert
+        listing.Location.ShouldBe(location);
     }
 
     [Fact]
     public void Should_Set_Basic_Properties()
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
         var title = "Casa en Venta - Zona Residencial";
         var description = "Hermosa casa con jardín";
         var location = "Guadalajara, Jalisco";
@@ -55,7 +91,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_Property_Specifications()
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Bedrooms = 3;
@@ -74,7 +110,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_Status(ListingStatus status)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Status = status;
@@ -91,7 +127,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_PropertyCategory(PropertyCategory category)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Category = category;
@@ -108,7 +144,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_PropertyType(PropertyType type)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Type = type;
@@ -124,7 +160,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_TransactionType(TransactionType transactionType)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.TransactionType = transactionType;
@@ -137,7 +173,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Associate_With_Architect()
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
         var architectId = Guid.NewGuid();
 
         // Act
@@ -151,7 +187,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Track_Creation_Metadata()
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
         var createdAt = DateTime.UtcNow;
         var createdBy = Guid.NewGuid();
 
@@ -168,7 +204,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Track_Modification_Metadata()
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
         var modifiedAt = DateTime.UtcNow;
         var modifiedBy = Guid.NewGuid();
 
@@ -185,7 +221,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Initialize_Empty_Images_Collection()
     {
         // Arrange & Act
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Assert
         listing.Images.ShouldNotBeNull();
@@ -199,7 +235,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Store_Different_Prices(decimal price)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Price = price;
@@ -215,7 +251,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Store_Different_Areas(decimal area)
     {
         // Arrange
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Act
         listing.Area = area;
@@ -228,7 +264,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Be_AggregateRoot()
     {
         // Arrange & Act
-        var listing = new Listing();
+        var listing = CreateTestListing();
 
         // Assert
         listing.ShouldBeAssignableTo<AggregateRoot<Guid>>();
