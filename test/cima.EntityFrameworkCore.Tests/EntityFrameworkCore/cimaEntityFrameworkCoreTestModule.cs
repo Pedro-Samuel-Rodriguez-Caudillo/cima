@@ -1,14 +1,17 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using System;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
+using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Sqlite;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
 using Volo.Abp.PermissionManagement;
+using Volo.Abp.Threading;
 using Volo.Abp.Uow;
 
 namespace cima.EntityFrameworkCore;
@@ -37,7 +40,6 @@ public class cimaEntityFrameworkCoreTestModule : AbpModule
         context.Services.AddAlwaysDisableUnitOfWorkTransaction();
 
         ConfigureInMemorySqlite(context.Services);
-
     }
 
     private void ConfigureInMemorySqlite(IServiceCollection services)
@@ -50,6 +52,25 @@ public class cimaEntityFrameworkCoreTestModule : AbpModule
             {
                 context.DbContextOptions.UseSqlite(_sqliteConnection);
             });
+        });
+    }
+
+    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    {
+        // Seed test data after EF Core is configured
+        SeedTestData(context.ServiceProvider);
+    }
+
+    private static void SeedTestData(IServiceProvider serviceProvider)
+    {
+        AsyncHelper.RunSync(async () =>
+        {
+            using (var scope = serviceProvider.CreateScope())
+            {
+                await scope.ServiceProvider
+                    .GetRequiredService<IDataSeeder>()
+                    .SeedAsync();
+            }
         });
     }
 
