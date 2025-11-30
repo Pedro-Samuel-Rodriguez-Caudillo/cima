@@ -1,0 +1,55 @@
+refactor(domain): implementar nullability y lista enlazada en entidades
+
+CAMBIOS EN ENTIDADES:
+- Listing.Location ahora es nullable (string?)
+- ContactRequest.Phone ahora es nullable (string?)
+- Architect.Name agregado como required
+- Architect.Bio ahora es nullable
+- Architect.PortfolioUrl eliminado (portafolio interno con Listings)
+- FeaturedListing.DisplayOrder eliminado (orden aleatorio)
+- ListingImage refactorizado a lista enlazada con PreviousImageId/NextImageId
+
+JUSTIFICACIÓN:
+1. Location nullable: borrador puede no tener ubicación definida
+2. Phone nullable: no todos los usuarios quieren dar teléfono
+3. Name en Architect: cada arquitecto debe tener nombre visible
+4. Bio nullable: permite onboarding gradual
+5. PortfolioUrl eliminado: portafolio se muestra con Listings
+6. DisplayOrder eliminado en FeaturedListing: queremos orden aleatorio
+7. Lista enlazada en ListingImage: evita conflictos de orden y mejora rendimiento
+
+ARCHIVOS MODIFICADOS:
+- src/cima.Domain/Entities/Listing.cs
+- src/cima.Domain/Entities/ContactRequest.cs
+- src/cima.Domain/Entities/Architect.cs
+- src/cima.Domain/Entities/FeaturedListing.cs
+- src/cima.Domain/Entities/ListingImage.cs
+- src/cima.EntityFrameworkCore/EntityFrameworkCore/cimaDbContext.cs
+- src/cima.Domain.Shared/Dtos/FeaturedListingDto.cs
+- src/cima.Application.Contracts/Listings/IFeaturedListingAppService.cs
+- src/cima.Application/Listings/FeaturedListingAppService.cs
+
+TESTS ACTUALIZADOS:
+- test/cima.Domain.Tests/Entities/ArchitectTests.cs
+- test/cima.Domain.Tests/Entities/ContactRequestTests.cs
+- test/cima.Domain.Tests/Entities/ListingTests.cs
+- test/cima.Domain.Tests/Entities/ListingImageTests.cs
+- test/cima.Domain.Tests/Entities/FeaturedListingTests.cs
+
+MIGRACIÓN:
+- Creada migración EF Core: Refactorizar_Entidades_Nullability_ListaEnlazada
+
+PENDIENTE:
+- 9 errores de compilación en Application layer (ver REFACTORIZACION_COMPLETADA_PENDIENTES.md)
+- Métodos de ListingImage temporalmente comentados (AddImageAsync, RemoveImageAsync, UpdateImagesOrderAsync)
+- Requiere actualizar ArchitectAppService, DevelopmentDataSeeder, AutoMapper
+
+Breaking Changes:
+- Architect.PortfolioUrl eliminado
+- FeaturedListing.DisplayOrder eliminado
+- ListingImage.DisplayOrder eliminado
+- Architect.Name ahora required
+- ContactRequest.Phone ahora nullable
+- Listing.Location ahora nullable
+
+Closes #refactoring-nullability

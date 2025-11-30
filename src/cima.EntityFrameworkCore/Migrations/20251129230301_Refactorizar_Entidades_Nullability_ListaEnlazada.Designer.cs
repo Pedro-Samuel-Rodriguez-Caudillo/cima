@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using cima.EntityFrameworkCore;
 namespace cima.Migrations
 {
     [DbContext(typeof(cimaDbContext))]
-    partial class cimaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251129230301_Refactorizar_Entidades_Nullability_ListaEnlazada")]
+    partial class Refactorizar_Entidades_Nullability_ListaEnlazada
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

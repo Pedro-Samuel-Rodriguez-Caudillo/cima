@@ -20,7 +20,7 @@
 
     <link href="cima.Blazor.styles.css" rel="stylesheet"/>
     <link href="cima.Blazor.Client.styles.css" rel="stylesheet"/>
-    <link href="_content/cima.Blazor.Client/css/app.min.css" rel="stylesheet"/>
+    <link href="css/app.min.css" rel="stylesheet"/>
     
     <HeadOutlet @rendermode="InteractiveAuto" />
 
@@ -53,8 +53,7 @@
 @code{
     private List<string> GlobalStyles =>
     [
-        "global-styles.css",
-        "_content/cima.Blazor.Client/css/app.min.css"
+        // CSS de Tailwind se carga directamente desde wwwroot del servidor
     ];
 
     private List<string> GlobalScripts =>

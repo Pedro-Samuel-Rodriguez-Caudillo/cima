@@ -212,8 +212,9 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var architect = new Architect
         {
             UserId = Guid.NewGuid(),
-            Bio = "Test Architect Biography",
-            PortfolioUrl = "https://test-portfolio.com"
+            Name = "Test Architect",  // ? Name es required
+            Bio = "Test Architect Biography"
+            // PortfolioUrl eliminado
         };
 
         await WithUnitOfWorkAsync(async () =>

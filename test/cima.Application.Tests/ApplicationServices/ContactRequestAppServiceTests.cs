@@ -170,8 +170,9 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
         var architect = new Architect
         {
             UserId = Guid.NewGuid(),
-            Bio = "Test Architect Bio",
-            PortfolioUrl = "https://test.com"
+            Name = "Test Architect",  // ? Name es required
+            Bio = "Test Architect Bio"
+            // PortfolioUrl eliminado
         };
 
         await WithUnitOfWorkAsync(async () =>

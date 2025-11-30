@@ -260,7 +260,11 @@
     private bool IsLoading { get; set; } = true;
     private bool IsSubmitting { get; set; }
     
-    private CreateUpdateListingDto Model { get; set; } = new();
+    private CreateUpdateListingDto Model { get; set; } = new() 
+    { 
+        Title = "",  // ? Inicializar required
+        Description = ""  // ? Inicializar required
+    };
     private List<ArchitectDto>? Architects { get; set; }
     private ListingDto? ExistingListing { get; set; }
     

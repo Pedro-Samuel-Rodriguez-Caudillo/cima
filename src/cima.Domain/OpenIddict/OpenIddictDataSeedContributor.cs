@@ -101,18 +101,12 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
                     "Impersonation"
                 },
                 scopes: commonScopes,
-                redirectUris: new List<string> { consoleAndAngularClientRootUrl },
-                postLogoutRedirectUris: new List<string> { consoleAndAngularClientRootUrl },
+                redirectUris: consoleAndAngularClientRootUrl != null ? new List<string> { consoleAndAngularClientRootUrl } : null,  // ✅ null check
+                postLogoutRedirectUris: consoleAndAngularClientRootUrl != null ? new List<string> { consoleAndAngularClientRootUrl } : null,  // ✅ null check
                 clientUri: consoleAndAngularClientRootUrl,
                 logoUri: "/images/clients/angular.svg"
             );
         }
-
-        
-        
-
-
-
 
         // Swagger Client
         var swaggerClientId = configurationSection["cima_Swagger:ClientId"];
@@ -132,8 +126,8 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
                     OpenIddictConstants.GrantTypes.Password
                 },
                 scopes: commonScopes,
-                redirectUris: new List<string> { $"{swaggerRootUrl}/swagger/oauth2-redirect.html" },
-                clientUri: swaggerRootUrl.EnsureEndsWith('/') + "swagger",
+                redirectUris: swaggerRootUrl != null ? new List<string> { $"{swaggerRootUrl}/swagger/oauth2-redirect.html" } : null,  // ✅ null check
+                clientUri: swaggerRootUrl?.EnsureEndsWith('/') + "swagger",  // ✅ null propagation
                 logoUri: "/images/clients/swagger.svg"
             );
         }

@@ -166,7 +166,7 @@
             {
                 Name = Model.Name,
                 Email = Model.Email,
-                Phone = Model.Phone,
+                Phone = Model.Phone ?? string.Empty,
                 Message = Model.Message,
                 ListingId = ListingId
             };

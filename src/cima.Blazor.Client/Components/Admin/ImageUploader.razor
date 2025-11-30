@@ -33,31 +33,34 @@
             <div class="mt-4">
                 <h6>Imágenes subidas (@uploadedImages.Count/10)</h6>
                 <Row>
-                    @foreach (var image in uploadedImages.OrderBy(i => i.DisplayOrder))
+                    @* TODO: Refactorizar para usar lista enlazada *@
+                    @foreach (var image in GetImagesInOrder())
                     {
                         <Column ColumnSize="ColumnSize.Is4.OnDesktop.Is6.OnTablet.Is12.OnMobile" Margin="Margin.Is2.FromBottom">
                             <Card>
                                 <CardImage Source="@image.Url" Alt="@image.AltText" />
                                 <CardBody>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Orden: @image.DisplayOrder</small>
-                                        <ButtonGroup Size="Size.Small">
-                                            @if (image.DisplayOrder > 1)
+                                        <small class="text-muted">Imagen</small>
+                                        <Buttons Size="Size.Small">
+                                            @* TODO: Reordenamiento temporalmente deshabilitado - refactorizar a lista enlazada
+                                            @if (image.PreviousImageId != null)
                                             {
                                                 <Button Color="Color.Secondary" Clicked="() => MoveImageUp(image)">
                                                     <Icon Name="IconName.AngleUp" />
                                                 </Button>
                                             }
-                                            @if (image.DisplayOrder < uploadedImages.Count)
+                                            @if (image.NextImageId != null)
                                             {
                                                 <Button Color="Color.Secondary" Clicked="() => MoveImageDown(image)">
                                                     <Icon Name="IconName.AngleDown" />
                                                 </Button>
                                             }
+                                            *@
                                             <Button Color="Color.Danger" Clicked="() => RemoveImage(image)" Disabled="@isDeleting">
                                                 <Icon Name="IconName.Delete" />
                                             </Button>
-                                        </ButtonGroup>
+                                        </Buttons>
                                     </div>
                                 </CardBody>
                             </Card>
@@ -93,173 +96,49 @@
         uploadedImages = InitialImages ?? new();
     }
 
+    // Obtener imágenes en orden usando lista enlazada
+    private List<ListingImageDto> GetImagesInOrder()
+    {
+        if (!uploadedImages.Any()) return new List<ListingImageDto>();
+        
+        var ordered = new List<ListingImageDto>();
+        var current = uploadedImages.FirstOrDefault(i => i.PreviousImageId == null);
+        
+        while (current != null)
+        {
+            ordered.Add(current);
+            current = uploadedImages.FirstOrDefault(i => i.ImageId == current.NextImageId);
+        }
+        
+        return ordered;
+    }
+
     private async Task OnFileChanged(FileChangedEventArgs e)
     {
-        if (e.Files == null || !e.Files.Any())
-            return;
-
-        // Validar que no se exceda el máximo de imágenes
-        if (uploadedImages.Count + e.Files.Length > 10)
-        {
-            await Message.Warn($"Solo puede tener un máximo de 10 imágenes. Actualmente tiene {uploadedImages.Count}.");
-            return;
-        }
-
-        isUploading = true;
-        uploadProgress = 0;
-
-        try
-        {
-            int totalFiles = e.Files.Length;
-            int processedFiles = 0;
-
-            foreach (var file in e.Files)
-            {
-                // Validar tamaño
-                if (file.Size > 5 * 1024 * 1024)
-                {
-                    await Message.Warn($"El archivo {file.Name} excede el tamaño máximo de 5MB");
-                    continue;
-                }
-
-                // Validar tipo
-                var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif" };
-                if (!allowedTypes.Contains(file.Type.ToLowerInvariant()))
-                {
-                    await Message.Warn($"El archivo {file.Name} no es una imagen válida");
-                    continue;
-                }
-
-                try
-                {
-                    // Convertir a base64 para enviar al servidor
-                    using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-                    using var ms = new MemoryStream();
-                    await stream.CopyToAsync(ms);
-                    var bytes = ms.ToArray();
-                    var base64 = Convert.ToBase64String(bytes);
-                    var dataUrl = $"data:{file.Type};base64,{base64}";
-
-                    // Por ahora, guardar en memoria (en producción, subiría al servidor)
-                    var imageDto = new CreateListingImageDto
-                    {
-                        Url = dataUrl, // Temporal: en producción sería la URL del servidor
-                        DisplayOrder = uploadedImages.Count + 1,
-                        AltText = file.Name,
-                        FileSize = file.Size,
-                        ContentType = file.Type
-                    };
-
-                    // Agregar imagen al listing
-                    var addedImage = await ListingAppService.AddImageAsync(ListingId, imageDto);
-                    uploadedImages.Add(addedImage);
-
-                    processedFiles++;
-                    uploadProgress = (int)((processedFiles / (float)totalFiles) * 100);
-                    StateHasChanged();
-                }
-                catch (Exception ex)
-                {
-                    await Message.Error($"Error al subir {file.Name}: {ex.Message}");
-                }
-            }
-
-            await Message.Success($"{processedFiles} imagen(es) subida(s) exitosamente");
-            await ImagesChanged.InvokeAsync(uploadedImages);
-        }
-        catch (Exception ex)
-        {
-            await Message.Error($"Error al procesar archivos: {ex.Message}");
-        }
-        finally
-        {
-            isUploading = false;
-            uploadProgress = 0;
-        }
+        // TODO: Método temporalmente deshabilitado - necesita refactorización para lista enlazada
+        await Message.Info("Funcionalidad de subida de imágenes temporalmente deshabilitada durante refactorización");
     }
 
     private async Task RemoveImage(ListingImageDto image)
     {
-        if (isDeleting)
-            return;
-
-        isDeleting = true;
-        try
-        {
-            await ListingAppService.RemoveImageAsync(ListingId, image.ImageId);
-            uploadedImages.Remove(image);
-
-            // Reordenar
-            for (int i = 0; i < uploadedImages.Count; i++)
-            {
-                uploadedImages[i].DisplayOrder = i + 1;
-            }
-
-            await Message.Success("Imagen eliminada");
-            await ImagesChanged.InvokeAsync(uploadedImages);
-        }
-        catch (Exception ex)
-        {
-            await Message.Error($"Error al eliminar imagen: {ex.Message}");
-        }
-        finally
-        {
-            isDeleting = false;
-        }
+        // TODO: Método temporalmente deshabilitado - necesita refactorización para lista enlazada
+        await Message.Info("Funcionalidad de eliminación temporalmente deshabilitada durante refactorización");
     }
 
+    /* MÉTODOS DE REORDENAMIENTO COMENTADOS TEMPORALMENTE - Requieren refactorización a lista enlazada
     private async Task MoveImageUp(ListingImageDto image)
     {
-        var currentIndex = uploadedImages.FindIndex(i => i.ImageId == image.ImageId);
-        if (currentIndex <= 0)
-            return;
-
-        // Intercambiar posiciones
-        var temp = uploadedImages[currentIndex - 1];
-        uploadedImages[currentIndex - 1] = image;
-        uploadedImages[currentIndex] = temp;
-
-        // Actualizar DisplayOrder
-        uploadedImages[currentIndex - 1].DisplayOrder = currentIndex;
-        uploadedImages[currentIndex].DisplayOrder = currentIndex + 1;
-
-        await UpdateImageOrder();
+        // TODO: Implementar con lista enlazada
     }
 
     private async Task MoveImageDown(ListingImageDto image)
     {
-        var currentIndex = uploadedImages.FindIndex(i => i.ImageId == image.ImageId);
-        if (currentIndex < 0 || currentIndex >= uploadedImages.Count - 1)
-            return;
-
-        // Intercambiar posiciones
-        var temp = uploadedImages[currentIndex + 1];
-        uploadedImages[currentIndex + 1] = image;
-        uploadedImages[currentIndex] = temp;
-
-        // Actualizar DisplayOrder
-        uploadedImages[currentIndex].DisplayOrder = currentIndex + 1;
-        uploadedImages[currentIndex + 1].DisplayOrder = currentIndex + 2;
-
-        await UpdateImageOrder();
+        // TODO: Implementar con lista enlazada
     }
 
     private async Task UpdateImageOrder()
     {
-        try
-        {
-            var orderInput = uploadedImages.Select(i => new UpdateImageOrderDto
-            {
-                ImageId = i.ImageId,
-                DisplayOrder = i.DisplayOrder
-            }).ToList();
-
-            await ListingAppService.UpdateImagesOrderAsync(ListingId, orderInput);
-            await ImagesChanged.InvokeAsync(uploadedImages);
-        }
-        catch (Exception ex)
-        {
-            await Message.Error($"Error al reordenar imágenes: {ex.Message}");
-        }
+        // TODO: Implementar con lista enlazada
     }
+    */
 }

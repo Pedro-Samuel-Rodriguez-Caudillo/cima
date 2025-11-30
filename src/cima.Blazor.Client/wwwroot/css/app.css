@@ -1,3 +1,4 @@
-@import "../main.css";
+/* Archivo CSS base para ABP Framework y estilos legacy */
+/* El sistema principal de diseño Tailwind está en main.css -> app.min.css */
 
-/* Entrada unificada para Tailwind. main.css contiene todo el diseño y se compila a app.min.css. */
+/* Mantener solo estilos críticos de ABP si son necesarios */

@@ -21,7 +21,9 @@
                 <div class="relative w-full md:w-2/5 aspect-listing-card md:aspect-auto overflow-hidden">
                     @if (Listing.Images?.Any() == true)
                     {
-                        var mainImage = Listing.Images.OrderBy(i => i.DisplayOrder).First();
+                        @* Obtener primera imagen de la lista enlazada *@
+                        var mainImage = Listing.Images.FirstOrDefault(i => i.PreviousImageId == null) 
+                                     ?? Listing.Images.First();
                         <img 
                             src="@mainImage.Url" 
                             alt="@mainImage.AltText"

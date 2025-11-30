@@ -9,9 +9,9 @@ namespace cima.Domain.Entities
     {
         #region Propiedades de las casas
         // Formulario
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Location { get; set; }
+        public required string Title { get; set; }
+        public required string Description { get; set; }
+        public string? Location { get; set; }  // Nullable - puede estar sin definir
         public decimal Price { get; set; }
         public decimal Area { get; set; }
         public int Bedrooms { get; set; }
@@ -33,7 +33,7 @@ namespace cima.Domain.Entities
 
         // Relaciones
         public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();
-        public virtual Architect Architect { get; set; }
+        public virtual Architect? Architect { get; set; }
         #endregion
     }
 }

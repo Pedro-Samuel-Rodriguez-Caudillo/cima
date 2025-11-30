@@ -15,17 +15,17 @@ namespace cima.Domain.Entities
     {
         public Guid ListingId { get; set; }
         public Guid ArchitectId { get; set; }
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public string Message { get; set; }
+        public required string Name { get; set; }
+        public required string Email { get; set; }
+        public string? Phone { get; set; }  // Nullable - opcional en formulario
+        public required string Message { get; set; }
         public ContactRequestStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? RepliedAt { get; set; }
-        public string ReplyNotes { get; set; }
+        public string? ReplyNotes { get; set; }
 
-        public virtual Listing Listing { get; set; }
-        public virtual Architect Architect { get; set; }
+        public virtual Listing? Listing { get; set; }
+        public virtual Architect? Architect { get; set; }
     }
 }

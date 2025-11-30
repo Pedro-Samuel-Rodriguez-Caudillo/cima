@@ -13,13 +13,17 @@ namespace cima.Entities;
 public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
 {
     [Fact]
-    public void Should_Create_Architect_With_Parameterless_Constructor()
+    public void Should_Create_Architect_With_Required_Properties()
     {
         // Arrange & Act
-        var architect = new Architect();
+        var architect = new Architect 
+        { 
+            Name = "Juan Pérez"
+        };
 
         // Assert
         architect.ShouldNotBeNull();
+        architect.Name.ShouldBe("Juan Pérez");
         architect.Listings.ShouldNotBeNull();
         architect.Listings.ShouldBeEmpty();
     }
@@ -28,7 +32,10 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_UserId()
     {
         // Arrange
-        var architect = new Architect();
+        var architect = new Architect 
+        { 
+            Name = "María González"
+        };
         var userId = Guid.NewGuid();
 
         // Act
@@ -42,7 +49,10 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_Bio()
     {
         // Arrange
-        var architect = new Architect();
+        var architect = new Architect 
+        { 
+            Name = "Carlos Ramírez"
+        };
         var bio = "Arquitecto con más de 15 años de experiencia";
 
         // Act
@@ -53,42 +63,47 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     }
 
     [Fact]
-    public void Should_Set_PortfolioUrl()
+    public void Should_Allow_Null_Bio()
     {
-        // Arrange
-        var architect = new Architect();
-        var portfolioUrl = "https://portfolio.example.com";
-
-        // Act
-        architect.PortfolioUrl = portfolioUrl;
+        // Arrange & Act
+        var architect = new Architect 
+        { 
+            Name = "Ana Torres",
+            Bio = null
+        };
 
         // Assert
-        architect.PortfolioUrl.ShouldBe(portfolioUrl);
+        architect.Bio.ShouldBeNull();
     }
 
     [Fact]
     public void Should_Set_All_Properties_Together()
     {
         // Arrange
-        var architect = new Architect();
         var userId = Guid.NewGuid();
 
         // Act
-        architect.UserId = userId;
-        architect.Bio = "Especialista en diseño residencial";
-        architect.PortfolioUrl = "https://myportfolio.com";
+        var architect = new Architect
+        {
+            UserId = userId,
+            Name = "Luis Hernández",
+            Bio = "Especialista en diseño residencial"
+        };
 
         // Assert
         architect.UserId.ShouldBe(userId);
+        architect.Name.ShouldBe("Luis Hernández");
         architect.Bio.ShouldBe("Especialista en diseño residencial");
-        architect.PortfolioUrl.ShouldBe("https://myportfolio.com");
     }
 
     [Fact]
     public void Should_Be_AggregateRoot()
     {
         // Arrange & Act
-        var architect = new Architect();
+        var architect = new Architect 
+        { 
+            Name = "Pedro Sánchez"
+        };
 
         // Assert
         architect.ShouldBeAssignableTo<AggregateRoot<Guid>>();
@@ -98,7 +113,10 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Initialize_Empty_Listings_Collection()
     {
         // Arrange & Act
-        var architect = new Architect();
+        var architect = new Architect 
+        { 
+            Name = "Sofia Mendoza"
+        };
 
         // Assert
         architect.Listings.ShouldNotBeNull();
@@ -109,31 +127,41 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Store_Long_Bio()
     {
         // Arrange
-        var architect = new Architect();
         var longBio = "Arquitecto con más de 15 años de experiencia en diseño residencial y comercial. " +
                      "Especializado en arquitectura sustentable y eficiencia energética. " +
                      "Ha participado en proyectos reconocidos a nivel nacional e internacional.";
 
         // Act
-        architect.Bio = longBio;
+        var architect = new Architect
+        {
+            Name = "Roberto Jiménez",
+            Bio = longBio
+        };
 
         // Assert
         architect.Bio.ShouldBe(longBio);
     }
 
-    [Theory]
-    [InlineData("https://www.architect-portfolio.com")]
-    [InlineData("https://arquitectura.mx/juan-perez")]
-    [InlineData("www.myarchitecture.com")]
-    public void Should_Store_Portfolio_Url(string url)
+    [Fact]
+    public void Should_Require_Name()
     {
-        // Arrange
-        var architect = new Architect();
+        // Arrange & Act & Assert
+        Should.Throw<ArgumentNullException>(() => new Architect { Name = null! });
+    }
 
-        // Act
-        architect.PortfolioUrl = url;
+    [Theory]
+    [InlineData("Juan Pérez")]
+    [InlineData("María González López")]
+    [InlineData("Arq. Carlos Ramírez")]
+    public void Should_Store_Different_Name_Formats(string name)
+    {
+        // Arrange & Act
+        var architect = new Architect
+        {
+            Name = name
+        };
 
         // Assert
-        architect.PortfolioUrl.ShouldBe(url);
+        architect.Name.ShouldBe(name);
     }
 }

@@ -7,7 +7,7 @@ using cima.Domain.Entities;
 namespace cima.Entities;
 
 /// <summary>
-/// Tests unitarios para la entidad FeaturedListing
+/// Tests unitarios para la entidad FeaturedListing (sin DisplayOrder - orden aleatorio)
 /// </summary>
 public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModule>
 {
@@ -17,12 +17,10 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         // Arrange
         var listingId = Guid.NewGuid();
         var createdBy = Guid.NewGuid();
-        var displayOrder = 5;
 
         // Act
         var featured = new FeaturedListing(
             listingId: listingId,
-            displayOrder: displayOrder,
             createdBy: createdBy
         );
 
@@ -30,7 +28,6 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         featured.ShouldNotBeNull();
         featured.Id.ShouldNotBe(Guid.Empty);
         featured.ListingId.ShouldBe(listingId);
-        featured.DisplayOrder.ShouldBe(displayOrder);
         featured.CreatedBy.ShouldBe(createdBy);
         featured.FeaturedSince.ShouldBeInRange(
             DateTime.UtcNow.AddSeconds(-5),
@@ -53,7 +50,6 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         featured.ShouldNotBeNull();
         featured.Id.ShouldNotBe(Guid.Empty);
         featured.ListingId.ShouldBe(listingId);
-        featured.DisplayOrder.ShouldBe(999); // Default value
         featured.CreatedBy.ShouldBeNull();
         featured.FeaturedSince.ShouldBeInRange(
             DateTime.UtcNow.AddSeconds(-5),
@@ -70,46 +66,10 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         // Assert
         featured.ShouldNotBeNull();
         featured.Id.ShouldBe(Guid.Empty);
-        featured.DisplayOrder.ShouldBe(999); // Default value
         featured.FeaturedSince.ShouldBeInRange(
             DateTime.UtcNow.AddSeconds(-5),
             DateTime.UtcNow.AddSeconds(5)
         );
-    }
-
-    [Theory]
-    [InlineData(1)]
-    [InlineData(5)]
-    [InlineData(10)]
-    [InlineData(12)]
-    public void Should_Set_DisplayOrder_Correctly(int displayOrder)
-    {
-        // Arrange
-        var listingId = Guid.NewGuid();
-
-        // Act
-        var featured = new FeaturedListing(
-            listingId: listingId,
-            displayOrder: displayOrder
-        );
-
-        // Assert
-        featured.DisplayOrder.ShouldBe(displayOrder);
-    }
-
-    [Fact]
-    public void Should_Default_DisplayOrder_To_999_When_Not_Specified()
-    {
-        // Arrange
-        var listingId = Guid.NewGuid();
-
-        // Act
-        var featured = new FeaturedListing(
-            listingId: listingId
-        );
-
-        // Assert
-        featured.DisplayOrder.ShouldBe(999);
     }
 
     [Fact]
@@ -186,71 +146,13 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
 
         // Act
         featured.ListingId = newListingId;
-        featured.DisplayOrder = 1;
         featured.CreatedBy = newCreatedBy;
         featured.FeaturedSince = newFeaturedSince;
 
         // Assert
         featured.ListingId.ShouldBe(newListingId);
-        featured.DisplayOrder.ShouldBe(1);
         featured.CreatedBy.ShouldBe(newCreatedBy);
         featured.FeaturedSince.ShouldBe(newFeaturedSince);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(-999)]
-    public void Should_Allow_Negative_Or_Zero_DisplayOrder(int displayOrder)
-    {
-        // Arrange & Act - No hay restricción en el Domain, validación en Application
-        var featured = new FeaturedListing(
-            listingId: Guid.NewGuid(),
-            displayOrder: displayOrder
-        );
-
-        // Assert
-        featured.DisplayOrder.ShouldBe(displayOrder);
-    }
-
-    [Theory]
-    [InlineData(1, 2, true)]  // 1 < 2 (orden ascendente correcto)
-    [InlineData(2, 1, false)] // 2 > 1 (orden incorrecto)
-    [InlineData(5, 5, false)] // 5 == 5 (mismo orden)
-    public void Should_Compare_DisplayOrder_For_Sorting(int order1, int order2, bool shouldBeFirst)
-    {
-        // Arrange
-        var featured1 = new FeaturedListing(
-            listingId: Guid.NewGuid(),
-            displayOrder: order1
-        );
-
-        var featured2 = new FeaturedListing(
-            listingId: Guid.NewGuid(),
-            displayOrder: order2
-        );
-
-        // Act
-        var isFirstInOrder = featured1.DisplayOrder < featured2.DisplayOrder;
-
-        // Assert
-        isFirstInOrder.ShouldBe(shouldBeFirst);
-    }
-
-    [Fact]
-    public void Should_Handle_Multiple_FeaturedListings_With_Different_Orders()
-    {
-        // Arrange & Act
-        var featured1 = new FeaturedListing(Guid.NewGuid(), displayOrder: 1);
-        var featured2 = new FeaturedListing(Guid.NewGuid(), displayOrder: 5);
-        var featured3 = new FeaturedListing(Guid.NewGuid(), displayOrder: 3);
-        var featured4 = new FeaturedListing(Guid.NewGuid(), displayOrder: 2);
-
-        // Assert
-        featured1.DisplayOrder.ShouldBe(1);
-        featured2.DisplayOrder.ShouldBe(5);
-        featured3.DisplayOrder.ShouldBe(3);
-        featured4.DisplayOrder.ShouldBe(2);
     }
 
     [Fact]
@@ -265,22 +167,6 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         featured1.Id.ShouldNotBe(featured2.Id);
         featured2.Id.ShouldNotBe(featured3.Id);
         featured3.Id.ShouldNotBe(featured1.Id);
-    }
-
-    [Fact]
-    public void Should_Allow_Same_Listing_To_Be_Featured_Multiple_Times_With_Different_Ids()
-    {
-        // Arrange - Escenario: misma propiedad destacada en diferentes momentos
-        var sameListingId = Guid.NewGuid();
-
-        // Act
-        var featured1 = new FeaturedListing(sameListingId, displayOrder: 1);
-        var featured2 = new FeaturedListing(sameListingId, displayOrder: 2);
-
-        // Assert
-        featured1.ListingId.ShouldBe(featured2.ListingId);
-        featured1.Id.ShouldNotBe(featured2.Id); // IDs diferentes
-        featured1.DisplayOrder.ShouldNotBe(featured2.DisplayOrder);
     }
 
     [Fact]
@@ -322,14 +208,14 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
     public void Should_Support_Max_12_Featured_Listings_Business_Rule(int count)
     {
         // Arrange - Regla de negocio: máximo 12 propiedades destacadas
+        // Nota: El orden es aleatorio, se define en la consulta, no en la entidad
         var featuredListings = new FeaturedListing[count];
 
         // Act
         for (int i = 0; i < count; i++)
         {
             featuredListings[i] = new FeaturedListing(
-                listingId: Guid.NewGuid(),
-                displayOrder: i + 1
+                listingId: Guid.NewGuid()
             );
         }
 
@@ -341,5 +227,21 @@ public sealed class FeaturedListingTests : cimaDomainTestBase<cimaDomainTestModu
         {
             featuredListings.Length.ShouldBeLessThanOrEqualTo(12);
         }
+    }
+
+    [Fact]
+    public void Should_Allow_Same_Listing_To_Be_Featured_Only_Once()
+    {
+        // Arrange - La regla de negocio debe prevenir duplicados
+        // (validación en Application Layer con índice único en DB)
+        var sameListingId = Guid.NewGuid();
+
+        // Act
+        var featured1 = new FeaturedListing(sameListingId);
+        var featured2 = new FeaturedListing(sameListingId);
+
+        // Assert - Ambos objetos se pueden crear, pero DB debe rechazar duplicados
+        featured1.ListingId.ShouldBe(featured2.ListingId);
+        featured1.Id.ShouldNotBe(featured2.Id); // IDs diferentes
     }
 }

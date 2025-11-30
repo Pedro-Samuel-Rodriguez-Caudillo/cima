@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using cima.Blazor.Client.Navigation;
+using cima.Blazor.Client.Services;
 using cima.Localization;
 using OpenIddict.Abstractions;
 using Volo.Abp.AspNetCore.Components.Web;
@@ -61,6 +62,13 @@ public class cimaBlazorClientModule : AbpModule
         ConfigureMenu(context);
         ConfigureAutoMapper(context);
         ConfigureLocalization();
+        ConfigureApplicationServices(context);
+    }
+
+    private void ConfigureApplicationServices(ServiceConfigurationContext context)
+    {
+        // Registrar EnumLocalizationService
+        context.Services.AddTransient<EnumLocalizationService>();
     }
 
     private void ConfigureLocalization()

@@ -11,7 +11,7 @@ namespace cima.Domain.Shared.Dtos
     public class ListingFiltersDto
     {
         // Busqueda de texto
-        public string SearchTerm { get; set; }
+        public string? SearchTerm { get; set; }  // ? nullable
 
         // Filtros de estado
         public ListingStatus? Status { get; set; }
@@ -28,7 +28,7 @@ namespace cima.Domain.Shared.Dtos
         public Guid? ArchitectId { get; set; }
 
         // Ordenamiento
-        public string SortBy { get; set; }  // "price", "area", "createdat"
+        public string? SortBy { get; set; }  // ? nullable - "price", "area", "createdat"
         public bool SortDescending { get; set; } = false;
 
         // Paginacion
@@ -41,8 +41,8 @@ namespace cima.Domain.Shared.Dtos
     /// </summary>
     public class ListingFilterDto
     {
-        public string Title { get; set; }
-        public string Location { get; set; }
+        public string? Title { get; set; }  // ? nullable
+        public string? Location { get; set; }  // ? nullable
         public decimal? PriceMin { get; set; }
         public decimal? PriceMax { get; set; }
         public int? Bedrooms { get; set; }
@@ -58,16 +58,16 @@ namespace cima.Domain.Shared.Dtos
     public class ListingDetailDto
     {
         public Guid Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public string Location { get; set; }
+        public required string Title { get; set; }  // ? required
+        public required string Description { get; set; }  // ? required
+        public string? Location { get; set; }  // ? nullable
         public decimal Price { get; set; }
         public decimal Area { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }
         public Guid ArchitectId { get; set; }
-        public ArchitectDetailDto Architect { get; set; }
+        public ArchitectDetailDto? Architect { get; set; }  // ? nullable
         public List<ListingImageDto> Images { get; set; } = new();
         public DateTime CreatedAt { get; set; }
         public Guid? CreatedBy { get; set; }
@@ -78,12 +78,12 @@ namespace cima.Domain.Shared.Dtos
     public class ListingListDto
     {
         public Guid Id { get; set; }
-        public string Title { get; set; }
-        public string Location { get; set; }
+        public required string Title { get; set; }  // ? required
+        public string? Location { get; set; }  // ? nullable
         public decimal Price { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
-        public ListingImageDto MainImage { get; set; }
+        public ListingImageDto? MainImage { get; set; }  // ? nullable
         public ListingStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
     }

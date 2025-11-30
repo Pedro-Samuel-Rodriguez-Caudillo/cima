@@ -47,12 +47,25 @@
 	<ItemGroup>
 		<Content Remove="package.json" />
 		<Content Remove="package-lock.json" />
+    <!-- Excluir app.min.css de los static assets del Client -->
+    <Content Remove="wwwroot\css\app.min.css" />
 		<None Include="package.json">
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
 		<None Include="package-lock.json">
 			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
 		</None>
+    <None Include="wwwroot\css\app.min.css">
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
 	</ItemGroup>
+
+  <!-- Copiar CSS compilado al proyecto Blazor Server después de build -->
+  <Target Name="CopyTailwindCss" AfterTargets="Build">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css" Condition="!Exists('$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\css\app.min.css" 
+          DestinationFolder="$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css" 
+          SkipUnchangedFiles="true" />
+  </Target>
 	
 </Project>
