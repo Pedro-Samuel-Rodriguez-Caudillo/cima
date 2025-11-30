@@ -9,6 +9,7 @@ using cima.Domain.Shared;
 using cima.Domain.Shared.Dtos;
 using cima.Listings;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Users;
 
 namespace cima.ApplicationServices;
 
@@ -20,12 +21,14 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     private readonly IListingAppService _listingAppService;
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly ICurrentUser _currentUser;
 
     public ListingAppServiceTests()
     {
         _listingAppService = GetRequiredService<IListingAppService>();
         _listingRepository = GetRequiredService<IRepository<Listing, Guid>>();
         _architectRepository = GetRequiredService<IRepository<Architect, Guid>>();
+        _currentUser = GetRequiredService<ICurrentUser>();
     }
 
     #region GetListAsync Tests
@@ -160,15 +163,21 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     {
         // Arrange
         var listing = await CreateTestListingAsync();
+        var listingId = listing.Id;
 
         // Act
         await WithUnitOfWorkAsync(async () =>
         {
-            await _listingAppService.DeleteAsync(listing.Id);
+            await _listingAppService.DeleteAsync(listingId);
         });
 
-        // Assert
-        var exists = await _listingRepository.AnyAsync(l => l.Id == listing.Id);
+        // Assert - Verify in new UoW to avoid disposed context
+        bool exists = false;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            exists = await _listingRepository.AnyAsync(l => l.Id == listingId);
+        });
+        
         exists.ShouldBeFalse();
     }
 
@@ -209,12 +218,15 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
 
     private async Task<Architect> CreateTestArchitectAsync()
     {
+        // Use admin user ID from test seeding (from cimaTestDataSeedContributor)
+        // The admin user was created during test initialization
+        var adminUserId = _currentUser.Id ?? Guid.NewGuid(); // Fallback to new Guid if no current user
+        
         var architect = new Architect
         {
-            UserId = Guid.NewGuid(),
-            Name = "Test Architect",  // ? Name es required
+            UserId = adminUserId,
+            Name = "Test Architect",
             Bio = "Test Architect Biography"
-            // PortfolioUrl eliminado
         };
 
         await WithUnitOfWorkAsync(async () =>
