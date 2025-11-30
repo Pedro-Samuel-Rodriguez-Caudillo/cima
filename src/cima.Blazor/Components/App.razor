@@ -16,15 +16,15 @@
     <title>cima</title>
     <base href="/" />
 
-    @* Deshabilitar preload automático de ABP para Edge *@
-    <meta name="blazor-preload" content="false" />
+    @* CRÍTICO: Deshabilitar preload de ABP - causa pérdida de estilos *@
+    <meta name="abp-disable-bundle-preload" content="true" />
     
-    @* CSS en orden correcto - primero ABP, luego custom *@
+    @* CSS en orden correcto sin preload *@
     <AbpStyles BundleName="@BlazorBasicThemeBundles.Styles.Global" 
                WebAssemblyStyleFiles="GlobalStyles" 
                @rendermode="InteractiveAuto" />
 
-    @* Estilos propios - sin preload, carga normal *@
+    @* Estilos propios - carga normal *@
     <link href="cima.Blazor.styles.css" rel="stylesheet" />
     <link href="cima.Blazor.Client.styles.css" rel="stylesheet" />
     <link href="css/app.min.css" rel="stylesheet" />
@@ -52,9 +52,6 @@
                 WebAssemblyScriptFiles="GlobalScripts" 
                 @rendermode="InteractiveAuto" />
 
-    @* Fix para Microsoft Edge - cargar antes de blazor.web.js *@
-    <script src="js/edge-fix.js"></script>
-    
     <script src="_framework/blazor.web.js"></script>
 
 </body>

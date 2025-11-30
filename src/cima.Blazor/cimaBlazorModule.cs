@@ -82,18 +82,6 @@ public class cimaBlazorModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
         var configuration = context.Services.GetConfiguration();
 
-        // ? Suprimir warnings de IdentityModel ANTES de que ABP los emita
-        context.Services.Configure<LoggerFilterOptions>(options =>
-        {
-            options.MinLevel = LogLevel.Information;
-            options.Rules.Add(new LoggerFilterRule(
-                providerName: null,
-                categoryName: "Volo.Abp.IdentityModel.IdentityModelAuthenticationService",
-                logLevel: LogLevel.Error, // Solo errores, no warnings
-                filter: null
-            ));
-        });
-
         context.Services.PreConfigure<AbpMvcDataAnnotationsLocalizationOptions>(options =>
         {
             options.AddAssemblyResource(
