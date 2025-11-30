@@ -63,7 +63,7 @@
                     <select 
                         class="cima-input w-full md:w-auto"
                         value="@SortOption"
-                        @onchange="@(async e => { SortOption = e.Value?.ToString() ?? "CreatedAt DESC"; await HandleSortChange(); })">
+                        @onchange="@(e => { SortOption = e.Value?.ToString() ?? "CreatedAt DESC"; HandleSortChange(); })">
                         <option value="CreatedAt DESC">@L["Properties:Newest"]</option>
                         <option value="Price ASC">@L["Properties:PriceLowToHigh"]</option>
                         <option value="Price DESC">@L["Properties:PriceHighToLow"]</option>
