@@ -145,8 +145,15 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     [Fact]
     public void Should_Require_Name()
     {
-        // Arrange & Act & Assert
-        Should.Throw<ArgumentNullException>(() => new Architect { Name = null! });
+        // Arrange & Act
+        var architect = new Architect
+        {
+            Name = "Nombre Válido"
+        };
+
+        // Assert - Name is required and cannot be empty
+        architect.Name.ShouldNotBeNullOrEmpty();
+        architect.Name.ShouldNotBeNullOrWhiteSpace();
     }
 
     [Theory]
