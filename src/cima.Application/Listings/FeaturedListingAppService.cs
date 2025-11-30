@@ -107,9 +107,9 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         // Si no hay caché, obtener de BD
         var queryable = await _featuredListingRepository.WithDetailsAsync(
-            fl => fl.Listing!,         // ? null-forgiving - primer parámetro
-            fl => fl.Listing!.Architect!,  // ? null-forgiving - ambos niveles
-            fl => fl.Listing!.Images!);    // ? null-forgiving - ambos niveles
+            fl => fl.Listing,
+            fl => fl.Listing!.Architect,  // ? null-forgiving operator (sabemos que Listing no es null por WithDetails)
+            fl => fl.Listing!.Images);    // ? null-forgiving operator
 
         // Filtrar solo listings activos
         queryable = queryable.Where(fl => 

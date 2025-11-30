@@ -127,17 +127,16 @@
         NavManager.NavigateTo($"/properties?search={Uri.EscapeDataString(searchTerm)}");
     }
 
-    private async Task HandleCardFlipped(Guid listingId)
+    private void HandleCardFlipped(Guid listingId)
     {
         // Cerrar card previamente abierta
         if (_currentFlippedCardId.HasValue && 
             _currentFlippedCardId != listingId && 
             _cardRefs.TryGetValue(_currentFlippedCardId.Value, out var prevCard))
         {
-            prevCard.Close();  // Close es void, no async
+            prevCard.Close();
         }
 
         _currentFlippedCardId = listingId;
-        await Task.CompletedTask;  // ? Hacer el método consistentemente async
     }
 }

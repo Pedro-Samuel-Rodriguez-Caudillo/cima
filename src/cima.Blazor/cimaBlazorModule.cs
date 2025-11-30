@@ -193,7 +193,7 @@ public class cimaBlazorModule : AbpModule
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
-        ConfigureApplicationServices(context);  // Ya incluye supresión de warnings
+        ConfigureApplicationServices(context);
     }
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)
@@ -467,8 +467,11 @@ public class cimaBlazorModule : AbpModule
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
-        // Multi-tenancy deshabilitado - no se usa UseMultiTenancy()
-        
+        if (MultiTenancyConsts.IsEnabled)
+        {
+            app.UseMultiTenancy();
+        }
+
         app.UseUnitOfWork();
         app.UseDynamicClaims();
         app.UseAntiforgery();

@@ -6,7 +6,7 @@ public class cimaStyleBundleContributor : BundleContributor
 {
     public override void ConfigureBundle(BundleConfigurationContext context)
     {
-        // Agregar el CSS compilado de Tailwind desde el proyecto Client
-        context.Files.Add("/_content/cima.Blazor.Client/css/app.min.css");
+        // El CSS de Tailwind se carga directamente desde /css/app.min.css en App.razor
+        // No es necesario agregarlo al bundle aquí
     }
 }

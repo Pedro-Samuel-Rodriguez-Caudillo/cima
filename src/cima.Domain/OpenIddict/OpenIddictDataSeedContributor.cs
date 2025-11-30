@@ -79,6 +79,29 @@ public class OpenIddictDataSeedContributor : IDataSeedContributor, ITransientDep
 
         var configurationSection = _configuration.GetSection("OpenIddict:Applications");
 
+        // Blazor WebApp Client
+        var blazorClientId = configurationSection["cima_BlazorWebApp:ClientId"];
+        if (!blazorClientId.IsNullOrWhiteSpace())
+        {
+            var blazorRootUrl = configurationSection["cima_BlazorWebApp:RootUrl"]?.EnsureEndsWith('/');
+            await CreateApplicationAsync(
+                applicationType: OpenIddictConstants.ApplicationTypes.Web,
+                name: blazorClientId!,
+                type: OpenIddictConstants.ClientTypes.Confidential,
+                consentType: OpenIddictConstants.ConsentTypes.Implicit,
+                displayName: "Blazor WebApp Application",
+                secret: "1q2w3e*",  // Desarrollo - cambiar en producción
+                grantTypes: new List<string> {
+                    OpenIddictConstants.GrantTypes.AuthorizationCode,
+                    OpenIddictConstants.GrantTypes.RefreshToken
+                },
+                scopes: commonScopes,
+                redirectUris: blazorRootUrl != null ? new List<string> { $"{blazorRootUrl}signin-oidc" } : null,
+                postLogoutRedirectUris: blazorRootUrl != null ? new List<string> { $"{blazorRootUrl}signout-callback-oidc" } : null,
+                clientUri: blazorRootUrl,
+                logoUri: "/images/clients/blazor.svg"
+            );
+        }
 
         //Console Test / Angular Client
         var consoleAndAngularClientId = configurationSection["cima_App:ClientId"];

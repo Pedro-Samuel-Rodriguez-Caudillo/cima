@@ -1490,6 +1490,27 @@ input[type="text"]::placeholder,
   color: rgb(0 41 93 / var(--tw-text-opacity, 1));
 }
 
+.cima-badge-success {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 250 229 / var(--tw-bg-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(4 120 87 / var(--tw-text-opacity, 1));
+}
+
+.cima-badge-warning {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(217 119 6 / var(--tw-text-opacity, 1));
+}
+
+.cima-badge-danger {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+
 /* === DIVIDERS === */
 
 /* === ESTADOS DE CARGA === */
@@ -1624,6 +1645,13 @@ input[type="text"]::placeholder,
 }
 
 /* === TABS === */
+
+.cima-tab-active {
+  --tw-border-opacity: 1;
+  border-color: rgb(0 71 171 / var(--tw-border-opacity, 1));
+  --tw-text-opacity: 1;
+  color: rgb(0 61 145 / var(--tw-text-opacity, 1));
+}
 
 /* === TOAST DE ENTORNO === */
 

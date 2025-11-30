@@ -259,7 +259,7 @@
         return $"{baseClass} bg-neutral-100 text-neutral-700 hover:bg-neutral-200";
     }
 
-    private async Task HandleCardFlipped(Guid listingId)
+    private void HandleCardFlipped(Guid listingId)
     {
         // Cerrar card previamente abierta
         if (_currentFlippedCardId.HasValue && 
@@ -270,6 +270,5 @@
         }
 
         _currentFlippedCardId = listingId;
-        await Task.CompletedTask;
     }
 }

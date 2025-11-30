@@ -8,7 +8,21 @@ module.exports = {
         './*.razor',
         './wwwroot/index.html'
     ],
+    // Modo JIT para reducir tamaño del CSS generado
+    mode: 'jit',
     darkMode: 'class',
+    
+    // Configurar safelist solo para clases que realmente usamos dinámicamente
+    safelist: [
+        // Clases que se generan dinámicamente
+        'cima-badge-primary',
+        'cima-badge-success',
+        'cima-badge-warning',
+        'cima-badge-danger',
+        'cima-tab-active',
+        'flipped',
+    ],
+    
     theme: {
         extend: {
             // === SISTEMA DE COLORES - MINIMALISMO SUIZO ===
