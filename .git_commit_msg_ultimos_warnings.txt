@@ -1,0 +1,24 @@
+fix(warnings): eliminar ultimos 3 warnings de codigo inaccesible y missing await
+
+Corregir warnings finales CS0162 y CS4014 en Blazor.
+
+Cambios:
+
+**cimaMenuContributor.cs (CS0162):**
+- Eliminar bloque if inaccesible de multi-tenancy
+- Multi-tenancy deshabilitado, siempre remover del menu
+
+**Properties/Index.razor (CS4014):**
+- Agregar async/await en lambda de onchange del select de ordenamiento
+- HandleSortChange() es async Task, debe esperarse
+
+**cimaBlazorModule.cs (CS0162):**
+- Eliminar bloque if inaccesible de UseMultiTenancy
+- Multi-tenancy deshabilitado, no se usa middleware
+
+Resultado:
+- Build: 0 errores
+- Warnings: 0
+- Codigo mas limpio sin bloques inaccesibles
+
+Refs: #warnings #CS0162 #CS4014
