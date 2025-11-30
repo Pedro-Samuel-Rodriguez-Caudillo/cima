@@ -91,13 +91,7 @@ public class cimaMenuContributor : IMenuContributor
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
 
-        // Multi-tenancy deshabilitado en este proyecto
-        if (MultiTenancyConsts.IsEnabled)  // Siempre false, pero mantener por si se habilita
-        {
-            administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
-        }
-        
-        // Siempre remover tenant management ya que no se usa
+        // Multi-tenancy deshabilitado - siempre remover del menú
         administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
 
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
