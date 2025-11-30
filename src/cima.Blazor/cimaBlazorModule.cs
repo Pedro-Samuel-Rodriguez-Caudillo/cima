@@ -193,13 +193,25 @@ public class cimaBlazorModule : AbpModule
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
-        ConfigureApplicationServices(context);
+        ConfigureApplicationServices(context);  // Ya incluye supresión de warnings
     }
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)
     {
         // Registrar EnumLocalizationService para renderizado en servidor
         context.Services.AddTransient<Client.Services.EnumLocalizationService>();
+        
+        // Suprimir warnings de IdentityModel para AbpMvcClient
+        // Estos warnings son inofensivos y ocurren porque no usamos el cliente MVC tradicional
+        context.Services.Configure<Microsoft.Extensions.Logging.LoggerFilterOptions>(options =>
+        {
+            options.Rules.Add(new Microsoft.Extensions.Logging.LoggerFilterRule(
+                providerName: null,
+                categoryName: "Volo.Abp.IdentityModel.IdentityModelAuthenticationService",
+                logLevel: Microsoft.Extensions.Logging.LogLevel.Error, // Solo errores, no warnings
+                filter: null
+            ));
+        });
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -467,13 +479,8 @@ public class cimaBlazorModule : AbpModule
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
-        // Multi-tenancy deshabilitado en este proyecto
-        if (MultiTenancyConsts.IsEnabled)  // Siempre false
-        {
-            app.UseMultiTenancy();
-        }
-        // No es necesario else ya que multi-tenancy está deshabilitado
-
+        // Multi-tenancy deshabilitado - no se usa UseMultiTenancy()
+        
         app.UseUnitOfWork();
         app.UseDynamicClaims();
         app.UseAntiforgery();
