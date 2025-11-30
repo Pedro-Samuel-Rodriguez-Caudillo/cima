@@ -53,7 +53,7 @@
 
                 @* Status Filter *@
                 <div>
-                    <select class="cima-input" value="@StatusFilter" @onchange="@(e => { StatusFilter = e.Value?.ToString(); LoadListings(); })">
+                    <select class="cima-input" value="@StatusFilter" @onchange="@(async e => { StatusFilter = e.Value?.ToString(); await LoadListings(); })">
                         <option value="">@L["Common:All"] (@L["Common:Status"])</option>
                         <option value="@((int)ListingStatus.Draft)">@EnumLocalizer.GetListingStatusName(ListingStatus.Draft)</option>
                         <option value="@((int)ListingStatus.Published)">@EnumLocalizer.GetListingStatusName(ListingStatus.Published)</option>
@@ -64,7 +64,7 @@
 
                 @* Category Filter *@
                 <div>
-                    <select class="cima-input" value="@CategoryFilter" @onchange="@(e => { CategoryFilter = e.Value?.ToString(); LoadListings(); })">
+                    <select class="cima-input" value="@CategoryFilter" @onchange="@(async e => { CategoryFilter = e.Value?.ToString(); await LoadListings(); })">
                         <option value="">@L["Common:All"] (@L["Search:PropertyCategory"])</option>
                         <option value="@((int)PropertyCategory.Residential)">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</option>
                         <option value="@((int)PropertyCategory.Commercial)">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</option>
@@ -75,7 +75,7 @@
 
                 @* Transaction Type Filter *@
                 <div>
-                    <select class="cima-input" value="@TransactionFilter" @onchange="@(e => { TransactionFilter = e.Value?.ToString(); LoadListings(); })">
+                    <select class="cima-input" value="@TransactionFilter" @onchange="@(async e => { TransactionFilter = e.Value?.ToString(); await LoadListings(); })">
                         <option value="">@L["Common:All"] (@L["Search:TransactionType"])</option>
                         <option value="@((int)TransactionType.Sale)">@EnumLocalizer.GetTransactionTypeName(TransactionType.Sale)</option>
                         <option value="@((int)TransactionType.Rent)">@EnumLocalizer.GetTransactionTypeName(TransactionType.Rent)</option>

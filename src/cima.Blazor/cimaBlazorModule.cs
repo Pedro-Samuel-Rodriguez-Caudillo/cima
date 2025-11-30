@@ -467,10 +467,12 @@ public class cimaBlazorModule : AbpModule
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
 
-        if (MultiTenancyConsts.IsEnabled)
+        // Multi-tenancy deshabilitado en este proyecto
+        if (MultiTenancyConsts.IsEnabled)  // Siempre false
         {
             app.UseMultiTenancy();
         }
+        // No es necesario else ya que multi-tenancy está deshabilitado
 
         app.UseUnitOfWork();
         app.UseDynamicClaims();
