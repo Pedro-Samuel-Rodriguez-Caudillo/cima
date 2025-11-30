@@ -82,6 +82,18 @@ public class cimaBlazorModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
         var configuration = context.Services.GetConfiguration();
 
+        // ? Suprimir warnings de IdentityModel ANTES de que ABP los emita
+        context.Services.Configure<LoggerFilterOptions>(options =>
+        {
+            options.MinLevel = LogLevel.Information;
+            options.Rules.Add(new LoggerFilterRule(
+                providerName: null,
+                categoryName: "Volo.Abp.IdentityModel.IdentityModelAuthenticationService",
+                logLevel: LogLevel.Error, // Solo errores, no warnings
+                filter: null
+            ));
+        });
+
         context.Services.PreConfigure<AbpMvcDataAnnotationsLocalizationOptions>(options =>
         {
             options.AddAssemblyResource(
@@ -200,18 +212,6 @@ public class cimaBlazorModule : AbpModule
     {
         // Registrar EnumLocalizationService para renderizado en servidor
         context.Services.AddTransient<Client.Services.EnumLocalizationService>();
-        
-        // Suprimir warnings de IdentityModel para AbpMvcClient
-        // Estos warnings son inofensivos y ocurren porque no usamos el cliente MVC tradicional
-        context.Services.Configure<Microsoft.Extensions.Logging.LoggerFilterOptions>(options =>
-        {
-            options.Rules.Add(new Microsoft.Extensions.Logging.LoggerFilterRule(
-                providerName: null,
-                categoryName: "Volo.Abp.IdentityModel.IdentityModelAuthenticationService",
-                logLevel: Microsoft.Extensions.Logging.LogLevel.Error, // Solo errores, no warnings
-                filter: null
-            ));
-        });
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)

@@ -73,15 +73,25 @@
         subtree: false
     });
 
-    // 3. Suprimir warnings de preload en consola
+    // 3. Suprimir SOLO warnings específicos de preload
     const originalConsoleWarn = console.warn;
     console.warn = function(...args) {
-        const message = args[0];
-        if (typeof message === 'string' && 
-            (message.includes('preload') || message.includes('preloaded'))) {
-            // Suprimir warnings de preload
-            return;
+        const message = args.join(' ');
+        
+        // Suprimir SOLO estos warnings específicos:
+        if (typeof message === 'string') {
+            // 1. Warnings de preload no utilizado
+            if (message.includes('preload') && message.includes('not used within a few seconds')) {
+                return; // Suprimir
+            }
+            
+            // 2. Warnings de IdentityClientConfiguration (son inofensivos)
+            if (message.includes('IdentityClientConfiguration') && message.includes('AbpMvcClient')) {
+                return; // Suprimir
+            }
         }
+        
+        // Dejar pasar todos los demás warnings
         originalConsoleWarn.apply(console, args);
     };
 

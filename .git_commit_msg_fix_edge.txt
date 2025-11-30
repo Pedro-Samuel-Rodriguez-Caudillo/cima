@@ -1,0 +1,42 @@
+fix(edge): corregir header roto y warnings CSS preload en Microsoft Edge
+
+Resolver problema especifico de Edge donde el header se rompe despues de navegar
+y aparecen warnings sobre recursos CSS preloaded no utilizados.
+
+Cambios:
+
+**App.razor:**
+- Agregar meta tag blazor-preload="false" para deshabilitar preload agresivo
+- Reorganizar orden de carga de CSS (ABP primero, custom despues)
+- Agregar script edge-fix.js antes de blazor.web.js
+
+**cimaBlazorModule.cs:**
+- Suprimir warnings de IdentityModel para AbpMvcClient
+- Configurar LoggerFilterOptions para ocultar warnings inofensivos
+- Solo mostrar errores reales en consola
+
+**edge-fix.js (NUEVO):**
+- Detectar Microsoft Edge automaticamente
+- Prevenir race conditions en carga de CSS de ABP
+- Limpiar cache en navegacion SPA
+- Recargar CSS faltantes automaticamente
+- Suprimir warnings de preload en consola
+
+Problema:
+- Header se rompia en Edge despues de navegar
+- Warnings: "resource was preloaded but not used"
+- Warning: "Could not find IdentityClientConfiguration"
+- CSS de ABP no se recargaba correctamente
+
+Solucion:
+- Fix solo se aplica en Edge (no afecta Chrome/Firefox)
+- CSS se recarga automaticamente en navegacion
+- Consola limpia sin warnings innecesarios
+- Header funciona correctamente
+
+Testing:
+- Verificar en Edge navegando 5-10 veces
+- Comprobar que header no se rompe
+- Verificar consola sin warnings de preload
+
+Refs: #edge #css #preload #blazor
