@@ -93,7 +93,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             Description = "Descripción de prueba con más de 20 caracteres para validación",
             Location = "Guadalajara, Jalisco, México",
             Price = 1500000m,
-            Area = 120m,
+            LandArea = 200m,
+            ConstructionArea = 120m,
             Bedrooms = 3,
             Bathrooms = 2,
             Category = PropertyCategory.Residential,
@@ -131,7 +132,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             Description = listing.Description,
             Location = "Nueva Ubicación Actualizada México",
             Price = 2000000m,
-            Area = listing.Area,
+            LandArea = listing.LandArea,
+            ConstructionArea = listing.ConstructionArea,
             Bedrooms = 4,
             Bathrooms = 3,
             Category = listing.Category,
@@ -197,7 +199,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             Description = "Test description with minimum 20 characters required for validation",
             Location = "Test Location Guadalajara Mexico",
             Price = price,
-            Area = 120m,
+            LandArea = 200m,
+            ConstructionArea = 120m,
             Bedrooms = 3,
             Bathrooms = 2,
             Category = PropertyCategory.Residential,
@@ -218,15 +221,15 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
 
     private async Task<Architect> CreateTestArchitectAsync()
     {
-        // Use admin user ID from test seeding (from cimaTestDataSeedContributor)
-        // The admin user was created during test initialization
-        var adminUserId = _currentUser.Id ?? Guid.NewGuid(); // Fallback to new Guid if no current user
+        var adminUserId = _currentUser.Id ?? Guid.NewGuid();
         
         var architect = new Architect
         {
             UserId = adminUserId,
-            Name = "Test Architect",
-            Bio = "Test Architect Biography"
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         await WithUnitOfWorkAsync(async () =>

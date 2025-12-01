@@ -5,6 +5,10 @@ using cima.Domain.Shared;
 
 namespace cima.Domain.Entities
 {
+    /// <summary>
+    /// Agregado raíz que representa una propiedad inmobiliaria.
+    /// Bounded Context: Listings (Gestión de Propiedades)
+    /// </summary>
     public class Listing : AggregateRoot<Guid>
     {
         #region Propiedades de las casas
@@ -13,7 +17,17 @@ namespace cima.Domain.Entities
         public required string Description { get; set; }
         public string? Location { get; set; }  // Nullable - puede estar sin definir
         public decimal Price { get; set; }
-        public decimal Area { get; set; }
+        
+        /// <summary>
+        /// Área total del terreno en m²
+        /// </summary>
+        public decimal LandArea { get; set; }
+        
+        /// <summary>
+        /// Área construida en m²
+        /// </summary>
+        public decimal ConstructionArea { get; set; }
+        
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }

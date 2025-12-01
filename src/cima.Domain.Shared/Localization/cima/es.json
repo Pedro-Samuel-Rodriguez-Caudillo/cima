@@ -223,6 +223,11 @@
     "Dashboard:DatabaseConnection": "Conexión a Base de Datos",
     "Dashboard:ApiStatus": "Estado de API",
     "Dashboard:LastUpdate": "Última actualización",
-    "Dashboard:ErrorLoading": "Error al cargar estadísticas"
+    "Dashboard:ErrorLoading": "Error al cargar estadísticas",
+    
+    "Cima:Contact:AdminEmail": "Correo Administrativo",
+    "Cima:Contact:AdminEmail:Description": "Correo electrónico donde llegan todas las solicitudes de contacto",
+    "Cima:Contact:AdminPhone": "Teléfono Administrativo",
+    "Cima:Contact:AdminPhone:Description": "Número telefónico administrativo para contacto"
   }
 }

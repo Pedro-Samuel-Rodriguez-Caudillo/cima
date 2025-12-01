@@ -9,6 +9,7 @@ namespace cima.Entities;
 
 /// <summary>
 /// Tests unitarios para la entidad Architect
+/// Ahora con nueva estructura: sin Name/Bio, con estadísticas y metadata
 /// </summary>
 public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
 {
@@ -16,14 +17,22 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Create_Architect_With_Required_Properties()
     {
         // Arrange & Act
+        var userId = Guid.NewGuid();
         var architect = new Architect 
         { 
-            Name = "Juan Pérez"
+            UserId = userId,
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         // Assert
         architect.ShouldNotBeNull();
-        architect.Name.ShouldBe("Juan Pérez");
+        architect.UserId.ShouldBe(userId);
+        architect.TotalListingsPublished.ShouldBe(0);
+        architect.ActiveListings.ShouldBe(0);
+        architect.IsActive.ShouldBeTrue();
         architect.Listings.ShouldNotBeNull();
         architect.Listings.ShouldBeEmpty();
     }
@@ -32,68 +41,102 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_UserId()
     {
         // Arrange
+        var userId1 = Guid.NewGuid();
+        var userId2 = Guid.NewGuid();
         var architect = new Architect 
         { 
-            Name = "María González"
+            UserId = userId1,
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
-        var userId = Guid.NewGuid();
 
         // Act
-        architect.UserId = userId;
+        architect.UserId = userId2;
 
         // Assert
-        architect.UserId.ShouldBe(userId);
+        architect.UserId.ShouldBe(userId2);
     }
 
     [Fact]
-    public void Should_Set_Bio()
+    public void Should_Track_TotalListingsPublished()
     {
         // Arrange
         var architect = new Architect 
         { 
-            Name = "Carlos Ramírez"
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
-        var bio = "Arquitecto con más de 15 años de experiencia";
 
         // Act
-        architect.Bio = bio;
+        architect.TotalListingsPublished = 5;
 
         // Assert
-        architect.Bio.ShouldBe(bio);
+        architect.TotalListingsPublished.ShouldBe(5);
     }
 
     [Fact]
-    public void Should_Allow_Null_Bio()
-    {
-        // Arrange & Act
-        var architect = new Architect 
-        { 
-            Name = "Ana Torres",
-            Bio = null
-        };
-
-        // Assert
-        architect.Bio.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Should_Set_All_Properties_Together()
+    public void Should_Track_ActiveListings()
     {
         // Arrange
-        var userId = Guid.NewGuid();
+        var architect = new Architect 
+        { 
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 10,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
+        };
+
+        // Act
+        architect.ActiveListings = 3;
+
+        // Assert
+        architect.ActiveListings.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Should_Set_RegistrationDate()
+    {
+        // Arrange
+        var registrationDate = DateTime.UtcNow.AddDays(-30);
 
         // Act
         var architect = new Architect
         {
-            UserId = userId,
-            Name = "Luis Hernández",
-            Bio = "Especialista en diseño residencial"
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = registrationDate,
+            IsActive = true
         };
 
         // Assert
-        architect.UserId.ShouldBe(userId);
-        architect.Name.ShouldBe("Luis Hernández");
-        architect.Bio.ShouldBe("Especialista en diseño residencial");
+        architect.RegistrationDate.ShouldBe(registrationDate);
+    }
+
+    [Fact]
+    public void Should_Set_IsActive_Status()
+    {
+        // Arrange
+        var architect = new Architect 
+        { 
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
+        };
+
+        // Act
+        architect.IsActive = false;
+
+        // Assert
+        architect.IsActive.ShouldBeFalse();
     }
 
     [Fact]
@@ -102,7 +145,11 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
         // Arrange & Act
         var architect = new Architect 
         { 
-            Name = "Pedro Sánchez"
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         // Assert
@@ -115,7 +162,11 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
         // Arrange & Act
         var architect = new Architect 
         { 
-            Name = "Sofia Mendoza"
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         // Assert
@@ -124,51 +175,45 @@ public sealed class ArchitectTests : cimaDomainTestBase<cimaDomainTestModule>
     }
 
     [Fact]
-    public void Should_Store_Long_Bio()
+    public void Should_Update_Statistics()
     {
         // Arrange
-        var longBio = "Arquitecto con más de 15 años de experiencia en diseño residencial y comercial. " +
-                     "Especializado en arquitectura sustentable y eficiencia energética. " +
-                     "Ha participado en proyectos reconocidos a nivel nacional e internacional.";
-
-        // Act
         var architect = new Architect
         {
-            Name = "Roberto Jiménez",
-            Bio = longBio
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 5,
+            ActiveListings = 3,
+            RegistrationDate = DateTime.UtcNow.AddMonths(-6),
+            IsActive = true
         };
 
+        // Act - Simular publicación de nuevas propiedades
+        architect.TotalListingsPublished += 2;
+        architect.ActiveListings += 2;
+
         // Assert
-        architect.Bio.ShouldBe(longBio);
+        architect.TotalListingsPublished.ShouldBe(7);
+        architect.ActiveListings.ShouldBe(5);
     }
 
     [Fact]
-    public void Should_Require_Name()
+    public void Should_Deactivate_Architect()
     {
-        // Arrange & Act
+        // Arrange
         var architect = new Architect
         {
-            Name = "Nombre Válido"
+            UserId = Guid.NewGuid(),
+            TotalListingsPublished = 10,
+            ActiveListings = 3,
+            RegistrationDate = DateTime.UtcNow.AddYears(-1),
+            IsActive = true
         };
 
-        // Assert - Name is required and cannot be empty
-        architect.Name.ShouldNotBeNullOrEmpty();
-        architect.Name.ShouldNotBeNullOrWhiteSpace();
-    }
-
-    [Theory]
-    [InlineData("Juan Pérez")]
-    [InlineData("María González López")]
-    [InlineData("Arq. Carlos Ramírez")]
-    public void Should_Store_Different_Name_Formats(string name)
-    {
-        // Arrange & Act
-        var architect = new Architect
-        {
-            Name = name
-        };
+        // Act
+        architect.IsActive = false;
 
         // Assert
-        architect.Name.ShouldBe(name);
+        architect.IsActive.ShouldBeFalse();
+        architect.TotalListingsPublished.ShouldBe(10); // Stats no se pierden al desactivar
     }
 }

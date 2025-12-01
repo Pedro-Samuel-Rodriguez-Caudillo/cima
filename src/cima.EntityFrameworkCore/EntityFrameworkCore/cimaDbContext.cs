@@ -92,7 +92,8 @@ public class cimaDbContext :
             b.Property(x => x.Description).HasMaxLength(5000);
             b.Property(x => x.Location).HasMaxLength(500);  // Ahora nullable - no IsRequired
             b.Property(x => x.Price).HasPrecision(18, 2);
-            b.Property(x => x.Area).HasPrecision(10, 2);
+            b.Property(x => x.LandArea).HasPrecision(10, 2).IsRequired();
+            b.Property(x => x.ConstructionArea).HasPrecision(10, 2).IsRequired();
             b.HasIndex(x => new { x.Status, x.ArchitectId });
             b.HasIndex(x => x.CreatedAt);
             b.HasOne(x => x.Architect)
@@ -112,9 +113,10 @@ public class cimaDbContext :
         {
             b.ToTable("Architects");
             b.HasKey(x => x.Id);
-            b.Property(x => x.Name).IsRequired().HasMaxLength(200);  // Nuevo campo Name
-            b.Property(x => x.Bio).HasMaxLength(2000);  // Ahora nullable
-            // PortfolioUrl eliminado - el portafolio es interno con Listings
+            b.Property(x => x.TotalListingsPublished).IsRequired();
+            b.Property(x => x.ActiveListings).IsRequired();
+            b.Property(x => x.RegistrationDate).IsRequired();
+            b.Property(x => x.IsActive).IsRequired();
             b.HasIndex(x => x.UserId).IsUnique();
         });
 

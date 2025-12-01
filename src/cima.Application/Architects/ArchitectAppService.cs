@@ -156,9 +156,10 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         var architect = new Architect
         {
             UserId = CurrentUser.Id.Value,
-            Name = input.Name?.Trim() ?? CurrentUser.UserName ?? "Arquitecto",  // ✨ Name es required
-            Bio = input.Bio?.Trim()  // ✅ Bio es nullable
-            // PortfolioUrl eliminado - el portafolio es interno con Listings
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = Clock.Now,
+            IsActive = true
         };
 
         await _architectRepository.InsertAsync(architect, autoSave: true);
@@ -191,12 +192,11 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         }
 
         // Actualizar campos
-        if (!string.IsNullOrWhiteSpace(input.Name))
+        // Solo admin puede cambiar IsActive
+        if (input.IsActive.HasValue && isAdmin)
         {
-            architect.Name = input.Name.Trim();  // ✨ Actualizar Name si se proporciona
+            architect.IsActive = input.IsActive.Value;
         }
-        architect.Bio = input.Bio?.Trim();  // ✅ Bio es nullable, puede ser null
-        // PortfolioUrl eliminado
 
         await _architectRepository.UpdateAsync(architect, autoSave: true);
 

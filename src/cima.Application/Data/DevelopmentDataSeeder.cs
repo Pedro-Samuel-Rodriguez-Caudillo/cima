@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Bogus;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
 using Microsoft.Extensions.Logging;
@@ -8,11 +9,13 @@ using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
+using Volo.Abp.Identity;
 
 namespace cima.Application.Data;
 
 /// <summary>
 /// Seeder de datos de prueba para desarrollo
+/// Hybrid Approach: Usuarios fijos (admin + arquitecto) + Listings generados con Bogus
 /// Solo se ejecuta en entorno de desarrollo
 /// </summary>
 public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
@@ -21,6 +24,8 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IRepository<FeaturedListing, Guid> _featuredListingRepository;
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
+    private readonly IIdentityUserRepository _userRepository;
+    private readonly IdentityUserManager _userManager;
     private readonly IGuidGenerator _guidGenerator;
     private readonly ILogger<DevelopmentDataSeeder> _logger;
 
@@ -29,6 +34,8 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         IRepository<Architect, Guid> architectRepository,
         IRepository<FeaturedListing, Guid> featuredListingRepository,
         IRepository<ContactRequest, Guid> contactRequestRepository,
+        IIdentityUserRepository userRepository,
+        IdentityUserManager userManager,
         IGuidGenerator guidGenerator,
         ILogger<DevelopmentDataSeeder> logger)
     {
@@ -36,6 +43,8 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         _architectRepository = architectRepository;
         _featuredListingRepository = featuredListingRepository;
         _contactRequestRepository = contactRequestRepository;
+        _userRepository = userRepository;
+        _userManager = userManager;
         _guidGenerator = guidGenerator;
         _logger = logger;
     }
@@ -57,195 +66,140 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             return;
         }
 
-        _logger.LogInformation("Seeding development data...");
+        _logger.LogInformation("Seeding development data with Hybrid approach...");
 
-        // Crear arquitecto de prueba
-        var architect = await SeedArchitect();
+        // Crear usuarios y arquitectos fijos
+        var (adminUser, architectUser, architect) = await SeedUsersAndArchitect();
 
-        // Crear propiedades de prueba
-        var listings = await SeedListings(architect.Id);
+        // Crear propiedades con Bogus
+        var listings = await SeedListingsWithBogus(architect.Id);
 
         // Marcar algunas como destacadas
         await SeedFeaturedListings(listings);
 
-        // Crear solicitudes de contacto de prueba
-        await SeedContactRequests(listings);
-
         _logger.LogInformation("Development data seeded successfully");
+        _logger.LogInformation($"Created: 1 admin, 1 architect, {listings.Length} listings");
     }
 
-    private async Task<Architect> SeedArchitect()
+    private async Task<(IdentityUser admin, IdentityUser architect, Architect architectProfile)> SeedUsersAndArchitect()
     {
-        var architect = new Architect
+        // Admin user (credenciales fijas para login)
+        var admin = await _userRepository.FindByNormalizedUserNameAsync("ADMIN@CIMA.COM");
+        if (admin == null)
         {
-            UserId = Guid.Empty, // Sin usuario asignado por ahora
-            Name = "Arquitecto CIMA",  // ? Name es required
-            Bio = "Arquitecto especializado en diseño contemporáneo y sustentable. Más de 15 años de experiencia en proyectos residenciales de lujo."
-            // PortfolioUrl eliminado - el portafolio es interno con Listings
-        };
+            admin = new IdentityUser(_guidGenerator.Create(), "admin@cima.com", "admin@cima.com")
+            {
+                Name = "Admin",
+                Surname = "CIMA"
+            };
+            await _userManager.CreateAsync(admin, "1q2w3E*");
+            await _userManager.AddToRoleAsync(admin, "admin");
+            _logger.LogInformation("Created admin user: admin@cima.com / 1q2w3E*");
+        }
 
-        await _architectRepository.InsertAsync(architect);
-        return architect;
+        // Architect user (credenciales fijas para login)
+        var architectUser = await _userRepository.FindByNormalizedUserNameAsync("ARQ@CIMA.COM");
+        if (architectUser == null)
+        {
+            architectUser = new IdentityUser(_guidGenerator.Create(), "arq@cima.com", "arq@cima.com")
+            {
+                Name = "Juan",
+                Surname = "Arquitecto"
+            };
+            await _userManager.CreateAsync(architectUser, "1q2w3E*");
+            _logger.LogInformation("Created architect user: arq@cima.com / 1q2w3E*");
+        }
+
+        // Architect profile
+        var architectProfile = await _architectRepository.FirstOrDefaultAsync(a => a.UserId == architectUser.Id);
+        if (architectProfile == null)
+        {
+            architectProfile = new Architect
+            {
+                UserId = architectUser.Id,
+                TotalListingsPublished = 0,
+                ActiveListings = 0,
+                RegistrationDate = DateTime.UtcNow.AddDays(-90),
+                IsActive = true
+            };
+            await _architectRepository.InsertAsync(architectProfile);
+            _logger.LogInformation("Created architect profile for user");
+        }
+
+        return (admin, architectUser, architectProfile);
     }
 
-    private async Task<Listing[]> SeedListings(Guid architectId)
+    private async Task<Listing[]> SeedListingsWithBogus(Guid architectId)
     {
-        var listings = new[]
+        Randomizer.Seed = new Random(12345); // Seed fijo para datos consistentes
+
+        var faker = new Faker("es_MX");
+        
+        // Listas de valores realistas
+        var propertyTitles = new[]
         {
-            // Casa de lujo en venta
-            CreateListing(
-                "Casa Moderna con Vista al Mar",
-                "Espectacular residencia de lujo con vista panorámica al océano. Diseño arquitectónico contemporáneo con acabados de primera calidad. Amplios espacios, terrazas y alberca infinity.",
-                "Playa del Carmen, Quintana Roo",
-                12500000m,
-                450m,
-                4,
-                5,
-                ListingStatus.Published,
-                PropertyCategory.Residential,
-                PropertyType.House,
-                TransactionType.Sale,
-                architectId,
-                -30
-            ),
-
-            // Departamento en renta
-            CreateListing(
-                "Departamento de Lujo en Polanco",
-                "Exclusivo departamento amueblado en la mejor zona de Polanco. 2 recámaras con baño completo, sala-comedor, cocina integral, balcón con vista. Amenidades: gimnasio, alberca, seguridad 24/7.",
-                "Polanco, Ciudad de México",
-                45000m,
-                120m,
-                2,
-                2,
-                ListingStatus.Published,
-                PropertyCategory.Residential,
-                PropertyType.Apartment,
-                TransactionType.Rent,
-                architectId,
-                -25
-            ),
-
-            // Oficina comercial
-            CreateListing(
-                "Oficina Corporativa en Santa Fe",
-                "Moderna oficina corporativa en edificio AAA. Espacio diáfano con posibilidad de diseño personalizado. Piso de acceso controlado, estacionamiento, helipuerto.",
-                "Santa Fe, Ciudad de México",
-                8500000m,
-                300m,
-                0,
-                4,
-                ListingStatus.Published,
-                PropertyCategory.Commercial,
-                PropertyType.Office,
-                TransactionType.Sale,
-                architectId,
-                -20
-            ),
-
-            // Villa de lujo
-            CreateListing(
-                "Villa de Lujo en Los Cabos",
-                "Impresionante villa frente al mar con 6 suites, cine en casa, gimnasio, spa, cancha de tenis y alberca infinity. Diseño arquitectónico único con materiales de importación.",
-                "Los Cabos, Baja California Sur",
-                28000000m,
-                800m,
-                6,
-                8,
-                ListingStatus.Published,
-                PropertyCategory.Residential,
-                PropertyType.Villa,
-                TransactionType.Sale,
-                architectId,
-                -15
-            ),
-
-            // Condominio
-            CreateListing(
-                "Condominio Familiar en Querétaro",
-                "Hermoso condominio de 3 niveles en privada cerrada. 3 recámaras, jardín privado, 2 cajones de estacionamiento. Áreas comunes con alberca y área de juegos.",
-                "Juriquilla, Querétaro",
-                3800000m,
-                180m,
-                3,
-                3,
-                ListingStatus.Published,
-                PropertyCategory.Residential,
-                PropertyType.Condo,
-                TransactionType.Sale,
-                architectId,
-                -10
-            ),
-
-            // Local comercial
-            CreateListing(
-                "Local Comercial en Zona Rosa",
-                "Excelente local comercial en la mejor ubicación de Zona Rosa. Ideal para restaurante, boutique o showroom. Amplios ventanales, 2 niveles.",
-                "Zona Rosa, Ciudad de México",
-                65000m,
-                150m,
-                0,
-                2,
-                ListingStatus.Published,
-                PropertyCategory.Commercial,
-                PropertyType.RetailSpace,
-                TransactionType.Rent,
-                architectId,
-                -8
-            ),
-
-            // Proyecto en portafolio (ya vendido)
-            CreateListing(
-                "Residencia Contemporánea Valle de Bravo",
-                "PROYECTO COMPLETADO - Residencia de diseño contemporáneo con integración al paisaje. Premio de arquitectura sustentable 2023.",
-                "Valle de Bravo, Estado de México",
-                15000000m,
-                500m,
-                5,
-                6,
-                ListingStatus.Portfolio,
-                PropertyCategory.Residential,
-                PropertyType.House,
-                TransactionType.Sale,
-                architectId,
-                -60
-            ),
-
-            // Propiedad archivada (vendida, no pública)
-            CreateListing(
-                "Casa en San Miguel de Allende",
-                "VENDIDA - Hermosa casa colonial restaurada en el centro histórico.",
-                "San Miguel de Allende, Guanajuato",
-                9500000m,
-                350m,
-                4,
-                4,
-                ListingStatus.Archived,
-                PropertyCategory.Residential,
-                PropertyType.House,
-                TransactionType.Sale,
-                architectId,
-                -90
-            ),
-
-            // Borrador (no publicado)
-            CreateListing(
-                "Proyecto en Desarrollo Coyoacán",
-                "Proyecto en proceso de documentación...",
-                "Coyoacán, Ciudad de México",
-                7200000m,
-                280m,
-                3,
-                3,
-                ListingStatus.Draft,
-                PropertyCategory.Residential,
-                PropertyType.House,
-                TransactionType.Sale,
-                architectId,
-                -2,
-                addImage: false
-            )
+            "Casa Moderna", "Departamento de Lujo", "Villa Campestre", "Condominio Familiar",
+            "Residencia Contemporánea", "Penthouse Exclusivo", "Casa Minimalista", "Loft Industrial"
         };
+        
+        var zones = new[]
+        {
+            "Polanco, Ciudad de México", "Santa Fe, Ciudad de México", "Condesa, Ciudad de México",
+            "Playa del Carmen, Quintana Roo", "Guadalajara, Jalisco", "Monterrey, Nuevo León",
+            "Querétaro, Querétaro", "Valle de Bravo, Estado de México", "Los Cabos, Baja California Sur"
+        };
+
+        var listings = Enumerable.Range(1, 12).Select(i =>
+        {
+            var status = i <= 8 ? ListingStatus.Published : 
+                        i == 9 ? ListingStatus.Portfolio :
+                        i == 10 ? ListingStatus.Archived : 
+                        ListingStatus.Draft;
+
+            var type = faker.PickRandom<PropertyType>();
+            var transactionType = faker.PickRandom<TransactionType>();
+            
+            var landArea = faker.Random.Decimal(100, 600);
+            var constructionArea = faker.Random.Decimal(landArea * 0.4m, landArea * 0.9m);
+            
+            var listing = new Listing
+            {
+                Title = $"{faker.PickRandom(propertyTitles)} {faker.PickRandom(zones).Split(',')[1].Trim()}",
+                Description = GenerateRealisticDescription(type, faker),
+                Location = faker.PickRandom(zones),
+                Price = GenerateRealisticPrice(type, transactionType, faker),
+                LandArea = Math.Round(landArea, 2),
+                ConstructionArea = Math.Round(constructionArea, 2),
+                Bedrooms = type == PropertyType.Office ? 0 : faker.Random.Int(1, 5),
+                Bathrooms = type == PropertyType.Office ? 2 : faker.Random.Int(1, 4),
+                Status = status,
+                Category = DetermineCategory(type),
+                Type = type,
+                TransactionType = transactionType,
+                ArchitectId = architectId,
+                CreatedAt = DateTime.UtcNow.AddDays(-faker.Random.Int(2, 120))
+            };
+
+            // Agregar imagen genérica de ABP solo a publicadas/portfolio
+            if (status == ListingStatus.Published || status == ListingStatus.Portfolio)
+            {
+                var imageId = _guidGenerator.Create();
+                listing.Images = new[]
+                {
+                    new ListingImage(
+                        imageId: imageId,
+                        url: "/images/getting-started/bg-01.png",
+                        altText: $"Imagen de {listing.Title}",
+                        fileSize: 500000,
+                        contentType: "image/png",
+                        previousImageId: null,
+                        nextImageId: null
+                    )
+                };
+            }
+
+            return listing;
+        }).ToArray();
 
         foreach (var listing in listings)
         {
@@ -255,62 +209,78 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         return listings;
     }
 
-    private Listing CreateListing(
-        string title,
-        string description,
-        string location,
-        decimal price,
-        decimal area,
-        int bedrooms,
-        int bathrooms,
-        ListingStatus status,
-        PropertyCategory category,
-        PropertyType type,
-        TransactionType transactionType,
-        Guid architectId,
-        int daysAgo,
-        bool addImage = true)
+    private string GenerateRealisticDescription(PropertyType type, Faker faker)
     {
-        var listing = new Listing
+        var templates = type switch
         {
-            Title = title,
-            Description = description,
-            Location = location,
-            Price = price,
-            Area = area,
-            Bedrooms = bedrooms,
-            Bathrooms = bathrooms,
-            Status = status,
-            Category = category,
-            Type = type,
-            TransactionType = transactionType,
-            ArchitectId = architectId,
-            CreatedAt = DateTime.UtcNow.AddDays(daysAgo)
+            PropertyType.House => new[]
+            {
+                "Hermosa casa de diseño contemporáneo con amplios espacios y acabados de lujo.",
+                "Residencia familiar con jardín privado, perfecta para familias que buscan tranquilidad.",
+                "Casa moderna con diseño arquitectónico único y vistas espectaculares."
+            },
+            PropertyType.Apartment => new[]
+            {
+                "Departamento de lujo con acabados premium en la mejor ubicación de la zona.",
+                "Moderno apartamento con balcón, amenidades completas y seguridad 24/7.",
+                "Exclusivo departamento amueblado listo para habitarse."
+            },
+            PropertyType.Office => new[]
+            {
+                "Oficina corporativa en edificio AAA con estacionamiento y helipuerto.",
+                "Espacio comercial ideal para empresas en crecimiento.",
+                "Local de oficinas con diseño moderno y excelente ubicación."
+            },
+            _ => new[]
+            {
+                "Propiedad exclusiva con características únicas.",
+                "Excelente inversión en zona de alto plusvalía."
+            }
         };
 
-        if (addImage)
+        return faker.PickRandom(templates);
+    }
+
+    private decimal GenerateRealisticPrice(PropertyType type, TransactionType transactionType, Faker faker)
+    {
+        if (transactionType == TransactionType.Rent)
         {
-            var imageId = _guidGenerator.Create();
-            listing.Images = new[]
+            return type switch
             {
-                new ListingImage(
-                    imageId: imageId,
-                    url: "/images/getting-started/bg-01.png",
-                    altText: $"Imagen de {title}",
-                    fileSize: 500000,
-                    contentType: "image/png",
-                    previousImageId: null,  // ? Primera imagen - lista enlazada
-                    nextImageId: null       // ? Única imagen - lista enlazada
-                )
+                PropertyType.House => faker.Random.Decimal(15000, 80000),
+                PropertyType.Apartment => faker.Random.Decimal(8000, 45000),
+                PropertyType.Office => faker.Random.Decimal(20000, 100000),
+                _ => faker.Random.Decimal(10000, 50000)
             };
         }
+        else // Sale
+        {
+            return type switch
+            {
+                PropertyType.House => faker.Random.Decimal(2000000, 15000000),
+                PropertyType.Apartment => faker.Random.Decimal(1500000, 8000000),
+                PropertyType.Villa => faker.Random.Decimal(10000000, 30000000),
+                PropertyType.Office => faker.Random.Decimal(3000000, 20000000),
+                _ => faker.Random.Decimal(1000000, 10000000)
+            };
+        }
+    }
 
-        return listing;
+    private PropertyCategory DetermineCategory(PropertyType type)
+    {
+        return type switch
+        {
+            PropertyType.House or PropertyType.Apartment or PropertyType.Condo or 
+            PropertyType.Townhouse or PropertyType.Villa => PropertyCategory.Residential,
+            PropertyType.Office or PropertyType.Warehouse or PropertyType.RetailSpace or 
+            PropertyType.Restaurant or PropertyType.Hotel => PropertyCategory.Commercial,
+            PropertyType.MixedUseBuilding or PropertyType.LiveWorkSpace => PropertyCategory.Mixed,
+            _ => PropertyCategory.Residential
+        };
     }
 
     private async Task SeedFeaturedListings(Listing[] listings)
     {
-        // Marcar las primeras 6 propiedades publicadas como destacadas
         var publishedListings = listings
             .Where(l => l.Status == ListingStatus.Published || l.Status == ListingStatus.Portfolio)
             .OrderByDescending(l => l.CreatedAt)
@@ -321,69 +291,12 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         {
             var featuredListing = new FeaturedListing(
                 listing.Id,
-                createdBy: null  // ? Sin displayOrder - orden aleatorio
+                createdBy: null
             );
 
             await _featuredListingRepository.InsertAsync(featuredListing);
         }
-    }
 
-    private async Task SeedContactRequests(Listing[] listings)
-    {
-        var publishedListings = listings
-            .Where(l => l.Status == ListingStatus.Published)
-            .Take(3)
-            .ToArray();
-
-        if (!publishedListings.Any())
-        {
-            return;
-        }
-
-        var contactRequests = new[]
-        {
-            new ContactRequest
-            {
-                Name = "Juan Pérez García",
-                Email = "juan.perez@ejemplo.com",
-                Phone = "+52 55 1234 5678",
-                Message = "Me interesa agendar una visita para conocer la propiedad. ¿Cuándo tendría disponibilidad?",
-                ListingId = publishedListings[0].Id,
-                ArchitectId = publishedListings[0].ArchitectId,
-                Status = ContactRequestStatus.New,
-                CreatedAt = DateTime.UtcNow.AddDays(-3)
-            },
-            new ContactRequest
-            {
-                Name = "María González López",
-                Email = "maria.gonzalez@ejemplo.com",
-                Phone = "+52 33 9876 5432",
-                Message = "Quisiera más información sobre las amenidades del edificio y costos de mantenimiento.",
-                ListingId = publishedListings.Length > 1 ? publishedListings[1].Id : publishedListings[0].Id,
-                ArchitectId = publishedListings.Length > 1 ? publishedListings[1].ArchitectId : publishedListings[0].ArchitectId,
-                Status = ContactRequestStatus.Replied,
-                CreatedAt = DateTime.UtcNow.AddDays(-5),
-                RepliedAt = DateTime.UtcNow.AddDays(-4),
-                ReplyNotes = "Se envió información por correo electrónico"
-            },
-            new ContactRequest
-            {
-                Name = "Carlos Rodríguez Sánchez",
-                Email = "carlos.rodriguez@ejemplo.com",
-                Phone = "+52 81 5555 1234",
-                Message = "Me gustaría hacer una oferta por la propiedad. ¿Podríamos agendar una videollamada?",
-                ListingId = publishedListings.Length > 2 ? publishedListings[2].Id : publishedListings[0].Id,
-                ArchitectId = publishedListings.Length > 2 ? publishedListings[2].ArchitectId : publishedListings[0].ArchitectId,
-                Status = ContactRequestStatus.Closed,
-                CreatedAt = DateTime.UtcNow.AddDays(-7),
-                RepliedAt = DateTime.UtcNow.AddDays(-6),
-                ReplyNotes = "Se agendó visita presencial. Cliente muy interesado."
-            }
-        };
-
-        foreach (var request in contactRequests)
-        {
-            await _contactRequestRepository.InsertAsync(request);
-        }
+        _logger.LogInformation($"Featured {publishedListings.Length} listings");
     }
 }

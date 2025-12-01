@@ -10,9 +10,10 @@ namespace cima.Domain.Shared.Dtos
         public Guid Id { get; set; }
         public required string Title { get; set; }  // ✅ required
         public required string Description { get; set; }  // ✅ required
-        public string? Location { get; set; }  // ✅ nullable (ahora es nullable en entity)
+        public string? Location { get; set; }  // ✅ nullable
         public decimal Price { get; set; }
-        public decimal Area { get; set; }
+        public decimal LandArea { get; set; }
+        public decimal ConstructionArea { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public ListingStatus Status { get; set; }
@@ -27,9 +28,10 @@ namespace cima.Domain.Shared.Dtos
         public List<ListingImageDto> Images { get; set; } = new();
         public DateTime CreatedAt { get; set; }
         
-        // Propiedades de conveniencia
-        public string? Address => Location; // Alias para compatibilidad
-        public DateTime CreationTime => CreatedAt; // Alias para compatibilidad
+        // Propiedades de conveniencia (backward compatibility)
+        public string? Address => Location;
+        public DateTime CreationTime => CreatedAt;
+        public decimal Area => LandArea; // Para compatibilidad con código existente
     }
 
     public class CreateUpdateListingDto
@@ -44,15 +46,19 @@ namespace cima.Domain.Shared.Dtos
 
         [Required(ErrorMessage = "La ubicación es requerida")]
         [StringLength(500, MinimumLength = 5, ErrorMessage = "La ubicación debe tener entre 5 y 500 caracteres")]
-        public string? Location { get; set; }  // ✅ nullable (ahora es nullable en entity)
+        public string? Location { get; set; }  // ✅ nullable
 
         [Required(ErrorMessage = "El precio es requerido")]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
         public decimal Price { get; set; }
 
-        [Required(ErrorMessage = "El área es requerida")]
-        [Range(1, 100000, ErrorMessage = "El área debe estar entre 1 y 100000 m²")]
-        public decimal Area { get; set; }
+        [Required(ErrorMessage = "El área del terreno es requerida")]
+        [Range(1, 100000, ErrorMessage = "El área del terreno debe estar entre 1 y 100000 m²")]
+        public decimal LandArea { get; set; }
+
+        [Required(ErrorMessage = "El área de construcción es requerida")]
+        [Range(1, 100000, ErrorMessage = "El área de construcción debe estar entre 1 y 100000 m²")]
+        public decimal ConstructionArea { get; set; }
 
         [Required(ErrorMessage = "El número de recámaras es requerido")]
         [Range(0, 50, ErrorMessage = "El número de recámaras debe estar entre 0 y 50")]
@@ -73,6 +79,10 @@ namespace cima.Domain.Shared.Dtos
 
         [Required(ErrorMessage = "El arquitecto es requerido")]
         public Guid ArchitectId { get; set; }
+        
+        // Backward compatibility
+        [Obsolete("Use LandArea instead")]
+        public decimal? Area { get; set; }
     }
 
     public class ListingImageDto

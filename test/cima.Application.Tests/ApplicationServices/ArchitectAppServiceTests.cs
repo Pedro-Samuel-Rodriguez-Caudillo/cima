@@ -72,7 +72,8 @@ public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaAppli
         // Assert
         result.ShouldNotBeNull();
         result.Id.ShouldBe(architect.Id);
-        result.Bio.ShouldBe(architect.Bio);
+        result.TotalListingsPublished.ShouldBe(architect.TotalListingsPublished);
+        result.IsActive.ShouldBe(architect.IsActive);
     }
 
     #endregion
@@ -84,9 +85,10 @@ public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaAppli
         var architect = new Architect
         {
             UserId = Guid.NewGuid(),
-            Name = "Test Architect", // ? Name es required
-            Bio = "Experienced architect with over 10 years in residential design"
-            // PortfolioUrl eliminado - el portafolio es interno
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         await WithUnitOfWorkAsync(async () =>

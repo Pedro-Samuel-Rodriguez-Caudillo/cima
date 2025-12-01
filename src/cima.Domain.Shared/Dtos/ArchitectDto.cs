@@ -7,39 +7,46 @@ namespace cima.Domain.Shared.Dtos
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public string Name { get; set; } = string.Empty;  // ? Agregado
-        public string? Bio { get; set; }  // ? Nullable
         public string? UserName { get; set; }  // Nombre del usuario de Identity
+        
+        // Estadísticas
+        public int TotalListingsPublished { get; set; }
+        public int ActiveListings { get; set; }
+        
+        // Metadata
+        public DateTime RegistrationDate { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class CreateArchitectDto
     {
-        public string Name { get; set; } = string.Empty;  // ? Agregado - requerido
-        public string? Bio { get; set; }  // ? Nullable - opcional
+        // Sin campos - se crea vinculado al usuario actual
     }
     
     public class UpdateArchitectDto
     {
-        public string? Name { get; set; }  // ? Agregado - opcional en update
-        public string? Bio { get; set; }  // ? Nullable
+        // Solo admin puede modificar IsActive
+        public bool? IsActive { get; set; }
     }
 
     public class ArchitectDetailDto
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public string Name { get; set; } = string.Empty;  // ? Agregado
-        public string? Bio { get; set; }  // ? Nullable
         public string? UserName { get; set; }
+        public int TotalListingsPublished { get; set; }
+        public int ActiveListings { get; set; }
+        public DateTime RegistrationDate { get; set; }
+        public bool IsActive { get; set; }
         public List<ListingListDto> Listings { get; set; } = new();
     }
 
     public class ArchitectListDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;  // ? Agregado
         public string? UserName { get; set; }
-        public string? Bio { get; set; }  // ? Nullable
-        public int ListingsCount { get; set; }
+        public int TotalListingsPublished { get; set; }
+        public int ActiveListings { get; set; }
+        public bool IsActive { get; set; }
     }
 }

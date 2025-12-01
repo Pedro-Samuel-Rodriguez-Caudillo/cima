@@ -59,7 +59,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         if (input.Status.HasValue)
         {
-            queryable = queryable.Where(p => (int)p.Status == input.Status.Value);
+        queryable = queryable.Where(p => (int)p.Status == input.Status.Value);
         }
 
         if (input.MinPrice.HasValue)
@@ -130,10 +130,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             "price desc" => queryable.OrderByDescending(p => p.Price),
             "priceasc" => queryable.OrderBy(p => p.Price),
             "pricedesc" => queryable.OrderByDescending(p => p.Price),
-            "area" => queryable.OrderBy(p => p.Area),
-            "area desc" => queryable.OrderByDescending(p => p.Area),
-            "areaasc" => queryable.OrderBy(p => p.Area),
-            "areadesc" => queryable.OrderByDescending(p => p.Area),
+            "landarea" => queryable.OrderBy(p => p.LandArea),
+            "landarea desc" => queryable.OrderByDescending(p => p.LandArea),
+            "landareaasc" => queryable.OrderBy(p => p.LandArea),
+            "landaread desc" => queryable.OrderByDescending(p => p.LandArea),
+            "area" => queryable.OrderBy(p => p.LandArea), // Backward compatibility
+            "area desc" => queryable.OrderByDescending(p => p.LandArea),
+            "areaasc" => queryable.OrderBy(p => p.LandArea),
+            "areadesc" => queryable.OrderByDescending(p => p.LandArea),
             "createdat" => queryable.OrderBy(p => p.CreatedAt),
             "createdat desc" => queryable.OrderByDescending(p => p.CreatedAt),
             "title" => queryable.OrderBy(p => p.Title),
@@ -205,6 +209,20 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .WithData("Area", input.Area)
                 .WithData("MinArea", 1);
         }
+        
+        if (input.LandArea <= 0)
+        {
+            throw new BusinessException("Listing:InvalidLandArea")
+                .WithData("LandArea", input.LandArea)
+                .WithData("MinArea", 1);
+        }
+
+        if (input.ConstructionArea <= 0)
+        {
+            throw new BusinessException("Listing:InvalidConstructionArea")
+                .WithData("ConstructionArea", input.ConstructionArea)
+                .WithData("MinArea", 1);
+        }
 
         // Validar que el arquitecto existe
         var architectExists = await _architectRepository.AnyAsync(a => a.Id == input.ArchitectId);
@@ -220,7 +238,8 @@ public class ListingAppService : cimaAppService, IListingAppService
             Description = normalizedDescription,
             Location = normalizedLocation,
             Price = input.Price,
-            Area = input.Area,
+            LandArea = input.LandArea,
+            ConstructionArea = input.ConstructionArea,
             Bedrooms = input.Bedrooms,
             Bathrooms = input.Bathrooms,
             Category = input.Category,
@@ -288,13 +307,28 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .WithData("Area", input.Area)
                 .WithData("MinArea", 1);
         }
+        
+        if (input.LandArea <= 0)
+        {
+            throw new BusinessException("Listing:InvalidLandArea")
+                .WithData("LandArea", input.LandArea)
+                .WithData("MinArea", 1);
+        }
+
+        if (input.ConstructionArea <= 0)
+        {
+            throw new BusinessException("Listing:InvalidConstructionArea")
+                .WithData("ConstructionArea", input.ConstructionArea)
+                .WithData("MinArea", 1);
+        }
 
         // Mapear TODOS los campos editables with datos normalizados
         listing.Title = normalizedTitle;
         listing.Description = normalizedDescription;
         listing.Location = normalizedLocation;
         listing.Price = input.Price;
-        listing.Area = input.Area;
+        listing.LandArea = input.LandArea;
+        listing.ConstructionArea = input.ConstructionArea;
         listing.Bedrooms = input.Bedrooms;
         listing.Bathrooms = input.Bathrooms;
         listing.Category = input.Category;
@@ -674,14 +708,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Bathrooms >= searchDto.MinBathrooms.Value);
         }
 
-        // Rango de área
+        // Rango de área (usar LandArea para backward compatibility)
         if (searchDto.MinArea.HasValue)
-        {
-            queryable = queryable.Where(p => p.Area >= searchDto.MinArea.Value);
+        {   
+            queryable = queryable.Where(p => p.LandArea >= searchDto.MinArea.Value);
         }
         if (searchDto.MaxArea.HasValue)
         {
-            queryable = queryable.Where(p => p.Area <= searchDto.MaxArea.Value);
+            queryable = queryable.Where(p => p.LandArea <= searchDto.MaxArea.Value);
         }
 
         // Aplicar ordenamiento
@@ -689,8 +723,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             "price-low" => queryable.OrderBy(p => p.Price),
             "price-high" => queryable.OrderByDescending(p => p.Price),
-            "area-large" => queryable.OrderByDescending(p => p.Area),
-            "area-small" => queryable.OrderBy(p => p.Area),
+            "area-large" => queryable.OrderByDescending(p => p.LandArea),
+            "area-small" => queryable.OrderBy(p => p.LandArea),
             "newest" => queryable.OrderByDescending(p => p.CreatedAt),
             "oldest" => queryable.OrderBy(p => p.CreatedAt),
             _ => queryable.OrderByDescending(p => p.CreatedAt)
