@@ -51,34 +51,61 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
 
     public async Task SeedAsync(DataSeedContext context)
     {
-        // Solo ejecutar en desarrollo
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        if (environment != "Development")
+        // CAMBIO: No verificar ASPNETCORE_ENVIRONMENT, ejecutar siempre en entorno no producción
+        // Solo skip en producción explícita
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+        
+        _logger.LogInformation("???????????????????????????????????????????");
+        _logger.LogInformation("[SEEDER] DevelopmentDataSeeder.SeedAsync() INICIADO");
+        _logger.LogInformation($"[SEEDER] Entorno actual: {environment}");
+        _logger.LogInformation("???????????????????????????????????????????");
+        
+        if (environment == "Production")
         {
-            _logger.LogInformation("Skipping development data seeding (not in Development environment)");
+            _logger.LogInformation("[SEEDER] ??  Saltando seeding (Entorno Production)");
             return;
         }
 
-        // Verificar si ya hay datos
-        if (await _listingRepository.AnyAsync())
+        // Verificar si ya existen datos
+        var existingListings = await _listingRepository.CountAsync();
+        _logger.LogInformation($"[SEEDER] ?? Listings existentes en BD: {existingListings}");
+        
+        if (existingListings > 0)
         {
-            _logger.LogInformation("Development data already seeded");
+            _logger.LogInformation("[SEEDER] ??  Saltando seeding (Ya existen propiedades en la BD)");
+            _logger.LogInformation("[SEEDER] ?? Para forzar re-seeding, ejecuta: etc/scripts/reset-database.ps1");
             return;
         }
 
-        _logger.LogInformation("Seeding development data with Hybrid approach...");
+        _logger.LogInformation("[SEEDER] ?? Iniciando creación de datos de prueba con Bogus...");
 
-        // Crear usuarios y arquitectos fijos
-        var (adminUser, architectUser, architect) = await SeedUsersAndArchitect();
+        try
+        {
+            // Crear usuarios y arquitectos fijos
+            _logger.LogInformation("[SEEDER] ?? Creando usuarios y arquitecto...");
+            var (adminUser, architectUser, architect) = await SeedUsersAndArchitect();
 
-        // Crear propiedades con Bogus
-        var listings = await SeedListingsWithBogus(architect.Id);
+            // Crear propiedades con Bogus
+            _logger.LogInformation("[SEEDER] ?? Generando propiedades con Bogus...");
+            var listings = await SeedListingsWithBogus(architect.Id);
 
-        // Marcar algunas como destacadas
-        await SeedFeaturedListings(listings);
+            // Marcar algunas como destacadas
+            _logger.LogInformation("[SEEDER] ? Marcando propiedades destacadas...");
+            await SeedFeaturedListings(listings);
 
-        _logger.LogInformation("Development data seeded successfully");
-        _logger.LogInformation($"Created: 1 admin, 1 architect, {listings.Length} listings");
+            _logger.LogInformation("???????????????????????????????????????????");
+            _logger.LogInformation("[SEEDER] ? SEEDING COMPLETADO EXITOSAMENTE");
+            _logger.LogInformation($"[SEEDER] ?? Resumen:");
+            _logger.LogInformation($"[SEEDER]    - 1 Admin: admin@cima.com / 1q2w3E*");
+            _logger.LogInformation($"[SEEDER]    - 1 Arquitecto: arq@cima.com / 1q2w3E*");
+            _logger.LogInformation($"[SEEDER]    - {listings.Length} Propiedades generadas");
+            _logger.LogInformation("???????????????????????????????????????????");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SEEDER] ? Error durante el seeding de datos de prueba");
+            throw;
+        }
     }
 
     private async Task<(IdentityUser admin, IdentityUser architect, Architect architectProfile)> SeedUsersAndArchitect()
