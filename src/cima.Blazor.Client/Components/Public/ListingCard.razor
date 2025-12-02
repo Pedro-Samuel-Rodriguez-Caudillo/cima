@@ -1,159 +1,101 @@
 @using cima.Domain.Shared.Dtos
 @using cima.Blazor.Client.Services
-@using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
 @inject EnumLocalizationService EnumLocalizer
 @inherits cimaComponentBase
 
 @*
-    Card de propiedad con flip animado para mostrar descripción
-    Responsive: vertical en móvil, horizontal en desktop
-    Animaciones mejoradas con feedback visual
+    Card de propiedad moderna estilo case study
+    DiseÃ±o limpio y corporativo
 *@
 
-<div class="cima-card-flip-container h-full" @onclick="HandleCardClick">
-    <div class="cima-card-flip @(IsFlipped ? "flipped" : "")" style="height: 100%; min-height: 280px;">
+<div class="group cursor-pointer" @onclick="NavigateToDetail">
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
         
-        @* FRENTE: Imagen + Info básica *@
-        <div class="cima-card-flip-front cima-card">
-            <div class="flex flex-col md:flex-row h-full">
-                
-                @* Imagen *@
-                <div class="relative w-full md:w-2/5 aspect-listing-card md:aspect-auto overflow-hidden">
-                    @if (Listing.Images?.Any() == true)
-                    {
-                        @* Obtener primera imagen de la lista enlazada *@
-                        var mainImage = Listing.Images.FirstOrDefault(i => i.PreviousImageId == null) 
-                                     ?? Listing.Images.First();
-                        <img 
-                            src="@mainImage.Url" 
-                            alt="@mainImage.AltText"
-                            class="w-full h-full object-cover cima-responsive-image transition-transform duration-300 @(IsFlipped ? "scale-110" : "")"
-                            loading="lazy" />
-                    }
-                    else
-                    {
-                        <div class="w-full h-full bg-neutral-200 flex items-center justify-center">
-                            <svg class="w-12 h-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                        </div>
-                    }
-                    
-                    @* Icono de información (i) con animación mejorada *@
-                    <button 
-                        class="cima-info-icon absolute top-3 right-3 @(InfoIconHovered ? "cima-info-icon-hover" : "")"
-                        @onclick="ToggleFlip"
-                        @onclick:stopPropagation="true"
-                        @onmouseenter="() => InfoIconHovered = true"
-                        @onmouseleave="() => InfoIconHovered = false"
-                        aria-label="@L["Properties:ViewDescription"]"
-                        title="@L["Properties:ViewDescription"]"
-                        type="button">
-                        <span class="cima-info-icon-text">i</span>
-                        <span class="cima-info-icon-ripple @(IsFlipping ? "active" : "")"></span>
-                    </button>
-                    
-                    @* Badge de estado (si es destacada o portfolio) *@
-                    @if (Listing.Status == ListingStatus.Portfolio)
-                    {
-                        <span class="cima-badge cima-badge-primary absolute top-3 left-3">
-                            @L["ListingStatus:Portfolio"]
-                        </span>
-                    }
+        @* Imagen *@
+        <div class="relative aspect-[4/3] overflow-hidden">
+            @if (Listing.Images?.Any() == true)
+            {
+                var mainImage = Listing.Images.FirstOrDefault(i => i.PreviousImageId == null) 
+                             ?? Listing.Images.First();
+                <img 
+                    src="@mainImage.Url" 
+                    alt="@mainImage.AltText"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy" />
+            }
+            else
+            {
+                <div class="w-full h-full bg-neutral-100 flex items-center justify-center">
+                    <svg class="w-16 h-16 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                </div>
+            }
+            
+            @* Badge superior izquierdo *@
+            @if (Listing.Status == ListingStatus.Portfolio)
+            {
+                <div class="absolute top-4 left-4 px-3 py-1 bg-navy-900/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
+                    @L["ListingStatus:Portfolio"]
+                </div>
+            }
+        </div>
+        
+        @* Contenido *@
+        <div class="p-6 flex-1 flex flex-col">
+            <div class="flex-1">
+                @* UbicaciÃ³n *@
+                <div class="flex items-center gap-2 text-sm text-neutral-500 mb-3">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="truncate font-medium">@(Listing.Location ?? "UbicaciÃ³n no disponible")</span>
                 </div>
                 
-                @* Información *@
-                <div class="flex-1 p-4 md:p-5 flex flex-col justify-between">
+                @* TÃ­tulo *@
+                <h3 class="text-xl font-display font-bold text-navy-900 mb-4 leading-tight line-clamp-2">
+                    @Listing.Title
+                </h3>
+                
+                @* CaracterÃ­sticas *@
+                <div class="grid grid-cols-3 gap-4 mb-5 py-4 border-t border-b border-neutral-100">
                     <div>
-                        <h3 class="text-xl font-semibold text-neutral-900 mb-2 cima-truncate-2">
-                            @Listing.Title
-                        </h3>
-                        
-                        <div class="flex items-center text-sm text-neutral-600 mb-3">
-                            <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span class="truncate">@Listing.Location</span>
-                        </div>
-                        
-                        <div class="grid grid-cols-3 gap-3 mb-4">
-                            <div class="text-center">
-                                <div class="text-xs text-neutral-500">@L["Properties:Bedrooms"]</div>
-                                <div class="text-lg font-semibold text-navy-600">@Listing.Bedrooms</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-neutral-500">@L["Properties:Bathrooms"]</div>
-                                <div class="text-lg font-semibold text-navy-600">@Listing.Bathrooms</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-xs text-neutral-500">@L["Properties:Area"]</div>
-                                <div class="text-lg font-semibold text-navy-600">@Listing.Area.ToString("N0")</div>
-                            </div>
-                        </div>
+                        <div class="text-xs text-neutral-500 font-medium mb-1">@L["Properties:Bedrooms"]</div>
+                        <div class="text-lg font-bold text-navy-600">@Listing.Bedrooms</div>
                     </div>
-                    
                     <div>
-                        <div class="text-2xl font-bold text-navy-600 mb-1">
-                            @Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
-                        </div>
-                        <div class="text-xs text-neutral-500">
-                            @EnumLocalizer.GetTransactionTypeName(Listing.TransactionType)
-                        </div>
+                        <div class="text-xs text-neutral-500 font-medium mb-1">@L["Properties:Bathrooms"]</div>
+                        <div class="text-lg font-bold text-navy-600">@Listing.Bathrooms</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-neutral-500 font-medium mb-1">mÂ²</div>
+                        <div class="text-lg font-bold text-navy-600">@Listing.ConstructionArea.ToString("N0")</div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        @* REVERSO: Descripción con animaciones *@
-        <div class="cima-card-flip-back cima-card bg-gradient-to-br from-navy-50 to-navy-100/50">
-            <div class="p-5 h-full flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <h4 class="text-lg font-semibold text-navy-900 cima-slide-in-left @(IsFlipped ? "active" : "")">
-                        @L["PropertyDetail:Description"]
-                    </h4>
-                    
-                    <button 
-                        class="cima-info-icon bg-navy-500 cima-slide-in-right @(IsFlipped ? "active" : "")"
-                        @onclick="ToggleFlip"
-                        @onclick:stopPropagation="true"
-                        aria-label="@L["Common:Close"]"
-                        title="@L["Common:Close"]"
-                        type="button">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="flex-1 overflow-y-auto cima-fade-in @(IsFlipped ? "active" : "")" style="animation-delay: 0.1s;">
-                    <div class="@(IsExpanded ? "" : "cima-truncate-3") text-sm text-neutral-700 leading-relaxed">
-                        @Listing.Description
+            
+            @* Precio y botÃ³n *@
+            <div class="flex items-end justify-between gap-4">
+                <div>
+                    <div class="text-xs text-neutral-500 font-medium mb-1">Precio</div>
+                    <div class="text-2xl font-bold text-navy-900">
+                        @Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
                     </div>
-                    
-                    @if (!string.IsNullOrEmpty(Listing.Description) && Listing.Description.Length > 150 && !IsExpanded)
-                    {
-                        <button 
-                            class="text-navy-600 hover:text-navy-700 text-sm font-medium mt-2 hover:underline transition-all"
-                            @onclick="ExpandDescription"
-                            @onclick:stopPropagation="true"
-                            type="button">
-                            @L["Common:ReadMore"]
-                        </button>
-                    }
                 </div>
                 
                 <button 
-                    class="cima-btn cima-btn-primary w-full mt-4 cima-slide-in-bottom @(IsFlipped ? "active" : "")"
-                    style="animation-delay: 0.2s;"
-                    @onclick="NavigateToDetail"
-                    @onclick:stopPropagation="true"
-                    type="button">
-                    @L["Properties:ViewDetails"]
+                    type="button"
+                    class="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 group-hover:bg-navy-700"
+                    @onclick:stopPropagation="true">
+                    <span>Ver detalles</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -167,56 +109,15 @@
     [Parameter]
     public EventCallback<Guid> OnCardFlipped { get; set; }
 
-    private bool IsFlipped { get; set; }
-    private bool IsExpanded { get; set; }
-    private bool InfoIconHovered { get; set; }
-    private bool IsFlipping { get; set; }
-
-    private async Task ToggleFlip()
-    {
-        IsFlipping = true;
-        IsFlipped = !IsFlipped;
-        IsExpanded = false; // Reset al voltear
-        
-        if (IsFlipped && OnCardFlipped.HasDelegate)
-        {
-            await OnCardFlipped.InvokeAsync(Listing.Id);
-        }
-
-        // Reset del ripple después de la animación
-        await Task.Delay(600);
-        IsFlipping = false;
-        StateHasChanged();
-    }
-
-    private void ExpandDescription()
-    {
-        IsExpanded = true;
-    }
-
-    private void HandleCardClick()
-    {
-        if (!IsFlipped)
-        {
-            NavigateToDetail();
-        }
-    }
-
     private void NavigateToDetail()
     {
         Navigation.NavigateTo($"/properties/{Listing.Id}");
     }
 
-    // Método público para cerrar desde el componente padre
+    // Compatibility method for legacy code
     public void Close()
     {
-        if (IsFlipped)
-        {
-            IsFlipped = false;
-            IsExpanded = false;
-            InfoIconHovered = false;
-            IsFlipping = false;
-            StateHasChanged();
-        }
+        // No-op in new design
+        StateHasChanged();
     }
 }
