@@ -115,7 +115,9 @@ public class cimaBlazorClientModule : AbpModule
 
     private static void ConfigureAuthentication(WebAssemblyHostBuilder builder)
     {
-        builder.Services.AddBlazorWebAppServices();
+        // Blazor Web App usa autenticación del lado del servidor
+        // No se requiere configuración adicional en el cliente WebAssembly
+        // La autenticación fluye desde el servidor a través del circuito de SignalR
     }
     
     private static void ConfigureHttpClient(ServiceConfigurationContext context, IWebAssemblyHostEnvironment environment)
