@@ -178,6 +178,9 @@ public class cimaBlazorModule : AbpModule
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
 
+        // Configurar CascadingAuthenticationState para Blazor Web App
+        context.Services.AddCascadingAuthenticationState();
+
         if (!configuration.GetValue<bool>("App:DisablePII"))
         {
             Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
