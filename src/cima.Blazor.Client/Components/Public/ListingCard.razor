@@ -6,8 +6,9 @@
 @inherits cimaComponentBase
 
 @*
-    Card de propiedad con flip para mostrar descripción
+    Card de propiedad con flip animado para mostrar descripción
     Responsive: vertical en móvil, horizontal en desktop
+    Animaciones mejoradas con feedback visual
 *@
 
 <div class="cima-card-flip-container h-full" @onclick="HandleCardClick">
@@ -27,7 +28,7 @@
                         <img 
                             src="@mainImage.Url" 
                             alt="@mainImage.AltText"
-                            class="w-full h-full object-cover cima-responsive-image"
+                            class="w-full h-full object-cover cima-responsive-image transition-transform duration-300 @(IsFlipped ? "scale-110" : "")"
                             loading="lazy" />
                     }
                     else
@@ -40,15 +41,18 @@
                         </div>
                     }
                     
-                    @* Icono de información (i) *@
+                    @* Icono de información (i) con animación mejorada *@
                     <button 
-                        class="cima-info-icon absolute top-3 right-3"
+                        class="cima-info-icon absolute top-3 right-3 @(InfoIconHovered ? "cima-info-icon-hover" : "")"
                         @onclick="ToggleFlip"
                         @onclick:stopPropagation="true"
+                        @onmouseenter="() => InfoIconHovered = true"
+                        @onmouseleave="() => InfoIconHovered = false"
                         aria-label="@L["Properties:ViewDescription"]"
                         title="@L["Properties:ViewDescription"]"
                         type="button">
-                        i
+                        <span class="cima-info-icon-text">i</span>
+                        <span class="cima-info-icon-ripple @(IsFlipping ? "active" : "")"></span>
                     </button>
                     
                     @* Badge de estado (si es destacada o portfolio) *@
@@ -105,26 +109,28 @@
             </div>
         </div>
         
-        @* REVERSO: Descripción *@
-        <div class="cima-card-flip-back cima-card bg-navy-50">
+        @* REVERSO: Descripción con animaciones *@
+        <div class="cima-card-flip-back cima-card bg-gradient-to-br from-navy-50 to-navy-100/50">
             <div class="p-5 h-full flex flex-col">
                 <div class="flex justify-between items-start mb-4">
-                    <h4 class="text-lg font-semibold text-navy-900">
+                    <h4 class="text-lg font-semibold text-navy-900 cima-slide-in-left @(IsFlipped ? "active" : "")">
                         @L["PropertyDetail:Description"]
                     </h4>
                     
                     <button 
-                        class="cima-info-icon bg-navy-500"
+                        class="cima-info-icon bg-navy-500 cima-slide-in-right @(IsFlipped ? "active" : "")"
                         @onclick="ToggleFlip"
                         @onclick:stopPropagation="true"
                         aria-label="@L["Common:Close"]"
                         title="@L["Common:Close"]"
                         type="button">
-                        ?
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto">
+                <div class="flex-1 overflow-y-auto cima-fade-in @(IsFlipped ? "active" : "")" style="animation-delay: 0.1s;">
                     <div class="@(IsExpanded ? "" : "cima-truncate-3") text-sm text-neutral-700 leading-relaxed">
                         @Listing.Description
                     </div>
@@ -132,17 +138,18 @@
                     @if (!string.IsNullOrEmpty(Listing.Description) && Listing.Description.Length > 150 && !IsExpanded)
                     {
                         <button 
-                            class="text-navy-600 hover:text-navy-700 text-sm font-medium mt-2"
+                            class="text-navy-600 hover:text-navy-700 text-sm font-medium mt-2 hover:underline transition-all"
                             @onclick="ExpandDescription"
                             @onclick:stopPropagation="true"
                             type="button">
-                            ...
+                            @L["Common:ReadMore"]
                         </button>
                     }
                 </div>
                 
                 <button 
-                    class="cima-btn cima-btn-primary w-full mt-4"
+                    class="cima-btn cima-btn-primary w-full mt-4 cima-slide-in-bottom @(IsFlipped ? "active" : "")"
+                    style="animation-delay: 0.2s;"
                     @onclick="NavigateToDetail"
                     @onclick:stopPropagation="true"
                     type="button">
@@ -162,9 +169,12 @@
 
     private bool IsFlipped { get; set; }
     private bool IsExpanded { get; set; }
+    private bool InfoIconHovered { get; set; }
+    private bool IsFlipping { get; set; }
 
     private async Task ToggleFlip()
     {
+        IsFlipping = true;
         IsFlipped = !IsFlipped;
         IsExpanded = false; // Reset al voltear
         
@@ -172,6 +182,11 @@
         {
             await OnCardFlipped.InvokeAsync(Listing.Id);
         }
+
+        // Reset del ripple después de la animación
+        await Task.Delay(600);
+        IsFlipping = false;
+        StateHasChanged();
     }
 
     private void ExpandDescription()
@@ -199,6 +214,8 @@
         {
             IsFlipped = false;
             IsExpanded = false;
+            InfoIconHovered = false;
+            IsFlipping = false;
             StateHasChanged();
         }
     }

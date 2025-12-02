@@ -146,7 +146,7 @@
 
     .cima-card-flip {
         @apply relative w-full h-full;
-        transition: transform 0.6s;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         transform-style: preserve-3d;
     }
 
@@ -170,12 +170,79 @@
         @apply w-8 h-8 flex items-center justify-center;
         @apply bg-neutral-400/80 text-white rounded-full;
         @apply text-sm font-semibold cursor-pointer;
-        @apply transition-all duration-200;
-        @apply hover:bg-navy-500 hover:scale-110;
+        @apply transition-all duration-300 ease-out;
+        @apply hover:bg-navy-500 hover:scale-110 hover:shadow-lg;
         @apply focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
-        /* Área de clic expandida */
-        @apply relative;
-        padding: 0.75rem; /* Área de interacción más amplia */
+        @apply relative overflow-hidden;
+        padding: 0.75rem;
+    }
+
+    .cima-info-icon-text {
+        @apply relative z-10 transition-transform duration-300;
+    }
+
+    .cima-info-icon:hover .cima-info-icon-text {
+        @apply scale-110;
+    }
+
+    .cima-info-icon-hover {
+        @apply bg-navy-500 shadow-lg;
+    }
+
+    /* Efecto ripple en el icono de información */
+    .cima-info-icon-ripple {
+        @apply absolute inset-0 rounded-full;
+        @apply bg-white/30;
+        @apply scale-0 opacity-0;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s;
+    }
+
+    .cima-info-icon-ripple.active {
+        @apply scale-150 opacity-0;
+        animation: ripple-effect 0.6s ease-out;
+    }
+
+    /* === ANIMACIONES DE CONTENIDO === */
+    .cima-slide-in-left {
+        @apply opacity-0;
+        transform: translateX(-20px);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+
+    .cima-slide-in-left.active {
+        @apply opacity-100;
+        transform: translateX(0);
+    }
+
+    .cima-slide-in-right {
+        @apply opacity-0;
+        transform: translateX(20px);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+
+    .cima-slide-in-right.active {
+        @apply opacity-100;
+        transform: translateX(0);
+    }
+
+    .cima-slide-in-bottom {
+        @apply opacity-0;
+        transform: translateY(20px);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+
+    .cima-slide-in-bottom.active {
+        @apply opacity-100;
+        transform: translateY(0);
+    }
+
+    .cima-fade-in {
+        @apply opacity-0;
+        transition: opacity 0.4s ease-out;
+    }
+
+    .cima-fade-in.active {
+        @apply opacity-100;
     }
 
     /* === FORMS === */
@@ -293,10 +360,21 @@
     }
 }
 
-/* === ANIMACIONES DE CARGA CAD === */
+/* === ANIMACIONES KEYFRAMES === */
 @keyframes draw-line {
     to {
         stroke-dashoffset: 0;
+    }
+}
+
+@keyframes ripple-effect {
+    0% {
+        transform: scale(0);
+        opacity: 0.6;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
     }
 }
 

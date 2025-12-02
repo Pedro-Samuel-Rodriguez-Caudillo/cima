@@ -164,6 +164,7 @@
     "Common:UpdatedAt": "Última actualización",
     "Common:Active": "Activo",
     "Common:Retry": "Reintentar",
+    "Common:ReadMore": "Leer más",
     
     "Validation:Required": "Este campo es requerido",
     "Validation:Email": "Ingresa un correo electrónico válido",
