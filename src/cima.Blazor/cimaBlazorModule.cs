@@ -105,6 +105,16 @@ public class cimaBlazorModule : AbpModule
             });
         });
 
+        PreConfigure<OpenIddictServerBuilder>(builder =>
+        {
+            builder
+                .AllowAuthorizationCodeFlow()
+                .RequireProofKeyForCodeExchange()
+                .AllowRefreshTokenFlow();
+        });
+
+
+
         if (hostingEnvironment.IsProduction())
         {
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
@@ -316,7 +326,7 @@ public class cimaBlazorModule : AbpModule
     {
         Configure<AbpNavigationOptions>(options =>
         {
-            options.MenuContributors.Add(new cimaMenuContributor(context.Services.GetConfiguration()));
+            options.MenuContributors.Add(new Navigation.cimaMenuContributor(context.Services.GetConfiguration()));
         });
     }
 

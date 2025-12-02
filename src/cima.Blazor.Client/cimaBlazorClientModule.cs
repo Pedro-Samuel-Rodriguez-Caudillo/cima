@@ -1,65 +1,31 @@
 ﻿using System;
 using System.Net.Http;
-using System.Globalization;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using cima.Blazor.Client.Navigation;
 using cima.Blazor.Client.Services;
 using cima.Localization;
-using OpenIddict.Abstractions;
-using Volo.Abp.AspNetCore.Components.Web;
-using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.Autofac.WebAssembly;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
-using Volo.Abp.UI.Navigation;
-using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
-using Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Bundling;
-using Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme;
-using Volo.Abp.SettingManagement.Blazor.WebAssembly;
-using Volo.Abp.FeatureManagement.Blazor.WebAssembly;
-using Volo.Abp.TenantManagement.Blazor.WebAssembly;
-using Volo.Abp.Identity.Blazor.WebAssembly;
-
 
 namespace cima.Blazor.Client;
 
 [DependsOn(
-    typeof(AbpSettingManagementBlazorWebAssemblyModule),
-    typeof(AbpFeatureManagementBlazorWebAssemblyModule),
-    typeof(AbpIdentityBlazorWebAssemblyModule),
-    typeof(AbpTenantManagementBlazorWebAssemblyModule),
-    typeof(AbpAspNetCoreComponentsWebAssemblyBasicThemeModule),
     typeof(AbpAutofacWebAssemblyModule),
     typeof(cimaHttpApiClientModule)
 )]
 public class cimaBlazorClientModule : AbpModule
 {
-    public override void PreConfigureServices(ServiceConfigurationContext context)
-    {
-        PreConfigure<AbpAspNetCoreComponentsWebOptions>(options =>
-        {
-            options.IsBlazorWebApp = true;
-        });
-    }
-    
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
         var environment = context.Services.GetSingletonInstance<IWebAssemblyHostEnvironment>();
-        var builder = context.Services.GetSingletonInstance<WebAssemblyHostBuilder>();
 
-        ConfigureAuthentication(builder);
         ConfigureHttpClient(context, environment);
         ConfigureBlazorise(context);
-        ConfigureRouter(context);
-        ConfigureMenu(context);
         ConfigureAutoMapper(context);
         ConfigureLocalization();
         ConfigureApplicationServices(context);
@@ -67,7 +33,6 @@ public class cimaBlazorClientModule : AbpModule
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)
     {
-        // Registrar EnumLocalizationService
         context.Services.AddTransient<EnumLocalizationService>();
     }
 
@@ -84,23 +49,6 @@ public class cimaBlazorClientModule : AbpModule
         });
     }
 
-    private void ConfigureRouter(ServiceConfigurationContext context)
-    {
-        Configure<AbpRouterOptions>(options =>
-        {
-            options.AppAssembly = typeof(cimaBlazorClientModule).Assembly;
-            options.AdditionalAssemblies.Add(typeof(cimaBlazorClientModule).Assembly);
-        });
-    }
-
-    private void ConfigureMenu(ServiceConfigurationContext context)
-    {
-        Configure<AbpNavigationOptions>(options =>
-        {
-            options.MenuContributors.Add(new cimaMenuContributor(context.Services.GetConfiguration()));
-        });
-    }
-
     private void ConfigureBlazorise(ServiceConfigurationContext context)
     {
         context.Services
@@ -111,13 +59,6 @@ public class cimaBlazorClientModule : AbpModule
             })
             .AddBootstrap5Providers()
             .AddFontAwesomeIcons();
-    }
-
-    private static void ConfigureAuthentication(WebAssemblyHostBuilder builder)
-    {
-        // Blazor Web App usa autenticación del lado del servidor
-        // No se requiere configuración adicional en el cliente WebAssembly
-        // La autenticación fluye desde el servidor a través del circuito de SignalR
     }
     
     private static void ConfigureHttpClient(ServiceConfigurationContext context, IWebAssemblyHostEnvironment environment)
