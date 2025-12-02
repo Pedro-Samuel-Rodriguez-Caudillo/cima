@@ -9,7 +9,7 @@
 
 <div class="language-selector">
     <button @onclick="ToggleDropdown" 
-            class="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-gray-100">
+            class="@ButtonClass">
         <i class="fas fa-globe"></i>
         <span class="hidden md:inline">@GetCurrentLanguageName()</span>
         <i class="fas fa-chevron-down text-xs"></i>
@@ -22,7 +22,7 @@
                 <button @onclick="@(() => ChangeLanguage("es"))"
                         class="@GetLanguageClass("es")">
                     <span class="flag-icon flag-icon-es mr-2"></span>
-                    Espa�ol
+                    Español
                     @if (IsCurrentLanguage("es"))
                     {
                         <i class="fas fa-check ml-auto text-blue-600"></i>
@@ -44,21 +44,16 @@
 </div>
 
 @code {
+    [Parameter]
+    public string ButtonClass { get; set; } = "flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 transition-colors rounded-lg hover:bg-gray-100";
+
     private bool showDropdown = false;
     private string currentCulture = "es";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        // Obtener cultura actual desde localStorage o sistema
-        try
-        {
-            var storedCulture = await JS.InvokeAsync<string>("localStorage.getItem", "selectedCulture");
-            currentCulture = string.IsNullOrEmpty(storedCulture) ? "es" : storedCulture;
-        }
-        catch
-        {
-            currentCulture = "es";
-        }
+        // Obtener la cultura actual del sistema de ABP
+        currentCulture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
     }
 
     private void ToggleDropdown()
@@ -66,7 +61,7 @@
         showDropdown = !showDropdown;
     }
 
-    private async Task ChangeLanguage(string cultureName)
+    private void ChangeLanguage(string cultureName)
     {
         if (currentCulture == cultureName)
         {
@@ -74,28 +69,16 @@
             return;
         }
 
-        currentCulture = cultureName;
-        showDropdown = false;
-
-        // Guardar preferencia en localStorage
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", "selectedCulture", cultureName);
-        }
-        catch
-        {
-            // Ignorar si falla
-        }
-
-        // Recargar la p�gina con la nueva cultura
-        var uri = new Uri(Navigation.Uri)
-            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-        var cultureEscaped = Uri.EscapeDataString(cultureName);
-        var uriEscaped = Uri.EscapeDataString(uri);
-
-        Navigation.NavigateTo(
-            $"Culture/SetCulture?culture={cultureEscaped}&redirectUri={uriEscaped}",
-            forceLoad: true);
+        // Cambiar cultura usando el mecanismo de ABP
+        // ABP espera el parámetro 'culture' en la URL para cambiar la cultura
+        var uri = new Uri(Navigation.Uri);
+        var currentUrl = uri.PathAndQuery;
+        
+        // Construir nueva URL con parámetro culture
+        var newUrl = Navigation.GetUriWithQueryParameter("culture", cultureName);
+        
+        // Navegar a la nueva URL - esto recargará la página con la nueva cultura
+        Navigation.NavigateTo(newUrl, forceLoad: true);
     }
 
     private bool IsCurrentLanguage(string cultureName)
@@ -107,9 +90,9 @@
     {
         return currentCulture.ToLower() switch
         {
-            "es" => "Espa�ol",
+            "es" => "Español",
             "en" => "English",
-            _ => "Espa�ol"
+            _ => "Español"
         };
     }
 
@@ -134,7 +117,7 @@
         display: inline-block;
     }
 
-    /* Flag icons - puedes agregar una librer�a de flags o usar emojis */
+    /* Flag icons - emojis para banderas */
     .flag-icon {
         width: 20px;
         height: 15px;
@@ -143,10 +126,10 @@
     }
 
     .flag-icon-es::before {
-        content: "????";
+        content: "🇪🇸";
     }
 
     .flag-icon-us::before {
-        content: "????";
+        content: "🇺🇸";
     }
 </style>
