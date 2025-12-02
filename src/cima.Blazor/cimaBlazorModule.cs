@@ -5,6 +5,7 @@ using cima.Blazor.Client;
 using cima.Blazor.Client.Navigation;
 using cima.Blazor.Components;
 using cima.Blazor.HealthChecks;
+using cima.Blazor.Services;
 using cima.Data;
 using cima.EntityFrameworkCore;
 using cima.Localization;
@@ -104,6 +105,16 @@ public class cimaBlazorModule : AbpModule
             });
         });
 
+        PreConfigure<OpenIddictServerBuilder>(builder =>
+        {
+            builder
+                .AllowAuthorizationCodeFlow()
+                .RequireProofKeyForCodeExchange()
+                .AllowRefreshTokenFlow();
+        });
+
+
+
         if (hostingEnvironment.IsProduction())
         {
             PreConfigure<AbpOpenIddictAspNetCoreOptions>(options =>
@@ -194,6 +205,12 @@ public class cimaBlazorModule : AbpModule
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
         ConfigureApplicationServices(context);
+        
+        // Registrar el HostedService para seeding en Development
+        if (hostingEnvironment.IsDevelopment())
+        {
+            context.Services.AddHostedService<DevelopmentDataSeedingService>();
+        }
     }
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)
@@ -309,7 +326,7 @@ public class cimaBlazorModule : AbpModule
     {
         Configure<AbpNavigationOptions>(options =>
         {
-            options.MenuContributors.Add(new cimaMenuContributor(context.Services.GetConfiguration()));
+            options.MenuContributors.Add(new Navigation.cimaMenuContributor(context.Services.GetConfiguration()));
         });
     }
 
@@ -398,8 +415,13 @@ public class cimaBlazorModule : AbpModule
         var env = context.GetEnvironment();
         var app = context.GetApplicationBuilder();
         
-        // EJECUTAR MIGRACIONES (BLOQUEA HASTA COMPLETAR)
-        ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
+        // EJECUTAR MIGRACIONES SOLO EN STAGING/PRODUCTION
+        // En Development, el seeding se ejecuta a través de DevelopmentDataSeedingService
+        if (env.IsStaging() || env.IsProduction())
+        {
+            // En staging/production: ejecutar migraciones y seeding (BLOQUEA HASTA COMPLETAR)
+            ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
+        }
         
         app.Use(async (ctx, next) =>
         {

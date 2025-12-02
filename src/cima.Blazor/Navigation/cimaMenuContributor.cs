@@ -4,16 +4,12 @@ using Microsoft.Extensions.Configuration;
 using cima.Localization;
 using cima.Permissions;
 using cima.MultiTenancy;
+using cima.Blazor.Client.Navigation;
 using Volo.Abp.Account.Localization;
 using Volo.Abp.UI.Navigation;
-using Localization.Resources.AbpUi;
 using Volo.Abp.Authorization.Permissions;
-using Volo.Abp.SettingManagement.Blazor.Menus;
-using Volo.Abp.Users;
-using Volo.Abp.TenantManagement.Blazor.Navigation;
-using Volo.Abp.Identity.Blazor;
 
-namespace cima.Blazor.Client.Navigation;
+namespace cima.Blazor.Navigation;
 
 public class cimaMenuContributor : IMenuContributor
 {
@@ -87,21 +83,11 @@ public class cimaMenuContributor : IMenuContributor
             requiredPermissionName: cimaPermissions.ContactRequests.Default
         ));
         
-        // Administration menu
+        // Administration menu - configuración básica
+        // NOTA: En Blazor Web App, los menús de Identity, TenantManagement, Settings
+        // se configuran automáticamente en el servidor (cimaBlazorModule)
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
-
-        if (MultiTenancyConsts.IsEnabled)
-        {
-            administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
-        }
-        else
-        {
-            administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
-        }
-
-        administration.SetSubItemOrder(IdentityMenuNames.GroupName, 2);
-        administration.SetSubItemOrder(SettingManagementMenus.GroupName, 3);
 
         return Task.CompletedTask;
     }

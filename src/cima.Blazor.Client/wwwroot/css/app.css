@@ -1,4 +1,41 @@
-/* Archivo CSS base para ABP Framework y estilos legacy */
-/* El sistema principal de diseño Tailwind está en main.css -> app.min.css */
+ï»¿@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Mantener solo estilos críticos de ABP si son necesarios */
+/* Custom Base Styles */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply font-sans text-neutral-900 antialiased bg-white;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-display tracking-tight;
+    }
+}
+
+/* Animations */
+@layer utilities {
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+    }
+}

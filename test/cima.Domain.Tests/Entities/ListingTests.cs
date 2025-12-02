@@ -70,21 +70,24 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
         var description = "Hermosa casa con jardín";
         var location = "Guadalajara, Jalisco";
         var price = 2500000m;
-        var area = 150m;
+        var landArea = 250m;
+        var constructionArea = 150m;
 
         // Act
         listing.Title = title;
         listing.Description = description;
         listing.Location = location;
         listing.Price = price;
-        listing.Area = area;
+        listing.LandArea = landArea;
+        listing.ConstructionArea = constructionArea;
 
         // Assert
         listing.Title.ShouldBe(title);
         listing.Description.ShouldBe(description);
         listing.Location.ShouldBe(location);
         listing.Price.ShouldBe(price);
-        listing.Area.ShouldBe(area);
+        listing.LandArea.ShouldBe(landArea);
+        listing.ConstructionArea.ShouldBe(constructionArea);
     }
 
     [Fact]
@@ -245,19 +248,21 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     }
 
     [Theory]
-    [InlineData(50)]
-    [InlineData(120)]
-    [InlineData(300)]
-    public void Should_Store_Different_Areas(decimal area)
+    [InlineData(50, 30)]
+    [InlineData(120, 90)]
+    [InlineData(300, 240)]
+    public void Should_Store_Different_Areas(decimal landArea, decimal constructionArea)
     {
         // Arrange
         var listing = CreateTestListing();
 
         // Act
-        listing.Area = area;
+        listing.LandArea = landArea;
+        listing.ConstructionArea = constructionArea;
 
         // Assert
-        listing.Area.ShouldBe(area);
+        listing.LandArea.ShouldBe(landArea);
+        listing.ConstructionArea.ShouldBe(constructionArea);
     }
 
     [Fact]

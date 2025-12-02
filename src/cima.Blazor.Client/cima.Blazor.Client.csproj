@@ -17,18 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Paquetes ABP para Blazor Web App (modo híbrido) - MÍNIMOS NECESARIOS -->
     <PackageReference Include="Volo.Abp.Autofac.WebAssembly" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.SettingManagement.Blazor.WebAssembly" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.FeatureManagement.Blazor.WebAssembly" Version="9.3.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme" Version="9.3.6" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Volo.Abp.Identity.Blazor.WebAssembly" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.TenantManagement.Blazor.WebAssembly" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.AutoMapper" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Components.Web" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.BlazoriseUI" Version="9.3.6" />
+    
+    <!-- NOTA: Los componentes de ABP usan AbpComponentBase que viene de Volo.Abp.AspNetCore.Components.Web -->
   </ItemGroup>
 
   <ItemGroup>

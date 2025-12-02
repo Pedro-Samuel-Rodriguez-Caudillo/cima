@@ -7,84 +7,69 @@
 
 @inherits cimaComponentBase
 
-<section class="relative bg-gradient-to-br from-navy-700 via-navy-600 to-navy-500 text-white overflow-hidden">
-    @* Patrón decorativo de fondo *@
-    <div class="absolute inset-0 opacity-10">
-        <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+@* Hero a PANTALLA COMPLETA (100vh) *@
+<section class="relative w-full h-screen overflow-hidden">
+    @* Fondo con gradiente y pattern *@
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700">
+        @* SVG pattern decorativo *@
+        <svg class="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                <pattern id="grid-pattern" width="60" height="60" patternUnits="userSpaceOnUse">
+                    <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" stroke-width="0.5"/>
                 </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#hero-grid)" />
+            <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+        </svg>
+        
+        @* Icono decorativo grande *@
+        <svg class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] md:w-[700px] md:h-[700px] text-navy-600 opacity-10" 
+             fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/>
         </svg>
     </div>
 
-    <div class="cima-container relative z-10 py-20 md:py-32">
-        <div class="max-w-4xl mx-auto text-center">
-            @* Título principal *@
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 cima-text-balance">
-                @Localizer["Hero:Title"]
-            </h1>
-            
-            <p class="text-lg md:text-xl text-navy-100 mb-12 max-w-2xl mx-auto">
-                @Localizer["Hero:Subtitle"]
-            </p>
+    @* Overlay oscuro para mejor legibilidad *@
+    <div class="absolute inset-0 bg-black/30"></div>
 
-            @* Card de búsqueda sin sombra *@
-            <div class="bg-white rounded-xl p-6 md:p-8 max-w-2xl mx-auto">
-                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
-                        <label for="hero-search" class="sr-only">@Localizer["Hero:SearchPlaceholder"]</label>
-                        <input
-                            id="hero-search"
-                            type="search"
-                            class="cima-input"
-                            placeholder="@Localizer["Hero:SearchPlaceholder"]"
-                            @bind="SearchTerm"
-                            @bind:event="oninput"
-                            aria-label="@Localizer["Hero:SearchPlaceholder"]" />
-                    </div>
-                    
-                    <button 
-                        type="submit" 
-                        class="cima-btn cima-btn-primary md:px-8">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        @Localizer["Hero:SearchButton"]
-                    </button>
-                </form>
-
-                @* Quick stats o información adicional *@
-                <div class="mt-6 pt-6 border-t border-neutral-200 grid grid-cols-3 gap-4 text-center text-sm">
-                    <div>
-                        <div class="font-semibold text-navy-600 text-lg">500+</div>
-                        <div class="text-neutral-600">@Localizer["Properties:Title"]</div>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-navy-600 text-lg">50+</div>
-                        <div class="text-neutral-600">@Localizer["Menu:Architects"]</div>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-navy-600 text-lg">1000+</div>
-                        <div class="text-neutral-600">@Localizer["Portfolio:CompletedProjects"]</div>
-                    </div>
-                </div>
+    @* Contenido centrado *@
+    <div class="relative h-full flex flex-col items-center justify-center px-4 z-10">
+        <div class="text-center max-w-5xl mx-auto">
+            @* Logo/Marca principal *@
+            <div class="mb-8 animate-fade-in">
+                <h1 class="text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-[0.25em] uppercase mb-6 text-white drop-shadow-2xl">
+                    4cima
+                </h1>
+                <p class="text-sm md:text-base lg:text-lg tracking-[0.3em] uppercase text-white/90 font-light">
+                    Arquitectura &bull; DiseÃ±o &bull; Exclusividad
+                </p>
             </div>
 
-            @* Indicador de scroll *@
-            <button 
-                @onclick="ScrollToProperties"
-                class="mt-12 inline-flex flex-col items-center text-white/80 hover:text-white transition-colors group"
-                aria-label="@Localizer["Hero:ScrollToProperties"]">
-                <span class="text-sm mb-2">@Localizer["Hero:ScrollToProperties"]</span>
-                <svg class="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-            </button>
+            @* DescripciÃ³n opcional *@
+            <p class="text-lg md:text-xl text-white/80 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+                Proyectos arquitectÃ³nicos que trascienden el tiempo
+            </p>
+
+            @* CTA Buttons *@
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="/properties" 
+                   class="px-8 py-4 bg-white text-navy-900 rounded-xl font-semibold hover:bg-neutral-100 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 min-w-[200px]">
+                    Ver Propiedades
+                </a>
+                <a href="/portfolio" 
+                   class="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-semibold hover:bg-white hover:text-navy-900 transition-all duration-300 min-w-[200px]">
+                    Portafolio
+                </a>
+            </div>
         </div>
+
+        @* Indicador de scroll *@
+        <button @onclick="ScrollToFeatured" 
+                class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 hover:text-white transition-all duration-300 group animate-bounce">
+            <span class="text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Descubrir</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+            </svg>
+        </button>
     </div>
 </section>
 
@@ -92,34 +77,23 @@
     [Parameter]
     public EventCallback<string> OnSearch { get; set; }
 
-    private string SearchTerm { get; set; } = string.Empty;
-
-    private async Task HandleSubmit()
-    {
-        if (!string.IsNullOrWhiteSpace(SearchTerm) && OnSearch.HasDelegate)
-        {
-            await OnSearch.InvokeAsync(SearchTerm.Trim());
-        }
-    }
-
-    private async Task ScrollToProperties()
+    private async Task ScrollToFeatured()
     {
         try
         {
-            // Scroll suave a la sección de propiedades destacadas usando el ID
             await JS.InvokeVoidAsync("eval", @"
                 const featuredSection = document.getElementById('featured-properties');
                 if (featuredSection) {
-                    featuredSection.scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'start' 
+                    featuredSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
                     });
                 }
             ");
         }
-        catch (Exception)
+        catch
         {
-            // Fallback silencioso si falla el scroll
+            // Silenciar error si falla
         }
     }
 }

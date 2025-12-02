@@ -274,7 +274,7 @@
             _currentFlippedCardId != listingId && 
             _cardRefs.TryGetValue(_currentFlippedCardId.Value, out var prevCard))
         {
-            prevCard.Close();
+            prevCard?.Close();
         }
 
         _currentFlippedCardId = listingId;

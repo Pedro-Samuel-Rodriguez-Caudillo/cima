@@ -162,6 +162,9 @@
     "Common:Status": "Status",
     "Common:CreatedAt": "Created at",
     "Common:UpdatedAt": "Last updated",
+    "Common:Active": "Active",
+    "Common:Retry": "Retry",
+    "Common:ReadMore": "Read more",
     
     "Validation:Required": "This field is required",
     "Validation:Email": "Enter a valid email address",
@@ -221,9 +224,6 @@
     "Dashboard:DatabaseConnection": "Database Connection",
     "Dashboard:ApiStatus": "API Status",
     "Dashboard:LastUpdate": "Last update",
-    "Dashboard:ErrorLoading": "Error loading statistics",
-    
-    "Common:Active": "Active",
-    "Common:Retry": "Retry"
+    "Dashboard:ErrorLoading": "Error loading statistics"
   }
 }

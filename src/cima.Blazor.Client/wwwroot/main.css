@@ -1,6 +1,6 @@
 /* 
- * CIMA - Sistema de Diseño Base
- * Minimalismo Suizo + Azul Oscuro Corporativo
+ * CIMA - Sistema de Diseño Corporativo
+ * Paleta azul oscuro tendiendo a negro, sin degradados
  */
 
 @tailwind base;
@@ -9,19 +9,16 @@
 
 /* === LAYER BASE === */
 @layer base {
-    /* Tipografía base */
     html {
         @apply scroll-smooth;
     }
 
     body {
-        @apply font-sans text-neutral-900 antialiased;
-        @apply bg-white;
+        @apply font-sans text-neutral-900 antialiased bg-white;
     }
 
-    /* Headings con familia display */
     h1, h2, h3, h4, h5, h6 {
-        @apply font-display font-semibold text-neutral-900;
+        @apply font-display font-semibold text-navy-900;
     }
 
     h1 { @apply text-4xl lg:text-5xl; }
@@ -31,12 +28,10 @@
     h5 { @apply text-lg lg:text-xl; }
     h6 { @apply text-base lg:text-lg; }
 
-    /* Foco global accesible */
     *:focus-visible {
         @apply outline-2 outline-offset-2 outline-navy-500;
     }
 
-    /* Inputs base */
     input[type="text"],
     input[type="email"],
     input[type="tel"],
@@ -50,28 +45,46 @@
 
 /* === LAYER COMPONENTS === */
 @layer components {
+    /* === NAVBAR TRANSPARENTE CON SCROLL === */
+    .navbar-transparent {
+        @apply fixed top-0 left-0 right-0 z-50 transition-all duration-300;
+        @apply bg-transparent;
+    }
+
+    .navbar-transparent.scrolled {
+        @apply bg-navy-900 shadow-lg;
+    }
+
+    .navbar-transparent .nav-link {
+        @apply text-white/90 hover:text-white transition-colors;
+    }
+
+    .navbar-transparent.scrolled .nav-link {
+        @apply text-white/95 hover:text-white;
+    }
+
     /* === UTILIDADES DE TEXTO === */
     .cima-text-balance {
         text-wrap: balance;
     }
 
-    .cima-truncate-2 {
+    .line-clamp-2 {
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
     }
 
-    .cima-truncate-3 {
+    .line-clamp-3 {
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 3;
         overflow: hidden;
     }
 
-    /* === OVERLAYS Y GRADIENTES === */
+    /* === OVERLAYS - SIN DEGRADADOS === */
     .cima-overlay {
-        @apply absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-neutral-900/40 to-transparent;
+        @apply absolute inset-0 bg-navy-950/60;
     }
 
     .cima-overlay-hover {
@@ -95,7 +108,7 @@
         @apply w-full aspect-video bg-neutral-200 rounded-lg animate-pulse;
     }
 
-    /* === BADGES === */
+    /* === BADGES CORPORATIVOS === */
     .cima-badge {
         @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
     }
@@ -105,15 +118,15 @@
     }
 
     .cima-badge-success {
-        @apply bg-success-light text-success-dark;
+        @apply bg-green-100 text-green-800;
     }
 
     .cima-badge-warning {
-        @apply bg-warning-light text-warning-dark;
+        @apply bg-yellow-100 text-yellow-800;
     }
 
     .cima-badge-danger {
-        @apply bg-danger-light text-danger-dark;
+        @apply bg-red-100 text-red-800;
     }
 
     /* === DIVIDERS === */
@@ -128,54 +141,6 @@
     /* === ESTADOS DE CARGA === */
     .cima-loading-spinner {
         @apply inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin;
-    }
-
-    /* === CARDS ESPECIALIZADAS === */
-    .cima-card-interactive {
-        @apply cima-card cursor-pointer;
-        @apply transition-all duration-300 ease-smooth;
-        @apply hover:shadow-lg hover:-translate-y-1;
-        @apply focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
-    }
-
-    /* Card con flip 3D */
-    .cima-card-flip-container {
-        perspective: 1000px;
-        @apply relative;
-    }
-
-    .cima-card-flip {
-        @apply relative w-full h-full;
-        transition: transform 0.6s;
-        transform-style: preserve-3d;
-    }
-
-    .cima-card-flip.flipped {
-        transform: rotateY(180deg);
-    }
-
-    .cima-card-flip-front,
-    .cima-card-flip-back {
-        @apply absolute w-full h-full;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-    }
-
-    .cima-card-flip-back {
-        transform: rotateY(180deg);
-    }
-
-    /* === INFO ICON (i) === */
-    .cima-info-icon {
-        @apply w-8 h-8 flex items-center justify-center;
-        @apply bg-neutral-400/80 text-white rounded-full;
-        @apply text-sm font-semibold cursor-pointer;
-        @apply transition-all duration-200;
-        @apply hover:bg-navy-500 hover:scale-110;
-        @apply focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
-        /* Área de clic expandida */
-        @apply relative;
-        padding: 0.75rem; /* Área de interacción más amplia */
     }
 
     /* === FORMS === */
@@ -200,6 +165,16 @@
         @apply mt-1 text-sm text-neutral-500;
     }
 
+    /* === CARDS CORPORATIVAS === */
+    .cima-card {
+        @apply bg-white rounded-xl overflow-hidden transition-all duration-300;
+    }
+
+    .cima-card-interactive {
+        @apply cima-card cursor-pointer hover:shadow-xl hover:-translate-y-1;
+        @apply focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
+    }
+
     /* === TABS === */
     .cima-tabs {
         @apply flex border-b border-neutral-200;
@@ -217,30 +192,13 @@
         @apply text-navy-600 border-navy-500;
     }
 
-    /* === TOAST DE ENTORNO === */
-    .cima-env-toast {
-        @apply fixed bottom-4 right-4 z-50;
-        @apply px-4 py-2 rounded-lg shadow-lg;
-        @apply text-sm font-medium;
-        @apply pointer-events-none;
-    }
-
-    .cima-env-toast-develop {
-        @apply bg-warning text-warning-dark;
-    }
-
-    .cima-env-toast-staging {
-        @apply bg-info text-white;
-    }
-
     /* === LAZY LOAD IMAGES === */
     .cima-image-lazy {
-        @apply transition-opacity duration-300;
-        opacity: 0;
+        @apply transition-opacity duration-300 opacity-0;
     }
 
     .cima-image-lazy.loaded {
-        opacity: 1;
+        @apply opacity-100;
     }
 
     /* === RESPONSIVE IMAGES === */
@@ -248,101 +206,73 @@
         @apply w-full h-auto object-cover;
     }
 
-    /* === MODO OSCURO (tokens preparados) === */
-    .dark {
-        .cima-card {
-            @apply bg-neutral-800 text-neutral-100;
-        }
+    /* === SECCIONES === */
+    .cima-section {
+        @apply w-full py-16 md:py-20;
+    }
 
-        .cima-input {
-            @apply bg-neutral-800 text-neutral-100 border-neutral-700;
-        }
+    .cima-section-alt {
+        @apply bg-neutral-50;
+    }
 
-        .cima-btn-secondary {
-            @apply bg-neutral-800 text-neutral-100;
-        }
-
-        .cima-section-alt {
-            @apply bg-neutral-900;
-        }
-
-        .cima-overlay {
-            @apply from-neutral-900/90 via-neutral-900/60;
-        }
+    .cima-container {
+        @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
     }
 }
 
 /* === LAYER UTILITIES === */
 @layer utilities {
-    /* Animaciones específicas */
-    .animate-draw {
-        stroke-dasharray: 1000;
-        stroke-dashoffset: 1000;
-        animation: draw-line 2s ease-out forwards;
-    }
-
     /* Aspect ratios personalizados */
     .aspect-listing-card {
-        aspect-ratio: 16 / 10;
+        aspect-ratio: 4 / 3;
     }
 
-    /* Backdrop blur personalizado */
+    /* Backdrop blur */
     .backdrop-blur-sm-safari {
         -webkit-backdrop-filter: blur(4px);
         backdrop-filter: blur(4px);
     }
 }
 
-/* === ANIMACIONES DE CARGA CAD === */
-@keyframes draw-line {
-    to {
-        stroke-dashoffset: 0;
+/* === ANIMACIONES KEYFRAMES === */
+@keyframes slide-down {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-down {
+    animation: slide-down 0.3s ease-out;
 }
 
 /* === LOADER PRINCIPAL === */
 .loader {
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 999;
-    background-color: #fafafa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    @apply fixed inset-0 w-screen h-screen z-[999] bg-neutral-50;
+    @apply flex items-center justify-center;
 }
 
 .dark .loader {
-    background-color: #0a0a0a;
+    @apply bg-neutral-950;
 }
 
-/* Ocultar contenedor de app duplicado durante carga */
 #ApplicationContainer > div:first-child:not(:only-child) {
     display: none !important;
 }
 
 /* === BLAZOR ERROR UI === */
 #blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    @apply bg-yellow-100 fixed bottom-0 left-0 w-full z-[1000];
+    @apply px-5 py-3 shadow-lg;
     display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
 }
 
 #blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
+    @apply cursor-pointer absolute right-3 top-2;
 }
 
 /* === PRINT STYLES === */

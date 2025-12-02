@@ -146,7 +146,8 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
             Description = "Test description with enough characters for validation purposes",
             Location = "Test Location City Country",
             Price = 1500000m,
-            Area = 120m,
+            LandArea = 200m,
+            ConstructionArea = 120m,
             Bedrooms = 3,
             Bathrooms = 2,
             Category = PropertyCategory.Residential,
@@ -170,9 +171,10 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
         var architect = new Architect
         {
             UserId = Guid.NewGuid(),
-            Name = "Test Architect",  // ? Name es required
-            Bio = "Test Architect Bio"
-            // PortfolioUrl eliminado
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = DateTime.UtcNow,
+            IsActive = true
         };
 
         await WithUnitOfWorkAsync(async () =>
