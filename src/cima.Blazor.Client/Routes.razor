@@ -1,34 +1,32 @@
-@using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic
-@using Volo.Abp.AspNetCore.Components.Web.Theming.Routing
-@using Microsoft.Extensions.Options
-@inject IOptions<AbpRouterOptions> RouterOptions
-@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
 
-<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="RouterOptions.Value.AdditionalAssemblies">
-    <Found Context="routeData">
-        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
-            <NotAuthorized>
-                <RedirectToLogin />
-            </NotAuthorized>
-        </AuthorizeRouteView>
-    </Found>
-    <NotFound>
-        <PageTitle>P·gina no encontrada</PageTitle>
-        <LayoutView Layout="typeof(MainLayout)">
-            <div class="container mx-auto px-4 py-8">
-                <div class="max-w-md mx-auto text-center">
-                    <h1 class="text-6xl font-bold text-gray-800 mb-4">404</h1>
-                    <h2 class="text-2xl font-semibold text-gray-700 mb-4">P·gina no encontrada</h2>
-                    <p class="text-gray-600 mb-8">La p·gina que buscas no existe o ha sido movida.</p>
-                    <a href="/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
-                        Volver al inicio
-                    </a>
-                    @if (NavigationManager != null)
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
+                <NotAuthorized>
+                    @if (!context.User.Identity?.IsAuthenticated ?? false)
                     {
-                        <p class="mt-4 text-sm text-gray-500">Ruta: @NavigationManager.Uri</p>
+                        <RedirectToLogin />
                     }
+                    else
+                    {
+                        <p role="alert">You are not authorized to access this resource.</p>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>P√°gina no encontrada</PageTitle>
+            <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
+                <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                    <h1 class="text-6xl font-display font-bold text-navy-900 mb-4">404</h1>
+                    <p class="text-xl text-neutral-600 mb-8">Lo sentimos, la p√°gina que buscas no existe.</p>
+                    <a href="/" class="cima-btn cima-btn-primary">Volver al inicio</a>
                 </div>
-            </div>
-        </LayoutView>
-    </NotFound>
-</Router>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
