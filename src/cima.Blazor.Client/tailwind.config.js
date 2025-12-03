@@ -283,7 +283,7 @@ module.exports = {
                 // === CONTENEDOR ===
                 '.cima-container': {
                     width: '100%',
-                    maxWidth: theme('maxWidth.7xl'),
+                    maxWidth: '1280px', // Explicit max-width to prevent sizing issues
                     marginLeft: 'auto',
                     marginRight: 'auto',
                     paddingLeft: '1rem',

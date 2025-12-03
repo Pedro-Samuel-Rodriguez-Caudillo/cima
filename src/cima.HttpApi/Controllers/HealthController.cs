@@ -48,7 +48,6 @@ namespace cima.Controllers
         /// <summary>
         /// Endpoint alternativo para Railway - exactamente igual
         /// </summary>
-        [HttpGet]
         [HttpGet("")]
         public IActionResult Index()
         {

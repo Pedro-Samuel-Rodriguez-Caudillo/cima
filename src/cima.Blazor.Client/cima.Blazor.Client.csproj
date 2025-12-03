@@ -31,7 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Pages\Admin\Architects\" />
     <Folder Include="Pages\NewFolder1\" />
   </ItemGroup>
 
@@ -58,9 +57,7 @@
   <!-- Copiar CSS compilado al proyecto Blazor Server después de build -->
   <Target Name="CopyTailwindCss" AfterTargets="Build">
     <MakeDir Directories="$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css" Condition="!Exists('$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css')" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\css\app.min.css" 
-          DestinationFolder="$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css" 
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\wwwroot\css\app.min.css" DestinationFolder="$(MSBuildProjectDirectory)\..\cima.Blazor\wwwroot\css" SkipUnchangedFiles="true" />
   </Target>
 	
 </Project>

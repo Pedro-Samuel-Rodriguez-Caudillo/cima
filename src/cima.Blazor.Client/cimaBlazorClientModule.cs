@@ -4,19 +4,25 @@ using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using cima.Blazor.Client.Services;
+using cima.Blazor.Client.Authentication;
 using cima.Localization;
 using Volo.Abp.Autofac.WebAssembly;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Localization;
+using Volo.Abp.AspNetCore.Components.Web;
+using Volo.Abp.BlazoriseUI;
 using Volo.Abp.Modularity;
 
 namespace cima.Blazor.Client;
 
 [DependsOn(
     typeof(AbpAutofacWebAssemblyModule),
-    typeof(cimaHttpApiClientModule)
+    typeof(cimaHttpApiClientModule),
+    typeof(AbpAspNetCoreComponentsWebModule),
+    typeof(AbpBlazoriseUIModule)
 )]
 public class cimaBlazorClientModule : AbpModule
 {
@@ -24,11 +30,19 @@ public class cimaBlazorClientModule : AbpModule
     {
         var environment = context.Services.GetSingletonInstance<IWebAssemblyHostEnvironment>();
 
+        ConfigureAuthentication(context);
         ConfigureHttpClient(context, environment);
         ConfigureBlazorise(context);
         ConfigureAutoMapper(context);
         ConfigureLocalization();
         ConfigureApplicationServices(context);
+    }
+
+    private void ConfigureAuthentication(ServiceConfigurationContext context)
+    {
+        // Registrar el AuthenticationStateProvider persistente para WebAssembly
+        context.Services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
+        context.Services.AddAuthorizationCore();
     }
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)

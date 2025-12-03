@@ -1,4 +1,8 @@
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ICurrentUser CurrentUser
 
 <div class="flex flex-col min-h-screen bg-white font-sans text-neutral-900">
     <cima.Blazor.Client.Components.Public.Navbar />
@@ -9,3 +13,40 @@
 
     <cima.Blazor.Client.Components.Public.Footer />
 </div>
+
+@code {
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var uri = new Uri(Navigation.Uri);
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            // Usuarios autenticados que intentan acceder a Login
+            if (uri.AbsolutePath.Contains("Account/Login", StringComparison.OrdinalIgnoreCase))
+            {
+                // Admin ? Dashboard de Admin
+                if (CurrentUser.IsInRole("admin"))
+                {
+                    Navigation.NavigateTo("/admin/listings");
+                }
+                else
+                {
+                    // Usuario normal ? Home
+                    Navigation.NavigateTo("/");
+                }
+            }
+        }
+        else
+        {
+            // Usuarios NO autenticados que intentan acceder a rutas protegidas
+            if (uri.AbsolutePath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase) ||
+                uri.AbsolutePath.StartsWith("/account", StringComparison.OrdinalIgnoreCase) ||
+                uri.AbsolutePath.StartsWith("/listings", StringComparison.OrdinalIgnoreCase))
+            {
+                Navigation.NavigateTo("/Account/Login");
+            }
+        }
+    }
+}
