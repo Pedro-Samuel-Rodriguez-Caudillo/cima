@@ -4,10 +4,10 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ICurrentUser CurrentUser
-@implements IDisposable
+@implements IAsyncDisposable
 @rendermode InteractiveAuto
 
-<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(_isScrolled ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10")">
+<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(_isScrolled ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10")">
     <div class="cima-container h-20 flex items-center justify-between">
         <!-- Brand -->
         <a href="/" class="text-white font-display font-semibold tracking-[0.35em] uppercase text-lg hover:opacity-80 transition-opacity">
@@ -164,7 +164,7 @@
     private bool _adminMenuOpen = false;
     private bool _userMenuOpen = false;
     private DotNetObjectReference<Navbar>? _dotNetHelper;
-    private IJSObjectReference? _scrollModule;
+    private IJSObjectReference? _scrollListener;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -174,11 +174,9 @@
             {
                 _dotNetHelper = DotNetObjectReference.Create(this);
                 
-                // Esperar a que el DOM esté listo
-                await Task.Delay(100);
-                
-                // Intentar registrar el listener de scroll
-                await JS.InvokeVoidAsync("cima.addScrollListener", _dotNetHelper);
+                // Registrar el listener de scroll con retorno del objeto dispose
+                _scrollListener = await JS.InvokeAsync<IJSObjectReference>(
+                    "cima.addScrollListener", _dotNetHelper);
             }
             catch (Exception ex)
             {
@@ -188,13 +186,14 @@
     }
 
     [JSInvokable]
-    public void OnScroll(bool isScrolled)
+    public Task OnScroll(bool isScrolled)
     {
         if (_isScrolled != isScrolled)
         {
             _isScrolled = isScrolled;
-            InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
+        return Task.CompletedTask;
     }
 
     private string GetLinkClass()
@@ -213,9 +212,30 @@
         return CurrentUser.IsInRole("admin");
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _dotNetHelper?.Dispose();
-        _scrollModule?.DisposeAsync();
+        try
+        {
+            // Llamar a dispose en JavaScript
+            if (_scrollListener is not null)
+            {
+                await _scrollListener.InvokeVoidAsync("dispose");
+                await _scrollListener.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // El circuito ya está desconectado, esto es esperado
+        }
+        catch (Exception ex)
+        {
+            // Log pero no propagar el error durante dispose
+            Console.WriteLine($"Error durante dispose del navbar: {ex.Message}");
+        }
+        finally
+        {
+            // Siempre liberar la referencia de .NET
+            _dotNetHelper?.Dispose();
+        }
     }
 }
