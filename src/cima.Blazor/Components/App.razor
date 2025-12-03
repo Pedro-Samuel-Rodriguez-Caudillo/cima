@@ -3,9 +3,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
 @using cima.Blazor.Client.Authentication
-@using Volo.Abp.AspNetCore.Components.Server.BasicTheme.Bundling
 @using Volo.Abp.Localization
-@using Volo.Abp.AspNetCore.Components.Web.Theming.Bundling
 @inject IHostEnvironment Env
 @inject PersistentComponentState PersistentComponentState
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -22,19 +20,70 @@
     <title>cima</title>
     <base href="/" />
 
+    <!-- Preload critical resources -->
+    <link rel="preload" href="_framework/blazor.web.js" as="script" />
+    <link rel="preload" href="/css/app.min.css" as="style" />
 
-    <!-- Scoped styles primero (menor prioridad) -->
+    <!-- Scoped styles -->
     <link href="cima.Blazor.styles.css" rel="stylesheet"/>
     <link href="cima.Blazor.Client.styles.css" rel="stylesheet"/>
     
-    <!-- Tailwind al final (mayor prioridad - desde wwwroot del servidor) -->
+    <!-- MudBlazor -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+
+    <!-- Tailwind -->
     <link href="/css/app.min.css" rel="stylesheet"/>
     
     <HeadOutlet @rendermode="InteractiveAuto" />
 
-    
+    <!-- Loading indicator styles -->
+    <style>
+        #blazor-loading-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        #blazor-loading-indicator.hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        #blazor-loading-indicator .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="abp-application-layout @rtl">
+
+    <!-- Loading indicator -->
+    <div id="blazor-loading-indicator">
+        <div class="spinner"></div>
+        <span>Cargando...</span>
+    </div>
 
     <Routes @rendermode="InteractiveAuto" />
 
@@ -48,15 +97,46 @@
             <text>An error has occurred. This application may no longer respond until reloaded.</text>
         }
         <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
+        <a class="dismiss">X</a>
     </div>
+    
+    <!-- Script de navbar ANTES de Blazor -->
+    <script src="/js/navbar-scroll.js"></script>
+    
     <script src="_content/Volo.Abp.AspNetCore.Components.Web/libs/abp/js/abp.js"></script>
     
-    <!-- Script de Blazor -->
-    <script src="_framework/blazor.web.js"></script>
+    <!-- Script de Blazor con autostart=false para controlar inicio -->
+    <script src="_framework/blazor.web.js" autostart="false"></script>
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     
-    <!-- Script personalizado de navbar -->
-    <script src="/js/navbar-scroll.js"></script>
+    <!-- Control de inicio de Blazor y loading indicator -->
+    <script>
+        (function() {
+            var loader = document.getElementById('blazor-loading-indicator');
+            
+            function hideLoader() {
+                if (loader) {
+                    loader.classList.add('hidden');
+                    setTimeout(function() {
+                        loader.style.display = 'none';
+                    }, 300);
+                }
+            }
+            
+            // Iniciar Blazor manualmente
+            Blazor.start().then(function() {
+                // Blazor iniciado - ocultar loader
+                console.log('[cima] Blazor iniciado');
+                hideLoader();
+            }).catch(function(err) {
+                console.error('[cima] Error iniciando Blazor:', err);
+                hideLoader();
+            });
+            
+            // Fallback: ocultar después de 8 segundos máximo
+            setTimeout(hideLoader, 8000);
+        })();
+    </script>
 
 </body>
 </html>
@@ -66,13 +146,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Registrar callback para persistir el estado
         _persistingSubscription = PersistentComponentState.RegisterOnPersisting(PersistAuthenticationState);
     }
 
     private async Task PersistAuthenticationState()
     {
-        // Este método se ejecuta durante el callback OnPersisting
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         
         if (authenticationState.User.Identity?.IsAuthenticated == true)
