@@ -8,7 +8,8 @@ window.cima = {
 
             if (!ticking) {
                 window.requestAnimationFrame(() => {
-                    const isScrolled = lastKnownScrollPosition > 50;
+                    // Umbral reducido de 50px a 20px para hacer el navbar más sensible
+                    const isScrolled = lastKnownScrollPosition > 20;
                     dotNetHelper.invokeMethodAsync('OnScroll', isScrolled);
                     ticking = false;
                 });
