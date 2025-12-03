@@ -1,5 +1,8 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
 
 <CascadingAuthenticationState>
     <Router AppAssembly="typeof(Program).Assembly">
@@ -12,19 +15,19 @@
                     }
                     else
                     {
-                        <p role="alert">You are not authorized to access this resource.</p>
+                        <p role="alert">@L["Auth:NotAuthorized"]</p>
                     }
                 </NotAuthorized>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-            <PageTitle>Página no encontrada</PageTitle>
+            <PageTitle>@L["NotFound:Title"]</PageTitle>
             <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
                 <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                    <h1 class="text-6xl font-display font-bold text-navy-900 mb-4">404</h1>
-                    <p class="text-xl text-neutral-600 mb-8">Lo sentimos, la página que buscas no existe.</p>
-                    <a href="/" class="cima-btn cima-btn-primary">Volver al inicio</a>
+                    <h1 class="text-6xl font-display font-bold text-navy-900 mb-4">@L["NotFound:Code"]</h1>
+                    <p class="text-xl text-neutral-600 mb-8">@L["NotFound:Message"]</p>
+                    <a href="/" class="cima-btn cima-btn-primary">@L["NotFound:BackHome"]</a>
                 </div>
             </LayoutView>
         </NotFound>

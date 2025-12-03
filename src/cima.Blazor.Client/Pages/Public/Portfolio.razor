@@ -35,7 +35,7 @@
                     id="architect-filter"
                     class="cima-input flex-1 md:max-w-md"
                     value="@SelectedArchitectId"
-                    @onchange="@(e => { SelectedArchitectId = e.Value?.ToString(); HandleArchitectChange(); })">
+                    @onchange="OnArchitectFilterChanged">
                     <option value="">@L["Portfolio:AllArchitects"]</option>
                     @if (Architects?.Any() == true)
                     {
@@ -132,16 +132,16 @@
                               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <h3 class="text-xl font-semibold text-neutral-900 mb-2">
-                        No hay proyectos en portafolio
+                        @L["Portfolio:NoProjects"]
                     </h3>
                     <p class="text-neutral-600">
                         @if (!string.IsNullOrEmpty(SelectedArchitectId))
                         {
-                            <span>Este arquitecto aún no tiene proyectos completados</span>
+                            <span>@L["Portfolio:NoProjectsByArchitect"]</span>
                         }
                         else
                         {
-                            <span>Pronto agregaremos nuestros proyectos completados</span>
+                            <span>@L["Portfolio:ComingSoon"]</span>
                         }
                     </p>
                 </div>
@@ -199,8 +199,7 @@
             {
                 SkipCount = (CurrentPage - 1) * PageSize,
                 MaxResultCount = PageSize,
-                Sorting = "CreatedAt DESC",
-                Status = (int)ListingStatus.Portfolio
+                Sorting = "CreatedAt DESC"
             };
 
             // Filtrar por arquitecto si está seleccionado
@@ -209,7 +208,8 @@
                 input.ArchitectId = architectId;
             }
 
-            var result = await ListingService.GetListAsync(input);
+            // Use GetPortfolioAsync which is AllowAnonymous (public access)
+            var result = await ListingService.GetPortfolioAsync(input);
             
             PortfolioProjects = result.Items.ToList();
             TotalCount = (int)result.TotalCount;
@@ -224,8 +224,9 @@
         }
     }
 
-    private async void HandleArchitectChange()
+    private async Task OnArchitectFilterChanged(ChangeEventArgs e)
     {
+        SelectedArchitectId = e.Value?.ToString();
         CurrentPage = 1;
         await LoadPortfolio();
     }
