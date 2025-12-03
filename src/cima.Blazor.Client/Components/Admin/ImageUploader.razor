@@ -1,144 +1,86 @@
-@using System.IO
-@using Microsoft.AspNetCore.Components.Forms
-@using cima.Listings
+@using MudBlazor
 @using cima.Domain.Shared.Dtos
-@using Volo.Abp.AspNetCore.Components.Web
-@inherits AbpComponentBase
-@inject IListingAppService ListingAppService
-@inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Components.Forms
 
-<Card>
-    <CardBody>
-        <Field>
-            <FieldLabel>Agregar Imágenes</FieldLabel>
-            <FileEdit Filter=".jpg,.jpeg,.png,.webp,.gif" 
-                     Changed="@OnFileChanged" 
-                     Multiple
-                     MaxFileSize="@(5 * 1024 * 1024)"
-                     Placeholder="Seleccione hasta 10 imágenes (máx. 5MB cada una)" />
-            <FieldHelp>
-                Formatos permitidos: JPG, PNG, WebP, GIF. Tamaño máximo por archivo: 5MB.
-            </FieldHelp>
-        </Field>
+<MudPaper Class="p-4" Elevation="0" Outlined="true">
+    <MudText Typo="Typo.h6" Class="mb-4">ImÃ¡genes de la Propiedad</MudText>
 
-        @if (isUploading)
-        {
-            <Progress Value="@uploadProgress" Max="100" Striped Animated Class="mt-3">
-                <ProgressBar>Subiendo... @uploadProgress%</ProgressBar>
-            </Progress>
-        }
+    <InputFile id="fileInput" OnChange="OnInputFileChange" multiple accept=".jpg, .jpeg, .png, .webp" hidden />
+    
+    <MudButton HtmlTag="label"
+               Variant="Variant.Filled"
+               Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.CloudUpload"
+               for="fileInput">
+        Subir ImÃ¡genes
+    </MudButton>
 
-        @if (uploadedImages.Any())
-        {
-            <div class="mt-4">
-                <h6>Imágenes subidas (@uploadedImages.Count/10)</h6>
-                <Row>
-                    @* TODO: Refactorizar para usar lista enlazada *@
-                    @foreach (var image in GetImagesInOrder())
-                    {
-                        <Column ColumnSize="ColumnSize.Is4.OnDesktop.Is6.OnTablet.Is12.OnMobile" Margin="Margin.Is2.FromBottom">
-                            <Card>
-                                <CardImage Source="@image.Url" Alt="@image.AltText" />
-                                <CardBody>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Imagen</small>
-                                        <Buttons Size="Size.Small">
-                                            @* TODO: Reordenamiento temporalmente deshabilitado - refactorizar a lista enlazada
-                                            @if (image.PreviousImageId != null)
-                                            {
-                                                <Button Color="Color.Secondary" Clicked="() => MoveImageUp(image)">
-                                                    <Icon Name="IconName.AngleUp" />
-                                                </Button>
-                                            }
-                                            @if (image.NextImageId != null)
-                                            {
-                                                <Button Color="Color.Secondary" Clicked="() => MoveImageDown(image)">
-                                                    <Icon Name="IconName.AngleDown" />
-                                                </Button>
-                                            }
-                                            *@
-                                            <Button Color="Color.Danger" Clicked="() => RemoveImage(image)" Disabled="@isDeleting">
-                                                <Icon Name="IconName.Delete" />
-                                            </Button>
-                                        </Buttons>
-                                    </div>
-                                </CardBody>
-                            </Card>
-                        </Column>
-                    }
-                </Row>
-            </div>
-        }
-        else if (!isUploading)
-        {
-            <Alert Color="Color.Info" Visible Class="mt-3">
-                <AlertMessage>Sin imágenes</AlertMessage>
-                <AlertDescription>
-                    Seleccione archivos de imagen para comenzar a subirlos.
-                </AlertDescription>
-            </Alert>
-        }
-    </CardBody>
-</Card>
+    @if (uploadedImages.Any())
+    {
+        <MudGrid Class="mt-4">
+            @foreach (var image in uploadedImages)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard>
+                        @if (!string.IsNullOrEmpty(image.Url))
+                        {
+                            <MudCardMedia Image="@image.Url" Height="200" />
+                        }
+                        <MudCardContent>
+                            <MudText Typo="Typo.caption">@(image.AltText ?? "Sin nombre")</MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           OnClick="@(() => RemoveImage(image))" />
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Class="mt-4">No hay imÃ¡genes seleccionadas.</MudAlert>
+    }
+</MudPaper>
 
 @code {
-    [Parameter] public Guid ListingId { get; set; }
     [Parameter] public List<ListingImageDto> InitialImages { get; set; } = new();
-    [Parameter] public EventCallback<List<ListingImageDto>> ImagesChanged { get; set; }
+    [Parameter] public EventCallback<List<ListingImageDto>> OnImagesChanged { get; set; }
 
     private List<ListingImageDto> uploadedImages = new();
-    private bool isUploading = false;
-    private bool isDeleting = false;
-    private int uploadProgress = 0;
 
     protected override void OnInitialized()
     {
-        uploadedImages = InitialImages ?? new();
+        if (InitialImages != null)
+        {
+            uploadedImages = new List<ListingImageDto>(InitialImages);
+        }
     }
 
-    // Obtener imágenes en orden usando lista enlazada
-    private List<ListingImageDto> GetImagesInOrder()
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
     {
-        if (!uploadedImages.Any()) return new List<ListingImageDto>();
-        
-        var ordered = new List<ListingImageDto>();
-        var current = uploadedImages.FirstOrDefault(i => i.PreviousImageId == null);
-        
-        while (current != null)
+        foreach (var file in e.GetMultipleFiles())
         {
-            ordered.Add(current);
-            current = uploadedImages.FirstOrDefault(i => i.ImageId == current.NextImageId);
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+            var url = $"data:{file.ContentType};base64,{base64}";
+            
+            uploadedImages.Add(new ListingImageDto 
+            { 
+                Url = url,
+                AltText = file.Name
+            });
         }
         
-        return ordered;
-    }
-
-    private async Task OnFileChanged(FileChangedEventArgs e)
-    {
-        // TODO: Método temporalmente deshabilitado - necesita refactorización para lista enlazada
-        await Message.Info("Funcionalidad de subida de imágenes temporalmente deshabilitada durante refactorización");
+        await OnImagesChanged.InvokeAsync(uploadedImages);
     }
 
     private async Task RemoveImage(ListingImageDto image)
     {
-        // TODO: Método temporalmente deshabilitado - necesita refactorización para lista enlazada
-        await Message.Info("Funcionalidad de eliminación temporalmente deshabilitada durante refactorización");
+        uploadedImages.Remove(image);
+        await OnImagesChanged.InvokeAsync(uploadedImages);
     }
-
-    /* MÉTODOS DE REORDENAMIENTO COMENTADOS TEMPORALMENTE - Requieren refactorización a lista enlazada
-    private async Task MoveImageUp(ListingImageDto image)
-    {
-        // TODO: Implementar con lista enlazada
-    }
-
-    private async Task MoveImageDown(ListingImageDto image)
-    {
-        // TODO: Implementar con lista enlazada
-    }
-
-    private async Task UpdateImageOrder()
-    {
-        // TODO: Implementar con lista enlazada
-    }
-    */
 }
