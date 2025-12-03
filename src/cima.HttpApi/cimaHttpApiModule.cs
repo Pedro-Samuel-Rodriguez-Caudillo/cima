@@ -12,7 +12,7 @@ using Volo.Abp.AspNetCore.Mvc;
 
 namespace cima;
 
- [DependsOn(
+[DependsOn(
     typeof(cimaApplicationContractsModule),
     typeof(AbpPermissionManagementHttpApiModule),
     typeof(AbpSettingManagementHttpApiModule),
@@ -20,7 +20,7 @@ namespace cima;
     typeof(AbpIdentityHttpApiModule),
     typeof(AbpTenantManagementHttpApiModule),
     typeof(AbpFeatureManagementHttpApiModule)
-    )]
+)]
 public class cimaHttpApiModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
@@ -33,6 +33,9 @@ public class cimaHttpApiModule : AbpModule
     {
         Configure<AbpAspNetCoreMvcOptions>(options =>
         {
+            // Registrar controladores de Application Contracts (auto-generated API)
+            // Los controladores manuales como HealthController (que heredan de ControllerBase)
+            // son descubiertos automaticamente por ASP.NET Core MVC
             options.ConventionalControllers.Create(typeof(cimaApplicationContractsModule).Assembly);
         });
     }

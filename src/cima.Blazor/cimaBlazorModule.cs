@@ -1,11 +1,10 @@
-using Blazorise;
-using Blazorise.Bootstrap5;
-using Blazorise.Icons.FontAwesome;
 using cima.Blazor.Client;
 using cima.Blazor.Client.Navigation;
 using cima.Blazor.Components;
 using cima.Blazor.HealthChecks;
 using cima.Blazor.Services;
+using MudBlazor.Services;
+
 using cima.Data;
 using cima.EntityFrameworkCore;
 using cima.Localization;
@@ -33,12 +32,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
-using Volo.Abp.AspNetCore.Components.Server.BasicTheme;
-using Volo.Abp.AspNetCore.Components.Server.BasicTheme.Bundling;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
-using Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling;
-using Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Bundling;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
@@ -49,13 +44,11 @@ using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Identity;
-using Volo.Abp.Identity.Blazor.Server;
 using Volo.Abp.Localization;
 using Volo.Abp.Modularity;
 using Volo.Abp.OpenIddict;
 using Volo.Abp.Security.Claims;
 using Volo.Abp.Swashbuckle;
-using Volo.Abp.TenantManagement.Blazor.Server;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
@@ -68,11 +61,7 @@ namespace cima.Blazor;
     typeof(cimaHttpApiModule),
     typeof(AbpAutofacModule),
     typeof(AbpSwashbuckleModule),
-    typeof(AbpIdentityBlazorServerModule),
-    typeof(AbpTenantManagementBlazorServerModule),
     typeof(AbpAccountWebOpenIddictModule),
-    typeof(AbpAspNetCoreComponentsServerBasicThemeModule),
-    typeof(AbpAspNetCoreComponentsWebAssemblyBasicThemeBundlingModule),
     typeof(AbpAspNetCoreMvcUiBasicThemeModule),
     typeof(AbpAspNetCoreSerilogModule)
    )]
@@ -146,6 +135,7 @@ public class cimaBlazorModule : AbpModule
             options.IsBlazorWebApp = true;
         });
     }
+    
     private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)
     {
         context.Services.AddCors(options =>
@@ -173,10 +163,16 @@ public class cimaBlazorModule : AbpModule
         var hostingEnvironment = context.Services.GetHostingEnvironment();
         var configuration = context.Services.GetConfiguration();
 
+        // Add Razor Pages for ABP Account MVC pages (Login, Register, etc.)
+        context.Services.AddRazorPages();
+        
         // Add services to the container.
         context.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
+
+        // Added MudBlazor
+        context.Services.AddMudServices();
 
         // Configurar CascadingAuthenticationState para Blazor Web App
         context.Services.AddCascadingAuthenticationState();
@@ -203,7 +199,7 @@ public class cimaBlazorModule : AbpModule
         ConfigureVirtualFileSystem(hostingEnvironment);
         ConfigureSwaggerServices(context.Services);
         ConfigureAutoApiControllers();
-        ConfigureBlazorise(context);
+        
         ConfigureRouter(context);
         ConfigureMenu(context);
         ConfigureHealthChecks(context, configuration);
@@ -248,10 +244,10 @@ public class cimaBlazorModule : AbpModule
             options.Parameters.InteractiveAuto = true;
 
             // En staging/production, deshabilitar pre-bundling para evitar errores de archivos faltantes
-            // Los bundles se generarán bajo demanda
+            // Los bundles se generarn bajo demanda
             if (hostingEnvironment.IsStaging() || hostingEnvironment.IsProduction())
             {
-                // Configurar para modo minificado en producción
+                // Configurar para modo minificado en produccin
                 options.Mode = BundlingMode.BundleAndMinify;
             }
 
@@ -271,25 +267,6 @@ public class cimaBlazorModule : AbpModule
                     bundle.AddFiles("/global-scripts.js");
                 }
             );
-
-            // Blazor UI
-            options.StyleBundles.Configure(
-                BlazorBasicThemeBundles.Styles.Global,
-                bundle =>
-                {
-                    bundle.AddFiles("/global-styles.css");
-                }
-            );
-        });
-
-        // WebAssembly bundles - aquí se agrega el CSS de Tailwind
-        Configure<AbpBundlingOptions>(options =>
-        {
-            var globalStyles = options.StyleBundles.Get(BlazorWebAssemblyStandardBundles.Styles.Global);
-            globalStyles.AddContributors(typeof(cimaStyleBundleContributor));
-
-            var globalScripts = options.ScriptBundles.Get(BlazorWebAssemblyStandardBundles.Scripts.Global);
-            globalScripts.AddContributors(typeof(cimaScriptBundleContributor));
         });
     }
 
@@ -318,19 +295,6 @@ public class cimaBlazorModule : AbpModule
                 options.CustomSchemaIds(type => type.FullName);
             }
         );
-    }
-
-
-    private void ConfigureBlazorise(ServiceConfigurationContext context)
-    {
-        context.Services
-            .AddBlazorise(options =>
-            {
-                // TODO (IMPORTANT): To use Blazorise, you need a license key. Get your license key directly from Blazorise, follow  the instructions at https://abp.io/faq#how-to-get-blazorise-license-key
-                //options.ProductToken = "Your Product Token";
-            })
-            .AddBootstrap5Providers()
-            .AddFontAwesomeIcons();
     }
 
     private void ConfigureMenu(ServiceConfigurationContext context)
@@ -427,7 +391,7 @@ public class cimaBlazorModule : AbpModule
         var app = context.GetApplicationBuilder();
         
         // EJECUTAR MIGRACIONES SOLO EN STAGING/PRODUCTION
-        // En Development, el seeding se ejecuta a través de DevelopmentDataSeedingService
+        // En Development, el seeding se ejecuta a travs de DevelopmentDataSeedingService
         if (env.IsStaging() || env.IsProduction())
         {
             // En staging/production: ejecutar migraciones y seeding (BLOQUEA HASTA COMPLETAR)
@@ -446,11 +410,12 @@ public class cimaBlazorModule : AbpModule
             await next();
         });
         
-        // Permitir Railway healthchecks - debe ir ANTES de cualquier middleware de autenticación
+        // Permitir Railway healthchecks - debe ir ANTES de cualquier middleware de autenticacin
         app.Use(async (ctx, next) =>
         {
-            // Railway healthcheck bypass - permitir sin autenticación ni CORS
+            // Railway healthcheck bypass - permitir sin autenticacin ni CORS
             if (ctx.Request.Path.StartsWithSegments("/api/health/ping") ||
+                ctx.Request.Path.StartsWithSegments("/api/health") ||
                 ctx.Request.Path.StartsWithSegments("/health"))
             {
                 // Permitir cualquier host para healthchecks (incluyendo healthcheck.railway.app)
@@ -478,6 +443,7 @@ public class cimaBlazorModule : AbpModule
         app.UseCorrelationId();
         app.UseCors();
         app.UseRouting();
+        
         var configuration = context.GetConfiguration();
         if (Convert.ToBoolean(configuration["AuthServer:IsOnK8s"]))
         {
@@ -495,6 +461,7 @@ public class cimaBlazorModule : AbpModule
 
             app.UseStaticFilesForPatterns("appsettings*.json");
         }
+        
         app.MapAbpStaticAssets();
         app.UseAbpSecurityHeaders();
         app.UseAuthentication();
@@ -517,16 +484,22 @@ public class cimaBlazorModule : AbpModule
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
+        
         app.UseConfiguredEndpoints(endpoints =>
         {
+            // Map Razor Pages for ABP Account (Login, Register, etc.)
+            endpoints.MapRazorPages();
+            
+            // Map API Controllers
+            endpoints.MapControllers();
+            
             // Mapear Razor Components para Blazor Web App
             endpoints.MapRazorComponents<Components.App>()
                 .AddInteractiveServerRenderMode()
                 .AddInteractiveWebAssemblyRenderMode()
                 .AddAdditionalAssemblies(typeof(cimaBlazorClientModule).Assembly);
             
-            endpoints.MapControllers();
-            
+            // Health check endpoints
             endpoints.MapHealthChecks("/health", new HealthCheckOptions
             {
                 ResponseWriter = async (context, report) =>
@@ -564,7 +537,7 @@ public class cimaBlazorModule : AbpModule
     {
         if (!env.IsStaging() && !env.IsProduction())
         {
-            return; // Solo en staging/production
+            return;
         }
         
         var logger = serviceProvider.GetRequiredService<ILogger<cimaBlazorModule>>();
@@ -586,7 +559,7 @@ public class cimaBlazorModule : AbpModule
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error durante la migración automática");
+            logger.LogError(ex, "Error durante la migracion automatica");
             throw;
         }
     }
