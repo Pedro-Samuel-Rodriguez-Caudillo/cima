@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Net.Http;
-using Blazorise;
-using Blazorise.Bootstrap5;
-using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,16 +10,16 @@ using Volo.Abp.Autofac.WebAssembly;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Localization;
 using Volo.Abp.AspNetCore.Components.Web;
-using Volo.Abp.BlazoriseUI;
 using Volo.Abp.Modularity;
+using MudBlazor.Services;
+
 
 namespace cima.Blazor.Client;
 
 [DependsOn(
     typeof(AbpAutofacWebAssemblyModule),
     typeof(cimaHttpApiClientModule),
-    typeof(AbpAspNetCoreComponentsWebModule),
-    typeof(AbpBlazoriseUIModule)
+    typeof(AbpAspNetCoreComponentsWebModule)
 )]
 public class cimaBlazorClientModule : AbpModule
 {
@@ -32,7 +29,8 @@ public class cimaBlazorClientModule : AbpModule
 
         ConfigureAuthentication(context);
         ConfigureHttpClient(context, environment);
-        ConfigureBlazorise(context);
+        
+        ConfigureMudBlazor(context);
         ConfigureAutoMapper(context);
         ConfigureLocalization();
         ConfigureApplicationServices(context);
@@ -40,7 +38,6 @@ public class cimaBlazorClientModule : AbpModule
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
     {
-        // Registrar el AuthenticationStateProvider persistente para WebAssembly
         context.Services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
         context.Services.AddAuthorizationCore();
     }
@@ -63,18 +60,11 @@ public class cimaBlazorClientModule : AbpModule
         });
     }
 
-    private void ConfigureBlazorise(ServiceConfigurationContext context)
+    private void ConfigureMudBlazor(ServiceConfigurationContext context)
     {
-        context.Services
-            .AddBlazorise(options =>
-            {
-                // TODO (IMPORTANT): To use Blazorise, you need a license key. Get your license key directly from Blazorise, follow  the instructions at https://abp.io/faq#how-to-get-blazorise-license-key
-                //options.ProductToken = "Your Product Token";
-            })
-            .AddBootstrap5Providers()
-            .AddFontAwesomeIcons();
+        context.Services.AddMudServices();
     }
-    
+
     private static void ConfigureHttpClient(ServiceConfigurationContext context, IWebAssemblyHostEnvironment environment)
     {
         context.Services.AddTransient(sp => new HttpClient

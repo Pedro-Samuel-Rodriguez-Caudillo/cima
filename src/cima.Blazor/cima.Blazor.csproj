@@ -18,14 +18,14 @@
 
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.5" />
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
+    <PackageReference Include="MudBlazor" Version="8.15.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
-    <PackageReference Include="Blazorise.Bootstrap5" Version="1.8.1" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.8.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="9.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="9.0.5" />
@@ -46,14 +46,10 @@
 
   <ItemGroup>
     <PackageReference Include="Volo.Abp.Account.Web.OpenIddict" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.Identity.Blazor.Server" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.TenantManagement.Blazor.Server" Version="9.3.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Volo.Abp.AspNetCore.Components.Server.BasicTheme" Version="9.3.6" />
     <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic" Version="9.3.6" />
-    <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling" Version="9.3.6" />
     <!-- Paquete que contiene los archivos CSS de Bootstrap necesarios para ABP bundling -->
     <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly.Theming" Version="9.3.6" />
   </ItemGroup>
