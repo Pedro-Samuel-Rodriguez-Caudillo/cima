@@ -198,7 +198,7 @@ public class cimaBlazorModule : AbpModule
         ConfigureCors(context, configuration);
         ConfigureAuthentication(context);
         ConfigureUrls(configuration);
-        ConfigureBundles();
+        ConfigureBundles(hostingEnvironment);
         ConfigureAutoMapper();
         ConfigureVirtualFileSystem(hostingEnvironment);
         ConfigureSwaggerServices(context.Services);
@@ -240,12 +240,20 @@ public class cimaBlazorModule : AbpModule
         });
     }
 
-    private void ConfigureBundles()
+    private void ConfigureBundles(IWebHostEnvironment hostingEnvironment)
     {
         Configure<AbpBundlingOptions>(options =>
         {
             // Blazor Web App
             options.Parameters.InteractiveAuto = true;
+
+            // En staging/production, deshabilitar pre-bundling para evitar errores de archivos faltantes
+            // Los bundles se generarán bajo demanda
+            if (hostingEnvironment.IsStaging() || hostingEnvironment.IsProduction())
+            {
+                // Configurar para modo minificado en producción
+                options.Mode = BundlingMode.BundleAndMinify;
+            }
 
             // MVC UI
             options.StyleBundles.Configure(
