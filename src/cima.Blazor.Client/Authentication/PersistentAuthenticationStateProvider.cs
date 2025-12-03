@@ -2,56 +2,47 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace cima.Blazor.Client.Authentication;
 
-/// <summary>
-/// AuthenticationStateProvider para Blazor WebAssembly que recibe el estado
-/// del servidor a través de PersistentComponentState.
-/// </summary>
 public class PersistentAuthenticationStateProvider : AuthenticationStateProvider
 {
     private static readonly Task<AuthenticationState> _unauthenticatedTask =
         Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
 
-    private readonly Task<AuthenticationState> _authenticationStateTask = _unauthenticatedTask;
+    private readonly PersistentComponentState _state;
 
-    public PersistentAuthenticationStateProvider(PersistentComponentState persistentComponentState)
+    public PersistentAuthenticationStateProvider(PersistentComponentState state)
     {
-        if (!persistentComponentState.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) || 
-            userInfo is null)
+        _state = state;
+    }
+
+    public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    {
+        if (!_state.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) || userInfo is null)
         {
-            return;
+            return _unauthenticatedTask;
         }
 
-        Claim[] claims = [
+        List<Claim> claims = [
             new Claim(ClaimTypes.NameIdentifier, userInfo.UserId),
             new Claim(ClaimTypes.Name, userInfo.UserName),
-            new Claim(ClaimTypes.Email, userInfo.Email ?? string.Empty)
-        ];
+            new Claim(ClaimTypes.Email, userInfo.Email ?? "")];
 
         if (userInfo.Roles != null)
         {
             foreach (var role in userInfo.Roles)
             {
-                claims = [.. claims, new Claim(ClaimTypes.Role, role)];
+                claims.Add(new Claim(ClaimTypes.Role, role));
             }
         }
 
-        _authenticationStateTask = Task.FromResult(
-            new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, 
-                authenticationType: nameof(PersistentAuthenticationStateProvider)))));
-    }
-
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
-    {
-        return _authenticationStateTask;
+        return Task.FromResult(
+            new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, nameof(PersistentAuthenticationStateProvider)))));
     }
 }
 
-/// <summary>
-/// Información del usuario que se persiste desde el servidor al cliente WebAssembly.
-/// </summary>
 public class UserInfo
 {
     public required string UserId { get; set; }
