@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using cima.Domain.Entities;
 using cima.Domain.Shared.Dtos;
@@ -11,6 +12,7 @@ using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
 using System.Linq.Dynamic.Core;
+using System.Collections.Generic;
 
 namespace cima.Architects;
 
@@ -37,12 +39,14 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Obtiene lista paginada de arquitectos (acceso público)
     /// </summary>
     [AllowAnonymous]
-    public async Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+    public async Task<PagedResultDto<ArchitectDto>> GetListAsync(
+        PagedAndSortedResultRequestDto input,
+        CancellationToken cancellationToken = default)
     {
         var queryable = await _architectRepository.GetQueryableAsync();
         
         // Contar total de registros
-        var totalCount = await AsyncExecuter.CountAsync(queryable);
+        var totalCount = await AsyncExecuter.CountAsync(queryable, cancellationToken);
 
         // Aplicar ordenamiento (ABP tiene extensión ApplySorting)
         if (!string.IsNullOrWhiteSpace(input.Sorting))
@@ -55,19 +59,50 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         var architects = await AsyncExecuter.ToListAsync(
             queryable
                 .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
+                .Take(input.MaxResultCount),
+            cancellationToken
         );
 
         // Mapear a DTOs
-        var architectDtos = ObjectMapper.Map<System.Collections.Generic.List<Architect>, System.Collections.Generic.List<ArchitectDto>>(architects);
+        var architectDtos = ObjectMapper.Map<List<Architect>, List<ArchitectDto>>(architects);
 
-        // Cargar nombres de usuario
-        foreach (var dto in architectDtos)
+        // Cargar nombres de usuario de forma optimizada
+        if (architectDtos.Any())
         {
-            var user = await _userRepository.FindAsync(dto.UserId);
-            if (user != null)
+            try
             {
-                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+                // Obtener todos los UserIds únicos
+                var userIds = architectDtos.Select(x => x.UserId).Distinct().ToList();
+                
+                // Obtener los usuarios de forma batch usando GetListByIdsAsync si está disponible
+                // Si no, usar GetListAsync sin filtro y filtrar en memoria (menos eficiente pero funciona)
+                var users = await _userRepository.GetListAsync(cancellationToken: cancellationToken);
+                
+                // Filtrar por los IDs que necesitamos (en memoria)
+                var relevantUsers = users.Where(u => userIds.Contains(u.Id)).ToList();
+                var userDict = relevantUsers.ToDictionary(u => u.Id, u => u.UserName ?? u.Email ?? "Usuario desconocido");
+
+                // Asignar nombres de usuario desde el diccionario
+                foreach (var dto in architectDtos)
+                {
+                    if (userDict.TryGetValue(dto.UserId, out var userName))
+                    {
+                        dto.UserName = userName;
+                    }
+                    else
+                    {
+                        dto.UserName = "Usuario desconocido";
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // La petición fue cancelada (navegación rápida del usuario en Blazor WASM)
+                // Retornar datos parciales sin nombres de usuario
+                foreach (var dto in architectDtos)
+                {
+                    dto.UserName = "Usuario desconocido";
+                }
             }
         }
 
@@ -78,16 +113,28 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Obtiene perfil de arquitecto por Id (acceso público)
     /// </summary>
     [AllowAnonymous]
-    public async Task<ArchitectDto> GetAsync(Guid id)
+    public async Task<ArchitectDto> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var architect = await _architectRepository.GetAsync(id);
+        var architect = await _architectRepository.GetAsync(id, cancellationToken: cancellationToken);
         var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
         
-        // Cargar nombre de usuario
-        var user = await _userRepository.FindAsync(architect.UserId);
-        if (user != null)
+        try
         {
-            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            // Cargar nombre de usuario
+            var user = await _userRepository.FindAsync(architect.UserId, cancellationToken: cancellationToken);
+            if (user != null)
+            {
+                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            }
+            else
+            {
+                dto.UserName = "Usuario desconocido";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Si se cancela, retornar con nombre por defecto
+            dto.UserName = "Usuario desconocido";
         }
         
         return dto;
@@ -97,11 +144,12 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Obtiene perfil de arquitecto por UserId (acceso público)
     /// </summary>
     [AllowAnonymous]
-    public async Task<ArchitectDto> GetByUserIdAsync(Guid userId)
+    public async Task<ArchitectDto> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var queryable = await _architectRepository.GetQueryableAsync();
         var architect = await AsyncExecuter.FirstOrDefaultAsync(
-            queryable.Where(a => a.UserId == userId)
+            queryable.Where(a => a.UserId == userId),
+            cancellationToken
         );
 
         if (architect == null)
@@ -114,11 +162,23 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
         var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
         
-        // Cargar nombre de usuario
-        var user = await _userRepository.FindAsync(userId);
-        if (user != null)
+        try
         {
-            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            // Cargar nombre de usuario
+            var user = await _userRepository.FindAsync(userId, cancellationToken: cancellationToken);
+            if (user != null)
+            {
+                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            }
+            else
+            {
+                dto.UserName = "Usuario desconocido";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Si se cancela, retornar con nombre por defecto
+            dto.UserName = "Usuario desconocido";
         }
 
         return dto;
@@ -128,7 +188,7 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Crea perfil de arquitecto para usuario actual (requiere autenticación)
     /// </summary>
     [Authorize(cimaPermissions.Architects.Create)]
-    public async Task<ArchitectDto> CreateAsync(CreateArchitectDto input)
+    public async Task<ArchitectDto> CreateAsync(CreateArchitectDto input, CancellationToken cancellationToken = default)
     {
         if (!CurrentUser.Id.HasValue)
         {
@@ -141,7 +201,8 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         // Verificar que el usuario no tenga ya un perfil de arquitecto
         var queryable = await _architectRepository.GetQueryableAsync();
         var existingArchitect = await AsyncExecuter.FirstOrDefaultAsync(
-            queryable.Where(a => a.UserId == CurrentUser.Id.Value)
+            queryable.Where(a => a.UserId == CurrentUser.Id.Value),
+            cancellationToken
         );
 
         if (existingArchitect != null)
@@ -162,7 +223,7 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             IsActive = true
         };
 
-        await _architectRepository.InsertAsync(architect, autoSave: true);
+        await _architectRepository.InsertAsync(architect, autoSave: true, cancellationToken: cancellationToken);
 
         var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
         dto.UserName = CurrentUser.UserName ?? CurrentUser.Email ?? "Usuario actual";
@@ -174,9 +235,9 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Actualiza perfil de arquitecto (solo el propietario o admin)
     /// </summary>
     [Authorize(cimaPermissions.Architects.Edit)]
-    public async Task<ArchitectDto> UpdateAsync(Guid id, UpdateArchitectDto input)
+    public async Task<ArchitectDto> UpdateAsync(Guid id, UpdateArchitectDto input, CancellationToken cancellationToken = default)
     {
-        var architect = await _architectRepository.GetAsync(id);
+        var architect = await _architectRepository.GetAsync(id, cancellationToken: cancellationToken);
 
         // Verificar que solo el propietario o admin pueda actualizar
         var isOwner = architect.UserId == CurrentUser.Id;
@@ -198,15 +259,27 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             architect.IsActive = input.IsActive.Value;
         }
 
-        await _architectRepository.UpdateAsync(architect, autoSave: true);
+        await _architectRepository.UpdateAsync(architect, autoSave: true, cancellationToken: cancellationToken);
 
         var dto = ObjectMapper.Map<Architect, ArchitectDto>(architect);
         
-        // Cargar nombre de usuario
-        var user = await _userRepository.FindAsync(architect.UserId);
-        if (user != null)
+        try
         {
-            dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            // Cargar nombre de usuario
+            var user = await _userRepository.FindAsync(architect.UserId, cancellationToken: cancellationToken);
+            if (user != null)
+            {
+                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
+            }
+            else
+            {
+                dto.UserName = "Usuario desconocido";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Si se cancela, retornar con nombre por defecto
+            dto.UserName = "Usuario desconocido";
         }
 
         return dto;
@@ -216,14 +289,15 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     /// Elimina perfil de arquitecto (solo admin)
     /// </summary>
     [Authorize(cimaPermissions.Architects.Delete)]
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var architect = await _architectRepository.GetAsync(id);
+        var architect = await _architectRepository.GetAsync(id, cancellationToken: cancellationToken);
 
         // Verificar si tiene propiedades asociadas
         var queryable = await _listingRepository.GetQueryableAsync();
         var hasListings = await AsyncExecuter.AnyAsync(
-            queryable.Where(l => l.ArchitectId == id)
+            queryable.Where(l => l.ArchitectId == id),
+            cancellationToken
         );
 
         if (hasListings)
@@ -234,6 +308,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        await _architectRepository.DeleteAsync(id, autoSave: true);
+        await _architectRepository.DeleteAsync(id, autoSave: true, cancellationToken: cancellationToken);
     }
 }

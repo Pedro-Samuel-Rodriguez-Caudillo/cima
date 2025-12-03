@@ -3,6 +3,7 @@ using cima.Architects;
 using cima.Domain.Shared.Dtos;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -18,7 +19,9 @@ namespace cima.Architects;
 [ExposeServices(typeof(IArchitectAppService), typeof(ArchitectClientProxy))]
 public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService>, IArchitectAppService
 {
-    public virtual async Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+    public virtual async Task<PagedResultDto<ArchitectDto>> GetListAsync(
+        PagedAndSortedResultRequestDto input,
+        CancellationToken cancellationToken = default)
     {
         return await RequestAsync<PagedResultDto<ArchitectDto>>(nameof(GetListAsync), new ClientProxyRequestTypeValue
         {
@@ -26,7 +29,7 @@ public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService
         });
     }
 
-    public virtual async Task<ArchitectDto> GetAsync(Guid id)
+    public virtual async Task<ArchitectDto> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await RequestAsync<ArchitectDto>(nameof(GetAsync), new ClientProxyRequestTypeValue
         {
@@ -34,7 +37,7 @@ public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService
         });
     }
 
-    public virtual async Task<ArchitectDto> GetByUserIdAsync(Guid userId)
+    public virtual async Task<ArchitectDto> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await RequestAsync<ArchitectDto>(nameof(GetByUserIdAsync), new ClientProxyRequestTypeValue
         {
@@ -42,7 +45,7 @@ public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService
         });
     }
 
-    public virtual async Task<ArchitectDto> CreateAsync(CreateArchitectDto input)
+    public virtual async Task<ArchitectDto> CreateAsync(CreateArchitectDto input, CancellationToken cancellationToken = default)
     {
         return await RequestAsync<ArchitectDto>(nameof(CreateAsync), new ClientProxyRequestTypeValue
         {
@@ -50,7 +53,7 @@ public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService
         });
     }
 
-    public virtual async Task<ArchitectDto> UpdateAsync(Guid id, UpdateArchitectDto input)
+    public virtual async Task<ArchitectDto> UpdateAsync(Guid id, UpdateArchitectDto input, CancellationToken cancellationToken = default)
     {
         return await RequestAsync<ArchitectDto>(nameof(UpdateAsync), new ClientProxyRequestTypeValue
         {
@@ -59,7 +62,7 @@ public partial class ArchitectClientProxy : ClientProxyBase<IArchitectAppService
         });
     }
 
-    public virtual async Task DeleteAsync(Guid id)
+    public virtual async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await RequestAsync(nameof(DeleteAsync), new ClientProxyRequestTypeValue
         {
