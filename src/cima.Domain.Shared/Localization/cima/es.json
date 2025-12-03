@@ -22,6 +22,12 @@
     "Hero:SearchPlaceholder": "Buscar por ubicación...",
     "Hero:WelcomeCard": "Bienvenido",
     "Hero:ScrollToProperties": "Ver propiedades destacadas",
+    "Hero:Brand": "4cima",
+    "Hero:Tagline": "Arquitectura - Diseño - Exclusividad",
+    "Hero:Description": "Proyectos arquitectónicos que trascienden el tiempo",
+    "Hero:ViewProperties": "Ver Propiedades",
+    "Hero:ViewPortfolio": "Portafolio",
+    "Hero:Discover": "Descubrir",
     
     "Search:QuickSearch": "Búsqueda Rápida",
     "Search:AdvancedFilters": "Filtros Avanzados",
@@ -102,6 +108,7 @@
     
     "Contact:Title": "Contáctanos",
     "Contact:Subtitle": "Estamos aquí para ayudarte",
+    "Contact:HomeSubtitle": "Estamos listos para ayudarte a encontrar la propiedad de tus sueños.",
     "Contact:Name": "Nombre completo",
     "Contact:Email": "Correo electrónico",
     "Contact:Phone": "Teléfono",
@@ -138,6 +145,13 @@
     "Portfolio:CompletedProjects": "Proyectos Completados",
     "Portfolio:FilterByArchitect": "Filtrar por arquitecto",
     "Portfolio:AllArchitects": "Todos los arquitectos",
+    "Portfolio:NoProjects": "No hay proyectos en portafolio",
+    "Portfolio:NoProjectsByArchitect": "Este arquitecto aún no tiene proyectos completados",
+    "Portfolio:ComingSoon": "Pronto agregaremos nuestros proyectos completados",
+    
+    "Featured:Subtitle": "Descubre nuestras propiedades más destacadas",
+    "Featured:NoProperties": "No hay propiedades destacadas",
+    "Featured:ComingSoon": "Pronto agregaremos propiedades destacadas",
     
     "Language": "Idioma",
     "Language:Spanish": "Español",
@@ -229,6 +243,13 @@
     "Cima:Contact:AdminEmail": "Correo Administrativo",
     "Cima:Contact:AdminEmail:Description": "Correo electrónico donde llegan todas las solicitudes de contacto",
     "Cima:Contact:AdminPhone": "Teléfono Administrativo",
-    "Cima:Contact:AdminPhone:Description": "Número telefónico administrativo para contacto"
+    "Cima:Contact:AdminPhone:Description": "Número telefónico administrativo para contacto",
+    
+    "NotFound:Title": "Página no encontrada",
+    "NotFound:Code": "404",
+    "NotFound:Message": "Lo sentimos, la página que buscas no existe.",
+    "NotFound:BackHome": "Volver al inicio",
+    
+    "Auth:NotAuthorized": "No tienes permisos para acceder a este recurso."
   }
 }

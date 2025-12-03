@@ -22,6 +22,12 @@
     "Hero:SearchPlaceholder": "Search by location...",
     "Hero:WelcomeCard": "Welcome",
     "Hero:ScrollToProperties": "View featured properties",
+    "Hero:Brand": "4cima",
+    "Hero:Tagline": "Architecture - Design - Exclusivity",
+    "Hero:Description": "Architectural projects that transcend time",
+    "Hero:ViewProperties": "View Properties",
+    "Hero:ViewPortfolio": "Portfolio",
+    "Hero:Discover": "Discover",
     
     "Search:QuickSearch": "Quick Search",
     "Search:AdvancedFilters": "Advanced Filters",
@@ -138,6 +144,22 @@
     "Portfolio:CompletedProjects": "Completed Projects",
     "Portfolio:FilterByArchitect": "Filter by architect",
     "Portfolio:AllArchitects": "All architects",
+    "Portfolio:NoProjects": "No portfolio projects",
+    "Portfolio:NoProjectsByArchitect": "This architect has no completed projects yet",
+    "Portfolio:ComingSoon": "We will soon add our completed projects",
+    
+    "Featured:Subtitle": "Discover our featured properties",
+    "Featured:NoProperties": "No featured properties",
+    "Featured:ComingSoon": "We will soon add featured properties",
+    
+    "Contact:HomeSubtitle": "We are ready to help you find your dream property.",
+    
+    "NotFound:Title": "Page not found",
+    "NotFound:Code": "404",
+    "NotFound:Message": "Sorry, the page you are looking for does not exist.",
+    "NotFound:BackHome": "Back to home",
+    
+    "Auth:NotAuthorized": "You do not have permission to access this resource.",
     
     "Language": "Language",
     "Language:Spanish": "Spanish",
