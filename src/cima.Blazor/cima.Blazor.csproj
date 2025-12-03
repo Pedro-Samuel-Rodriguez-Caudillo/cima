@@ -54,7 +54,7 @@
     <PackageReference Include="Volo.Abp.AspNetCore.Components.Server.BasicTheme" Version="9.3.6" />
     <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Basic" Version="9.3.6" />
     <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Bundling" Version="9.3.6" />
-    <!-- Agregar el paquete que contiene los archivos CSS de WebAssembly Theming -->
+    <!-- Paquete que contiene los archivos CSS de Bootstrap necesarios para ABP bundling -->
     <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly.Theming" Version="9.3.6" />
   </ItemGroup>
 
@@ -100,15 +100,5 @@
   <ItemGroup>
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
-
-  <!-- Target para incluir archivos estáticos de proyectos referenciados -->
-  <Target Name="IncludeReferencedProjectsAssets" BeforeTargets="Build;Publish">
-    <ItemGroup>
-      <ContentWithTargetPath Include="$(MSBuildProjectDirectory)\..\cima.Blazor.Client\wwwroot\**\*.*">
-        <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </ContentWithTargetPath>
-    </ItemGroup>
-  </Target>
 
 </Project>
