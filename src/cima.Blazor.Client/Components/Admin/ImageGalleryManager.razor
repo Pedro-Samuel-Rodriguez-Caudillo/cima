@@ -1,0 +1,345 @@
+@using cima.Listings
+@using cima.Permissions
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+@inject IListingAppService ListingService
+@inject IUiMessageService MessageService
+@inherits cimaComponentBase
+
+<div class="space-y-4">
+    @* Header *@
+    <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-neutral-900">
+            Galeria de Imagenes
+            @if (Images.Any())
+            {
+                <span class="ml-2 text-sm font-normal text-neutral-500">(@Images.Count imagenes)</span>
+            }
+        </h3>
+        
+        <label class="cima-btn cima-btn-primary cima-btn-sm cursor-pointer @(IsUploading ? "opacity-50 pointer-events-none" : "")">
+            @if (IsUploading)
+            {
+                <span class="cima-loading-spinner mr-2"></span>
+                <span>Subiendo...</span>
+            }
+            else
+            {
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Agregar Imagenes</span>
+            }
+            <InputFile OnChange="HandleFileSelection" multiple accept=".jpg,.jpeg,.png,.webp" class="hidden" disabled="@IsUploading" />
+        </label>
+    </div>
+
+    @* Upload Zone *@
+    @if (!Images.Any() && !IsUploading)
+    {
+        <label class="block border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center cursor-pointer hover:border-navy-400 hover:bg-navy-50/50 transition-colors">
+            <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="mt-4 text-neutral-600">
+                <span class="text-navy-600 font-medium">Haz clic para subir</span> o arrastra imagenes aqui
+            </p>
+            <p class="mt-2 text-sm text-neutral-500">PNG, JPG, WEBP hasta 10MB</p>
+            <InputFile OnChange="HandleFileSelection" multiple accept=".jpg,.jpeg,.png,.webp" class="hidden" />
+        </label>
+    }
+
+    @* Image Grid *@
+    @if (Images.Any())
+    {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            @foreach (var (image, index) in Images.Select((img, i) => (img, i)))
+            {
+                <div class="group relative aspect-square rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200 @(DraggedIndex == index ? "opacity-50" : "") @(index == 0 ? "ring-2 ring-navy-500" : "")"
+                     draggable="true"
+                     @ondragstart="() => HandleDragStart(index)"
+                     @ondragover:preventDefault
+                     @ondragover="() => HandleDragOver(index)"
+                     @ondrop="() => HandleDrop(index)"
+                     @ondragend="HandleDragEnd">
+                    
+                    <img src="@image.Url" alt="@(image.AltText ?? $"Imagen {index + 1}")" class="w-full h-full object-cover" />
+                    
+                    @if (index == 0)
+                    {
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 text-xs font-medium bg-navy-600 text-white rounded-full shadow-sm">Principal</span>
+                        </div>
+                    }
+                    
+                    <div class="absolute top-2 right-2">
+                        <span class="w-6 h-6 flex items-center justify-center text-xs font-medium bg-black/60 text-white rounded-full">@(index + 1)</span>
+                    </div>
+                    
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div class="flex gap-2">
+                            @if (index > 0)
+                            {
+                                <button type="button" class="p-2 bg-white rounded-full shadow-lg hover:bg-neutral-100" title="Mover al inicio" @onclick="() => MoveToFirst(index)" @onclick:stopPropagation>
+                                    <svg class="w-4 h-4 text-neutral-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                            }
+                            <button type="button" class="p-2 bg-red-500 rounded-full shadow-lg hover:bg-red-600" title="Eliminar" @onclick="() => RemoveImage(image)" @onclick:stopPropagation disabled="@IsDeleting">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="px-3 py-1 bg-black/60 rounded-full text-white text-xs">Arrastra para reordenar</div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <p class="text-sm text-neutral-500 text-center">
+            Arrastra las imagenes para cambiar el orden. La primera imagen sera la principal.
+        </p>
+    }
+
+    @* Upload Progress *@
+    @if (UploadProgress.Any())
+    {
+        <div class="space-y-2 bg-neutral-50 rounded-lg p-4">
+            <p class="text-sm font-medium text-neutral-700">Subiendo imagenes...</p>
+            @foreach (var item in UploadProgress)
+            {
+                <div class="space-y-1">
+                    <div class="flex justify-between text-xs text-neutral-600">
+                        <span class="truncate max-w-[200px]">@item.Key</span>
+                        <span>@item.Value%</span>
+                    </div>
+                    <div class="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-navy-600 rounded-full" style="width: @item.Value%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid ListingId { get; set; }
+    
+    [Parameter]
+    public List<ListingImageDto> InitialImages { get; set; } = new();
+    
+    [Parameter]
+    public EventCallback<List<ListingImageDto>> ImagesChanged { get; set; }
+
+    private List<ListingImageDto> Images { get; set; } = new();
+    private bool IsUploading { get; set; }
+    private bool IsDeleting { get; set; }
+    private int? DraggedIndex { get; set; }
+    private int? DragOverIndex { get; set; }
+    private Dictionary<string, int> UploadProgress { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        Images = InitialImages?.ToList() ?? new List<ListingImageDto>();
+        Images = GetOrderedImages();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (InitialImages != null && !ReferenceEquals(InitialImages, Images))
+        {
+            Images = InitialImages.ToList();
+            Images = GetOrderedImages();
+        }
+    }
+
+    private List<ListingImageDto> GetOrderedImages()
+    {
+        if (!Images.Any()) return new List<ListingImageDto>();
+        
+        var ordered = new List<ListingImageDto>();
+        var current = Images.FirstOrDefault(i => i.PreviousImageId == null);
+        
+        while (current != null && ordered.Count < Images.Count)
+        {
+            ordered.Add(current);
+            current = Images.FirstOrDefault(i => i.PreviousImageId == current.ImageId);
+        }
+        
+        var orphans = Images.Where(i => !ordered.Any(o => o.ImageId == i.ImageId));
+        ordered.AddRange(orphans);
+        
+        return ordered;
+    }
+
+    private async Task HandleFileSelection(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(10);
+        if (!files.Any()) return;
+
+        IsUploading = true;
+        UploadProgress.Clear();
+        StateHasChanged();
+
+        try
+        {
+            foreach (var file in files)
+            {
+                if (file.Size > 10 * 1024 * 1024)
+                {
+                    await MessageService.Warn($"El archivo {file.Name} excede 10MB");
+                    continue;
+                }
+
+                UploadProgress[file.Name] = 0;
+                StateHasChanged();
+
+                using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                
+                var buffer = new byte[81920];
+                int bytesRead;
+                long totalRead = 0;
+                
+                while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+                {
+                    await ms.WriteAsync(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    UploadProgress[file.Name] = (int)((totalRead * 100) / file.Size);
+                    StateHasChanged();
+                }
+
+                var base64 = Convert.ToBase64String(ms.ToArray());
+                var url = $"data:{file.ContentType};base64,{base64}";
+
+                var createDto = new CreateListingImageDto
+                {
+                    Url = url,
+                    AltText = GetFileNameWithoutExtension(file.Name),
+                    FileSize = file.Size,
+                    ContentType = file.ContentType
+                };
+
+                var newImage = await ListingService.AddImageAsync(ListingId, createDto);
+                Images.Add(newImage);
+                
+                UploadProgress.Remove(file.Name);
+                StateHasChanged();
+            }
+
+            await NotifyImagesChanged();
+            await MessageService.Success("Imagenes subidas exitosamente");
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsUploading = false;
+            UploadProgress.Clear();
+            StateHasChanged();
+        }
+    }
+
+    private string GetFileNameWithoutExtension(string fileName)
+    {
+        var lastDot = fileName.LastIndexOf('.');
+        return lastDot > 0 ? fileName.Substring(0, lastDot) : fileName;
+    }
+
+    private async Task RemoveImage(ListingImageDto image)
+    {
+        var confirmed = await MessageService.Confirm("Eliminar esta imagen?", "Eliminar");
+        if (!confirmed) return;
+
+        IsDeleting = true;
+        StateHasChanged();
+
+        try
+        {
+            await ListingService.RemoveImageAsync(ListingId, image.ImageId);
+            Images.Remove(image);
+            await NotifyImagesChanged();
+            await MessageService.Success("Imagen eliminada");
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsDeleting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task MoveToFirst(int currentIndex)
+    {
+        if (currentIndex <= 0 || currentIndex >= Images.Count) return;
+
+        var image = Images[currentIndex];
+        Images.RemoveAt(currentIndex);
+        Images.Insert(0, image);
+        
+        await UpdateImageOrder();
+    }
+
+    private void HandleDragStart(int index) => DraggedIndex = index;
+    private void HandleDragOver(int index) { if (DraggedIndex.HasValue && DraggedIndex.Value != index) DragOverIndex = index; }
+    private void HandleDragEnd() { DraggedIndex = null; DragOverIndex = null; }
+
+    private async Task HandleDrop(int targetIndex)
+    {
+        if (!DraggedIndex.HasValue || DraggedIndex.Value == targetIndex) 
+        {
+            DraggedIndex = null;
+            DragOverIndex = null;
+            return;
+        }
+
+        var draggedImage = Images[DraggedIndex.Value];
+        Images.RemoveAt(DraggedIndex.Value);
+        
+        if (targetIndex > DraggedIndex.Value) targetIndex--;
+        
+        Images.Insert(targetIndex, draggedImage);
+        DraggedIndex = null;
+        DragOverIndex = null;
+        
+        await UpdateImageOrder();
+    }
+
+    private async Task UpdateImageOrder()
+    {
+        try
+        {
+            var orderDtos = Images.Select((img, index) => new UpdateImageOrderDto
+            {
+                ImageId = img.ImageId,
+                DisplayOrder = index
+            }).ToList();
+
+            await ListingService.UpdateImagesOrderAsync(ListingId, orderDtos);
+            await NotifyImagesChanged();
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+            Images = InitialImages?.ToList() ?? new List<ListingImageDto>();
+            Images = GetOrderedImages();
+        }
+    }
+
+    private async Task NotifyImagesChanged()
+    {
+        if (ImagesChanged.HasDelegate)
+            await ImagesChanged.InvokeAsync(Images.ToList());
+    }
+}

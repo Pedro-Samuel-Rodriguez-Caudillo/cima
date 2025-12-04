@@ -4,6 +4,7 @@
 @using cima.Architects
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Services
+@using cima.Blazor.Client.Components.Admin
 @using cima.Permissions
 @attribute [Authorize(cimaPermissions.Listings.Default)]
 @inject IListingAppService ListingService
@@ -59,27 +60,27 @@
                     <div class="lg:col-span-2 space-y-6">
                         <div class="cima-card p-6">
                             <h2 class="text-xl font-semibold text-neutral-900 mb-6">
-                                Información Básica
+                                Informacion Basica
                             </h2>
 
                             <div class="space-y-4">
                                 @* Title *@
                                 <div class="cima-form-group">
-                                    <label for="title" class="cima-label cima-label-required">Título</label>
+                                    <label for="title" class="cima-label cima-label-required">Titulo</label>
                                     <InputText id="title" @bind-Value="Model.Title" class="cima-input" disabled="@IsSubmitting" />
                                     <ValidationMessage For="@(() => Model.Title)" class="cima-error-message" />
                                 </div>
 
                                 @* Description *@
                                 <div class="cima-form-group">
-                                    <label for="description" class="cima-label cima-label-required">Descripción</label>
+                                    <label for="description" class="cima-label cima-label-required">Descripcion</label>
                                     <InputTextArea id="description" @bind-Value="Model.Description" class="cima-input min-h-[150px]" rows="6" disabled="@IsSubmitting" />
                                     <ValidationMessage For="@(() => Model.Description)" class="cima-error-message" />
                                 </div>
 
                                 @* Location *@
                                 <div class="cima-form-group">
-                                    <label for="location" class="cima-label cima-label-required">Ubicación</label>
+                                    <label for="location" class="cima-label cima-label-required">Ubicacion</label>
                                     <InputText id="location" @bind-Value="Model.Location" class="cima-input" disabled="@IsSubmitting" />
                                     <ValidationMessage For="@(() => Model.Location)" class="cima-error-message" />
                                 </div>
@@ -99,30 +100,37 @@
                                     <ValidationMessage For="@(() => Model.Price)" class="cima-error-message" />
                                 </div>
 
-                                @* Area *@
+                                @* Land Area *@
                                 <div class="cima-form-group">
-                                    <label for="area" class="cima-label cima-label-required">Área (m²)</label>
-                                    <InputNumber id="area" @bind-Value="Model.Area" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Area)" class="cima-error-message" />
+                                    <label for="landArea" class="cima-label cima-label-required">Area Terreno (m2)</label>
+                                    <InputNumber id="landArea" @bind-Value="Model.LandArea" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.LandArea)" class="cima-error-message" />
+                                </div>
+
+                                @* Construction Area *@
+                                <div class="cima-form-group">
+                                    <label for="constructionArea" class="cima-label cima-label-required">Area Construccion (m2)</label>
+                                    <InputNumber id="constructionArea" @bind-Value="Model.ConstructionArea" class="cima-input" disabled="@IsSubmitting" />
+                                    <ValidationMessage For="@(() => Model.ConstructionArea)" class="cima-error-message" />
                                 </div>
 
                                 @* Bedrooms *@
                                 <div class="cima-form-group">
-                                    <label for="bedrooms" class="cima-label cima-label-required">Recámaras</label>
+                                    <label for="bedrooms" class="cima-label cima-label-required">Recamaras</label>
                                     <InputNumber id="bedrooms" @bind-Value="Model.Bedrooms" class="cima-input" disabled="@IsSubmitting" />
                                     <ValidationMessage For="@(() => Model.Bedrooms)" class="cima-error-message" />
                                 </div>
 
                                 @* Bathrooms *@
                                 <div class="cima-form-group">
-                                    <label for="bathrooms" class="cima-label cima-label-required">Baños</label>
+                                    <label for="bathrooms" class="cima-label cima-label-required">Banos</label>
                                     <InputNumber id="bathrooms" @bind-Value="Model.Bathrooms" class="cima-input" disabled="@IsSubmitting" />
                                     <ValidationMessage For="@(() => Model.Bathrooms)" class="cima-error-message" />
                                 </div>
 
                                 @* Category *@
                                 <div class="cima-form-group">
-                                    <label for="category" class="cima-label cima-label-required">Categoría</label>
+                                    <label for="category" class="cima-label cima-label-required">Categoria</label>
                                     <select id="category" @bind="SelectedCategory" class="cima-input" disabled="@IsSubmitting">
                                         <option value="">Seleccionar...</option>
                                         <option value="0">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</option>
@@ -132,7 +140,7 @@
                                     </select>
                                     @if (string.IsNullOrEmpty(SelectedCategory))
                                     {
-                                        <div class="cima-error-message">La categoría es requerida</div>
+                                        <div class="cima-error-message">La categoria es requerida</div>
                                     }
                                 </div>
 
@@ -158,7 +166,7 @@
 
                                 @* Transaction Type *@
                                 <div class="cima-form-group">
-                                    <label for="transaction" class="cima-label cima-label-required">Transacción</label>
+                                    <label for="transaction" class="cima-label cima-label-required">Transaccion</label>
                                     <select id="transaction" @bind="SelectedTransaction" class="cima-input" disabled="@IsSubmitting">
                                         <option value="">Seleccionar...</option>
                                         <option value="0">@EnumLocalizer.GetTransactionTypeName(TransactionType.Sale)</option>
@@ -167,7 +175,7 @@
                                     </select>
                                     @if (string.IsNullOrEmpty(SelectedTransaction))
                                     {
-                                        <div class="cima-error-message">El tipo de transacción es requerido</div>
+                                        <div class="cima-error-message">El tipo de transaccion es requerido</div>
                                     }
                                 </div>
 
@@ -192,12 +200,26 @@
                             </div>
                         </div>
 
-                        @* Images (Edit Mode Only) *@
+                        @* Images Section (Edit Mode Only) *@
                         @if (IsEditMode && ExistingListing != null && Id.HasValue)
                         {
                             <div class="cima-card p-6">
-                                <h2 class="text-xl font-semibold text-neutral-900 mb-6">Imágenes</h2>
-                                <ImageUploader ListingId="@Id.Value" InitialImages="@ExistingListing.Images" ImagesChanged="HandleImagesChanged" />
+                                <ImageGalleryManager 
+                                    ListingId="@Id.Value" 
+                                    InitialImages="@ExistingListing.Images" 
+                                    ImagesChanged="HandleImagesChanged" />
+                            </div>
+                        }
+                        else if (!IsEditMode)
+                        {
+                            <div class="cima-card p-6">
+                                <div class="text-center py-8 text-neutral-500">
+                                    <svg class="mx-auto h-12 w-12 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p class="font-medium">Galeria de Imagenes</p>
+                                    <p class="text-sm mt-1">Guarda la propiedad primero para agregar imagenes</p>
+                                </div>
                             </div>
                         }
                     </div>
@@ -226,18 +248,84 @@
                             @if (IsEditMode && ExistingListing != null)
                             {
                                 <div class="cima-card p-6">
-                                    <h3 class="font-semibold text-neutral-900 mb-4">Vista Previa</h3>
-                                    <div class="space-y-2 text-sm">
-                                        <div class="flex justify-between">
+                                    <h3 class="font-semibold text-neutral-900 mb-4">Informacion</h3>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="flex justify-between items-center">
                                             <span class="text-neutral-600">Estado:</span>
                                             <span class="@GetStatusBadgeClass(ExistingListing.Status)">
                                                 @EnumLocalizer.GetListingStatusName(ExistingListing.Status)
                                             </span>
                                         </div>
                                         <div class="flex justify-between">
-                                            <span class="text-neutral-600">Imágenes:</span>
+                                            <span class="text-neutral-600">Imagenes:</span>
                                             <span class="font-medium">@(ExistingListing.Images?.Count ?? 0)</span>
                                         </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-neutral-600">Creado:</span>
+                                            <span class="font-medium">@ExistingListing.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @* Quick Actions *@
+                                <div class="cima-card p-6">
+                                    <h3 class="font-semibold text-neutral-900 mb-4">Acciones Rapidas</h3>
+                                    <div class="space-y-2">
+                                        @if (ExistingListing.Status == ListingStatus.Draft)
+                                        {
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-success w-full cima-btn-sm"
+                                                    @onclick="PublishListing"
+                                                    disabled="@IsPerformingAction">
+                                                @if (IsPerformingAction)
+                                                {
+                                                    <span class="cima-loading-spinner mr-2"></span>
+                                                }
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Publicar
+                                            </button>
+                                        }
+                                        @if (ExistingListing.Status == ListingStatus.Published)
+                                        {
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-secondary w-full cima-btn-sm"
+                                                    @onclick="UnpublishListing"
+                                                    disabled="@IsPerformingAction">
+                                                Despublicar
+                                            </button>
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-secondary w-full cima-btn-sm"
+                                                    @onclick="MoveToPortfolio"
+                                                    disabled="@IsPerformingAction">
+                                                Mover a Portafolio
+                                            </button>
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-warning w-full cima-btn-sm"
+                                                    @onclick="ArchiveListing"
+                                                    disabled="@IsPerformingAction">
+                                                Archivar
+                                            </button>
+                                        }
+                                        @if (ExistingListing.Status == ListingStatus.Archived)
+                                        {
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-success w-full cima-btn-sm"
+                                                    @onclick="UnarchiveListing"
+                                                    disabled="@IsPerformingAction">
+                                                Desarchivar
+                                            </button>
+                                        }
+                                        @if (ExistingListing.Status == ListingStatus.Portfolio)
+                                        {
+                                            <button type="button" 
+                                                    class="cima-btn cima-btn-warning w-full cima-btn-sm"
+                                                    @onclick="ArchiveListing"
+                                                    disabled="@IsPerformingAction">
+                                                Archivar
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -258,19 +346,20 @@
 
     private bool IsLoading { get; set; } = true;
     private bool IsSubmitting { get; set; }
+    private bool IsPerformingAction { get; set; }
     
     private CreateUpdateListingDto Model { get; set; } = new() 
     { 
-        Title = "",  // ? Inicializar required
-        Description = ""  // ? Inicializar required
+        Title = "",
+        Description = ""
     };
     private List<ArchitectDto>? Architects { get; set; }
     private ListingDto? ExistingListing { get; set; }
     
     private string SelectedCategory { get; set; } = string.Empty;
-    private string SelectedType { get; set; } = string.Empty;
-    private string SelectedTransaction { get; set; } = string.Empty;
-    private string SelectedArchitectId { get; set; } = string.Empty;
+    private String SelectedType { get; set; } = string.Empty;
+    private String SelectedTransaction { get; set; } = string.Empty;
+    private String SelectedArchitectId { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -313,7 +402,8 @@
                 Description = ExistingListing.Description,
                 Location = ExistingListing.Location,
                 Price = ExistingListing.Price,
-                Area = ExistingListing.Area,
+                LandArea = ExistingListing.LandArea,
+                ConstructionArea = ExistingListing.ConstructionArea,
                 Bedrooms = ExistingListing.Bedrooms,
                 Bathrooms = ExistingListing.Bathrooms,
                 Category = ExistingListing.Category,
@@ -342,7 +432,6 @@
         {
             IsSubmitting = true;
 
-            // Convert string selections to enums
             Model.Category = (PropertyCategory)int.Parse(SelectedCategory);
             Model.Type = (PropertyType)int.Parse(SelectedType);
             Model.TransactionType = (TransactionType)int.Parse(SelectedTransaction);
@@ -356,7 +445,7 @@
             else
             {
                 var created = await ListingService.CreateAsync(Model);
-                await MessageService.Success("Propiedad creada exitosamente");
+                await MessageService.Success("Propiedad creada exitosamente. Ahora puedes agregar imagenes.");
                 NavManager.NavigateTo($"/admin/listings/edit/{created.Id}");
                 return;
             }
@@ -389,6 +478,71 @@
             StateHasChanged();
         }
     }
+
+    #region Status Actions
+
+    private async Task PublishListing()
+    {
+        await PerformStatusAction(
+            () => ListingService.PublishAsync(Id!.Value),
+            "Propiedad publicada exitosamente");
+    }
+
+    private async Task UnpublishListing()
+    {
+        await PerformStatusAction(
+            () => ListingService.UnpublishAsync(Id!.Value),
+            "Propiedad despublicada");
+    }
+
+    private async Task ArchiveListing()
+    {
+        var confirmed = await MessageService.Confirm(
+            "¿Estas seguro de archivar esta propiedad?",
+            "Archivar Propiedad");
+        if (!confirmed) return;
+
+        await PerformStatusAction(
+            () => ListingService.ArchiveAsync(Id!.Value),
+            "Propiedad archivada");
+    }
+
+    private async Task UnarchiveListing()
+    {
+        await PerformStatusAction(
+            () => ListingService.UnarchiveAsync(Id!.Value),
+            "Propiedad desarchivada y publicada");
+    }
+
+    private async Task MoveToPortfolio()
+    {
+        await PerformStatusAction(
+            () => ListingService.MoveToPortfolioAsync(Id!.Value),
+            "Propiedad movida al portafolio");
+    }
+
+    private async Task PerformStatusAction(Func<Task<ListingDto>> action, string successMessage)
+    {
+        try
+        {
+            IsPerformingAction = true;
+            StateHasChanged();
+
+            ExistingListing = await action();
+            await MessageService.Success(successMessage);
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsPerformingAction = false;
+            StateHasChanged();
+        }
+    }
+
+    #endregion
 
     private string GetStatusBadgeClass(ListingStatus status)
     {
