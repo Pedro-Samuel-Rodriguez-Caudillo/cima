@@ -62,7 +62,7 @@
                     <select 
                         class="cima-input w-full md:w-auto"
                         value="@SortOption"
-                        @onchange="@(e => { SortOption = e.Value?.ToString() ?? "CreatedAt DESC"; HandleSortChange(); })">
+                        @onchange="HandleSortChangeAsync">
                         <option value="CreatedAt DESC">@L["Properties:Newest"]</option>
                         <option value="Price ASC">@L["Properties:PriceLowToHigh"]</option>
                         <option value="Price DESC">@L["Properties:PriceHighToLow"]</option>
@@ -175,6 +175,7 @@
         try
         {
             IsLoading = true;
+            StateHasChanged();
 
             var input = new GetListingsInput
             {
@@ -202,6 +203,7 @@
         finally
         {
             IsLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -219,8 +221,10 @@
         await LoadListings();
     }
 
-    private async Task HandleSortChange()
+    private async Task HandleSortChangeAsync(ChangeEventArgs e)
     {
+        SortOption = e.Value?.ToString() ?? "CreatedAt DESC";
+        CurrentPage = 1;
         await LoadListings();
     }
 
