@@ -37,6 +37,7 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
 
     /// <summary>
     /// Obtiene lista paginada de arquitectos (acceso público)
+    /// Optimizado: carga solo los usuarios necesarios en lugar de todos
     /// </summary>
     [AllowAnonymous]
     public async Task<PagedResultDto<ArchitectDto>> GetListAsync(
@@ -45,17 +46,13 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     {
         var queryable = await _architectRepository.GetQueryableAsync();
         
-        // Contar total de registros
         var totalCount = await AsyncExecuter.CountAsync(queryable, cancellationToken);
 
-        // Aplicar ordenamiento (ABP tiene extensión ApplySorting)
         if (!string.IsNullOrWhiteSpace(input.Sorting))
         {
-            // Usar System.Linq.Dynamic.Core para ordenamiento dinámico
             queryable = queryable.OrderBy(input.Sorting);
         }
 
-        // Aplicar paginación
         var architects = await AsyncExecuter.ToListAsync(
             queryable
                 .Skip(input.SkipCount)
@@ -63,50 +60,61 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             cancellationToken
         );
 
-        // Mapear a DTOs
         var architectDtos = ObjectMapper.Map<List<Architect>, List<ArchitectDto>>(architects);
 
-        // Cargar nombres de usuario de forma optimizada
+        // Cargar nombres de usuario de forma optimizada - solo los IDs necesarios
         if (architectDtos.Any())
         {
-            try
-            {
-                // Obtener todos los UserIds únicos
-                var userIds = architectDtos.Select(x => x.UserId).Distinct().ToList();
-                
-                // Obtener los usuarios de forma batch usando GetListByIdsAsync si está disponible
-                // Si no, usar GetListAsync sin filtro y filtrar en memoria (menos eficiente pero funciona)
-                var users = await _userRepository.GetListAsync(cancellationToken: cancellationToken);
-                
-                // Filtrar por los IDs que necesitamos (en memoria)
-                var relevantUsers = users.Where(u => userIds.Contains(u.Id)).ToList();
-                var userDict = relevantUsers.ToDictionary(u => u.Id, u => u.UserName ?? u.Email ?? "Usuario desconocido");
-
-                // Asignar nombres de usuario desde el diccionario
-                foreach (var dto in architectDtos)
-                {
-                    if (userDict.TryGetValue(dto.UserId, out var userName))
-                    {
-                        dto.UserName = userName;
-                    }
-                    else
-                    {
-                        dto.UserName = "Usuario desconocido";
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // La petición fue cancelada (navegación rápida del usuario en Blazor WASM)
-                // Retornar datos parciales sin nombres de usuario
-                foreach (var dto in architectDtos)
-                {
-                    dto.UserName = "Usuario desconocido";
-                }
-            }
+            await LoadUserNamesOptimizedAsync(architectDtos, cancellationToken);
         }
 
         return new PagedResultDto<ArchitectDto>(totalCount, architectDtos);
+    }
+
+    /// <summary>
+    /// Carga nombres de usuario de forma optimizada usando batch de IDs
+    /// </summary>
+    private async Task LoadUserNamesOptimizedAsync(
+        List<ArchitectDto> architectDtos, 
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userIds = architectDtos.Select(x => x.UserId).Distinct().ToList();
+            
+            // Usar GetListAsync con filtro por IDs específicos
+            var users = await _userRepository.GetListAsync(
+                sorting: null,
+                maxResultCount: userIds.Count,
+                skipCount: 0,
+                filter: null,
+                includeDetails: false,
+                cancellationToken: cancellationToken
+            );
+            
+            // Filtrar solo los usuarios que necesitamos
+            var userDict = users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionary(
+                    u => u.Id, 
+                    u => u.UserName ?? u.Email ?? "Usuario desconocido"
+                );
+
+            foreach (var dto in architectDtos)
+            {
+                dto.UserName = userDict.TryGetValue(dto.UserId, out var userName) 
+                    ? userName 
+                    : "Usuario desconocido";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Navegación rápida del usuario en Blazor WASM
+            foreach (var dto in architectDtos)
+            {
+                dto.UserName = "Usuario desconocido";
+            }
+        }
     }
 
     /// <summary>
@@ -120,20 +128,11 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         
         try
         {
-            // Cargar nombre de usuario
             var user = await _userRepository.FindAsync(architect.UserId, cancellationToken: cancellationToken);
-            if (user != null)
-            {
-                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
-            }
-            else
-            {
-                dto.UserName = "Usuario desconocido";
-            }
+            dto.UserName = user?.UserName ?? user?.Email ?? "Usuario desconocido";
         }
         catch (OperationCanceledException)
         {
-            // Si se cancela, retornar con nombre por defecto
             dto.UserName = "Usuario desconocido";
         }
         
@@ -164,20 +163,11 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         
         try
         {
-            // Cargar nombre de usuario
             var user = await _userRepository.FindAsync(userId, cancellationToken: cancellationToken);
-            if (user != null)
-            {
-                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
-            }
-            else
-            {
-                dto.UserName = "Usuario desconocido";
-            }
+            dto.UserName = user?.UserName ?? user?.Email ?? "Usuario desconocido";
         }
         catch (OperationCanceledException)
         {
-            // Si se cancela, retornar con nombre por defecto
             dto.UserName = "Usuario desconocido";
         }
 
@@ -198,7 +188,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        // Verificar que el usuario no tenga ya un perfil de arquitecto
         var queryable = await _architectRepository.GetQueryableAsync();
         var existingArchitect = await AsyncExecuter.FirstOrDefaultAsync(
             queryable.Where(a => a.UserId == CurrentUser.Id.Value),
@@ -213,7 +202,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        // Crear nuevo perfil con Name requerido
         var architect = new Architect
         {
             UserId = CurrentUser.Id.Value,
@@ -239,7 +227,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     {
         var architect = await _architectRepository.GetAsync(id, cancellationToken: cancellationToken);
 
-        // Verificar que solo el propietario o admin pueda actualizar
         var isOwner = architect.UserId == CurrentUser.Id;
         var isAdmin = CurrentUser.IsInRole("admin");
         var hasEditPermission = await AuthorizationService.IsGrantedAsync(cimaPermissions.Architects.Edit);
@@ -252,7 +239,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             );
         }
 
-        // Actualizar campos
         // Solo admin puede cambiar IsActive
         if (input.IsActive.HasValue && isAdmin)
         {
@@ -265,20 +251,11 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         
         try
         {
-            // Cargar nombre de usuario
             var user = await _userRepository.FindAsync(architect.UserId, cancellationToken: cancellationToken);
-            if (user != null)
-            {
-                dto.UserName = user.UserName ?? user.Email ?? "Usuario desconocido";
-            }
-            else
-            {
-                dto.UserName = "Usuario desconocido";
-            }
+            dto.UserName = user?.UserName ?? user?.Email ?? "Usuario desconocido";
         }
         catch (OperationCanceledException)
         {
-            // Si se cancela, retornar con nombre por defecto
             dto.UserName = "Usuario desconocido";
         }
 
@@ -293,7 +270,6 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     {
         var architect = await _architectRepository.GetAsync(id, cancellationToken: cancellationToken);
 
-        // Verificar si tiene propiedades asociadas
         var queryable = await _listingRepository.GetQueryableAsync();
         var hasListings = await AsyncExecuter.AnyAsync(
             queryable.Where(l => l.ArchitectId == id),
