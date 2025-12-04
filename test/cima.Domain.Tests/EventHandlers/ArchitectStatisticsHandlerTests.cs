@@ -14,6 +14,7 @@ namespace cima.EventHandlers;
 
 /// <summary>
 /// Tests unitarios para ArchitectStatisticsHandler.
+/// Verifica el comportamiento correcto de actualizacion de estadisticas.
 /// </summary>
 public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDomainTestModule>
 {
@@ -28,10 +29,10 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
         _handler = new ArchitectStatisticsHandler(_architectRepository, _logger);
     }
 
-    #region ListingStatusChangedEto Tests
+    #region Primera Publicacion Tests
 
     [Fact]
-    public async Task HandleEventAsync_Should_Increment_Stats_When_Published()
+    public async Task HandleEventAsync_Should_Increment_Both_Stats_When_First_Time_Published()
     {
         // Arrange
         var architectId = Guid.NewGuid();
@@ -42,16 +43,45 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
             listingId: Guid.NewGuid(),
             architectId: architectId,
             oldStatus: ListingStatus.Draft,
-            newStatus: ListingStatus.Published);
+            newStatus: ListingStatus.Published,
+            isFirstTimePublished: true); // Primera publicacion
 
         // Act
         await _handler.HandleEventAsync(eventData);
 
         // Assert
-        architect.TotalListingsPublished.ShouldBe(6);
-        architect.ActiveListings.ShouldBe(4);
+        architect.TotalListingsPublished.ShouldBe(6); // Debe incrementar
+        architect.ActiveListings.ShouldBe(4); // Debe incrementar
         await _architectRepository.Received(1).UpdateAsync(architect);
     }
+
+    [Fact]
+    public async Task HandleEventAsync_Should_Only_Increment_ActiveListings_When_Republished()
+    {
+        // Arrange
+        var architectId = Guid.NewGuid();
+        var architect = CreateTestArchitect(totalPublished: 5, activeListings: 3);
+        _architectRepository.FindAsync(architectId).Returns(architect);
+
+        var eventData = new ListingStatusChangedEto(
+            listingId: Guid.NewGuid(),
+            architectId: architectId,
+            oldStatus: ListingStatus.Draft,
+            newStatus: ListingStatus.Published,
+            isFirstTimePublished: false); // Republicacion
+
+        // Act
+        await _handler.HandleEventAsync(eventData);
+
+        // Assert
+        architect.TotalListingsPublished.ShouldBe(5); // NO debe incrementar
+        architect.ActiveListings.ShouldBe(4); // Debe incrementar
+        await _architectRepository.Received(1).UpdateAsync(architect);
+    }
+
+    #endregion
+
+    #region Archive Tests
 
     [Fact]
     public async Task HandleEventAsync_Should_Decrement_ActiveListings_When_Archived_From_Published()
@@ -98,6 +128,10 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
         await _architectRepository.Received(1).UpdateAsync(architect);
     }
 
+    #endregion
+
+    #region Unarchive Tests
+
     [Fact]
     public async Task HandleEventAsync_Should_Increment_ActiveListings_When_Unarchived()
     {
@@ -110,15 +144,21 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
             listingId: Guid.NewGuid(),
             architectId: architectId,
             oldStatus: ListingStatus.Archived,
-            newStatus: ListingStatus.Published);
+            newStatus: ListingStatus.Published,
+            isFirstTimePublished: false); // Desarchivado no es primera publicacion
 
         // Act
         await _handler.HandleEventAsync(eventData);
 
         // Assert
-        architect.ActiveListings.ShouldBe(3);
+        architect.TotalListingsPublished.ShouldBe(5); // NO debe incrementar
+        architect.ActiveListings.ShouldBe(3); // Debe incrementar
         await _architectRepository.Received(1).UpdateAsync(architect);
     }
+
+    #endregion
+
+    #region Unpublish Tests
 
     [Fact]
     public async Task HandleEventAsync_Should_Decrement_ActiveListings_When_Unpublished()
@@ -142,6 +182,10 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
         await _architectRepository.Received(1).UpdateAsync(architect);
     }
 
+    #endregion
+
+    #region Edge Cases
+
     [Fact]
     public async Task HandleEventAsync_Should_Not_Go_Below_Zero_ActiveListings()
     {
@@ -160,7 +204,7 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
         await _handler.HandleEventAsync(eventData);
 
         // Assert
-        architect.ActiveListings.ShouldBe(0); // No debería ser negativo
+        architect.ActiveListings.ShouldBe(0); // No deberia ser negativo
     }
 
     [Fact]
@@ -197,9 +241,10 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
             listingId: Guid.NewGuid(),
             architectId: architectId,
             oldStatus: ListingStatus.Draft,
-            newStatus: ListingStatus.Published);
+            newStatus: ListingStatus.Published,
+            isFirstTimePublished: true);
 
-        // Act & Assert - No debería lanzar excepción
+        // Act & Assert - No deberia lanzar excepcion
         await Should.NotThrowAsync(async () =>
             await _handler.HandleEventAsync(eventData));
 
@@ -220,7 +265,7 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
             title: "Nueva propiedad",
             createdAt: DateTime.UtcNow);
 
-        // Act & Assert - Solo verificamos que no lance excepción
+        // Act & Assert - Solo verificamos que no lance excepcion
         await Should.NotThrowAsync(async () =>
             await _handler.HandleEventAsync(eventData));
     }
@@ -280,6 +325,23 @@ public sealed class ArchitectStatisticsHandlerTests : cimaDomainTestBase<cimaDom
 
         // Assert
         eventData.WasPublished.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void IsFirstTimePublished_Should_Be_Preserved(bool isFirstTime)
+    {
+        // Arrange
+        var eventData = new ListingStatusChangedEto(
+            Guid.NewGuid(), 
+            Guid.NewGuid(), 
+            ListingStatus.Draft, 
+            ListingStatus.Published,
+            isFirstTimePublished: isFirstTime);
+
+        // Assert
+        eventData.IsFirstTimePublished.ShouldBe(isFirstTime);
     }
 
     #endregion

@@ -22,6 +22,7 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
     private readonly IGuidGenerator _guidGenerator;
     private readonly IClock _clock;
     private readonly ListingManager _listingManager;
+    private readonly DateTime _testDateTime = new DateTime(2024, 1, 15, 10, 0, 0, DateTimeKind.Utc);
 
     public ListingManagerTests()
     {
@@ -30,7 +31,7 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         _clock = Substitute.For<IClock>();
         
         _guidGenerator.Create().Returns(Guid.NewGuid());
-        _clock.Now.Returns(DateTime.UtcNow);
+        _clock.Now.Returns(_testDateTime);
         
         _listingManager = new ListingManager(_architectRepository, _guidGenerator, _clock);
     }
@@ -68,6 +69,34 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         listing.Price.ShouldBe(2500000m);
         listing.Status.ShouldBe(ListingStatus.Draft);
         listing.ArchitectId.ShouldBe(architectId);
+        listing.FirstPublishedAt.ShouldBeNull(); // Nunca publicado
+    }
+
+    [Fact]
+    public async Task CreateAsync_Should_Set_FirstPublishedAt_To_Null()
+    {
+        // Arrange
+        var architectId = Guid.NewGuid();
+        var architect = CreateTestArchitect(architectId, isActive: true);
+        _architectRepository.GetAsync(architectId).Returns(architect);
+
+        // Act
+        var listing = await _listingManager.CreateAsync(
+            title: "Nueva Casa",
+            description: "Descripcion de prueba",
+            location: "Ciudad",
+            price: 1000000m,
+            landArea: 100m,
+            constructionArea: 80m,
+            bedrooms: 2,
+            bathrooms: 1,
+            category: PropertyCategory.Residential,
+            type: PropertyType.House,
+            transactionType: TransactionType.Sale,
+            architectId: architectId);
+
+        // Assert
+        listing.FirstPublishedAt.ShouldBeNull();
     }
 
     [Fact]
@@ -81,8 +110,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         // Act
         var listing = await _listingManager.CreateAsync(
             title: "  Casa con espacios  ",
-            description: "  Descripción con espacios  ",
-            location: "  Ubicación  ",
+            description: "  Descripcion con espacios  ",
+            location: "  Ubicacion  ",
             price: 1000000m,
             landArea: 100m,
             constructionArea: 80m,
@@ -95,8 +124,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
 
         // Assert
         listing.Title.ShouldBe("Casa con espacios");
-        listing.Description.ShouldBe("Descripción con espacios");
-        listing.Location.ShouldBe("Ubicación");
+        listing.Description.ShouldBe("Descripcion con espacios");
+        listing.Location.ShouldBe("Ubicacion");
     }
 
     [Fact]
@@ -111,8 +140,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         var exception = await Should.ThrowAsync<BusinessException>(async () =>
             await _listingManager.CreateAsync(
                 title: "Casa de Prueba",
-                description: "Descripción",
-                location: "Ubicación",
+                description: "Descripcion",
+                location: "Ubicacion",
                 price: 1000000m,
                 landArea: 100m,
                 constructionArea: 80m,
@@ -127,8 +156,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
     }
 
     [Theory]
-    [InlineData("", "Descripción válida")]
-    [InlineData("   ", "Descripción válida")]
+    [InlineData("", "Descripcion valida")]
+    [InlineData("   ", "Descripcion valida")]
     public async Task CreateAsync_Should_Throw_When_Title_Is_Empty(string title, string description)
     {
         // Arrange
@@ -141,7 +170,7 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
             await _listingManager.CreateAsync(
                 title: title,
                 description: description,
-                location: "Ubicación",
+                location: "Ubicacion",
                 price: 1000000m,
                 landArea: 100m,
                 constructionArea: 80m,
@@ -167,8 +196,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         var exception = await Should.ThrowAsync<BusinessException>(async () =>
             await _listingManager.CreateAsync(
                 title: "Casa",
-                description: "Descripción",
-                location: "Ubicación",
+                description: "Descripcion",
+                location: "Ubicacion",
                 price: 0m,
                 landArea: 100m,
                 constructionArea: 80m,
@@ -194,8 +223,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         var exception = await Should.ThrowAsync<BusinessException>(async () =>
             await _listingManager.CreateAsync(
                 title: "Casa",
-                description: "Descripción",
-                location: "Ubicación",
+                description: "Descripcion",
+                location: "Ubicacion",
                 price: 1000000m,
                 landArea: 100m,
                 constructionArea: 150m, // Mayor que landArea
@@ -228,6 +257,35 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
     }
 
     [Fact]
+    public async Task PublishAsync_Should_Set_FirstPublishedAt_On_First_Publication()
+    {
+        // Arrange
+        var listing = CreateTestListing(ListingStatus.Draft);
+        listing.FirstPublishedAt = null; // Nunca publicado
+
+        // Act
+        await _listingManager.PublishAsync(listing);
+
+        // Assert
+        listing.FirstPublishedAt.ShouldBe(_testDateTime);
+    }
+
+    [Fact]
+    public async Task PublishAsync_Should_Not_Change_FirstPublishedAt_On_Republication()
+    {
+        // Arrange
+        var originalPublishDate = new DateTime(2023, 6, 1, 10, 0, 0, DateTimeKind.Utc);
+        var listing = CreateTestListing(ListingStatus.Draft);
+        listing.FirstPublishedAt = originalPublishDate; // Ya fue publicado antes
+
+        // Act
+        await _listingManager.PublishAsync(listing);
+
+        // Assert
+        listing.FirstPublishedAt.ShouldBe(originalPublishDate); // No debe cambiar
+    }
+
+    [Fact]
     public async Task PublishAsync_Should_Throw_When_Already_Published()
     {
         // Arrange
@@ -251,6 +309,21 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
 
         // Assert
         listing.Status.ShouldBe(ListingStatus.Draft);
+    }
+
+    [Fact]
+    public async Task UnpublishAsync_Should_Preserve_FirstPublishedAt()
+    {
+        // Arrange
+        var originalPublishDate = new DateTime(2023, 6, 1, 10, 0, 0, DateTimeKind.Utc);
+        var listing = CreateTestListing(ListingStatus.Published);
+        listing.FirstPublishedAt = originalPublishDate;
+
+        // Act
+        await _listingManager.UnpublishAsync(listing);
+
+        // Assert
+        listing.FirstPublishedAt.ShouldBe(originalPublishDate); // No debe cambiar
     }
 
     [Fact]
@@ -368,8 +441,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
     {
         // Act & Assert (no exception means success)
         Should.NotThrow(() => _listingManager.ValidateListingData(
-            title: "Título válido",
-            description: "Descripción válida",
+            title: "Titulo valido",
+            description: "Descripcion valida",
             price: 1000000m,
             landArea: 200m,
             constructionArea: 150m));
@@ -385,7 +458,7 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         var exception = Should.Throw<BusinessException>(() =>
             _listingManager.ValidateListingData(
                 title: longTitle,
-                description: "Descripción",
+                description: "Descripcion",
                 price: 1000000m,
                 landArea: 200m,
                 constructionArea: 150m));
@@ -401,8 +474,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         // Act & Assert
         var exception = Should.Throw<BusinessException>(() =>
             _listingManager.ValidateListingData(
-                title: "Título",
-                description: "Descripción",
+                title: "Titulo",
+                description: "Descripcion",
                 price: 1000000m,
                 landArea: landArea,
                 constructionArea: 50m));
@@ -431,8 +504,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
         return new Listing
         {
             Title = "Casa de prueba",
-            Description = "Descripción de prueba",
-            Location = "Ubicación",
+            Description = "Descripcion de prueba",
+            Location = "Ubicacion",
             Price = 1000000m,
             LandArea = 200m,
             ConstructionArea = 150m,
@@ -443,7 +516,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
             TransactionType = TransactionType.Sale,
             ArchitectId = Guid.NewGuid(),
             Status = status,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            FirstPublishedAt = null
         };
     }
 
