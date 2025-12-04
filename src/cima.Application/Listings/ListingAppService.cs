@@ -124,24 +124,32 @@ public class ListingAppService : cimaAppService, IListingAppService
             return queryable.OrderByDescending(p => p.CreatedAt);
         }
 
-        return sorting.ToLower() switch
+        // Normalizar: quitar espacios extras y convertir a minúsculas
+        var normalizedSorting = sorting.Trim().ToLower().Replace(" ", "");
+
+        return normalizedSorting switch
         {
-            "price" => queryable.OrderBy(p => p.Price),
-            "price desc" => queryable.OrderByDescending(p => p.Price),
-            "priceasc" => queryable.OrderBy(p => p.Price),
+            // Price sorting
+            "price" or "priceasc" => queryable.OrderBy(p => p.Price),
             "pricedesc" => queryable.OrderByDescending(p => p.Price),
-            "landarea" => queryable.OrderBy(p => p.LandArea),
-            "landarea desc" => queryable.OrderByDescending(p => p.LandArea),
-            "landareaasc" => queryable.OrderBy(p => p.LandArea),
-            "landaread desc" => queryable.OrderByDescending(p => p.LandArea),
-            "area" => queryable.OrderBy(p => p.LandArea), // Backward compatibility
-            "area desc" => queryable.OrderByDescending(p => p.LandArea),
-            "areaasc" => queryable.OrderBy(p => p.LandArea),
+            
+            // Land Area sorting
+            "landarea" or "landareaasc" => queryable.OrderBy(p => p.LandArea),
+            "landaread" or "landaread desc" or "landareedesc" or "landareasc" => queryable.OrderByDescending(p => p.LandArea),
+            
+            // Area sorting (backward compatibility)
+            "area" or "areaasc" => queryable.OrderBy(p => p.LandArea),
             "areadesc" => queryable.OrderByDescending(p => p.LandArea),
-            "createdat" => queryable.OrderBy(p => p.CreatedAt),
-            "createdat desc" => queryable.OrderByDescending(p => p.CreatedAt),
-            "title" => queryable.OrderBy(p => p.Title),
-            "title desc" => queryable.OrderByDescending(p => p.Title),
+            
+            // CreatedAt sorting
+            "createdat" or "createdatasc" => queryable.OrderBy(p => p.CreatedAt),
+            "createdatdesc" => queryable.OrderByDescending(p => p.CreatedAt),
+            
+            // Title sorting
+            "title" or "titleasc" => queryable.OrderBy(p => p.Title),
+            "titledesc" => queryable.OrderByDescending(p => p.Title),
+            
+            // Default
             _ => queryable.OrderByDescending(p => p.CreatedAt)
         };
     }

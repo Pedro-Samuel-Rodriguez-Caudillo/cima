@@ -128,6 +128,8 @@ public class ListingCursorPaginationService : ApplicationService
         {
             var countQueryable = await _listingRepository.GetQueryableAsync();
             countQueryable = ApplyFilters(countQueryable, input);
+            // Agregar OrderBy antes del Count para evitar el warning de EF Core
+            countQueryable = countQueryable.OrderBy(l => l.Id);
             result.TotalCount = await AsyncExecuter.CountAsync(countQueryable);
         }
 
