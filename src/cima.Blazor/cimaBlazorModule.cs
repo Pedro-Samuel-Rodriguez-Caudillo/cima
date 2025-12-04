@@ -4,7 +4,7 @@ using cima.Blazor.Components;
 using cima.Blazor.HealthChecks;
 using cima.Blazor.Services;
 using MudBlazor.Services;
-
+using cima.Blazor.Infrastructure;
 using cima.Data;
 using cima.EntityFrameworkCore;
 using cima.Localization;
@@ -165,7 +165,10 @@ public class cimaBlazorModule : AbpModule
 
         // Add Razor Pages for ABP Account MVC pages (Login, Register, etc.)
         context.Services.AddRazorPages();
-        
+
+        context.Services.AddCimaImprovements(configuration, hostingEnvironment);
+
+
         // Add services to the container.
         context.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
@@ -389,6 +392,7 @@ public class cimaBlazorModule : AbpModule
     {
         var env = context.GetEnvironment();
         var app = context.GetApplicationBuilder();
+        var configuration = context.GetConfiguration();
         
         // EJECUTAR MIGRACIONES SOLO EN STAGING/PRODUCTION
         // En Development, el seeding se ejecuta a travs de DevelopmentDataSeedingService
@@ -444,7 +448,9 @@ public class cimaBlazorModule : AbpModule
         app.UseCors();
         app.UseRouting();
         
-        var configuration = context.GetConfiguration();
+        // Mejoras: Rate Limiting, OpenTelemetry
+        app.UseCimaImprovements(configuration);
+        
         if (Convert.ToBoolean(configuration["AuthServer:IsOnK8s"]))
         {
             app.Use(async (context, next) =>
