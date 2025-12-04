@@ -511,48 +511,201 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Agrega una imagen a una propiedad
-    /// TODO: Refactorizar para usar lista enlazada en lugar de DisplayOrder
+    /// Agrega una imagen a una propiedad usando lista enlazada.
+    /// La nueva imagen se agrega al final de la galería.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
-        throw new NotImplementedException("AddImageAsync necesita ser refactorizado para usar lista enlazada");
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validación de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
+        {
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
+        }
+
+        // Crear nuevo ID para la imagen
+        var newImageId = Guid.NewGuid();
         
-        // TODO: Implementar con lista enlazada
-        // 1. Obtener última imagen de la lista (NextImageId == null)
-        // 2. Crear nueva imagen con PreviousImageId = última imagen
-        // 3. Actualizar última imagen para que NextImageId apunte a la nueva
+        // Encontrar la última imagen (NextImageId == null)
+        ListingImage? lastImage = null;
+        if (listing.Images.Any())
+        {
+            lastImage = listing.Images.FirstOrDefault(img => img.NextImageId == null);
+        }
+
+        // Crear la nueva imagen
+        var newImage = new ListingImage(
+            imageId: newImageId,
+            url: input.Url,
+            altText: input.AltText,
+            fileSize: input.FileSize,
+            contentType: input.ContentType,
+            previousImageId: lastImage?.ImageId,
+            nextImageId: null
+        );
+
+        // Si hay una última imagen, actualizarla para que apunte a la nueva
+        if (lastImage != null)
+        {
+            var updatedLastImage = lastImage.WithNextImage(newImageId);
+            
+            // Reemplazar la imagen en la colección (ValueObject es inmutable)
+            var imagesList = listing.Images.ToList();
+            var lastImageIndex = imagesList.FindIndex(img => img.ImageId == lastImage.ImageId);
+            if (lastImageIndex >= 0)
+            {
+                imagesList[lastImageIndex] = updatedLastImage;
+            }
+            imagesList.Add(newImage);
+            
+            listing.Images = imagesList;
+        }
+        else
+        {
+            // Es la primera imagen
+            listing.Images = new List<ListingImage> { newImage };
+        }
+
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
+
+        return new ListingImageDto
+        {
+            ImageId = newImage.ImageId,
+            Url = newImage.Url,
+            AltText = newImage.AltText,
+            PreviousImageId = newImage.PreviousImageId,
+            NextImageId = newImage.NextImageId
+        };
     }
 
     /// <summary>
-    /// Elimina una imagen de una propiedad
-    /// TODO: Refactorizar para usar lista enlazada
+    /// Elimina una imagen de una propiedad.
+    /// Actualiza los punteros de la lista enlazada para mantener consistencia.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveImageAsync(Guid listingId, Guid imageId)
     {
-        throw new NotImplementedException("RemoveImageAsync necesita ser refactorizado para usar lista enlazada");
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validación de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
+        {
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
+        }
+
+        var imageToRemove = listing.Images.FirstOrDefault(img => img.ImageId == imageId);
+        if (imageToRemove == null)
+        {
+            throw new BusinessException("Listing:ImageNotFound")
+                .WithData("ImageId", imageId)
+                .WithData("ListingId", listingId);
+        }
+
+        var imagesList = listing.Images.ToList();
+
+        // Actualizar la imagen anterior para que apunte a la siguiente
+        if (imageToRemove.PreviousImageId.HasValue)
+        {
+            var previousIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.PreviousImageId.Value);
+            if (previousIndex >= 0)
+            {
+                imagesList[previousIndex] = imagesList[previousIndex].WithNextImage(imageToRemove.NextImageId);
+            }
+        }
+
+        // Actualizar la imagen siguiente para que apunte a la anterior
+        if (imageToRemove.NextImageId.HasValue)
+        {
+            var nextIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.NextImageId.Value);
+            if (nextIndex >= 0)
+            {
+                imagesList[nextIndex] = imagesList[nextIndex].WithPreviousImage(imageToRemove.PreviousImageId);
+            }
+        }
+
+        // Eliminar la imagen
+        imagesList.RemoveAll(img => img.ImageId == imageId);
         
-        // TODO: Implementar con lista enlazada
-        // 1. Encontrar la imagen a eliminar
-        // 2. Actualizar imagen anterior para que NextImageId apunte a la siguiente
-        // 3. Actualizar imagen siguiente para que PreviousImageId apunte a la anterior
-        // 4. Eliminar la imagen
+        listing.Images = imagesList;
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
     }
 
     /// <summary>
-    /// Actualiza el orden de las imágenes
-    /// TODO: Refactorizar para usar lista enlazada
+    /// Actualiza el orden de las imágenes reconstruyendo la lista enlazada.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
     {
-        throw new NotImplementedException("UpdateImagesOrderAsync necesita ser refactorizado para usar lista enlazada");
+        if (input == null || !input.Any())
+        {
+            return;
+        }
+
+        var listing = await _listingRepository.GetAsync(listingId);
+
+        // Validación de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
+        {
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
+        }
+
+        // Ordenar por DisplayOrder del input
+        var orderedInput = input.OrderBy(x => x.DisplayOrder).ToList();
         
-        // TODO: Implementar con lista enlazada
-        // 1. Reconstruir toda la lista enlazada según el nuevo orden
-        // 2. Actualizar PreviousImageId y NextImageId de todas las imágenes
+        // Crear diccionario de imágenes existentes
+        var existingImages = listing.Images.ToDictionary(img => img.ImageId);
+        
+        // Verificar que todas las imágenes del input existen
+        foreach (var item in orderedInput)
+        {
+            if (!existingImages.ContainsKey(item.ImageId))
+            {
+                throw new BusinessException("Listing:ImageNotFound")
+                    .WithData("ImageId", item.ImageId)
+                    .WithData("ListingId", listingId);
+            }
+        }
+
+        // Reconstruir la lista enlazada según el nuevo orden
+        var newImagesList = new List<ListingImage>();
+        
+        for (int i = 0; i < orderedInput.Count; i++)
+        {
+            var currentImageId = orderedInput[i].ImageId;
+            var originalImage = existingImages[currentImageId];
+            
+            Guid? previousId = i > 0 ? orderedInput[i - 1].ImageId : null;
+            Guid? nextId = i < orderedInput.Count - 1 ? orderedInput[i + 1].ImageId : null;
+            
+            var reorderedImage = new ListingImage(
+                imageId: originalImage.ImageId,
+                url: originalImage.Url,
+                altText: originalImage.AltText,
+                fileSize: originalImage.FileSize,
+                contentType: originalImage.ContentType,
+                previousImageId: previousId,
+                nextImageId: nextId
+            );
+            
+            newImagesList.Add(reorderedImage);
+        }
+
+        listing.Images = newImagesList;
+        listing.LastModifiedAt = Clock.Now;
+        listing.LastModifiedBy = CurrentUser.Id;
+
+        await _listingRepository.UpdateAsync(listing);
     }
 
     /// <summary>
