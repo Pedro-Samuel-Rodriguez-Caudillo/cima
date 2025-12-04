@@ -90,12 +90,23 @@ public class cimaDbContext :
             b.HasKey(x => x.Id);
             b.Property(x => x.Title).IsRequired().HasMaxLength(200);
             b.Property(x => x.Description).HasMaxLength(5000);
-            b.Property(x => x.Location).HasMaxLength(500);  // Ahora nullable - no IsRequired
+            b.Property(x => x.Location).HasMaxLength(500);
             b.Property(x => x.Price).HasPrecision(18, 2);
             b.Property(x => x.LandArea).HasPrecision(10, 2).IsRequired();
             b.Property(x => x.ConstructionArea).HasPrecision(10, 2).IsRequired();
-            b.HasIndex(x => new { x.Status, x.ArchitectId });
-            b.HasIndex(x => x.CreatedAt);
+            
+            // Índices para búsqueda optimizada
+            b.HasIndex(x => x.Status).HasDatabaseName("IX_Listings_Status");
+            b.HasIndex(x => x.Location).HasDatabaseName("IX_Listings_Location");
+            b.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_Listings_CreatedAt");
+            b.HasIndex(x => x.Price).HasDatabaseName("IX_Listings_Price");
+            b.HasIndex(x => x.ArchitectId).HasDatabaseName("IX_Listings_ArchitectId");
+            
+            // Índices compuestos para consultas frecuentes
+            b.HasIndex(x => new { x.Status, x.ArchitectId }).HasDatabaseName("IX_Listings_Status_ArchitectId");
+            b.HasIndex(x => new { x.Status, x.Location }).HasDatabaseName("IX_Listings_Status_Location");
+            b.HasIndex(x => new { x.Status, x.Type, x.TransactionType }).HasDatabaseName("IX_Listings_Status_Type_Transaction");
+            
             b.HasOne(x => x.Architect)
                 .WithMany(a => a.Listings)
                 .HasForeignKey(x => x.ArchitectId)
@@ -105,7 +116,6 @@ public class cimaDbContext :
                 ib.ToTable("ListingImages");
                 ib.WithOwner().HasForeignKey("ListingId");
                 ib.HasKey("ListingId", "ImageId");
-                // Lista enlazada: PreviousImageId y NextImageId configuradas automáticamente
             });
         });
 
