@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using cima.Domain.Services.Listings;
 using cima.Localization;
 using cima.MultiTenancy;
 using Volo.Abp.Localization;
@@ -44,6 +45,8 @@ public class cimaDomainModule : AbpModule
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
         });
 
+        // Registrar Domain Services
+        context.Services.AddTransient<IListingManager, ListingManager>();
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

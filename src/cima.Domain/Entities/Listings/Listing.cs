@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Volo.Abp.Domain.Entities;
+using cima.Domain.Events.Listings;
 using cima.Domain.Shared;
+using Volo.Abp.Domain.Entities;
 
 namespace cima.Domain.Entities
 {
@@ -48,6 +49,26 @@ namespace cima.Domain.Entities
         // Relaciones
         public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();
         public virtual Architect? Architect { get; set; }
+        #endregion
+
+        #region Domain Events
+
+        /// <summary>
+        /// Agrega un evento de dominio local para ser procesado después de guardar.
+        /// </summary>
+        public void AddDomainEvent(object eventData)
+        {
+            AddLocalEvent(eventData);
+        }
+
+        /// <summary>
+        /// Agrega un evento de dominio distribuido.
+        /// </summary>
+        public void AddDistributedDomainEvent(object eventData)
+        {
+            AddDistributedEvent(eventData);
+        }
+
         #endregion
     }
 }
