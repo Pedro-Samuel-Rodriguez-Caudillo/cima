@@ -863,34 +863,29 @@ public class ListingAppService : cimaAppService, IListingAppService
             return new List<LocationSuggestionDto>();
         }
 
-        // Sanitizar input (ABP ya valida, pero doble seguridad)
+        // Sanitizar input
         searchTerm = searchTerm.Trim();
 
         var queryable = await _listingRepository.GetQueryableAsync();
 
-        // Solo propiedades publicadas o en portafolio
-        queryable = queryable.Where(p => 
-            p.Status == ListingStatus.Published || 
-            p.Status == ListingStatus.Portfolio);
-
-        // Filtrar por ubicaciones que contengan el término de búsqueda
-        queryable = queryable.Where(p => p.Location != null && p.Location.Contains(searchTerm));  // ? null check
-
-        // Agrupar por ubicación y contar
-        var locations = await AsyncExecuter.ToListAsync(queryable);
-
-        var suggestions = locations
-            .Where(p => p.Location != null)  // ? filtrar nulls antes de agrupar
-            .GroupBy(p => p.Location!)  // ? null-forgiving operator (ya verificado arriba)
-            .Select(g => new LocationSuggestionDto
-            {
-                Location = g.Key,
-                Count = g.Count()
-            })
-            .OrderByDescending(s => s.Count)
-            .ThenBy(s => s.Location)
-            .Take(10)
-            .ToList();
+        // Solo propiedades publicadas o en portafolio, con ubicación definida
+        // Proyectar SOLO el campo Location para minimizar transferencia de datos
+        var suggestions = await AsyncExecuter.ToListAsync(
+            queryable
+                .Where(p => 
+                    (p.Status == ListingStatus.Published || p.Status == ListingStatus.Portfolio) &&
+                    p.Location != null &&
+                    p.Location.Contains(searchTerm))
+                .GroupBy(p => p.Location!)
+                .Select(g => new LocationSuggestionDto
+                {
+                    Location = g.Key,
+                    Count = g.Count()
+                })
+                .OrderByDescending(s => s.Count)
+                .ThenBy(s => s.Location)
+                .Take(10)
+        );
 
         return suggestions;
     }
