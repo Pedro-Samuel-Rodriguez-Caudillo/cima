@@ -33,10 +33,11 @@ public class ArchitectStatisticsHandler :
     public async Task HandleEventAsync(ListingStatusChangedEto eventData)
     {
         _logger.LogDebug(
-            "Procesando cambio de estado de Listing {ListingId}: {OldStatus} -> {NewStatus}",
+            "Procesando cambio de estado de Listing {ListingId}: {OldStatus} -> {NewStatus} (PrimeraPublicacion: {IsFirst})",
             eventData.ListingId,
             eventData.OldStatus,
-            eventData.NewStatus);
+            eventData.NewStatus,
+            eventData.IsFirstTimePublished);
 
         var architect = await _architectRepository.FindAsync(eventData.ArchitectId);
         if (architect == null)
@@ -50,17 +51,28 @@ public class ArchitectStatisticsHandler :
 
         var statsUpdated = false;
 
-        // Actualizar TotalListingsPublished cuando se publica por primera vez
-        if (eventData.WasPublished)
+        // Actualizar TotalListingsPublished SOLO si es primera publicación
+        if (eventData.WasPublished && eventData.IsFirstTimePublished)
         {
             architect.TotalListingsPublished++;
             architect.ActiveListings++;
             statsUpdated = true;
             
             _logger.LogInformation(
-                "Arquitecto {ArchitectId}: TotalListingsPublished incrementado a {Total}, ActiveListings a {Active}",
+                "Arquitecto {ArchitectId}: Primera publicación - TotalListingsPublished={Total}, ActiveListings={Active}",
                 architect.Id,
                 architect.TotalListingsPublished,
+                architect.ActiveListings);
+        }
+        // Republicación (Draft -> Published pero NO es primera vez)
+        else if (eventData.WasPublished && !eventData.IsFirstTimePublished)
+        {
+            architect.ActiveListings++;
+            statsUpdated = true;
+            
+            _logger.LogInformation(
+                "Arquitecto {ArchitectId}: Republicación - ActiveListings incrementado a {Active} (TotalPublished sin cambio)",
+                architect.Id,
                 architect.ActiveListings);
         }
         // Cuando se archiva desde Published o Portfolio
@@ -72,7 +84,7 @@ public class ArchitectStatisticsHandler :
             statsUpdated = true;
             
             _logger.LogInformation(
-                "Arquitecto {ArchitectId}: ActiveListings decrementado a {Active}",
+                "Arquitecto {ArchitectId}: Archivado - ActiveListings decrementado a {Active}",
                 architect.Id,
                 architect.ActiveListings);
         }
@@ -84,7 +96,7 @@ public class ArchitectStatisticsHandler :
             statsUpdated = true;
             
             _logger.LogInformation(
-                "Arquitecto {ArchitectId}: ActiveListings incrementado a {Active} (desarchivado)",
+                "Arquitecto {ArchitectId}: Desarchivado - ActiveListings incrementado a {Active}",
                 architect.Id,
                 architect.ActiveListings);
         }
@@ -96,7 +108,16 @@ public class ArchitectStatisticsHandler :
             statsUpdated = true;
             
             _logger.LogInformation(
-                "Arquitecto {ArchitectId}: ActiveListings decrementado a {Active} (despublicado)",
+                "Arquitecto {ArchitectId}: Despublicado - ActiveListings decrementado a {Active}",
+                architect.Id,
+                architect.ActiveListings);
+        }
+        // Cuando se mueve de Published a Portfolio (sigue activo, sin cambio)
+        else if (eventData.OldStatus == ListingStatus.Published && 
+                 eventData.NewStatus == ListingStatus.Portfolio)
+        {
+            _logger.LogDebug(
+                "Arquitecto {ArchitectId}: Movido a Portfolio - ActiveListings sin cambio ({Active})",
                 architect.Id,
                 architect.ActiveListings);
         }
@@ -115,7 +136,7 @@ public class ArchitectStatisticsHandler :
             eventData.ArchitectId,
             eventData.Title);
 
-        // Aquí se podrían agregar métricas o notificaciones
+        // Los listings se crean en Draft, no afectan estadísticas hasta publicación
         await Task.CompletedTask;
     }
 }

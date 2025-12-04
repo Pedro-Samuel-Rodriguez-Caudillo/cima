@@ -72,7 +72,8 @@ public class ListingManager : DomainService, IListingManager
             ArchitectId = architectId,
             Status = ListingStatus.Draft,
             CreatedAt = _clock.Now,
-            CreatedBy = createdBy
+            CreatedBy = createdBy,
+            FirstPublishedAt = null // Nunca publicado
         };
 
         // Disparar evento de dominio
@@ -95,16 +96,25 @@ public class ListingManager : DomainService, IListingManager
         }
 
         var oldStatus = listing.Status;
+        var isFirstTimePublished = listing.FirstPublishedAt == null;
+        
         listing.Status = ListingStatus.Published;
         listing.LastModifiedAt = _clock.Now;
         listing.LastModifiedBy = modifiedBy;
+        
+        // Marcar fecha de primera publicación solo si nunca se publicó
+        if (isFirstTimePublished)
+        {
+            listing.FirstPublishedAt = _clock.Now;
+        }
 
-        // Disparar evento para actualizar estadísticas del arquitecto
+        // Disparar evento con flag de primera publicación
         listing.AddDomainEvent(new ListingStatusChangedEto(
             listing.Id,
             listing.ArchitectId,
             oldStatus,
-            ListingStatus.Published));
+            ListingStatus.Published,
+            isFirstTimePublished));
 
         await Task.CompletedTask;
     }
@@ -169,11 +179,13 @@ public class ListingManager : DomainService, IListingManager
         listing.LastModifiedAt = _clock.Now;
         listing.LastModifiedBy = modifiedBy;
 
+        // No es primera publicación si ya tiene FirstPublishedAt
         listing.AddDomainEvent(new ListingStatusChangedEto(
             listing.Id,
             listing.ArchitectId,
             oldStatus,
-            ListingStatus.Published));
+            ListingStatus.Published,
+            isFirstTimePublished: false));
 
         await Task.CompletedTask;
     }

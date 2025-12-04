@@ -45,6 +45,12 @@ namespace cima.Domain.Entities
         public Guid? CreatedBy { get; set; }
         public DateTime? LastModifiedAt { get; set; }
         public Guid? LastModifiedBy { get; set; }
+        
+        /// <summary>
+        /// Fecha de la primera publicación. Null si nunca se ha publicado.
+        /// Se usa para evitar incrementar TotalListingsPublished en republicaciones.
+        /// </summary>
+        public DateTime? FirstPublishedAt { get; set; }
 
         // Relaciones
         public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();

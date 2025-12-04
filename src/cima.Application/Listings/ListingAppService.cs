@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using cima.Architects;
 using cima.Domain.Entities;
+using cima.Domain.Services.Listings;
 using cima.Domain.Shared;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -27,16 +28,19 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IDistributedCache _distributedCache;
+    private readonly IListingManager _listingManager;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
         IRepository<Listing, Guid> listingRepository,
         IRepository<Architect, Guid> architectRepository,
-        IDistributedCache distributedCache)
+        IDistributedCache distributedCache,
+        IListingManager listingManager)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _distributedCache = distributedCache;
+        _listingManager = listingManager;
     }
 
     /// <summary>
@@ -115,7 +119,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Aplica ordenamiento a la consulta
+    /// Aplica ordenamiento a la consulta.
+    /// Soporta múltiples formatos de entrada para flexibilidad.
     /// </summary>
     private IQueryable<Listing> ApplySorting(IQueryable<Listing> queryable, string? sorting)
     {
@@ -133,9 +138,9 @@ public class ListingAppService : cimaAppService, IListingAppService
             "price" or "priceasc" => queryable.OrderBy(p => p.Price),
             "pricedesc" => queryable.OrderByDescending(p => p.Price),
             
-            // Land Area sorting
+            // Land Area sorting - corregidos todos los casos posibles
             "landarea" or "landareaasc" => queryable.OrderBy(p => p.LandArea),
-            "landaread" or "landaread desc" or "landareedesc" or "landareasc" => queryable.OrderByDescending(p => p.LandArea),
+            "landareadesc" => queryable.OrderByDescending(p => p.LandArea),
             
             // Area sorting (backward compatibility)
             "area" or "areaasc" => queryable.OrderBy(p => p.LandArea),
@@ -149,7 +154,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             "title" or "titleasc" => queryable.OrderBy(p => p.Title),
             "titledesc" => queryable.OrderByDescending(p => p.Title),
             
-            // Default
+            // Default - más recientes primero
             _ => queryable.OrderByDescending(p => p.CreatedAt)
         };
     }
@@ -175,96 +180,33 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Crea nueva propiedad en estado Draft
+    /// Crea nueva propiedad en estado Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Create)]
     public async Task<ListingDto> CreateAsync(CreateUpdateListingDto input)
     {
-        // Normalizar datos de entrada
-        var normalizedTitle = input.Title?.Trim();
-        var normalizedDescription = input.Description?.Trim();
-        var normalizedLocation = input.Location?.Trim();
-
-        // Validaciones adicionales
-        if (string.IsNullOrWhiteSpace(normalizedTitle))
-        {
-            throw new BusinessException("Listing:TitleRequired")
-                .WithData("Field", "Title");
-        }
-
-        if (string.IsNullOrWhiteSpace(normalizedDescription))
-        {
-            throw new BusinessException("Listing:DescriptionRequired")
-                .WithData("Field", "Description");
-        }
-
-        if (string.IsNullOrWhiteSpace(normalizedLocation))
-        {
-            throw new BusinessException("Listing:LocationRequired")
-                .WithData("Field", "Location");
-        }
-
-        if (input.Price <= 0)
-        {
-            throw new BusinessException("Listing:InvalidPrice")
-                .WithData("Price", input.Price)
-                .WithData("MinPrice", 0.01);
-        }
-
-        if (input.Area <= 0)
-        {
-            throw new BusinessException("Listing:InvalidArea")
-                .WithData("Area", input.Area)
-                .WithData("MinArea", 1);
-        }
-        
-        if (input.LandArea <= 0)
-        {
-            throw new BusinessException("Listing:InvalidLandArea")
-                .WithData("LandArea", input.LandArea)
-                .WithData("MinArea", 1);
-        }
-
-        if (input.ConstructionArea <= 0)
-        {
-            throw new BusinessException("Listing:InvalidConstructionArea")
-                .WithData("ConstructionArea", input.ConstructionArea)
-                .WithData("MinArea", 1);
-        }
-
-        // Validar que el arquitecto existe
-        var architectExists = await _architectRepository.AnyAsync(a => a.Id == input.ArchitectId);
-        if (!architectExists)
-        {
-            throw new BusinessException("Architect:NotFound")
-                .WithData("ArchitectId", input.ArchitectId);
-        }
-
-        var listing = new Listing
-        {
-            Title = normalizedTitle,
-            Description = normalizedDescription,
-            Location = normalizedLocation,
-            Price = input.Price,
-            LandArea = input.LandArea,
-            ConstructionArea = input.ConstructionArea,
-            Bedrooms = input.Bedrooms,
-            Bathrooms = input.Bathrooms,
-            Category = input.Category,
-            Type = input.Type,
-            TransactionType = input.TransactionType,
-            ArchitectId = input.ArchitectId,
-            CreatedAt = Clock.Now,
-            CreatedBy = CurrentUser.Id,
-            Status = ListingStatus.Draft
-        };
+        // Usar ListingManager para crear con validaciones y eventos de dominio
+        var listing = await _listingManager.CreateAsync(
+            title: input.Title?.Trim() ?? string.Empty,
+            description: input.Description?.Trim() ?? string.Empty,
+            location: input.Location?.Trim(),
+            price: input.Price,
+            landArea: input.LandArea,
+            constructionArea: input.ConstructionArea,
+            bedrooms: input.Bedrooms,
+            bathrooms: input.Bathrooms,
+            category: input.Category,
+            type: input.Type,
+            transactionType: input.TransactionType,
+            architectId: input.ArchitectId,
+            createdBy: CurrentUser.Id);
 
         await _listingRepository.InsertAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
     /// <summary>
-    /// Actualiza propiedad existente
+    /// Actualiza propiedad existente con validaciones del ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingDto> UpdateAsync(Guid id, CreateUpdateListingDto input)
@@ -273,64 +215,31 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion: Solo el dueno o admin puede editar
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
             throw new AbpAuthorizationException("Solo puedes editar tus propias propiedades");
         }
 
-        // Normalizar datos de entrada
-        var normalizedTitle = input.Title?.Trim();
-        var normalizedDescription = input.Description?.Trim();
+        // Validar que el arquitecto esté activo
+        if (!architect.IsActive)
+        {
+            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
+                .WithData("ArchitectId", architect.Id);
+        }
+
+        // Normalizar y validar datos usando ListingManager
+        var normalizedTitle = input.Title?.Trim() ?? string.Empty;
+        var normalizedDescription = input.Description?.Trim() ?? string.Empty;
         var normalizedLocation = input.Location?.Trim();
 
-        // Validaciones adicionales
-        if (string.IsNullOrWhiteSpace(normalizedTitle))
-        {
-            throw new BusinessException("Listing:TitleRequired")
-                .WithData("Field", "Title");
-        }
+        _listingManager.ValidateListingData(
+            normalizedTitle,
+            normalizedDescription,
+            input.Price,
+            input.LandArea,
+            input.ConstructionArea);
 
-        if (string.IsNullOrWhiteSpace(normalizedDescription))
-        {
-            throw new BusinessException("Listing:DescriptionRequired")
-                .WithData("Field", "Description");
-        }
-
-        if (string.IsNullOrWhiteSpace(normalizedLocation))
-        {
-            throw new BusinessException("Listing:LocationRequired")
-                .WithData("Field", "Location");
-        }
-
-        if (input.Price <= 0)
-        {
-            throw new BusinessException("Listing:InvalidPrice")
-                .WithData("Price", input.Price)
-                .WithData("MinPrice", 0.01);
-        }
-
-        if (input.Area <= 0)
-        {
-            throw new BusinessException("Listing:InvalidArea")
-                .WithData("Area", input.Area)
-                .WithData("MinArea", 1);
-        }
-        
-        if (input.LandArea <= 0)
-        {
-            throw new BusinessException("Listing:InvalidLandArea")
-                .WithData("LandArea", input.LandArea)
-                .WithData("MinArea", 1);
-        }
-
-        if (input.ConstructionArea <= 0)
-        {
-            throw new BusinessException("Listing:InvalidConstructionArea")
-                .WithData("ConstructionArea", input.ConstructionArea)
-                .WithData("MinArea", 1);
-        }
-
-        // Mapear TODOS los campos editables with datos normalizados
+        // Mapear campos editables
         listing.Title = normalizedTitle;
         listing.Description = normalizedDescription;
         listing.Location = normalizedLocation;
@@ -360,7 +269,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion: Solo el dueno o admin puede eliminar
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
             throw new AbpAuthorizationException("Solo puedes eliminar tus propias propiedades");
         }
@@ -369,8 +278,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Cambia estado de Draft a Published
-    /// Permite publicar sin imagenes (con warning en logs)
+    /// Cambia estado de Draft a Published usando ListingManager
+    /// Los eventos de dominio actualizan las estadísticas del arquitecto
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
     public async Task<ListingDto> PublishAsync(Guid id)
@@ -379,34 +288,33 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion de propiedad del listing
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
-            throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");  // ? Usar clase correcta del using
+            throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");
         }
 
-        // Validar que está en estado Draft
-        if (listing.Status == ListingStatus.Published)
+        // Validar que el arquitecto esté activo
+        if (!architect.IsActive)
         {
-            throw new BusinessException("Listing:AlreadyPublished")
-                .WithData("ListingId", id);
+            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
+                .WithData("ArchitectId", architect.Id);
         }
 
         // Warning si no tiene imagenes (pero permite publicar)
         if (listing.Images == null || !listing.Images.Any())
         {
-            Logger.LogWarning($"Publicando propiedad {id} sin imágenes");
+            Logger.LogWarning("Publicando propiedad {ListingId} sin imágenes", id);
         }
 
-        listing.Status = ListingStatus.Published;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        // Usar ListingManager - dispara eventos de dominio
+        await _listingManager.PublishAsync(listing, CurrentUser.Id);
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
     /// <summary>
-    /// Cambia estado a Archived
+    /// Cambia estado a Archived usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Archive)]
     public async Task<ListingDto> ArchiveAsync(Guid id)
@@ -415,21 +323,20 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
             throw new AbpAuthorizationException("Solo puedes archivar tus propias propiedades");
         }
 
-        listing.Status = ListingStatus.Archived;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        // Usar ListingManager - dispara eventos de dominio
+        await _listingManager.ArchiveAsync(listing, CurrentUser.Id);
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
     /// <summary>
-    /// Reactiva una propiedad archivada a estado Published
+    /// Reactiva una propiedad archivada a estado Published usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
     public async Task<ListingDto> UnarchiveAsync(Guid id)
@@ -438,28 +345,27 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
             throw new AbpAuthorizationException("Solo puedes desarchivar tus propias propiedades");
         }
 
-        if (listing.Status != ListingStatus.Archived)
+        // Validar que el arquitecto esté activo
+        if (!architect.IsActive)
         {
-            throw new BusinessException("Listing:NotArchived")
-                .WithData("ListingId", id)
-                .WithData("CurrentStatus", listing.Status);
+            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
+                .WithData("ArchitectId", architect.Id);
         }
 
-        listing.Status = ListingStatus.Published;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        // Usar ListingManager - dispara eventos de dominio
+        await _listingManager.UnarchiveAsync(listing, CurrentUser.Id);
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
     /// <summary>
-    /// Cambia una propiedad publicada de vuelta a Draft
+    /// Cambia una propiedad publicada de vuelta a Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingDto> UnpublishAsync(Guid id)
@@ -468,21 +374,35 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // Validacion de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
             throw new AbpAuthorizationException("Solo puedes despublicar tus propias propiedades");
         }
 
-        if (listing.Status != ListingStatus.Published)
+        // Usar ListingManager - dispara eventos de dominio
+        await _listingManager.UnpublishAsync(listing, CurrentUser.Id);
+
+        await _listingRepository.UpdateAsync(listing);
+        return ObjectMapper.Map<Listing, ListingDto>(listing);
+    }
+
+    /// <summary>
+    /// Cambia una propiedad a estado Portfolio usando ListingManager
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task<ListingDto> MoveToPortfolioAsync(Guid id)
+    {
+        var listing = await _listingRepository.GetAsync(id);
+
+        // Validacion de propiedad
+        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
-            throw new BusinessException("Listing:NotPublished")
-                .WithData("ListingId", id)
-                .WithData("CurrentStatus", listing.Status);
+            throw new AbpAuthorizationException("Solo puedes mover a portafolio tus propias propiedades");
         }
 
-        listing.Status = ListingStatus.Draft;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        // Usar ListingManager - dispara eventos de dominio
+        await _listingManager.MoveToPortfolioAsync(listing, CurrentUser.Id);
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -583,11 +503,11 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Verifica si el usuario current es administrador
+    /// Verifica si el usuario actual es administrador (método sincrónico)
     /// </summary>
-    private async Task<bool> IsAdminAsync()
+    private bool IsAdmin()
     {
-        return await Task.FromResult(CurrentUser.IsInRole("admin"));
+        return CurrentUser.IsInRole("admin");
     }
 
     /// <summary>
@@ -633,29 +553,6 @@ public class ListingAppService : cimaAppService, IListingAppService
         // TODO: Implementar con lista enlazada
         // 1. Reconstruir toda la lista enlazada según el nuevo orden
         // 2. Actualizar PreviousImageId y NextImageId de todas las imágenes
-    }
-
-    /// <summary>
-    /// Cambia una propiedad a estado Portfolio (showcase de proyectos completados)
-    /// </summary>
-    [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task<ListingDto> MoveToPortfolioAsync(Guid id)
-    {
-        var listing = await _listingRepository.GetAsync(id);
-
-        // Validacion de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !await IsAdminAsync())
-        {
-            throw new AbpAuthorizationException("Solo puedes mover a portafolio tus propias propiedades");
-        }
-
-        listing.Status = ListingStatus.Portfolio;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
     }
 
     /// <summary>

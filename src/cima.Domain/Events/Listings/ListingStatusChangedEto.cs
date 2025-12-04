@@ -14,18 +14,26 @@ public class ListingStatusChangedEto
     public ListingStatus OldStatus { get; }
     public ListingStatus NewStatus { get; }
     public DateTime ChangedAt { get; }
+    
+    /// <summary>
+    /// Indica si esta es la primera vez que el listing se publica.
+    /// Se usa para evitar incrementar TotalListingsPublished en republicaciones.
+    /// </summary>
+    public bool IsFirstTimePublished { get; }
 
     public ListingStatusChangedEto(
         Guid listingId,
         Guid architectId,
         ListingStatus oldStatus,
-        ListingStatus newStatus)
+        ListingStatus newStatus,
+        bool isFirstTimePublished = false)
     {
         ListingId = listingId;
         ArchitectId = architectId;
         OldStatus = oldStatus;
         NewStatus = newStatus;
         ChangedAt = DateTime.UtcNow;
+        IsFirstTimePublished = isFirstTimePublished;
     }
 
     /// <summary>
@@ -44,6 +52,7 @@ public class ListingStatusChangedEto
 
     /// <summary>
     /// Indica si el listing se publicó (específicamente a Published).
+    /// Solo incrementa TotalListingsPublished si es primera publicación.
     /// </summary>
     public bool WasPublished =>
         OldStatus == ListingStatus.Draft && NewStatus == ListingStatus.Published;
