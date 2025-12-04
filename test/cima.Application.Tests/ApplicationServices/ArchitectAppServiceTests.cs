@@ -5,7 +5,6 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Modularity;
 using Xunit;
 using cima.Domain.Entities;
-using cima.Domain.Shared.Dtos;
 using cima.Architects;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
@@ -13,7 +12,7 @@ using Volo.Abp.Identity;
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests básicos de integración para ArchitectAppService
+/// Tests básicos de integração para ArchitectAppService
 /// </summary>
 public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {

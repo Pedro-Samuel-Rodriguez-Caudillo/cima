@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using cima.Domain.Entities;
-using cima.Domain.Shared.Dtos;
+using cima.Listings;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Volo.Abp;

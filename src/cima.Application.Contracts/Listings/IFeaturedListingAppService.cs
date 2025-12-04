@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using cima.Domain.Shared.Dtos;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
@@ -9,7 +8,7 @@ namespace cima.Listings;
 
 /// <summary>
 /// Servicio para gestionar propiedades destacadas
-/// Límite máximo: 12 propiedades destacadas
+/// Limite maximo: 12 propiedades destacadas
 /// Las propiedades se muestran en orden aleatorio
 /// </summary>
 public interface IFeaturedListingAppService : IApplicationService

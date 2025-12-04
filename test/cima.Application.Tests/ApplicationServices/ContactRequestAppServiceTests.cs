@@ -6,7 +6,6 @@ using Volo.Abp.Modularity;
 using Xunit;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
-using cima.Domain.Shared.Dtos;
 using cima.ContactRequests;
 using Volo.Abp.Domain.Repositories;
 

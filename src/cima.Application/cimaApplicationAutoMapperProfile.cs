@@ -1,6 +1,8 @@
 using AutoMapper;
+using cima.Architects;
+using cima.ContactRequests;
 using cima.Domain.Entities;
-using cima.Domain.Shared.Dtos;
+using cima.Listings;
 using System.Linq;
 
 namespace cima;
@@ -17,7 +19,7 @@ public class cimaApplicationAutoMapperProfile : Profile
         CreateMap<Listing, ListingListDto>()
             .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src => 
                 src.Images != null && src.Images.Any() 
-                    ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)  // ? Primera imagen de la lista enlazada
+                    ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)
                     : null));
                     
         CreateMap<CreateUpdateListingDto, Listing>()

@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using cima.Domain.Shared.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace cima.Statistics;
