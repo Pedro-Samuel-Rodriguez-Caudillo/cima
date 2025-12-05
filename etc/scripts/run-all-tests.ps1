@@ -1,154 +1,194 @@
-# Run All Tests Script
-# Executes unit tests, component tests, and E2E tests
+# Script para ejecutar todas las pruebas del proyecto
+# Incluye tests unitarios, de integración y E2E
 
 param(
-    [switch]$SkipE2E,
-    [switch]$SkipUnit,
-    [switch]$SkipUI,
+    [switch]$UnitOnly,
+    [switch]$IntegrationOnly,
+    [switch]$E2EOnly,
+    [switch]$Verbose,
     [switch]$Coverage
 )
 
-Write-Host "================================" -ForegroundColor Cyan
-Write-Host "CIMA Test Suite Runner" -ForegroundColor Cyan
-Write-Host "================================" -ForegroundColor Cyan
+$ErrorActionPreference = "Continue"
+$testResults = @()
+$startTime = Get-Date
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "  CIMA - Suite Completa de Pruebas" -ForegroundColor Cyan
+Write-Host "  $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-$testResults = @{
-    Domain = $null
-    Application = $null
-    UI = $null
-    E2E = $null
-}
-
-$failed = $false
-
-# Run Domain Tests
-if (-not $SkipUnit) {
-    Write-Host "Running Domain Tests..." -ForegroundColor Yellow
-    Write-Host "-----------------------------------" -ForegroundColor Gray
+# Función para ejecutar tests
+function Run-Tests {
+    param(
+        [string]$Project,
+        [string]$Name,
+        [string]$Filter = ""
+    )
     
-    $result = dotnet test test/cima.Domain.Tests/cima.Domain.Tests.csproj --logger "console;verbosity=minimal"
-    $testResults.Domain = $LASTEXITCODE
+    Write-Host "`n[$Name]" -ForegroundColor Yellow
+    Write-Host "Proyecto: $Project" -ForegroundColor Gray
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[PASSED] Domain Tests" -ForegroundColor Green
-    } else {
-        Write-Host "[FAILED] Domain Tests" -ForegroundColor Red
-        $failed = $true
+    $args = @("test", $Project, "--no-build", "--verbosity", "minimal")
+    
+    if ($Filter) {
+        $args += "--filter"
+        $args += $Filter
     }
-    Write-Host ""
-}
-
-# Run Application Tests
-if (-not $SkipUnit) {
-    Write-Host "Running Application Tests..." -ForegroundColor Yellow
-    Write-Host "-----------------------------------" -ForegroundColor Gray
     
-    $result = dotnet test test/cima.Application.Tests/cima.Application.Tests.csproj --logger "console;verbosity=minimal"
-    $testResults.Application = $LASTEXITCODE
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[PASSED] Application Tests" -ForegroundColor Green
-    } else {
-        Write-Host "[FAILED] Application Tests" -ForegroundColor Red
-        $failed = $true
+    if ($Coverage) {
+        $args += "--collect:""XPlat Code Coverage"""
     }
-    Write-Host ""
-}
-
-# Run UI Component Tests
-if (-not $SkipUI) {
-    Write-Host "Running UI Component Tests..." -ForegroundColor Yellow
-    Write-Host "-----------------------------------" -ForegroundColor Gray
     
-    $result = dotnet test test/cima.Blazor.UITests/cima.Blazor.UITests.csproj --logger "console;verbosity=minimal"
-    $testResults.UI = $LASTEXITCODE
+    $result = & dotnet @args 2>&1
+    $exitCode = $LASTEXITCODE
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[PASSED] UI Component Tests" -ForegroundColor Green
-    } else {
-        Write-Host "[FAILED] UI Component Tests" -ForegroundColor Red
-        $failed = $true
+    if ($Verbose) {
+        $result | ForEach-Object { Write-Host $_ }
     }
-    Write-Host ""
+    
+    $passed = ($result | Select-String "Passed!" | Measure-Object).Count
+    $failed = ($result | Select-String "Failed!" | Measure-Object).Count
+    
+    $status = if ($exitCode -eq 0) { "PASSED" } else { "FAILED" }
+    $color = if ($exitCode -eq 0) { "Green" } else { "Red" }
+    
+    Write-Host "Estado: $status" -ForegroundColor $color
+    
+    return @{
+        Name = $Name
+        Status = $status
+        ExitCode = $exitCode
+        Passed = $passed
+        Failed = $failed
+    }
 }
 
-# Run E2E Tests
-if (-not $SkipE2E) {
-    Write-Host "Running E2E Tests..." -ForegroundColor Yellow
-    Write-Host "-----------------------------------" -ForegroundColor Gray
-    Write-Host "NOTE: E2E tests require the application to be running" -ForegroundColor Cyan
-    Write-Host "Start the app with: dotnet run --project src/cima.Blazor/cima.Blazor.csproj" -ForegroundColor Cyan
-    Write-Host ""
+# Compilar solución primero
+Write-Host "`nCompilando solución..." -ForegroundColor Yellow
+$buildResult = dotnet build --configuration Release --verbosity minimal 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error de compilación!" -ForegroundColor Red
+    $buildResult | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+    exit 1
+}
+Write-Host "Compilación exitosa" -ForegroundColor Green
+
+# Tests de Dominio (Unitarios)
+if (-not $IntegrationOnly -and -not $E2EOnly) {
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "  TESTS DE DOMINIO (Unitarios)" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
     
-    $appRunning = $false
+    $testResults += Run-Tests `
+        -Project "test\cima.Domain.Tests\cima.Domain.Tests.csproj" `
+        -Name "Domain - Entities"
+        
+    $testResults += Run-Tests `
+        -Project "test\cima.Domain.Tests\cima.Domain.Tests.csproj" `
+        -Name "Domain - Specifications" `
+        -Filter "FullyQualifiedName~Specifications"
+        
+    $testResults += Run-Tests `
+        -Project "test\cima.Domain.Tests\cima.Domain.Tests.csproj" `
+        -Name "Domain - Services" `
+        -Filter "FullyQualifiedName~Services"
+}
+
+# Tests de Aplicación (Integración)
+if (-not $UnitOnly -and -not $E2EOnly) {
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "  TESTS DE APLICACIÓN (Integración)" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    
+    $testResults += Run-Tests `
+        -Project "test\cima.Application.Tests\cima.Application.Tests.csproj" `
+        -Name "Application - ListingAppService" `
+        -Filter "FullyQualifiedName~ListingAppServiceTests"
+        
+    $testResults += Run-Tests `
+        -Project "test\cima.Application.Tests\cima.Application.Tests.csproj" `
+        -Name "Application - StatisticsAppService" `
+        -Filter "FullyQualifiedName~StatisticsAppServiceTests"
+        
+    $testResults += Run-Tests `
+        -Project "test\cima.Application.Tests\cima.Application.Tests.csproj" `
+        -Name "Application - ContactRequestAppService" `
+        -Filter "FullyQualifiedName~ContactRequestAppServiceTests"
+        
+    $testResults += Run-Tests `
+        -Project "test\cima.Application.Tests\cima.Application.Tests.csproj" `
+        -Name "Application - ArchitectAppService" `
+        -Filter "FullyQualifiedName~ArchitectAppServiceTests"
+}
+
+# Tests E2E (requiere servidor corriendo)
+if (-not $UnitOnly -and -not $IntegrationOnly) {
+    Write-Host "`n========================================" -ForegroundColor Cyan
+    Write-Host "  TESTS E2E (End-to-End)" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "NOTA: Requiere que el servidor esté corriendo en localhost:5000" -ForegroundColor Yellow
+    
+    # Verificar si el servidor está corriendo
     try {
-        $response = Invoke-WebRequest -Uri "http://localhost:5000" -Method Head -TimeoutSec 2 -ErrorAction SilentlyContinue
-        $appRunning = $true
-    } catch {
-        $appRunning = $false
+        $response = Invoke-WebRequest -Uri "http://localhost:5000" -TimeoutSec 5 -ErrorAction SilentlyContinue
+        Write-Host "Servidor detectado, ejecutando tests E2E..." -ForegroundColor Green
+        
+        $testResults += Run-Tests `
+            -Project "test\cima.Blazor.E2ETests\cima.Blazor.E2ETests.csproj" `
+            -Name "E2E - Public Site" `
+            -Filter "FullyQualifiedName~PublicSiteTests"
+            
+        $testResults += Run-Tests `
+            -Project "test\cima.Blazor.E2ETests\cima.Blazor.E2ETests.csproj" `
+            -Name "E2E - Admin Panel" `
+            -Filter "FullyQualifiedName~AdminPanelTests"
+            
+        $testResults += Run-Tests `
+            -Project "test\cima.Blazor.E2ETests\cima.Blazor.E2ETests.csproj" `
+            -Name "E2E - Admin Listings" `
+            -Filter "FullyQualifiedName~AdminListingsTests"
     }
-    
-    if ($appRunning) {
-        Write-Host "App is running, executing E2E tests..." -ForegroundColor Green
-        
-        # Install Playwright browsers if needed
-        try {
-            pwsh test/cima.Blazor.E2ETests/bin/Debug/net9.0/playwright.ps1 install chromium 2>&1 | Out-Null
-        } catch {
-            Write-Host "Note: Playwright browsers may need manual installation" -ForegroundColor Yellow
-        }
-        
-        $result = dotnet test test/cima.Blazor.E2ETests/cima.Blazor.E2ETests.csproj --logger "console;verbosity=minimal"
-        $testResults.E2E = $LASTEXITCODE
-        
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "[PASSED] E2E Tests" -ForegroundColor Green
-        } else {
-            Write-Host "[FAILED] E2E Tests" -ForegroundColor Red
-            $failed = $true
-        }
-    } else {
-        Write-Host "[SKIPPED] E2E Tests - Application not running" -ForegroundColor Yellow
-        Write-Host "Start the app first: dotnet run --project src/cima.Blazor/cima.Blazor.csproj" -ForegroundColor Yellow
+    catch {
+        Write-Host "Servidor no disponible. Saltando tests E2E." -ForegroundColor Yellow
+        Write-Host "Para ejecutar tests E2E, inicia el servidor con: dotnet run --project src\cima.Blazor" -ForegroundColor Gray
     }
-    Write-Host ""
 }
 
-# Summary
+# Resumen
+$endTime = Get-Date
+$duration = $endTime - $startTime
+
+Write-Host "`n========================================" -ForegroundColor Cyan
+Write-Host "  RESUMEN DE RESULTADOS" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "================================" -ForegroundColor Cyan
-Write-Host "Test Results Summary" -ForegroundColor Cyan
-Write-Host "================================" -ForegroundColor Cyan
 
-if (-not $SkipUnit) {
-    $domainStatus = if ($testResults.Domain -eq 0) { "[PASSED]" } else { "[FAILED]" }
-    $domainColor = if ($testResults.Domain -eq 0) { "Green" } else { "Red" }
-    Write-Host "$domainStatus Domain Tests" -ForegroundColor $domainColor
+$totalPassed = 0
+$totalFailed = 0
+
+foreach ($result in $testResults) {
+    $color = if ($result.Status -eq "PASSED") { "Green" } else { "Red" }
+    $icon = if ($result.Status -eq "PASSED") { "[?]" } else { "[?]" }
+    Write-Host "$icon $($result.Name): $($result.Status)" -ForegroundColor $color
     
-    $appStatus = if ($testResults.Application -eq 0) { "[PASSED]" } else { "[FAILED]" }
-    $appColor = if ($testResults.Application -eq 0) { "Green" } else { "Red" }
-    Write-Host "$appStatus Application Tests" -ForegroundColor $appColor
-}
-
-if (-not $SkipUI) {
-    $uiStatus = if ($testResults.UI -eq 0) { "[PASSED]" } else { "[FAILED]" }
-    $uiColor = if ($testResults.UI -eq 0) { "Green" } else { "Red" }
-    Write-Host "$uiStatus UI Component Tests" -ForegroundColor $uiColor
-}
-
-if (-not $SkipE2E -and $testResults.E2E -ne $null) {
-    $e2eStatus = if ($testResults.E2E -eq 0) { "[PASSED]" } else { "[FAILED]" }
-    $e2eColor = if ($testResults.E2E -eq 0) { "Green" } else { "Red" }
-    Write-Host "$e2eStatus E2E Tests" -ForegroundColor $e2eColor
+    if ($result.Status -eq "PASSED") { $totalPassed++ }
+    else { $totalFailed++ }
 }
 
 Write-Host ""
+Write-Host "Total: $($testResults.Count) suites" -ForegroundColor Cyan
+Write-Host "  Pasadas: $totalPassed" -ForegroundColor Green
+Write-Host "  Fallidas: $totalFailed" -ForegroundColor $(if ($totalFailed -gt 0) { "Red" } else { "Gray" })
+Write-Host "  Duración: $($duration.TotalSeconds.ToString("F1")) segundos" -ForegroundColor Gray
+Write-Host ""
 
-if ($failed) {
-    Write-Host "Some tests failed. Review the output above." -ForegroundColor Red
+# Exit code
+if ($totalFailed -gt 0) {
+    Write-Host "Algunas pruebas fallaron!" -ForegroundColor Red
     exit 1
 } else {
-    Write-Host "All tests passed!" -ForegroundColor Green
+    Write-Host "Todas las pruebas pasaron!" -ForegroundColor Green
     exit 0
 }

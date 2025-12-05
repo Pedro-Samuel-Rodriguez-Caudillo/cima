@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp.Application.Dtos;
@@ -13,7 +15,7 @@ using Volo.Abp.Users;
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests básicos de integración para ListingAppService
+/// Tests de integración para ListingAppService
 /// </summary>
 public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -54,6 +56,54 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         result.Items.ShouldNotBeNull();
     }
 
+    [Fact]
+    public async Task GetListAsync_Should_Filter_By_Status()
+    {
+        // Arrange
+        await CreateTestListingAsync(status: ListingStatus.Published);
+        await CreateTestListingAsync(status: ListingStatus.Draft);
+
+        var input = new GetListingsInput
+        {
+            Status = (int)ListingStatus.Published,
+            MaxResultCount = 100
+        };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.GetListAsync(input);
+        });
+
+        // Assert
+        result.Items.ShouldAllBe(l => l.Status == ListingStatus.Published);
+    }
+
+    [Fact]
+    public async Task GetListAsync_Should_Filter_By_SearchTerm()
+    {
+        // Arrange
+        await CreateTestListingAsync(title: "Casa en Polanco Única");
+        await CreateTestListingAsync(title: "Departamento Centro");
+
+        var input = new GetListingsInput
+        {
+            SearchTerm = "Polanco",
+            MaxResultCount = 100
+        };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.GetListAsync(input);
+        });
+
+        // Assert
+        result.Items.ShouldContain(l => l.Title.Contains("Polanco"));
+    }
+
     #endregion
 
     #region GetAsync Tests
@@ -82,7 +132,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     #region CreateAsync Tests
 
     [Fact]
-    public async Task CreateAsync_Should_Create_New_Listing()
+    public async Task CreateAsync_Should_Create_New_Listing_In_Draft_Status()
     {
         // Arrange
         var architect = await CreateTestArchitectAsync();
@@ -114,6 +164,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         result.Id.ShouldNotBe(Guid.Empty);
         result.Title.ShouldBe(input.Title);
         result.Price.ShouldBe(input.Price);
+        result.Status.ShouldBe(ListingStatus.Draft); // Debe iniciar en Draft
     }
 
     #endregion
@@ -172,7 +223,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             await _listingAppService.DeleteAsync(listingId);
         });
 
-        // Assert - Verify in new UoW to avoid disposed context
+        // Assert
         bool exists = false;
         await WithUnitOfWorkAsync(async () =>
         {
@@ -184,11 +235,216 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
 
     #endregion
 
+    #region Status Change Tests
+
+    [Fact]
+    public async Task PublishAsync_Should_Change_Status_To_Published()
+    {
+        // Arrange
+        var listing = await CreateTestListingAsync(status: ListingStatus.Draft);
+
+        // Act
+        ListingDto result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.PublishAsync(listing.Id);
+        });
+
+        // Assert
+        result.Status.ShouldBe(ListingStatus.Published);
+    }
+
+    [Fact]
+    public async Task ArchiveAsync_Should_Change_Status_To_Archived()
+    {
+        // Arrange
+        var listing = await CreateTestListingAsync(status: ListingStatus.Published);
+
+        // Act
+        ListingDto result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.ArchiveAsync(listing.Id);
+        });
+
+        // Assert
+        result.Status.ShouldBe(ListingStatus.Archived);
+    }
+
+    [Fact]
+    public async Task MoveToPortfolioAsync_Should_Change_Status_To_Portfolio()
+    {
+        // Arrange
+        var listing = await CreateTestListingAsync(status: ListingStatus.Published);
+
+        // Act
+        ListingDto result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.MoveToPortfolioAsync(listing.Id);
+        });
+
+        // Assert
+        result.Status.ShouldBe(ListingStatus.Portfolio);
+    }
+
+    [Fact]
+    public async Task UnarchiveAsync_Should_Change_Status_From_Archived_To_Published()
+    {
+        // Arrange
+        var listing = await CreateTestListingAsync(status: ListingStatus.Archived);
+
+        // Act
+        ListingDto result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.UnarchiveAsync(listing.Id);
+        });
+
+        // Assert
+        result.Status.ShouldBe(ListingStatus.Published);
+    }
+
+    #endregion
+
+    #region DuplicateAsync Tests
+
+    [Fact]
+    public async Task DuplicateAsync_Should_Create_Copy_In_Draft_Status()
+    {
+        // Arrange
+        var original = await CreateTestListingAsync(
+            title: "Propiedad Original",
+            price: 2500000m,
+            status: ListingStatus.Published);
+
+        // Act
+        ListingDto result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.DuplicateAsync(original.Id);
+        });
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldNotBe(original.Id); // Diferente ID
+        result.Title.ShouldContain("Copia"); // Título con (Copia)
+        result.Price.ShouldBe(original.Price); // Mismo precio
+        result.Status.ShouldBe(ListingStatus.Draft); // Estado Draft
+    }
+
+    #endregion
+
+    #region GetPublishedAsync Tests
+
+    [Fact]
+    public async Task GetPublishedAsync_Should_Only_Return_Published_Listings()
+    {
+        // Arrange
+        await CreateTestListingAsync(status: ListingStatus.Published);
+        await CreateTestListingAsync(status: ListingStatus.Draft);
+        await CreateTestListingAsync(status: ListingStatus.Archived);
+
+        var input = new GetListingsInput { MaxResultCount = 100 };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.GetPublishedAsync(input);
+        });
+
+        // Assert
+        result.Items.ShouldAllBe(l => l.Status == ListingStatus.Published);
+    }
+
+    #endregion
+
+    #region GetPortfolioAsync Tests
+
+    [Fact]
+    public async Task GetPortfolioAsync_Should_Only_Return_Portfolio_Listings()
+    {
+        // Arrange
+        await CreateTestListingAsync(status: ListingStatus.Portfolio);
+        await CreateTestListingAsync(status: ListingStatus.Published);
+
+        var input = new GetListingsInput { MaxResultCount = 100 };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.GetPortfolioAsync(input);
+        });
+
+        // Assert
+        result.Items.ShouldAllBe(l => l.Status == ListingStatus.Portfolio);
+    }
+
+    #endregion
+
+    #region Search Tests
+
+    [Fact]
+    public async Task SearchAsync_Should_Filter_By_Price_Range()
+    {
+        // Arrange
+        await CreateTestListingAsync(price: 500000m, status: ListingStatus.Published);
+        await CreateTestListingAsync(price: 1500000m, status: ListingStatus.Published);
+        await CreateTestListingAsync(price: 3000000m, status: ListingStatus.Published);
+
+        var searchDto = new PropertySearchDto
+        {
+            MinPrice = 1000000m,
+            MaxPrice = 2000000m,
+            PageSize = 100
+        };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.SearchAsync(searchDto);
+        });
+
+        // Assert
+        result.Items.ShouldAllBe(l => l.Price >= 1000000m && l.Price <= 2000000m);
+    }
+
+    [Fact]
+    public async Task SearchAsync_Should_Filter_By_Category()
+    {
+        // Arrange
+        await CreateTestListingAsync(category: PropertyCategory.Residential, status: ListingStatus.Published);
+        await CreateTestListingAsync(category: PropertyCategory.Commercial, status: ListingStatus.Published);
+
+        var searchDto = new PropertySearchDto
+        {
+            Category = PropertyCategory.Residential,
+            PageSize = 100
+        };
+
+        // Act
+        PagedResultDto<ListingDto> result = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            result = await _listingAppService.SearchAsync(searchDto);
+        });
+
+        // Assert
+        result.Items.ShouldAllBe(l => l.Category == PropertyCategory.Residential);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private async Task<Listing> CreateTestListingAsync(
         string title = "Test Listing Property",
-        decimal price = 1500000m)
+        decimal price = 1500000m,
+        ListingStatus status = ListingStatus.Published,
+        PropertyCategory category = PropertyCategory.Residential)
     {
         var architect = await CreateTestArchitectAsync();
 
@@ -202,11 +458,11 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             ConstructionArea = 120m,
             Bedrooms = 3,
             Bathrooms = 2,
-            Category = PropertyCategory.Residential,
+            Category = category,
             Type = PropertyType.House,
             TransactionType = TransactionType.Sale,
             ArchitectId = architect.Id,
-            Status = ListingStatus.Published,
+            Status = status,
             CreatedAt = DateTime.UtcNow
         };
 
