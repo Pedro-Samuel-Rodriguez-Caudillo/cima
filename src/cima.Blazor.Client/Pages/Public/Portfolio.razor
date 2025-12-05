@@ -9,59 +9,74 @@
 
 <PageTitle>@L["Portfolio:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-white">
-    @* Header Section *@
-    <section class="cima-section bg-gradient-to-br from-navy-700 via-navy-600 to-navy-500 text-white">
-        <div class="cima-container">
-            <h1 class="text-3xl md:text-4xl font-display font-bold mb-4">
-                @L["Portfolio:Title"]
-            </h1>
-            <p class="text-lg text-navy-100 max-w-2xl">
-                @L["Portfolio:Subtitle"]
-            </p>
+<div class="min-h-screen bg-neutral-50">
+    @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
+    <section class="bg-navy-900">
+        <div class="cima-container py-20 md:py-28">
+            <div class="max-w-4xl">
+                <span class="inline-block px-4 py-1.5 bg-navy-700 text-navy-100 text-sm font-medium rounded-full mb-6">
+                    Proyectos Completados
+                </span>
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 tracking-tight text-white">
+                    @L["Portfolio:Title"]
+                </h1>
+                <p class="text-xl md:text-2xl text-navy-200 leading-relaxed max-w-2xl">
+                    @L["Portfolio:Subtitle"]
+                </p>
+            </div>
         </div>
     </section>
 
     @* Filters Section *@
-    <section class="cima-section-alt py-6">
+    <section class="relative -mt-8 z-10 pb-8">
         <div class="cima-container">
-            <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
-                    @L["Portfolio:FilterByArchitect"]:
-                </label>
-                
-                <select 
-                    id="architect-filter"
-                    class="cima-input flex-1 md:max-w-md"
-                    value="@SelectedArchitectId"
-                    @onchange="OnArchitectFilterChanged">
-                    <option value="">@L["Portfolio:AllArchitects"]</option>
-                    @if (Architects?.Any() == true)
-                    {
-                        @foreach (var architect in Architects)
+            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-neutral-100">
+                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                    <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
+                        @L["Portfolio:FilterByArchitect"]:
+                    </label>
+                    
+                    <select 
+                        id="architect-filter"
+                        class="cima-input flex-1 md:max-w-md bg-white"
+                        value="@SelectedArchitectId"
+                        @onchange="OnArchitectFilterChanged">
+                        <option value="">@L["Portfolio:AllArchitects"]</option>
+                        @if (Architects?.Any() == true)
                         {
-                            <option value="@architect.Id">@architect.UserName</option>
+                            @foreach (var architect in Architects)
+                            {
+                                <option value="@architect.Id">@architect.UserName</option>
+                            }
                         }
-                    }
-                </select>
+                    </select>
+                </div>
             </div>
         </div>
     </section>
 
     @* Projects Grid *@
-    <section class="cima-section">
+    <section class="py-12 md:py-16">
         <div class="cima-container">
             @if (IsLoading)
             {
-                <div class="cima-grid">
-                    @for (int i = 0; i < 6; i++)
+                <div class="mb-8">
+                    <div class="cima-skeleton-text w-48 h-6 mb-4"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8">
+                    @for (int i = 0; i < 8; i++)
                     {
-                        <div class="cima-card">
-                            <div class="cima-skeleton-image"></div>
-                            <div class="p-5 space-y-3">
-                                <div class="cima-skeleton-text w-3/4"></div>
-                                <div class="cima-skeleton-text w-1/2"></div>
-                                <div class="cima-skeleton-text w-full"></div>
+                        <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+                            <div class="aspect-[4/3] bg-neutral-200 animate-pulse"></div>
+                            <div class="p-5 space-y-4">
+                                <div class="cima-skeleton-text w-3/4 h-5"></div>
+                                <div class="cima-skeleton-text w-1/2 h-4"></div>
+                                <div class="flex gap-3">
+                                    <div class="cima-skeleton-text w-16 h-4"></div>
+                                    <div class="cima-skeleton-text w-16 h-4"></div>
+                                </div>
+                                <div class="cima-skeleton-text w-1/3 h-6"></div>
                             </div>
                         </div>
                     }
@@ -69,71 +84,95 @@
             }
             else if (PortfolioProjects?.Any() == true)
             {
-                <div class="mb-6">
-                    <p class="text-neutral-600">
-                        <span class="font-semibold text-neutral-900">@TotalCount</span> @L["Portfolio:CompletedProjects"]
+                <div class="mb-8">
+                    <p class="text-neutral-600 text-lg">
+                        <span class="font-semibold text-navy-900">@TotalCount</span> @L["Portfolio:CompletedProjects"]
                     </p>
                 </div>
 
-                <div class="cima-grid">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8">
                     @foreach (var listing in PortfolioProjects)
                     {
-                        <ListingCard 
-                            Listing="listing" 
-                            OnCardFlipped="HandleCardFlipped"
-                            @ref="@_cardRefs[listing.Id]" />
+                        <ListingCard Listing="listing" />
                     }
                 </div>
 
-                @* Paginación *@
+                @* Paginación Premium *@
                 @if (TotalPages > 1)
                 {
-                    <div class="mt-12 flex justify-center items-center gap-2">
-                        <button 
-                            @onclick="PreviousPage"
-                            disabled="@(CurrentPage == 1)"
-                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
-                            @L["Common:Previous"]
-                        </button>
+                    <div class="mt-16 flex justify-center">
+                        <nav class="inline-flex items-center gap-1 bg-white rounded-xl shadow-md p-2">
+                            <button 
+                                @onclick="PreviousPage"
+                                disabled="@(CurrentPage == 1)"
+                                class="flex items-center justify-center w-10 h-10 rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
 
-                        <div class="flex gap-1">
-                            @{
-                                var maxVisiblePages = Math.Min(TotalPages, 5);
-                                var startPage = Math.Max(1, CurrentPage - 2);
-                                var endPage = Math.Min(TotalPages, startPage + maxVisiblePages - 1);
-                                
-                                for (int i = startPage; i <= endPage; i++)
-                                {
-                                    var pageNum = i;
-                                    <button 
-                                        @onclick="@(() => GoToPage(pageNum))"
-                                        class="@GetPageButtonClass(pageNum)">
-                                        @pageNum
-                                    </button>
+                            <div class="flex items-center gap-1 px-2">
+                                @{
+                                    var maxVisiblePages = Math.Min(TotalPages, 5);
+                                    var startPage = Math.Max(1, CurrentPage - 2);
+                                    var endPage = Math.Min(TotalPages, startPage + maxVisiblePages - 1);
+                                    
+                                    if (startPage > 1)
+                                    {
+                                        <button @onclick="@(() => GoToPage(1))" class="@GetPageButtonClass(1)">1</button>
+                                        if (startPage > 2)
+                                        {
+                                            <span class="px-2 text-neutral-400">...</span>
+                                        }
+                                    }
+                                    
+                                    for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        var pageNum = i;
+                                        <button 
+                                            @onclick="@(() => GoToPage(pageNum))"
+                                            class="@GetPageButtonClass(pageNum)">
+                                            @pageNum
+                                        </button>
+                                    }
+                                    
+                                    if (endPage < TotalPages)
+                                    {
+                                        if (endPage < TotalPages - 1)
+                                        {
+                                            <span class="px-2 text-neutral-400">...</span>
+                                        }
+                                        <button @onclick="@(() => GoToPage(TotalPages))" class="@GetPageButtonClass(TotalPages)">@TotalPages</button>
+                                    }
                                 }
-                            }
-                        </div>
+                            </div>
 
-                        <button 
-                            @onclick="NextPage"
-                            disabled="@(CurrentPage == TotalPages)"
-                            class="cima-btn cima-btn-secondary disabled:opacity-50 disabled:cursor-not-allowed">
-                            @L["Common:Next"]
-                        </button>
+                            <button 
+                                @onclick="NextPage"
+                                disabled="@(CurrentPage == TotalPages)"
+                                class="flex items-center justify-center w-10 h-10 rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </nav>
                     </div>
                 }
             }
             else
             {
-                <div class="text-center py-16">
-                    <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <h3 class="text-xl font-semibold text-neutral-900 mb-2">
+                @* Empty state premium *@
+                <div class="text-center py-20">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-neutral-100 mb-8">
+                        <svg class="w-12 h-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-display font-bold text-neutral-900 mb-3">
                         @L["Portfolio:NoProjects"]
                     </h3>
-                    <p class="text-neutral-600">
+                    <p class="text-neutral-600 mb-8 max-w-md mx-auto">
                         @if (!string.IsNullOrEmpty(SelectedArchitectId))
                         {
                             <span>@L["Portfolio:NoProjectsByArchitect"]</span>
@@ -158,17 +197,21 @@
     private const int PageSize = 12;
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     
-    private Dictionary<Guid, ListingCard> _cardRefs = new();
-    private Guid? _currentFlippedCardId;
-    
     private string? SelectedArchitectId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(
-            LoadArchitects(),
-            LoadPortfolio()
-        );
+        try
+        {
+            await Task.WhenAll(
+                LoadArchitects(),
+                LoadPortfolio()
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - ocurre durante navegación/cambio de idioma
+        }
     }
 
     private async Task LoadArchitects()
@@ -181,6 +224,10 @@
             });
             
             Architects = result.Items.ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - ocurre durante navegación/cambio de idioma
         }
         catch (Exception ex)
         {
@@ -213,6 +260,10 @@
             PortfolioProjects = result.Items.ToList();
             TotalCount = (int)result.TotalCount;
         }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - ocurre durante navegación/cambio de idioma
+        }
         catch (Exception ex)
         {
             await HandleErrorAsync(ex);
@@ -235,8 +286,19 @@
         CurrentPage = page;
         await LoadPortfolio();
         
-        // Scroll to top
-        await JS.InvokeVoidAsync("window.scrollTo", new { top = 0, behavior = "smooth" });
+        try
+        {
+            // Scroll to top
+            await JS.InvokeVoidAsync("window.scrollTo", new { top = 0, behavior = "smooth" });
+        }
+        catch (JSDisconnectedException)
+        {
+            // Ignorar - circuito desconectado
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
+        }
     }
 
     private async Task PreviousPage()
@@ -257,26 +319,13 @@
 
     private string GetPageButtonClass(int page)
     {
-        var baseClass = "px-4 py-2 text-sm font-medium rounded transition-colors";
+        var baseClass = "flex items-center justify-center w-10 h-10 text-sm font-medium rounded-lg transition-all duration-200";
         
         if (page == CurrentPage)
         {
-            return $"{baseClass} bg-navy-500 text-white";
+            return $"{baseClass} bg-navy-600 text-white shadow-md";
         }
         
-        return $"{baseClass} bg-neutral-100 text-neutral-700 hover:bg-neutral-200";
-    }
-
-    private void HandleCardFlipped(Guid listingId)
-    {
-        // Cerrar card previamente abierta
-        if (_currentFlippedCardId.HasValue && 
-            _currentFlippedCardId != listingId && 
-            _cardRefs.TryGetValue(_currentFlippedCardId.Value, out var prevCard))
-        {
-            prevCard?.Close();
-        }
-
-        _currentFlippedCardId = listingId;
+        return $"{baseClass} text-neutral-600 hover:bg-neutral-100";
     }
 }
