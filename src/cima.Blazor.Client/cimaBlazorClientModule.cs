@@ -41,6 +41,9 @@ public class cimaBlazorClientModule : AbpModule
     {
         context.Services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
         context.Services.AddAuthorizationCore();
+        
+        // Login redirect service
+        context.Services.AddCimaLoginRedirect();
     }
 
     private void ConfigureApplicationServices(ServiceConfigurationContext context)

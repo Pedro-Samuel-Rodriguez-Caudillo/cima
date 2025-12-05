@@ -3,6 +3,7 @@
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @inject IStringLocalizer<cimaResource> L
+@inject NavigationManager Navigation
 
 <CascadingAuthenticationState>
     <Router AppAssembly="typeof(Program).Assembly">
@@ -15,9 +16,22 @@
                     }
                     else
                     {
-                        <p role="alert">@L["Auth:NotAuthorized"]</p>
+                        @* Usuario autenticado pero sin permisos *@
+                        <cima.Blazor.Client.Pages.Account.AccessDenied />
                     }
                 </NotAuthorized>
+                <Authorizing>
+                    <div class="min-h-screen flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="cima-saving-indicator mb-4 justify-center">
+                                <span class="cima-saving-dot"></span>
+                                <span class="cima-saving-dot"></span>
+                                <span class="cima-saving-dot"></span>
+                            </div>
+                            <p class="text-gray-500">@L["Auth:Verifying"]</p>
+                        </div>
+                    </div>
+                </Authorizing>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>

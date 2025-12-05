@@ -263,6 +263,26 @@
     "NotFound:Message": "Lo sentimos, la página que buscas no existe.",
     "NotFound:BackHome": "Volver al inicio",
     
-    "Auth:NotAuthorized": "No tienes permisos para acceder a este recurso."
+    "Auth:NotAuthorized": "No tienes permisos para acceder a este recurso.",
+    "Auth:Verifying": "Verificando credenciales...",
+    "Auth:SessionExpired": "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+    "Auth:LoginRequired": "Debes iniciar sesión para acceder a esta página.",
+    "Auth:AccessDenied": "Acceso Denegado",
+    "Auth:AccessDenied:Message": "No tienes permisos para acceder a esta página.",
+    "Auth:AccessDenied:Contact": "Si crees que esto es un error, contacta al administrador.",
+    "Auth:Redirecting": "Redireccionando...",
+    "Auth:Welcome": "Bienvenido de vuelta",
+    
+    "Login:Title": "Iniciar Sesión",
+    "Login:Subtitle": "Accede a tu panel de control",
+    "Login:Email": "Correo electrónico",
+    "Login:Password": "Contraseña",
+    "Login:RememberMe": "Recordarme",
+    "Login:ForgotPassword": "¿Olvidaste tu contraseña?",
+    "Login:Submit": "Iniciar Sesión",
+    "Login:Submitting": "Verificando...",
+    "Login:Error": "Credenciales incorrectas. Verifica tu correo y contraseña.",
+    "Login:Welcome": "Bienvenido a 4cima",
+    "Login:WelcomeSubtitle": "Panel de arquitectos"
   }
 }

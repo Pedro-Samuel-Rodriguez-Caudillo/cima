@@ -1,0 +1,45 @@
+@page "/account/post-login"
+@using Microsoft.AspNetCore.Components.Authorization
+@using cima.Blazor.Client.Services
+@inject ILoginRedirectService RedirectService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Redireccionando...</PageTitle>
+
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="text-center">
+        <div class="cima-saving-indicator mb-4 justify-center">
+            <span class="cima-saving-dot"></span>
+            <span class="cima-saving-dot"></span>
+            <span class="cima-saving-dot"></span>
+        </div>
+        <p class="text-gray-600">Redireccionando...</p>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            // No autenticado, ir a login
+            Navigation.NavigateTo("/", true);
+            return;
+        }
+
+        // Obtener URL de redirección según rol
+        var redirectUrl = RedirectService.GetRedirectUrl(user, ReturnUrl);
+        
+        // Pequeño delay para mostrar la animación
+        await Task.Delay(300);
+        
+        Navigation.NavigateTo(redirectUrl, forceLoad: false);
+    }
+}
