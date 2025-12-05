@@ -22,6 +22,16 @@ module.exports = {
         'cima-tab-active',
         'flipped',
         'line-clamp-2',
+        // Colores para badges de transacción
+        'bg-emerald-500',
+        'bg-blue-500',
+        'bg-amber-500',
+        'text-white',
+        // Grid responsive
+        'grid-cols-1',
+        'sm:grid-cols-2',
+        'lg:grid-cols-3',
+        'xl:grid-cols-4',
     ],
 
     theme: {
