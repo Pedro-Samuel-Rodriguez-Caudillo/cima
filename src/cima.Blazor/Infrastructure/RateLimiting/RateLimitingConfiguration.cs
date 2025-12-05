@@ -1,10 +1,12 @@
 using System;
+using System.Linq;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace cima.Blazor.Infrastructure.RateLimiting;
 
@@ -17,6 +19,8 @@ public static class RateLimitingConfiguration
     public const string SlidingPolicy = "sliding";
     public const string ApiPolicy = "api";
     public const string AuthPolicy = "auth";
+    public const string ContactFormPolicy = "contact";
+    public const string SearchPolicy = "search";
 
     /// <summary>
     /// Configura las políticas de Rate Limiting
@@ -32,28 +36,39 @@ public static class RateLimitingConfiguration
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            
             options.OnRejected = async (context, cancellationToken) =>
             {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("RateLimiting");
+                
+                var ipAddress = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var path = context.HttpContext.Request.Path;
+                
+                logger.LogWarning(
+                    "Rate limit exceeded for IP {IpAddress} on path {Path}",
+                    ipAddress, path);
+                
                 context.HttpContext.Response.ContentType = "application/json";
+                
+                var retryAfterSeconds = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+                    ? (int)retryAfter.TotalSeconds
+                    : 60;
+                
+                context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
                 
                 var response = new
                 {
                     error = "TooManyRequests",
                     message = "Has excedido el límite de peticiones. Por favor, espera antes de intentar de nuevo.",
-                    retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
-                        ? retryAfter.TotalSeconds
-                        : 60
+                    retryAfterSeconds
                 };
-                
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retry))
-                {
-                    context.HttpContext.Response.Headers.RetryAfter = retry.TotalSeconds.ToString();
-                }
                 
                 await context.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken);
             };
 
-            // Fixed Window - General API
+            // Fixed Window - General API (100 req/min)
             options.AddFixedWindowLimiter(FixedPolicy, opt =>
             {
                 opt.PermitLimit = rateLimitOptions.FixedWindow.PermitLimit;
@@ -62,7 +77,7 @@ public static class RateLimitingConfiguration
                 opt.QueueLimit = rateLimitOptions.FixedWindow.QueueLimit;
             });
 
-            // Sliding Window - Endpoints sensibles
+            // Sliding Window - Endpoints sensibles (50 req/30s)
             options.AddSlidingWindowLimiter(SlidingPolicy, opt =>
             {
                 opt.PermitLimit = rateLimitOptions.SlidingWindow.PermitLimit;
@@ -72,10 +87,10 @@ public static class RateLimitingConfiguration
                 opt.QueueLimit = rateLimitOptions.SlidingWindow.QueueLimit;
             });
 
-            // API Policy - Basada en IP
+            // API Policy - Basada en IP (200 req/min)
             options.AddPolicy(ApiPolicy, httpContext =>
             {
-                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var ipAddress = GetClientIpAddress(httpContext);
                 
                 return RateLimitPartition.GetSlidingWindowLimiter(
                     partitionKey: ipAddress,
@@ -89,10 +104,10 @@ public static class RateLimitingConfiguration
                     });
             });
 
-            // Auth Policy - Más restrictiva
+            // Auth Policy - Muy restrictiva (10 req/min - previene brute force)
             options.AddPolicy(AuthPolicy, httpContext =>
             {
-                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var ipAddress = GetClientIpAddress(httpContext);
                 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: ipAddress,
@@ -101,14 +116,60 @@ public static class RateLimitingConfiguration
                         PermitLimit = rateLimitOptions.Auth.PermitLimit,
                         Window = TimeSpan.FromSeconds(rateLimitOptions.Auth.WindowSeconds),
                         QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0 // No queue para auth
+                    });
+            });
+
+            // Contact Form Policy - Previene spam (5 req/5min por IP)
+            options.AddPolicy(ContactFormPolicy, httpContext =>
+            {
+                var ipAddress = GetClientIpAddress(httpContext);
+                
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: $"contact_{ipAddress}",
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(5),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                         QueueLimit = 0
                     });
             });
 
-            // Global Limiter
+            // Search Policy - Limita búsquedas costosas (30 req/min)
+            options.AddPolicy(SearchPolicy, httpContext =>
+            {
+                var ipAddress = GetClientIpAddress(httpContext);
+                
+                return RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"search_{ipAddress}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 3,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 2
+                    });
+            });
+
+            // Global Limiter - Último recurso (1000 req/5min por IP)
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
-                var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                // Excluir assets estáticos del rate limiting global
+                var path = httpContext.Request.Path.Value ?? "";
+                if (path.StartsWith("/_content") || 
+                    path.StartsWith("/_framework") ||
+                    path.StartsWith("/css") ||
+                    path.StartsWith("/js") ||
+                    path.StartsWith("/images") ||
+                    path.EndsWith(".wasm") ||
+                    path.EndsWith(".dll"))
+                {
+                    return RateLimitPartition.GetNoLimiter("static");
+                }
+                
+                var ipAddress = GetClientIpAddress(httpContext);
                 
                 return RateLimitPartition.GetFixedWindowLimiter(
                     partitionKey: ipAddress,
@@ -123,6 +184,36 @@ public static class RateLimitingConfiguration
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Obtiene la IP del cliente considerando proxies/load balancers
+    /// </summary>
+    private static string GetClientIpAddress(HttpContext httpContext)
+    {
+        // Intentar obtener IP real detrás de proxy
+        var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(forwardedFor))
+        {
+            // X-Forwarded-For puede tener múltiples IPs, la primera es el cliente
+            return forwardedFor.Split(',')[0].Trim();
+        }
+
+        var realIp = httpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(realIp))
+        {
+            return realIp;
+        }
+
+        return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
+    /// <summary>
+    /// Aplica Rate Limiting al pipeline de la aplicación
+    /// </summary>
+    public static IApplicationBuilder UseCimaRateLimiting(this IApplicationBuilder app)
+    {
+        return app.UseRateLimiter();
     }
 }
 

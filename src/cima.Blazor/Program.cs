@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 namespace cima.Blazor;
 
@@ -13,38 +14,43 @@ public class Program
 {
     public async static Task<int> Main(string[] args)
     {
+        // Bootstrap logger para capturar errores de inicio
         Log.Logger = new LoggerConfiguration()
-            .WriteTo.Async(c => c.File("Logs/logs.txt"))
-            .WriteTo.Async(c => c.Console())
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .Enrich.WithProperty("MachineName", Environment.MachineName)
+            .Enrich.WithProperty("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production")
+            .WriteTo.Console()
+            .WriteTo.File(
+                new CompactJsonFormatter(),
+                "Logs/bootstrap-.json",
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7)
             .CreateBootstrapLogger();
 
         try
         {
-            Log.Information("Starting web host.");
+            Log.Information("Starting cima web host");
             var builder = WebApplication.CreateBuilder(args);
             
-            // Solo configurar puerto dinámico si estamos en producción/deployment
-            // En desarrollo, launchSettings.json configurará el puerto
+            // Configuración de puerto dinámico para Railway/Docker/Cloud
             var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
             var port = Environment.GetEnvironmentVariable("PORT");
             
             if (!string.IsNullOrWhiteSpace(port) && string.IsNullOrWhiteSpace(urls))
             {
-                // Configuración para Railway/Docker/Cloud donde se especifica PORT
                 builder.WebHost.ConfigureKestrel(options =>
                 {
                     options.ListenAnyIP(int.Parse(port));
                 });
-                Log.Information($"Using dynamic port from PORT env var: {port}");
+                Log.Information("Using dynamic port from PORT env var: {Port}", port);
             }
             else if (!string.IsNullOrWhiteSpace(urls))
             {
-                // ASPNETCORE_URLS tiene prioridad
-                Log.Information($"Using ASPNETCORE_URLS: {urls}");
+                Log.Information("Using ASPNETCORE_URLS: {Urls}", urls);
             }
             else
             {
-                // En desarrollo, launchSettings.json configurará applicationUrl
                 Log.Information("Using launchSettings.json configuration (development)");
             }
             
@@ -53,19 +59,54 @@ public class Program
                 .UseAutofac()
                 .UseSerilog((context, services, loggerConfiguration) =>
                 {
+                    var environment = context.HostingEnvironment.EnvironmentName;
+                    
                     loggerConfiguration
-                    #if DEBUG
-                        .MinimumLevel.Debug()
-                    #else
-                        .MinimumLevel.Information()
-                    #endif
-                        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                        // Nivel mínimo basado en entorno
+                        .MinimumLevel.Is(context.HostingEnvironment.IsDevelopment() 
+                            ? LogEventLevel.Debug 
+                            : LogEventLevel.Information)
+                        
+                        // Overrides para reducir ruido
+                        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                         .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+                        .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+                        .MinimumLevel.Override("System.Net.Http", LogEventLevel.Warning)
+                        .MinimumLevel.Override("Volo.Abp", LogEventLevel.Warning)
+                        
+                        // Enrichers para contexto adicional
                         .Enrich.FromLogContext()
-                        .WriteTo.Async(c => c.File("Logs/logs.txt"))
-                        .WriteTo.Async(c => c.Console())
+                        .Enrich.WithProperty("Application", "cima")
+                        .Enrich.WithProperty("Environment", environment)
+                        .Enrich.WithProperty("MachineName", Environment.MachineName)
+                        
+                        // Consola con formato legible en desarrollo
+                        .WriteTo.Console(
+                            outputTemplate: context.HostingEnvironment.IsDevelopment()
+                                ? "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}"
+                                : "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+                        
+                        // Archivo JSON estructurado para análisis
+                        .WriteTo.File(
+                            new CompactJsonFormatter(),
+                            "Logs/cima-.json",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 30,
+                            fileSizeLimitBytes: 50_000_000, // 50MB
+                            rollOnFileSizeLimit: true)
+                        
+                        // Archivo de texto para lectura humana
+                        .WriteTo.File(
+                            "Logs/cima-.txt",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 14,
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
+                        
+                        // ABP Studio integration
                         .WriteTo.Async(c => c.AbpStudio(services));
                 });
+                
             await builder.AddApplicationAsync<cimaBlazorModule>();
             var app = builder.Build();
             await app.InitializeApplicationAsync();
@@ -84,7 +125,7 @@ public class Program
         }
         finally
         {
-            Log.CloseAndFlush();
+            await Log.CloseAndFlushAsync();
         }
     }
 }
