@@ -1,0 +1,216 @@
+@page "/architect/listings"
+@using cima.Architects
+@using cima.Listings
+@using cima.Domain.Shared
+@using cima.Blazor.Client.Services
+@using MudBlazor
+@attribute [Authorize]
+@inject IArchitectAppService ArchitectService
+@inject IListingAppService ListingService
+@inject EnumLocalizationService EnumLocalizer
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+@inherits cimaComponentBase
+
+<PageTitle>Mis Propiedades - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-neutral-50">
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <div class="flex items-center gap-4 mb-2">
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/architect/dashboard">
+                    Mi Panel
+                </MudButton>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">Mis Propiedades</h1>
+            <p class="text-neutral-600 mt-1">Todas las propiedades que has publicado</p>
+        </div>
+    </div>
+
+    <div class="cima-container py-8">
+        @if (IsLoading)
+        {
+            <MudCard Class="p-6">
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                <p class="text-center mt-4 text-neutral-600">Cargando propiedades...</p>
+            </MudCard>
+        }
+        else if (MyListings?.Any() == true)
+        {
+            <div class="space-y-4">
+                @foreach (var listing in MyListings)
+                {
+                    <MudCard Class="p-4 hover:shadow-lg transition-shadow">
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="w-full md:w-32 h-24 bg-neutral-200 rounded overflow-hidden flex-shrink-0">
+                                @if (listing.Images?.Any() == true)
+                                {
+                                    <img src="@listing.Images.First().Url" alt="@listing.Title" class="w-full h-full object-cover" />
+                                }
+                                else
+                                {
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" Class="text-neutral-400" />
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h3 class="font-semibold text-lg text-neutral-900">@listing.Title</h3>
+                                        <p class="text-sm text-neutral-600">@listing.Location</p>
+                                    </div>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(listing.Status)">
+                                        @EnumLocalizer.GetListingStatusName(listing.Status)
+                                    </MudChip>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-neutral-600">
+                                    <span>@EnumLocalizer.GetPropertyCategoryName(listing.Category)</span>
+                                    <span>•</span>
+                                    <span>@EnumLocalizer.GetPropertyTypeName(listing.Type)</span>
+                                    @if (listing.Bedrooms > 0)
+                                    {
+                                        <span>•</span>
+                                        <span>@listing.Bedrooms hab.</span>
+                                    }
+                                    @if (listing.Bathrooms > 0)
+                                    {
+                                        <span>•</span>
+                                        <span>@listing.Bathrooms baños</span>
+                                    }
+                                </div>
+
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="text-xl font-bold text-primary">
+                                        @listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                                    </div>
+                                    <div class="flex gap-2">
+                                        @if (listing.Status == ListingStatus.Published)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Size="Size.Small" 
+                                                Href="@($"/properties/{listing.Id}")" Target="_blank"
+                                                StartIcon="@Icons.Material.Filled.Visibility">
+                                                Ver Publicación
+                                            </MudButton>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </MudCard>
+                }
+            </div>
+
+            @if (TotalPages > 1)
+            {
+                <div class="mt-6 flex justify-center">
+                    <MudPagination Count="@TotalPages" Selected="@CurrentPage" SelectedChanged="GoToPage"
+                        Color="Color.Primary" Variant="Variant.Filled" />
+                </div>
+            }
+        }
+        else
+        {
+            <MudCard Class="p-16 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Class="text-neutral-400 mb-4" Style="font-size: 4rem;" />
+                <h3 class="text-xl font-semibold text-neutral-900 mb-2">No tienes propiedades</h3>
+                <p class="text-neutral-600">Contacta al administrador para publicar propiedades</p>
+            </MudCard>
+        }
+    </div>
+</div>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private List<ListingDto>? MyListings { get; set; }
+    private Guid? ArchitectId { get; set; }
+    private int TotalCount { get; set; }
+    private int CurrentPage { get; set; } = 1;
+    private const int PageSize = 10;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadArchitectAndListings();
+    }
+
+    private async Task LoadArchitectAndListings()
+    {
+        try
+        {
+            IsLoading = true;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+            {
+                NavManager.NavigateTo("/Account/Login");
+                return;
+            }
+
+            var userIdClaim = user.FindFirst("sub")?.Value ?? user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return;
+            }
+
+            try
+            {
+                var architect = await ArchitectService.GetByUserIdAsync(userId);
+                ArchitectId = architect.Id;
+            }
+            catch
+            {
+                ArchitectId = null;
+            }
+
+            if (ArchitectId.HasValue)
+            {
+                await LoadListings();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadListings()
+    {
+        if (!ArchitectId.HasValue) return;
+
+        var result = await ListingService.GetListAsync(new GetListingsInput
+        {
+            SkipCount = (CurrentPage - 1) * PageSize,
+            MaxResultCount = PageSize,
+            Sorting = "CreatedAt DESC",
+            ArchitectId = ArchitectId.Value
+        });
+
+        MyListings = result.Items.ToList();
+        TotalCount = (int)result.TotalCount;
+    }
+
+    private async Task GoToPage(int page)
+    {
+        CurrentPage = page;
+        await LoadListings();
+    }
+
+    private Color GetStatusColor(ListingStatus status) => status switch
+    {
+        ListingStatus.Published => Color.Success,
+        ListingStatus.Draft => Color.Warning,
+        ListingStatus.Archived => Color.Default,
+        ListingStatus.Portfolio => Color.Info,
+        _ => Color.Default
+    };
+}

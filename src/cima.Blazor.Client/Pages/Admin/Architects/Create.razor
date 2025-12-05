@@ -1,0 +1,202 @@
+@page "/admin/architects/create"
+@using cima.Architects
+@using cima.Permissions
+@using MudBlazor
+@attribute [Authorize(cimaPermissions.Architects.Create)]
+@inject IArchitectAppService ArchitectService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inherits cimaComponentBase
+
+<PageTitle>Nuevo Arquitecto - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-neutral-50">
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <div class="flex items-center gap-4 mb-2">
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/admin/architects">
+                    Volver
+                </MudButton>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">Nuevo Arquitecto</h1>
+            <p class="text-neutral-600 mt-1">Crear cuenta de usuario para un nuevo arquitecto</p>
+        </div>
+    </div>
+
+    <div class="cima-container py-8">
+        <div class="max-w-2xl">
+            <MudCard Class="p-6">
+                <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="space-y-6">
+                        <MudAlert Severity="Severity.Info" Class="mb-4">
+                            Se creará una cuenta de usuario con contraseña temporal. 
+                            El arquitecto deberá cambiar su contraseña en el primer inicio de sesión.
+                        </MudAlert>
+
+                        <MudTextField @bind-Value="Model.Email" Label="Email" Required="true"
+                            Variant="Variant.Outlined" InputType="InputType.Email"
+                            HelperText="Este será el nombre de usuario para iniciar sesión" />
+                        <ValidationMessage For="@(() => Model.Email)" class="text-red-500 text-sm" />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <MudTextField @bind-Value="Model.Name" Label="Nombre" Required="true"
+                                Variant="Variant.Outlined" />
+
+                            <MudTextField @bind-Value="Model.Surname" Label="Apellido" Required="true"
+                                Variant="Variant.Outlined" />
+                        </div>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudSwitch @bind-Value="UseCustomPassword" Label="Definir contraseña manual" Color="Color.Primary" />
+
+                        @if (UseCustomPassword)
+                        {
+                            <MudTextField @bind-Value="Model.TemporaryPassword" Label="Contraseña Temporal"
+                                Variant="Variant.Outlined" InputType="@PasswordInputType"
+                                Adornment="Adornment.End" AdornmentIcon="@PasswordIcon"
+                                OnAdornmentClick="TogglePasswordVisibility"
+                                HelperText="Mínimo 6 caracteres, debe incluir mayúscula, minúscula, número y símbolo" />
+                        }
+                        else
+                        {
+                            <MudAlert Severity="Severity.Normal">
+                                <MudIcon Icon="@Icons.Material.Filled.Key" Class="mr-2" />
+                                Se generará automáticamente una contraseña temporal segura
+                            </MudAlert>
+                        }
+
+                        <MudDivider Class="my-4" />
+
+                        <div class="flex gap-4">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                ButtonType="ButtonType.Submit" Disabled="@IsSubmitting" FullWidth="true">
+                                @if (IsSubmitting)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <span>Creando...</span>
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Class="mr-2" />
+                                    <span>Crear Arquitecto</span>
+                                }
+                            </MudButton>
+                        </div>
+                    </div>
+                </EditForm>
+            </MudCard>
+        </div>
+    </div>
+</div>
+
+@* Dialog para mostrar la contraseña temporal *@
+<MudDialog @bind-Visible="ShowPasswordDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Class="mr-2" />
+            Arquitecto Creado
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-4">
+            <strong>¡Importante!</strong> Guarda esta contraseña. El arquitecto deberá usarla para su primer inicio de sesión.
+        </MudAlert>
+        
+        <MudText Typo="Typo.body1" Class="mb-2">Email: <strong>@CreatedEmail</strong></MudText>
+        
+        <MudTextField Value="@CreatedPassword" Label="Contraseña Temporal" ReadOnly="true"
+            Variant="Variant.Outlined" Adornment="Adornment.End" 
+            AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+            OnAdornmentClick="CopyPassword" />
+        
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+            El arquitecto deberá cambiar esta contraseña en su primer inicio de sesión.
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CloseDialogAndRedirect">
+            Entendido
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private CreateArchitectWithUserDto Model { get; set; } = new();
+    private bool IsSubmitting { get; set; }
+    private bool UseCustomPassword { get; set; }
+    private bool ShowPassword { get; set; }
+    
+    private bool ShowPasswordDialog { get; set; }
+    private string CreatedEmail { get; set; } = "";
+    private string CreatedPassword { get; set; } = "";
+
+    private InputType PasswordInputType => ShowPassword ? InputType.Text : InputType.Password;
+    private string PasswordIcon => ShowPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+
+    private void TogglePasswordVisibility() => ShowPassword = !ShowPassword;
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Email) || 
+            string.IsNullOrWhiteSpace(Model.Name) || 
+            string.IsNullOrWhiteSpace(Model.Surname))
+        {
+            Snackbar.Add("Por favor completa todos los campos requeridos", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            IsSubmitting = true;
+            
+            // Si no usa contraseña personalizada, limpiar el campo
+            if (!UseCustomPassword)
+            {
+                Model.TemporaryPassword = null;
+            }
+
+            var result = await ArchitectService.CreateWithUserAsync(Model);
+            
+            // Guardar datos para el dialog
+            CreatedEmail = Model.Email;
+            CreatedPassword = result.TemporaryPassword;
+            
+            Snackbar.Add("Arquitecto creado exitosamente", Severity.Success);
+            ShowPasswordDialog = true;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task CopyPassword()
+    {
+        // Usar JavaScript para copiar al portapapeles
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", CreatedPassword);
+            Snackbar.Add("Contraseña copiada al portapapeles", Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("No se pudo copiar. Copia manualmente.", Severity.Warning);
+        }
+    }
+
+    private void CloseDialogAndRedirect()
+    {
+        ShowPasswordDialog = false;
+        NavManager.NavigateTo("/admin/architects");
+    }
+
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+}
