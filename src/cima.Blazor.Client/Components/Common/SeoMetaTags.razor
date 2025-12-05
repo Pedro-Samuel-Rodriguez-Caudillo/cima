@@ -1,0 +1,69 @@
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Navigation
+
+<HeadContent>
+    @* Primary Meta Tags *@
+    <meta name="title" content="@FullTitle" />
+    <meta name="description" content="@Description" />
+    <meta name="keywords" content="@Keywords" />
+    <meta name="author" content="4cima" />
+    <meta name="robots" content="@(NoIndex ? "noindex, nofollow" : "index, follow")" />
+    
+    @* Canonical URL *@
+    <link rel="canonical" href="@CanonicalUrl" />
+    
+    @* Open Graph / Facebook *@
+    <meta property="og:type" content="@OgType" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:title" content="@FullTitle" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:site_name" content="4cima" />
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <meta property="og:image" content="@ImageUrl" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+    }
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:locale:alternate" content="en_US" />
+    
+    @* Twitter *@
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="@CanonicalUrl" />
+    <meta property="twitter:title" content="@FullTitle" />
+    <meta property="twitter:description" content="@Description" />
+    @if (!string.IsNullOrEmpty(ImageUrl))
+    {
+        <meta property="twitter:image" content="@ImageUrl" />
+    }
+    
+    @* Property specific (for real estate) *@
+    @if (Price.HasValue)
+    {
+        <meta property="product:price:amount" content="@Price.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+        <meta property="product:price:currency" content="MXN" />
+    }
+    
+    @* JSON-LD Structured Data *@
+    @if (!string.IsNullOrEmpty(JsonLd))
+    {
+        <script type="application/ld+json">@((MarkupString)JsonLd)</script>
+    }
+</HeadContent>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "4cima - Propiedades exclusivas con arquitectura de vanguardia en México";
+    [Parameter] public string Keywords { get; set; } = "inmobiliaria, propiedades, arquitectura, México, casas, departamentos, lujo";
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string OgType { get; set; } = "website";
+    [Parameter] public decimal? Price { get; set; }
+    [Parameter] public bool NoIndex { get; set; } = false;
+    [Parameter] public string? JsonLd { get; set; }
+
+    private string FullTitle => string.IsNullOrEmpty(Title) 
+        ? "4cima - Arquitectura y Diseño Inmobiliario" 
+        : $"{Title} | 4cima";
+
+    private string CanonicalUrl => Navigation.Uri;
+}

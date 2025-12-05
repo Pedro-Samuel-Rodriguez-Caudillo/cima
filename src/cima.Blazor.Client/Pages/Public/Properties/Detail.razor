@@ -3,13 +3,28 @@
 @using cima.Listings
 @using cima.ContactRequests
 @using cima.Blazor.Client.Services
+@using cima.Blazor.Client.Components.Common
 @inject IListingAppService ListingService
 @inject IContactRequestAppService ContactRequestService
 @inject EnumLocalizationService EnumLocalizer
+@inject SeoJsonLdService SeoService
 @inject NavigationManager NavManager
 @inherits cimaComponentBase
 
 <PageTitle>@(Listing?.Title ?? L["Properties:Title"]) - @L["CompanyName"]</PageTitle>
+
+@* SEO Meta Tags *@
+@if (Listing != null)
+{
+    <SeoMetaTags 
+        Title="@Listing.Title"
+        Description="@GetSeoDescription()"
+        Keywords="@GetSeoKeywords()"
+        ImageUrl="@(Listing.Images?.FirstOrDefault()?.Url)"
+        OgType="product"
+        Price="@Listing.Price"
+        JsonLd="@GetPropertyJsonLd()" />
+}
 
 @if (IsLoading)
 {
@@ -237,5 +252,41 @@ else
         {
             IsLoading = false;
         }
+    }
+
+    private string GetSeoDescription()
+    {
+        if (Listing == null) return "";
+        
+        var desc = $"{Listing.Title} en {Listing.Location}. ";
+        if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} recámaras. ";
+        if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} baños. ";
+        desc += $"Precio: {Listing.Price:C0}";
+        
+        return desc.Length > 160 ? desc[..157] + "..." : desc;
+    }
+
+    private string GetSeoKeywords()
+    {
+        if (Listing == null) return "";
+        
+        var keywords = new List<string>
+        {
+            Listing.Location ?? "",
+            EnumLocalizer.GetPropertyTypeName(Listing.Type),
+            EnumLocalizer.GetPropertyCategoryName(Listing.Category),
+            EnumLocalizer.GetTransactionTypeName(Listing.TransactionType),
+            "propiedad",
+            "inmueble",
+            "4cima"
+        };
+        
+        return string.Join(", ", keywords.Where(k => !string.IsNullOrEmpty(k)));
+    }
+
+    private string GetPropertyJsonLd()
+    {
+        if (Listing == null) return "";
+        return SeoService.GeneratePropertyJsonLd(Listing, NavManager.BaseUri.TrimEnd('/'));
     }
 }

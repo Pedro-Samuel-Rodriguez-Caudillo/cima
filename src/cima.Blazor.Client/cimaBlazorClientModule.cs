@@ -45,6 +45,7 @@ public class cimaBlazorClientModule : AbpModule
     private void ConfigureApplicationServices(ServiceConfigurationContext context)
     {
         context.Services.AddTransient<EnumLocalizationService>();
+        context.Services.AddSingleton<SeoJsonLdService>();
     }
 
     private void ConfigureLocalization()
