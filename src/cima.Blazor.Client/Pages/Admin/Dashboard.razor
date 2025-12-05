@@ -1,15 +1,19 @@
 @page "/admin"
 @page "/admin/dashboard"
 @using cima.Statistics
+@using cima.Listings
+@using cima.ContactRequests
 @using MudBlazor
 @attribute [Authorize]
 @inject IStatisticsAppService StatisticsService
+@inject IListingAppService ListingService
+@inject IContactRequestAppService ContactRequestService
 @inject ISnackbar Snackbar
 @inherits cimaComponentBase
 
 <PageTitle>@L["Dashboard:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
+<div class="min-h-screen bg-neutral-50 pt-20">
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
@@ -25,10 +29,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 @for (int i = 0; i < 4; i++)
                 {
-                    <MudCard Class="p-6">
-                        <MudSkeleton Width="60%" Height="20px" Class="mb-2" />
-                        <MudSkeleton Width="40%" Height="32px" />
-                    </MudCard>
+                    <div class="bg-white rounded-lg shadow p-6 animate-pulse">
+                        <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                        <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+                    </div>
                 }
             </div>
         }
@@ -36,126 +40,265 @@
         {
             @* Stats Cards *@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <MudCard Class="p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-neutral-600">@L["Dashboard:TotalListings"]</span>
-                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" />
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-medium text-gray-500">Total Propiedades</span>
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="text-3xl font-bold text-neutral-900 mb-1">@Stats.TotalListings</div>
-                    <div class="text-xs text-neutral-500">
-                        <span class="text-green-600 font-medium">@Stats.PublishedListings</span> publicadas
+                    <div class="text-3xl font-bold text-gray-900">@Stats.TotalListings</div>
+                    <div class="flex items-center gap-2 mt-2 text-sm">
+                        <span class="text-green-600 font-medium">@Stats.PublishedListings publicadas</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-yellow-600">@Stats.DraftListings borradores</span>
                     </div>
-                </MudCard>
+                </div>
 
-                <MudCard Class="p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-neutral-600">@L["Dashboard:TotalArchitects"]</span>
-                        <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" />
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-medium text-gray-500">Arquitectos</span>
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="text-3xl font-bold text-neutral-900 mb-1">@Stats.TotalArchitects</div>
-                    <div class="text-xs text-neutral-500">
-                        <span class="text-green-600 font-medium">@Stats.ActiveArchitects</span> activos
-                    </div>
-                </MudCard>
+                    <div class="text-3xl font-bold text-gray-900">@Stats.TotalArchitects</div>
+                    <div class="text-sm text-green-600 font-medium mt-2">@Stats.ActiveArchitects activos</div>
+                </div>
 
-                <MudCard Class="p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-neutral-600">@L["Dashboard:ContactRequests"]</span>
-                        <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Large" Color="Color.Primary" />
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-medium text-gray-500">Solicitudes</span>
+                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 012 2z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="text-3xl font-bold text-neutral-900 mb-1">@Stats.TotalContactRequests</div>
-                    <div class="text-xs text-neutral-500">
-                        <span class="text-yellow-600 font-medium">@Stats.PendingContactRequests</span> pendientes
-                    </div>
-                </MudCard>
+                    <div class="text-3xl font-bold text-gray-900">@Stats.TotalContactRequests</div>
+                    @if (Stats.PendingContactRequests > 0)
+                    {
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                @Stats.PendingContactRequests nuevas
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-sm text-green-600 font-medium mt-2">Todas atendidas ?</div>
+                    }
+                </div>
 
-                <MudCard Class="p-6 hover:shadow-lg transition-shadow">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-neutral-600">@L["Dashboard:DraftListings"]</span>
-                        <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Large" Color="Color.Primary" />
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm font-medium text-gray-500">Portafolio</span>
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="text-3xl font-bold text-neutral-900 mb-1">@Stats.DraftListings</div>
-                    <div class="text-xs text-neutral-500">
-                        <span class="text-red-600 font-medium">@Stats.ArchivedListings</span> archivadas
+                    <div class="text-3xl font-bold text-gray-900">@Stats.PortfolioListings</div>
+                    <div class="text-sm text-gray-500 mt-2">proyectos completados</div>
+                </div>
+            </div>
+
+            @* Charts Row *@
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                @* Listings by Status *@
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Propiedades por Estado</h3>
+                    <div class="space-y-4">
+                        @{
+                            var total = Stats.TotalListings > 0 ? Stats.TotalListings : 1;
+                            var publishedPct = (Stats.PublishedListings * 100) / total;
+                            var draftPct = (Stats.DraftListings * 100) / total;
+                            var portfolioPct = (Stats.PortfolioListings * 100) / total;
+                            var archivedPct = (Stats.ArchivedListings * 100) / total;
+                        }
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Publicadas</span>
+                                <span class="font-medium">@Stats.PublishedListings (@publishedPct%)</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: @publishedPct%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Borradores</span>
+                                <span class="font-medium">@Stats.DraftListings (@draftPct%)</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: @draftPct%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Portafolio</span>
+                                <span class="font-medium">@Stats.PortfolioListings (@portfolioPct%)</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: @portfolioPct%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Archivadas</span>
+                                <span class="font-medium">@Stats.ArchivedListings (@archivedPct%)</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gray-400 h-2 rounded-full transition-all duration-500" style="width: @archivedPct%"></div>
+                            </div>
+                        </div>
                     </div>
-                </MudCard>
+                </div>
+
+                @* Recent Contact Requests *@
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Solicitudes Recientes</h3>
+                        <a href="/admin/contact-requests" class="text-sm text-navy-600 hover:underline">Ver todas ?</a>
+                    </div>
+                    @if (RecentRequests?.Any() == true)
+                    {
+                        <div class="space-y-3">
+                            @foreach (var request in RecentRequests.Take(5))
+                            {
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate">@request.Name</p>
+                                        <p class="text-xs text-gray-500 truncate">@request.Email</p>
+                                    </div>
+                                    <div class="ml-4">
+                                        @if (request.Status == ContactRequestStatus.New)
+                                        {
+                                            <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Nueva</span>
+                                        }
+                                        else if (request.Status == ContactRequestStatus.Replied)
+                                        {
+                                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Respondida</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Cerrada</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                            <p>No hay solicitudes recientes</p>
+                        </div>
+                    }
+                </div>
             </div>
 
             @* Quick Actions *@
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <MudCard Class="p-6 hover:shadow-lg hover:border-primary transition-all cursor-pointer" @onclick="@(() => NavTo("/admin/listings/create"))">
-                    <div class="flex items-center gap-4">
-                        <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Large">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" />
-                        </MudAvatar>
-                        <div>
-                            <div class="font-semibold text-neutral-900">@L["Dashboard:NewListing"]</div>
-                            <div class="text-sm text-neutral-600">@L["Dashboard:NewListingDesc"]</div>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <button @onclick="@(() => NavTo("/admin/listings/create"))" 
+                        class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:border-navy-300 hover:shadow-md transition-all text-left">
+                    <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
                     </div>
-                </MudCard>
+                    <div>
+                        <div class="font-medium text-gray-900">Nueva Propiedad</div>
+                        <div class="text-xs text-gray-500">Agregar al catálogo</div>
+                    </div>
+                </button>
 
-                <MudCard Class="p-6 hover:shadow-lg hover:border-primary transition-all cursor-pointer" @onclick="@(() => NavTo("/admin/architects/create"))">
-                    <div class="flex items-center gap-4">
-                        <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Large">
-                            <MudIcon Icon="@Icons.Material.Filled.PersonAdd" />
-                        </MudAvatar>
-                        <div>
-                            <div class="font-semibold text-neutral-900">@L["Dashboard:NewArchitect"]</div>
-                            <div class="text-sm text-neutral-600">@L["Dashboard:NewArchitectDesc"]</div>
-                        </div>
+                <button @onclick="@(() => NavTo("/admin/architects/create"))" 
+                        class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:border-navy-300 hover:shadow-md transition-all text-left">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
                     </div>
-                </MudCard>
+                    <div>
+                        <div class="font-medium text-gray-900">Nuevo Arquitecto</div>
+                        <div class="text-xs text-gray-500">Registrar usuario</div>
+                    </div>
+                </button>
 
-                <MudCard Class="p-6 hover:shadow-lg hover:border-primary transition-all cursor-pointer" @onclick="@(() => NavTo("/admin/listings"))">
-                    <div class="flex items-center gap-4">
-                        <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Large">
-                            <MudIcon Icon="@Icons.Material.Filled.List" />
-                        </MudAvatar>
-                        <div>
-                            <div class="font-semibold text-neutral-900">Ver Propiedades</div>
-                            <div class="text-sm text-neutral-600">Gestionar catalogo de propiedades</div>
-                        </div>
+                <button @onclick="@(() => NavTo("/admin/listings"))" 
+                        class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:border-navy-300 hover:shadow-md transition-all text-left">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
                     </div>
-                </MudCard>
+                    <div>
+                        <div class="font-medium text-gray-900">Ver Propiedades</div>
+                        <div class="text-xs text-gray-500">Gestionar catálogo</div>
+                    </div>
+                </button>
+
+                <button @onclick="@(() => NavTo("/admin/settings"))" 
+                        class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:border-navy-300 hover:shadow-md transition-all text-left">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Configuración</div>
+                        <div class="text-xs text-gray-500">Email, WhatsApp, etc.</div>
+                    </div>
+                </button>
             </div>
 
             @* System Status *@
-            <MudCard Class="p-6">
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4">@L["Dashboard:SystemStatus"]</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Estado del Sistema</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-sm font-medium">@L["Dashboard:DatabaseConnection"]</span>
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium text-gray-700">Base de Datos</span>
                         </div>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Common:Active"]</MudChip>
+                        <span class="text-xs font-medium text-green-700">Conectado</span>
                     </div>
-
                     <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span class="text-sm font-medium">@L["Dashboard:ApiStatus"]</span>
+                            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium text-gray-700">API</span>
                         </div>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Success">@L["Common:Active"]</MudChip>
+                        <span class="text-xs font-medium text-green-700">Operacional</span>
                     </div>
-
-                    <div class="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                        <span class="text-sm text-neutral-600">@L["Dashboard:LastUpdate"]</span>
-                        <span class="text-sm font-medium">@Stats.LastUpdated.ToLocalTime().ToString("g")</span>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span class="text-sm text-gray-600">Última actualización</span>
+                        <span class="text-sm font-medium text-gray-900">@Stats.LastUpdated.ToLocalTime().ToString("HH:mm")</span>
                     </div>
                 </div>
-            </MudCard>
+            </div>
         }
         else
         {
-            <MudCard Class="p-16 text-center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" Class="mb-4" />
-                <h3 class="text-xl font-semibold text-neutral-900 mb-2">@L["Dashboard:ErrorLoading"]</h3>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadStats" Class="mt-4">
-                    @L["Common:Retry"]
-                </MudButton>
-            </MudCard>
+            <div class="bg-white rounded-xl shadow-sm p-16 text-center">
+                <svg class="w-16 h-16 mx-auto text-red-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
+                <p class="text-gray-500 mb-4">No se pudieron obtener las estadísticas</p>
+                <button @onclick="LoadStats" class="cima-btn cima-btn-primary">
+                    Reintentar
+                </button>
+            </div>
         }
     </div>
 </div>
@@ -165,6 +308,7 @@
 
     private bool IsLoading { get; set; } = true;
     private DashboardStatsDto? Stats { get; set; }
+    private List<ContactRequestDto>? RecentRequests { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -176,7 +320,15 @@
         try
         {
             IsLoading = true;
-            Stats = await StatisticsService.GetDashboardAsync();
+            
+            // Cargar stats y solicitudes en paralelo
+            var statsTask = StatisticsService.GetDashboardAsync();
+            var requestsTask = ContactRequestService.GetListAsync(0, 5);
+            
+            await Task.WhenAll(statsTask, requestsTask);
+            
+            Stats = statsTask.Result;
+            RecentRequests = requestsTask.Result.Items.ToList();
         }
         catch (Exception ex)
         {

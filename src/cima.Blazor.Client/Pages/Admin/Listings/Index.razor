@@ -15,7 +15,7 @@
 
 <PageTitle>@L["Admin:Listings:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
+<div class="min-h-screen bg-neutral-50 pt-20">
     @* Header *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
@@ -25,7 +25,7 @@
                         @L["Admin:Listings:Title"]
                     </h1>
                     <p class="text-neutral-600 mt-1">
-                        Gestiona el catalogo de propiedades
+                        Gestiona el catálogo de propiedades
                     </p>
                 </div>
                 <a href="/admin/listings/create" class="cima-btn cima-btn-primary">
@@ -38,19 +38,63 @@
         </div>
     </div>
 
+    @* Bulk Actions Bar (visible cuando hay selección) *@
+    @if (SelectedIds.Any())
+    {
+        <div class="bg-navy-600 text-white sticky top-20 z-40 shadow-lg">
+            <div class="cima-container py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button @onclick="ClearSelection" class="p-1 hover:bg-white/20 rounded transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                        <span class="font-medium">@SelectedIds.Count seleccionadas</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button @onclick="BulkPublish" 
+                                class="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Publicar
+                        </button>
+                        <button @onclick="BulkArchive" 
+                                class="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                            </svg>
+                            Archivar
+                        </button>
+                        <button @onclick="BulkMoveToPortfolio" 
+                                class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            Portafolio
+                        </button>
+                        <button @onclick="BulkDelete" 
+                                class="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     @* Filters *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 @* Search *@
                 <div>
-                    <input 
-                        type="search" 
-                        class="cima-input" 
-                        placeholder="@L["Search"]..."
-                        @bind="SearchTerm"
-                        @bind:event="oninput"
-                        @onkeyup="HandleSearchKeyUp" />
+                    <input type="search" class="cima-input" placeholder="@L["Search"]..."
+                        @bind="SearchTerm" @bind:event="oninput" @onkeyup="HandleSearchKeyUp" />
                 </div>
 
                 @* Status Filter *@
@@ -100,7 +144,13 @@
             <div class="cima-card overflow-hidden">
                 @* Table Header *@
                 <div class="hidden lg:grid lg:grid-cols-12 gap-4 p-4 bg-neutral-50 border-b border-neutral-200 text-sm font-medium text-neutral-700">
-                    <div class="col-span-4">@L["Properties:Title"]</div>
+                    <div class="col-span-1">
+                        <input type="checkbox" 
+                               checked="@IsAllSelected" 
+                               @onchange="ToggleSelectAll"
+                               class="w-4 h-4 rounded border-gray-300 text-navy-600 focus:ring-navy-500" />
+                    </div>
+                    <div class="col-span-3">@L["Properties:Title"]</div>
                     <div class="col-span-2">@L["Search:PropertyCategory"]</div>
                     <div class="col-span-2">@L["Properties:Price"]</div>
                     <div class="col-span-2">@L["Common:Status"]</div>
@@ -111,13 +161,22 @@
                 <div class="divide-y divide-neutral-200">
                     @foreach (var listing in Listings)
                     {
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 hover:bg-neutral-50 transition-colors">
-                            @* Title + Image (Mobile & Desktop) *@
-                            <div class="col-span-1 lg:col-span-4 flex items-center gap-3">
+                        var isSelected = SelectedIds.Contains(listing.Id);
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 hover:bg-neutral-50 transition-colors @(isSelected ? "bg-navy-50" : "")">
+                            @* Checkbox *@
+                            <div class="col-span-1 flex items-center">
+                                <input type="checkbox" 
+                                       checked="@isSelected" 
+                                       @onchange="@(() => ToggleSelection(listing.Id))"
+                                       class="w-4 h-4 rounded border-gray-300 text-navy-600 focus:ring-navy-500" />
+                            </div>
+
+                            @* Title + Image *@
+                            <div class="col-span-1 lg:col-span-3 flex items-center gap-3">
                                 <div class="w-16 h-16 bg-neutral-200 rounded overflow-hidden flex-shrink-0">
                                     @if (listing.Images?.Any() == true)
                                     {
-                                        <img src="@listing.Images.First().Url" alt="@listing.Title" class="w-full h-full object-cover" />
+                                        <img src="@listing.Images.First().Url" alt="@listing.Title" class="w-full h-full object-cover" loading="lazy" />
                                     }
                                     else
                                     {
@@ -139,7 +198,7 @@
                                 </span>
                             </div>
 
-                            @* Price - usando cultura mexicana *@
+                            @* Price *@
                             <div class="col-span-1 lg:col-span-2 flex items-center">
                                 <span class="text-sm font-semibold text-neutral-900">
                                     @listing.Price.ToString("C0", MexicoCulture)
@@ -201,7 +260,6 @@
 </div>
 
 @code {
-    // Cultura mexicana para formato de números (comas para miles, punto para decimales)
     private static readonly CultureInfo MexicoCulture = new("es-MX");
     
     private bool IsLoading { get; set; } = true;
@@ -215,6 +273,10 @@
     private string? StatusFilter { get; set; }
     private string? CategoryFilter { get; set; }
     private string? TransactionFilter { get; set; }
+
+    // Bulk Selection
+    private HashSet<Guid> SelectedIds { get; set; } = new();
+    private bool IsAllSelected => Listings?.Any() == true && Listings.All(l => SelectedIds.Contains(l.Id));
 
     private System.Timers.Timer? _searchTimer;
 
@@ -258,6 +320,9 @@
             var result = await ListingService.GetListAsync(input);
             Listings = result.Items.ToList();
             TotalCount = (int)result.TotalCount;
+            
+            // Limpiar selección de items que ya no están en la lista
+            SelectedIds.RemoveWhere(id => !Listings.Any(l => l.Id == id));
         }
         catch (Exception ex)
         {
@@ -269,6 +334,130 @@
         }
     }
 
+    // Selection methods
+    private void ToggleSelection(Guid id)
+    {
+        if (SelectedIds.Contains(id))
+            SelectedIds.Remove(id);
+        else
+            SelectedIds.Add(id);
+    }
+
+    private void ToggleSelectAll()
+    {
+        if (Listings == null) return;
+        
+        if (IsAllSelected)
+            SelectedIds.Clear();
+        else
+            foreach (var listing in Listings)
+                SelectedIds.Add(listing.Id);
+    }
+
+    private void ClearSelection() => SelectedIds.Clear();
+
+    // Bulk Actions
+    private async Task BulkPublish()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Publicar propiedades",
+            $"¿Publicar {SelectedIds.Count} propiedades seleccionadas?",
+            yesText: "Publicar", cancelText: "Cancelar");
+
+        if (result == true)
+        {
+            var success = 0;
+            foreach (var id in SelectedIds.ToList())
+            {
+                try
+                {
+                    await ListingService.PublishAsync(id);
+                    success++;
+                }
+                catch { /* Ignorar errores individuales */ }
+            }
+            Snackbar.Add($"{success} propiedades publicadas", Severity.Success);
+            ClearSelection();
+            await LoadListings();
+        }
+    }
+
+    private async Task BulkArchive()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Archivar propiedades",
+            $"¿Archivar {SelectedIds.Count} propiedades seleccionadas?",
+            yesText: "Archivar", cancelText: "Cancelar");
+
+        if (result == true)
+        {
+            var success = 0;
+            foreach (var id in SelectedIds.ToList())
+            {
+                try
+                {
+                    await ListingService.ArchiveAsync(id);
+                    success++;
+                }
+                catch { /* Ignorar errores individuales */ }
+            }
+            Snackbar.Add($"{success} propiedades archivadas", Severity.Success);
+            ClearSelection();
+            await LoadListings();
+        }
+    }
+
+    private async Task BulkMoveToPortfolio()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Mover a Portafolio",
+            $"¿Mover {SelectedIds.Count} propiedades al portafolio?",
+            yesText: "Mover", cancelText: "Cancelar");
+
+        if (result == true)
+        {
+            var success = 0;
+            foreach (var id in SelectedIds.ToList())
+            {
+                try
+                {
+                    await ListingService.MoveToPortfolioAsync(id);
+                    success++;
+                }
+                catch { /* Ignorar errores individuales */ }
+            }
+            Snackbar.Add($"{success} propiedades movidas al portafolio", Severity.Success);
+            ClearSelection();
+            await LoadListings();
+        }
+    }
+
+    private async Task BulkDelete()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Eliminar propiedades",
+            $"¿Eliminar {SelectedIds.Count} propiedades? Esta acción no se puede deshacer.",
+            yesText: "Eliminar", cancelText: "Cancelar");
+
+        if (result == true)
+        {
+            var success = 0;
+            foreach (var id in SelectedIds.ToList())
+            {
+                try
+                {
+                    await ListingService.DeleteAsync(id);
+                    success++;
+                }
+                catch { /* Ignorar errores individuales */ }
+            }
+            Snackbar.Add($"{success} propiedades eliminadas", Severity.Success);
+            ClearSelection();
+            await LoadListings();
+        }
+    }
+
+    // Single Actions
     private async Task PublishListing(Guid id)
     {
         try

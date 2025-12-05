@@ -9,6 +9,7 @@ public class DashboardStatsDto
     public int PublishedListings { get; set; }
     public int DraftListings { get; set; }
     public int ArchivedListings { get; set; }
+    public int PortfolioListings { get; set; }
     public int TotalArchitects { get; set; }
     public int ActiveArchitects { get; set; }
     public int TotalContactRequests { get; set; }

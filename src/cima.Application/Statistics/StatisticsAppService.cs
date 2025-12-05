@@ -14,7 +14,7 @@ namespace cima.Statistics;
 /// Implementación del servicio de estadísticas
 /// Requiere permisos administrativos para todos los métodos
 /// </summary>
-[Authorize(cimaPermissions.Listings.Default)] // Requiere al menos permiso de lectura
+[Authorize(cimaPermissions.Listings.Default)]
 public class StatisticsAppService : ApplicationService, IStatisticsAppService
 {
     private readonly IRepository<Listing, Guid> _listingRepository;
@@ -51,6 +51,9 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
         var archivedListings = await AsyncExecuter.CountAsync(
             listingsQuery.Where(l => l.Status == ListingStatus.Archived)
         );
+        var portfolioListings = await AsyncExecuter.CountAsync(
+            listingsQuery.Where(l => l.Status == ListingStatus.Portfolio)
+        );
 
         // Estadísticas de Arquitectos
         var totalArchitects = await AsyncExecuter.CountAsync(architectsQuery);
@@ -60,7 +63,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             )
         );
 
-        // Estadísticas de ContactRequests - CORREGIDO: usar "New" en lugar de "Pending"
+        // Estadísticas de ContactRequests
         var totalContactRequests = await AsyncExecuter.CountAsync(contactRequestsQuery);
         var pendingContactRequests = await AsyncExecuter.CountAsync(
             contactRequestsQuery.Where(cr => cr.Status == ContactRequestStatus.New)
@@ -75,6 +78,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             PublishedListings = publishedListings,
             DraftListings = draftListings,
             ArchivedListings = archivedListings,
+            PortfolioListings = portfolioListings,
             TotalArchitects = totalArchitects,
             ActiveArchitects = activeArchitects,
             TotalContactRequests = totalContactRequests,
@@ -145,7 +149,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             .GroupBy(cr => cr.Status.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // ACTUALIZADO: Calcular tiempo promedio de respuesta usando RepliedAt
+        // Calcular tiempo promedio de respuesta
         var repliedRequests = contactRequests
             .Where(cr => cr.RepliedAt.HasValue)
             .ToList();
