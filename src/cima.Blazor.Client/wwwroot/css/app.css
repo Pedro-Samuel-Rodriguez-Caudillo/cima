@@ -204,6 +204,272 @@
     }
 }
 
+/* ========================================
+   MICRO-INTERACTIONS - FASE 2: Cards y Listas
+   ======================================== */
+
+@layer components {
+    /* Property Card con hover effects */
+    .cima-card {
+        @apply bg-white rounded-xl overflow-hidden
+               transition-all duration-300 ease-out;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .cima-card:hover {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-4px);
+    }
+
+    .cima-card:active {
+        transform: translateY(-2px);
+        transition-duration: 0.1s;
+    }
+
+    /* Card con imagen zoom al hover */
+    .cima-card-image {
+        @apply overflow-hidden;
+    }
+
+    .cima-card-image img {
+        @apply w-full h-full object-cover transition-transform duration-500 ease-out;
+    }
+
+    .cima-card:hover .cima-card-image img {
+        transform: scale(1.05);
+    }
+
+    /* Card sin elevación (flat) */
+    .cima-card-flat {
+        @apply bg-white rounded-xl border border-gray-200
+               transition-all duration-200 ease-out;
+    }
+
+    .cima-card-flat:hover {
+        @apply border-gray-300 bg-gray-50;
+    }
+
+    /* Card interactiva (clickeable) */
+    .cima-card-interactive {
+        @apply cursor-pointer;
+    }
+
+    .cima-card-interactive:focus-visible {
+        @apply outline-none ring-2 ring-navy-500 ring-offset-2;
+    }
+
+    /* Table row con hover */
+    .cima-table-row {
+        @apply transition-colors duration-150 ease-out;
+    }
+
+    .cima-table-row:hover {
+        @apply bg-gray-50;
+    }
+
+    .cima-table-row-selected {
+        @apply bg-navy-50;
+    }
+
+    .cima-table-row-selected:hover {
+        @apply bg-navy-100;
+    }
+
+    /* List item con hover slide */
+    .cima-list-item {
+        @apply relative px-4 py-3 transition-all duration-200 ease-out
+               border-l-4 border-transparent;
+    }
+
+    .cima-list-item:hover {
+        @apply bg-gray-50 border-l-navy-500;
+        padding-left: 1.25rem;
+    }
+
+    .cima-list-item-active {
+        @apply bg-navy-50 border-l-navy-600;
+    }
+
+    /* Badge/Chip con pulse al crear */
+    .cima-badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+               transition-all duration-200 ease-out;
+    }
+
+    .cima-badge-success {
+        @apply bg-green-100 text-green-800;
+    }
+
+    .cima-badge-warning {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+    .cima-badge-error {
+        @apply bg-red-100 text-red-800;
+    }
+
+    .cima-badge-info {
+        @apply bg-blue-100 text-blue-800;
+    }
+
+    .cima-badge-neutral {
+        @apply bg-gray-100 text-gray-800;
+    }
+
+    .cima-badge-new {
+        animation: badge-pulse 2s ease-in-out 3;
+    }
+
+    @keyframes badge-pulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(29, 42, 75, 0.4);
+        }
+        50% { 
+            transform: scale(1.05);
+            box-shadow: 0 0 0 8px rgba(29, 42, 75, 0);
+        }
+    }
+
+    /* Dropdown menu con slide */
+    .cima-dropdown {
+        @apply absolute z-50 mt-2 bg-white rounded-lg shadow-lg border border-gray-100
+               opacity-0 invisible transform -translate-y-2
+               transition-all duration-200 ease-out;
+    }
+
+    .cima-dropdown-open {
+        @apply opacity-100 visible translate-y-0;
+    }
+
+    .cima-dropdown-item {
+        @apply px-4 py-2 text-gray-700 transition-colors duration-150
+               hover:bg-gray-50 hover:text-navy-600
+               first:rounded-t-lg last:rounded-b-lg;
+    }
+
+    /* Accordion/Collapsible */
+    .cima-accordion-content {
+        @apply overflow-hidden transition-all duration-300 ease-out;
+        max-height: 0;
+    }
+
+    .cima-accordion-open .cima-accordion-content {
+        max-height: 500px;
+    }
+
+    .cima-accordion-icon {
+        @apply transition-transform duration-200 ease-out;
+    }
+
+    .cima-accordion-open .cima-accordion-icon {
+        transform: rotate(180deg);
+    }
+
+    /* Tab indicator slide */
+    .cima-tabs {
+        @apply relative flex border-b border-gray-200;
+    }
+
+    .cima-tab {
+        @apply px-4 py-3 text-gray-600 font-medium
+               transition-colors duration-200 ease-out
+               hover:text-navy-600;
+    }
+
+    .cima-tab-active {
+        @apply text-navy-600;
+    }
+
+    .cima-tab-indicator {
+        @apply absolute bottom-0 h-0.5 bg-navy-600
+               transition-all duration-300 ease-out;
+    }
+
+    /* Empty state */
+    .cima-empty-state {
+        @apply flex flex-col items-center justify-center py-16 text-center;
+    }
+
+    .cima-empty-state-icon {
+        @apply w-16 h-16 text-gray-300 mb-4;
+    }
+
+    /* Avatar con online indicator */
+    .cima-avatar {
+        @apply relative inline-block rounded-full overflow-hidden;
+    }
+
+    .cima-avatar-online::after {
+        content: '';
+        @apply absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full
+               border-2 border-white;
+        animation: online-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes online-pulse {
+        0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        }
+        50% { 
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
+        }
+    }
+
+    /* Progress bar animated */
+    .cima-progress {
+        @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+    }
+
+    .cima-progress-bar {
+        @apply h-full bg-navy-600 rounded-full transition-all duration-500 ease-out;
+    }
+
+    .cima-progress-bar-animated {
+        background: linear-gradient(
+            90deg,
+            rgba(29, 42, 75, 1) 0%,
+            rgba(29, 42, 75, 0.7) 50%,
+            rgba(29, 42, 75, 1) 100%
+        );
+        background-size: 200% 100%;
+        animation: progress-shimmer 1.5s ease-in-out infinite;
+    }
+
+    @keyframes progress-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Notification dot */
+    .cima-notification-dot {
+        @apply absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full;
+        animation: notification-bounce 0.5s ease-out;
+    }
+
+    @keyframes notification-bounce {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+
+    /* Floating Action Button */
+    .cima-fab {
+        @apply fixed bottom-6 right-6 w-14 h-14 rounded-full
+               bg-navy-600 text-white shadow-lg
+               flex items-center justify-center
+               transition-all duration-300 ease-out
+               hover:bg-navy-700 hover:shadow-xl hover:scale-110
+               active:scale-95
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2
+               z-40;
+    }
+
+    .cima-fab-hidden {
+        @apply opacity-0 translate-y-4 pointer-events-none;
+    }
+}
+
 /* Page Transition Animations */
 @layer utilities {
     /* Fade in animation */
@@ -418,18 +684,28 @@
     .stagger-children > *,
     .cima-btn,
     .cima-checkbox:checked,
-    .cima-toggle::after {
+    .cima-toggle::after,
+    .cima-card,
+    .cima-card-image img,
+    .cima-dropdown,
+    .cima-accordion-content,
+    .cima-tab-indicator,
+    .cima-fab,
+    .cima-progress-bar {
         animation: none !important;
         transition: none !important;
     }
 
-    .animate-pulse {
+    .animate-pulse,
+    .cima-badge-new,
+    .cima-avatar-online::after,
+    .cima-progress-bar-animated {
         animation: none !important;
-        opacity: 0.7;
     }
 
     .cima-btn:hover,
-    .cima-btn:active {
+    .cima-btn:active,
+    .cima-card:hover {
         transform: none !important;
     }
 }

@@ -1,0 +1,77 @@
+@* Badge/Chip con variantes y animación de nuevo *@
+
+<span class="@ComputedClass" role="status">
+    @if (Icon != null)
+    {
+        <span class="mr-1.5 -ml-0.5">@Icon</span>
+    }
+    @Text
+    @ChildContent
+</span>
+
+@code {
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public BadgeVariant Variant { get; set; } = BadgeVariant.Neutral;
+    [Parameter] public BadgeSize Size { get; set; } = BadgeSize.Medium;
+    [Parameter] public bool IsNew { get; set; }
+    [Parameter] public bool Rounded { get; set; } = true;
+    [Parameter] public RenderFragment? Icon { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private string ComputedClass => string.Join(" ", GetClasses());
+
+    private IEnumerable<string> GetClasses()
+    {
+        yield return "cima-badge";
+        
+        yield return Variant switch
+        {
+            BadgeVariant.Success => "cima-badge-success",
+            BadgeVariant.Warning => "cima-badge-warning",
+            BadgeVariant.Error => "cima-badge-error",
+            BadgeVariant.Info => "cima-badge-info",
+            BadgeVariant.Neutral => "cima-badge-neutral",
+            _ => "cima-badge-neutral"
+        };
+
+        yield return Size switch
+        {
+            BadgeSize.Small => "text-xs px-2 py-0.5",
+            BadgeSize.Medium => "text-sm px-3 py-1",
+            BadgeSize.Large => "text-base px-4 py-1.5",
+            _ => "text-sm px-3 py-1"
+        };
+
+        if (!Rounded)
+        {
+            yield return "rounded-md";
+        }
+
+        if (IsNew)
+        {
+            yield return "cima-badge-new";
+        }
+
+        if (!string.IsNullOrEmpty(Class))
+        {
+            yield return Class;
+        }
+    }
+
+    public enum BadgeVariant
+    {
+        Neutral,
+        Success,
+        Warning,
+        Error,
+        Info
+    }
+
+    public enum BadgeSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+}

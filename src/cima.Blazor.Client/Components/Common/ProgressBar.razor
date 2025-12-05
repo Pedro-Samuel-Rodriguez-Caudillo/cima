@@ -1,0 +1,82 @@
+@* Progress Bar con animación *@
+
+<div class="@ContainerClass" role="progressbar" 
+     aria-valuenow="@Value" 
+     aria-valuemin="0" 
+     aria-valuemax="@Max"
+     aria-label="@AriaLabel">
+    <div class="@BarClass" style="width: @PercentageStyle"></div>
+</div>
+
+@if (ShowLabel)
+{
+    <div class="flex justify-between mt-1 text-sm text-gray-600">
+        @if (!string.IsNullOrEmpty(Label))
+        {
+            <span>@Label</span>
+        }
+        <span>@Percentage%</span>
+    </div>
+}
+
+@code {
+    [Parameter] public double Value { get; set; }
+    [Parameter] public double Max { get; set; } = 100;
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool ShowLabel { get; set; }
+    [Parameter] public bool Animated { get; set; }
+    [Parameter] public bool Indeterminate { get; set; }
+    [Parameter] public ProgressSize Size { get; set; } = ProgressSize.Medium;
+    [Parameter] public ProgressVariant Variant { get; set; } = ProgressVariant.Primary;
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Progreso";
+
+    private int Percentage => Max > 0 ? (int)Math.Round((Value / Max) * 100) : 0;
+    private string PercentageStyle => Indeterminate ? "100%" : $"{Percentage}%";
+
+    private string ContainerClass => $"cima-progress {SizeClass} {Class}".Trim();
+
+    private string BarClass => string.Join(" ", GetBarClasses());
+
+    private IEnumerable<string> GetBarClasses()
+    {
+        yield return "cima-progress-bar";
+        
+        yield return Variant switch
+        {
+            ProgressVariant.Primary => "bg-navy-600",
+            ProgressVariant.Success => "bg-green-500",
+            ProgressVariant.Warning => "bg-yellow-500",
+            ProgressVariant.Error => "bg-red-500",
+            _ => "bg-navy-600"
+        };
+
+        if (Animated || Indeterminate)
+        {
+            yield return "cima-progress-bar-animated";
+        }
+    }
+
+    private string SizeClass => Size switch
+    {
+        ProgressSize.Small => "h-1",
+        ProgressSize.Medium => "h-2",
+        ProgressSize.Large => "h-3",
+        _ => "h-2"
+    };
+
+    public enum ProgressSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+
+    public enum ProgressVariant
+    {
+        Primary,
+        Success,
+        Warning,
+        Error
+    }
+}

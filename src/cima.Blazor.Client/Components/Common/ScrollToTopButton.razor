@@ -1,0 +1,51 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<button class="cima-fab @(_isVisible ? "" : "cima-fab-hidden")"
+        @onclick="ScrollToTop"
+        aria-label="Volver arriba"
+        title="Volver arriba">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+    </svg>
+</button>
+
+@code {
+    [Parameter] public int ShowAfterPixels { get; set; } = 300;
+    
+    private bool _isVisible;
+    private DotNetObjectReference<ScrollToTopButton>? _objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("cimaScrollToTop.init", _objRef, ShowAfterPixels);
+        }
+    }
+
+    [JSInvokable]
+    public void UpdateVisibility(bool isVisible)
+    {
+        if (_isVisible != isVisible)
+        {
+            _isVisible = isVisible;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ScrollToTop()
+    {
+        await JS.InvokeVoidAsync("cimaScrollToTop.scrollToTop");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_objRef != null)
+        {
+            await JS.InvokeVoidAsync("cimaScrollToTop.dispose");
+            _objRef.Dispose();
+        }
+    }
+}
