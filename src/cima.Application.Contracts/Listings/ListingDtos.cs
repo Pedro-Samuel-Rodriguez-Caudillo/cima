@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using cima.Architects;
 using cima.Domain.Shared;
 
@@ -32,6 +33,11 @@ public class ListingDto
     public string? Address => Location;
     public DateTime CreationTime => CreatedAt;
     public decimal Area => LandArea;
+    
+    /// <summary>
+    /// URL de la imagen principal (primera imagen de la lista)
+    /// </summary>
+    public string? PrimaryImageUrl => Images?.FirstOrDefault()?.Url;
 }
 
 public class CreateUpdateListingDto
