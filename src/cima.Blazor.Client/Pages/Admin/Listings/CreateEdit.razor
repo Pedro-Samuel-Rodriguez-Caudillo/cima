@@ -202,6 +202,27 @@
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Published)
                                         {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true" 
+                                                Size="Size.Small" OnClick="MoveToPortfolio">
+                                                Mover a Portafolio
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
+                                                Size="Size.Small" OnClick="ArchiveListing">
+                                                Archivar
+                                            </MudButton>
+                                        }
+                                        @if (ExistingListing.Status == ListingStatus.Archived)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
+                                                Size="Size.Small" OnClick="UnarchiveListing">
+                                                Reactivar (Publicar)
+                                            </MudButton>
+                                        }
+                                        @if (ExistingListing.Status == ListingStatus.Portfolio)
+                                        {
+                                            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                                                Esta propiedad está en el portafolio como proyecto completado.
+                                            </MudAlert>
                                             <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
                                                 Size="Size.Small" OnClick="ArchiveListing">
                                                 Archivar
@@ -475,10 +496,48 @@
         }
     }
 
+    private async Task UnarchiveListing()
+    {
+        if (!Id.HasValue) return;
+        
+        try
+        {
+            ExistingListing = await ListingService.UnarchiveAsync(Id.Value);
+            Snackbar.Add("Propiedad reactivada y publicada", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al reactivar: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task MoveToPortfolio()
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Mover a Portafolio", 
+            "¿Mover esta propiedad al portafolio? Se mostrará como proyecto completado y dejará de aparecer en propiedades disponibles.",
+            yesText: "Mover a Portafolio", cancelText: "Cancelar");
+        
+        if (result == true && Id.HasValue)
+        {
+            try
+            {
+                ExistingListing = await ListingService.MoveToPortfolioAsync(Id.Value);
+                Snackbar.Add("Propiedad movida al portafolio", Severity.Success);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error al mover a portafolio: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
     private Color GetStatusColor(ListingStatus status) => status switch
     {
-        ListingStatus.Published => Color.Success,
         ListingStatus.Draft => Color.Warning,
+        ListingStatus.Published => Color.Success,
         ListingStatus.Archived => Color.Default,
         ListingStatus.Portfolio => Color.Info,
         _ => Color.Default
