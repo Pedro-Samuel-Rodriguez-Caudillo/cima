@@ -98,6 +98,14 @@ public partial class ListingClientProxy : ClientProxyBase<IListingAppService>, I
         });
     }
 
+    public virtual async Task<ListingDto> DuplicateAsync(Guid id)
+    {
+        return await RequestAsync<ListingDto>(nameof(DuplicateAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(Guid), id }
+        });
+    }
+
     public virtual async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
     {
         return await RequestAsync<PagedResultDto<ListingDto>>(nameof(GetPublishedAsync), new ClientProxyRequestTypeValue

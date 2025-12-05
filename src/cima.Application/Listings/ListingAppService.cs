@@ -409,6 +409,47 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
+    /// Duplica una propiedad existente creando una copia en estado Draft
+    /// No copia las imágenes, solo los datos de la propiedad
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Create)]
+    public async Task<ListingDto> DuplicateAsync(Guid id)
+    {
+        var original = await _listingRepository.GetAsync(id);
+
+        // Validacion: Solo el dueño o admin puede duplicar
+        var architect = await _architectRepository.GetAsync(original.ArchitectId);
+        if (architect.UserId != CurrentUser.Id && !IsAdmin())
+        {
+            throw new AbpAuthorizationException("Solo puedes duplicar tus propias propiedades");
+        }
+
+        // Crear nueva propiedad usando ListingManager
+        var duplicatedListing = await _listingManager.CreateAsync(
+            title: $"{original.Title} (Copia)",
+            description: original.Description,
+            location: original.Location,
+            price: original.Price,
+            landArea: original.LandArea,
+            constructionArea: original.ConstructionArea,
+            bedrooms: original.Bedrooms,
+            bathrooms: original.Bathrooms,
+            category: original.Category,
+            type: original.Type,
+            transactionType: original.TransactionType,
+            architectId: original.ArchitectId,
+            createdBy: CurrentUser.Id);
+
+        await _listingRepository.InsertAsync(duplicatedListing);
+        
+        Logger.LogInformation(
+            "Propiedad {OriginalId} duplicada a {NewId} por usuario {UserId}",
+            id, duplicatedListing.Id, CurrentUser.Id);
+
+        return ObjectMapper.Map<Listing, ListingDto>(duplicatedListing);
+    }
+
+    /// <summary>
     /// Obtiene solo propiedades publicadas (público - sin autenticación)
     /// </summary>
     [AllowAnonymous]

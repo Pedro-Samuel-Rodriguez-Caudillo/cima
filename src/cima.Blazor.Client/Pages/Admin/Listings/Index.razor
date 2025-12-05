@@ -70,7 +70,7 @@
                         <button @onclick="BulkMoveToPortfolio" 
                                 class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v2M7 7h10"/>
                             </svg>
                             Portafolio
                         </button>
@@ -213,9 +213,18 @@
                             </div>
 
                             @* Actions *@
-                            <div class="col-span-1 lg:col-span-2 flex items-center justify-start lg:justify-end gap-2">
+                            <div class="col-span-1 lg:col-span-2 flex items-center justify-start lg:justify-end gap-1">
+                                @* Preview *@
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" 
+                                    Href="@($"/properties/{listing.Id}")" Target="_blank" Title="Vista previa" />
+
+                                @* Edit *@
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
                                     Href="@($"/admin/listings/edit/{listing.Id}")" Title="Editar" />
+
+                                @* Duplicate *@
+                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" 
+                                    Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" Title="Duplicar" />
 
                                 @if (listing.Status == ListingStatus.Draft)
                                 {
@@ -499,6 +508,28 @@
             {
                 await ListingService.DeleteAsync(id);
                 Snackbar.Add("Propiedad eliminada", Severity.Success);
+                await LoadListings();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DuplicateListing(Guid id)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Duplicar Propiedad",
+            "¿Estás seguro de duplicar esta propiedad? Se creará una copia idéntica.",
+            yesText: "Duplicar", cancelText: "Cancelar");
+
+        if (result == true)
+        {
+            try
+            {
+                await ListingService.DuplicateAsync(id);
+                Snackbar.Add("Propiedad duplicada exitosamente", Severity.Success);
                 await LoadListings();
             }
             catch (Exception ex)

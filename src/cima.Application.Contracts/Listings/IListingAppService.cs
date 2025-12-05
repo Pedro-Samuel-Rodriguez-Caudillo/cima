@@ -63,6 +63,11 @@ public interface IListingAppService : IApplicationService
     Task<ListingDto> MoveToPortfolioAsync(Guid id);
     
     /// <summary>
+    /// Duplica una propiedad existente (sin imágenes, estado Draft)
+    /// </summary>
+    Task<ListingDto> DuplicateAsync(Guid id);
+    
+    /// <summary>
     /// Obtiene propiedades de un arquitecto especifico
     /// </summary>
     Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
