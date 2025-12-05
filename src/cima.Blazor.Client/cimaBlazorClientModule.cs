@@ -34,6 +34,7 @@ public class cimaBlazorClientModule : AbpModule
         ConfigureAutoMapper(context);
         ConfigureLocalization();
         ConfigureApplicationServices(context);
+        ConfigurePerformanceServices(context);
     }
 
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -49,6 +50,12 @@ public class cimaBlazorClientModule : AbpModule
         
         // Toast service con accesibilidad
         context.Services.AddCimaToastService();
+    }
+
+    private void ConfigurePerformanceServices(ServiceConfigurationContext context)
+    {
+        // Client-side caching
+        context.Services.AddCimaClientCache();
     }
 
     private void ConfigureLocalization()

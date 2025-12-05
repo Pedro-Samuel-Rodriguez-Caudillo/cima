@@ -1,0 +1,92 @@
+@* Imagen con lazy loading usando IntersectionObserver *@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="@ContainerClass" @ref="_containerRef">
+    @if (!_isLoaded && ShowPlaceholder)
+    {
+        <div class="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+            @if (PlaceholderContent != null)
+            {
+                @PlaceholderContent
+            }
+            else
+            {
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            }
+        </div>
+    }
+    
+    <img @ref="_imageRef"
+         src="@(_shouldLoad ? Src : PlaceholderSrc)"
+         alt="@Alt"
+         class="@ImageClass @(_isLoaded ? "opacity-100" : "opacity-0") transition-opacity duration-300"
+         loading="lazy"
+         decoding="async"
+         @onload="OnImageLoaded"
+         @onerror="OnImageError" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Src { get; set; } = "";
+    [Parameter] public string Alt { get; set; } = "";
+    [Parameter] public string? PlaceholderSrc { get; set; }
+    [Parameter] public bool ShowPlaceholder { get; set; } = true;
+    [Parameter] public string? ContainerClass { get; set; } = "relative overflow-hidden";
+    [Parameter] public string? ImageClass { get; set; } = "w-full h-full object-cover";
+    [Parameter] public RenderFragment? PlaceholderContent { get; set; }
+    [Parameter] public EventCallback OnLoad { get; set; }
+    [Parameter] public EventCallback OnError { get; set; }
+    [Parameter] public int RootMargin { get; set; } = 50;
+
+    private ElementReference _containerRef;
+    private ElementReference _imageRef;
+    private bool _shouldLoad;
+    private bool _isLoaded;
+    private bool _hasError;
+    private DotNetObjectReference<LazyImage>? _objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("cimaLazyImage.observe", _containerRef, _objRef, RootMargin);
+        }
+    }
+
+    [JSInvokable]
+    public void SetVisible()
+    {
+        if (!_shouldLoad)
+        {
+            _shouldLoad = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnImageLoaded()
+    {
+        _isLoaded = true;
+        await OnLoad.InvokeAsync();
+        StateHasChanged();
+    }
+
+    private async Task OnImageError()
+    {
+        _hasError = true;
+        await OnError.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_objRef != null)
+        {
+            await JS.InvokeVoidAsync("cimaLazyImage.unobserve", _containerRef);
+            _objRef.Dispose();
+        }
+    }
+}

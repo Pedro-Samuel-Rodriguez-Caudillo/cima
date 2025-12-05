@@ -56,7 +56,59 @@ window.cimaScrollToTop = {
 };
 
 // ========================================
-// Image Lazy Loading with Intersection Observer
+// Lazy Image Loading with IntersectionObserver
+// ========================================
+
+window.cimaLazyImage = {
+    observer: null,
+    elements: new Map(),
+    
+    getObserver: function (rootMargin) {
+        if (!this.observer) {
+            this.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const dotNetRef = this.elements.get(entry.target);
+                        if (dotNetRef) {
+                            dotNetRef.invokeMethodAsync('SetVisible');
+                            this.observer.unobserve(entry.target);
+                            this.elements.delete(entry.target);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: `${rootMargin}px 0px`,
+                threshold: 0.01
+            });
+        }
+        return this.observer;
+    },
+    
+    observe: function (element, dotNetRef, rootMargin) {
+        if (element) {
+            this.elements.set(element, dotNetRef);
+            this.getObserver(rootMargin).observe(element);
+        }
+    },
+    
+    unobserve: function (element) {
+        if (element && this.observer) {
+            this.observer.unobserve(element);
+            this.elements.delete(element);
+        }
+    },
+    
+    dispose: function () {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+        this.elements.clear();
+    }
+};
+
+// ========================================
+// Image Lazy Loading (legacy - kept for compatibility)
 // ========================================
 
 window.cimaImageLoader = {
@@ -230,4 +282,157 @@ function createAnnouncer() {
     document.body.appendChild(announcer);
     return announcer;
 }
+
+// ========================================
+// Preload Critical Resources
+// ========================================
+
+window.cimaPreload = {
+    preloadImage: function (src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(src);
+            img.onerror = () => reject(new Error(`Failed to preload: ${src}`));
+            img.src = src;
+        });
+    },
+    
+    preloadImages: function (srcs) {
+        return Promise.all(srcs.map(src => this.preloadImage(src)));
+    },
+    
+    prefetchPage: function (url) {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = url;
+        document.head.appendChild(link);
+    }
+};
+
+// ========================================
+// Performance Monitoring
+// ========================================
+
+window.cimaPerformance = {
+    marks: {},
+    
+    mark: function (name) {
+        this.marks[name] = performance.now();
+        if (window.performance && window.performance.mark) {
+            performance.mark(name);
+        }
+    },
+    
+    measure: function (name, startMark, endMark) {
+        if (window.performance && window.performance.measure) {
+            try {
+                performance.measure(name, startMark, endMark);
+            } catch (e) {
+                console.warn('Performance measure failed:', e);
+            }
+        }
+        
+        const start = this.marks[startMark];
+        const end = this.marks[endMark] || performance.now();
+        return end - start;
+    },
+    
+    getMetrics: function () {
+        const metrics = {};
+        
+        // Navigation Timing
+        if (window.performance && window.performance.timing) {
+            const timing = window.performance.timing;
+            metrics.pageLoad = timing.loadEventEnd - timing.navigationStart;
+            metrics.domContentLoaded = timing.domContentLoadedEventEnd - timing.navigationStart;
+            metrics.firstByte = timing.responseStart - timing.navigationStart;
+        }
+        
+        // Core Web Vitals (if available)
+        if (window.performance && window.performance.getEntriesByType) {
+            const paintEntries = performance.getEntriesByType('paint');
+            paintEntries.forEach(entry => {
+                if (entry.name === 'first-contentful-paint') {
+                    metrics.fcp = entry.startTime;
+                }
+            });
+        }
+        
+        return metrics;
+    },
+    
+    reportToConsole: function () {
+        const metrics = this.getMetrics();
+        console.group('CIMA Performance Metrics');
+        console.table(metrics);
+        console.groupEnd();
+    }
+};
+
+// Auto-report performance in development
+if (window.location.hostname === 'localhost') {
+    window.addEventListener('load', () => {
+        setTimeout(() => window.cimaPerformance.reportToConsole(), 1000);
+    });
+}
+
+// ========================================
+// Client-side Cache Utilities
+// ========================================
+
+window.cimaCache = {
+    getKeys: function (prefix) {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(prefix)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    },
+    
+    getSize: function () {
+        let total = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+                total += localStorage.getItem(key)?.length || 0;
+            }
+        }
+        return total;
+    },
+    
+    clearExpired: function (prefix) {
+        const now = Date.now();
+        const keys = this.getKeys(prefix);
+        let cleared = 0;
+        
+        keys.forEach(key => {
+            try {
+                const item = JSON.parse(localStorage.getItem(key));
+                if (item && item.expiresAt && new Date(item.expiresAt).getTime() < now) {
+                    localStorage.removeItem(key);
+                    cleared++;
+                }
+            } catch (e) {
+                // Invalid JSON, remove it
+                localStorage.removeItem(key);
+                cleared++;
+            }
+        });
+        
+        return cleared;
+    }
+};
+
+// Auto-clear expired cache on page load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        const cleared = window.cimaCache.clearExpired('cima_cache_');
+        if (cleared > 0) {
+            console.log(`CIMA: Cleared ${cleared} expired cache items`);
+        }
+    }, 2000);
+});
 
