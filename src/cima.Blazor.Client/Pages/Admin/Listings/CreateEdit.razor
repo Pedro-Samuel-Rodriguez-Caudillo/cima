@@ -6,328 +6,209 @@
 @using cima.Blazor.Client.Services
 @using cima.Blazor.Client.Components.Admin
 @using cima.Permissions
+@using MudBlazor
+@using System.Globalization
 @attribute [Authorize(cimaPermissions.Listings.Default)]
 @inject IListingAppService ListingService
 @inject IArchitectAppService ArchitectService
 @inject EnumLocalizationService EnumLocalizer
 @inject NavigationManager NavManager
-@inject IUiMessageService MessageService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inherits cimaComponentBase
 
 <PageTitle>@PageTitle - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50">
-    @* Header *@
+<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex items-center gap-4 mb-2">
-                <a href="/admin/listings" class="cima-btn cima-btn-secondary cima-btn-sm">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    @L["Common:Back"]
-                </a>
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/admin/listings">
+                    Volver
+                </MudButton>
             </div>
-            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
-                @PageTitle
-            </h1>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">@PageTitle</h1>
         </div>
     </div>
 
-    @* Content *@
     <div class="cima-container py-8">
         @if (IsLoading)
         {
-            <div class="cima-card p-8">
-                <div class="space-y-6">
-                    @for (int i = 0; i < 8; i++)
-                    {
-                        <div>
-                            <div class="cima-skeleton-text w-32 mb-2"></div>
-                            <div class="cima-skeleton-text w-full h-10"></div>
-                        </div>
-                    }
-                </div>
-            </div>
+            <MudCard Class="p-8">
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+                <p class="text-center mt-4">Cargando...</p>
+            </MudCard>
+        }
+        else if (!CanCreateListings)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                <strong>Sin perfil de arquitecto</strong>
+                <p>Tu cuenta no tiene un perfil de arquitecto asociado. Contacta al administrador.</p>
+            </MudAlert>
+        }
+        else if (IsAdmin && (Architects == null || !Architects.Any()))
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">
+                <strong>No hay arquitectos disponibles</strong>
+                <p>Primero debes crear al menos un arquitecto antes de poder crear propiedades.</p>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/admin/architects/create" Class="mt-2">
+                    Crear Arquitecto
+                </MudButton>
+            </MudAlert>
         }
         else
         {
-            <EditForm Model="@Model" OnValidSubmit="HandleSubmit">
+            <EditForm Model="@Model" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit">
                 <DataAnnotationsValidator />
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    @* Main Form *@
                     <div class="lg:col-span-2 space-y-6">
-                        <div class="cima-card p-6">
-                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">
-                                Informacion Basica
-                            </h2>
-
+                        <MudCard Class="p-6">
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">Informacion Basica</h2>
                             <div class="space-y-4">
-                                @* Title *@
-                                <div class="cima-form-group">
-                                    <label for="title" class="cima-label cima-label-required">Titulo</label>
-                                    <InputText id="title" @bind-Value="Model.Title" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Title)" class="cima-error-message" />
-                                </div>
-
-                                @* Description *@
-                                <div class="cima-form-group">
-                                    <label for="description" class="cima-label cima-label-required">Descripcion</label>
-                                    <InputTextArea id="description" @bind-Value="Model.Description" class="cima-input min-h-[150px]" rows="6" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Description)" class="cima-error-message" />
-                                </div>
-
-                                @* Location *@
-                                <div class="cima-form-group">
-                                    <label for="location" class="cima-label cima-label-required">Ubicacion</label>
-                                    <InputText id="location" @bind-Value="Model.Location" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Location)" class="cima-error-message" />
-                                </div>
+                                <MudTextField @bind-Value="Model.Title" Label="Titulo" Required="true" 
+                                    Variant="Variant.Outlined" Class="mb-4"
+                                    For="@(() => Model.Title)" />
+                                <MudTextField @bind-Value="Model.Description" Label="Descripcion" 
+                                    Lines="4" Variant="Variant.Outlined" Class="mb-4"
+                                    For="@(() => Model.Description)" />
+                                <MudTextField @bind-Value="Model.Location" Label="Ubicacion" Required="true" 
+                                    Variant="Variant.Outlined"
+                                    For="@(() => Model.Location)" />
                             </div>
-                        </div>
+                        </MudCard>
 
-                        <div class="cima-card p-6">
-                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">
-                                Detalles
-                            </h2>
+                        <MudCard Class="p-6">
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">Detalles</h2>
+                            <div class="grid grid-cols-2 gap-4">
+                                <MudNumericField @bind-Value="Model.Price" Label="Precio (MXN)" 
+                                    Variant="Variant.Outlined" 
+                                    Culture="@MexicoCulture"
+                                    Format="N0"
+                                    For="@(() => Model.Price)" />
+                                <MudNumericField @bind-Value="Model.LandArea" Label="Area Terreno (m²)" 
+                                    Variant="Variant.Outlined" 
+                                    Culture="@MexicoCulture"
+                                    Format="N2"
+                                    For="@(() => Model.LandArea)" />
+                                <MudNumericField @bind-Value="Model.ConstructionArea" Label="Area Construccion (m²)" 
+                                    Variant="Variant.Outlined" 
+                                    Culture="@MexicoCulture"
+                                    Format="N2"
+                                    For="@(() => Model.ConstructionArea)" />
+                                <MudNumericField @bind-Value="Model.Bedrooms" Label="Recamaras" 
+                                    Variant="Variant.Outlined"
+                                    For="@(() => Model.Bedrooms)" />
+                                <MudNumericField @bind-Value="Model.Bathrooms" Label="Banos" 
+                                    Variant="Variant.Outlined"
+                                    For="@(() => Model.Bathrooms)" />
+                                
+                                <MudSelect T="PropertyCategory" @bind-Value="Model.Category" Label="Categoria" 
+                                    Variant="Variant.Outlined" Required="true"
+                                    For="@(() => Model.Category)">
+                                    <MudSelectItem Value="PropertyCategory.Residential">Residencial</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Commercial">Comercial</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Mixed">Mixto</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Land">Terreno</MudSelectItem>
+                                </MudSelect>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                @* Price *@
-                                <div class="cima-form-group">
-                                    <label for="price" class="cima-label cima-label-required">Precio (MXN)</label>
-                                    <InputNumber id="price" @bind-Value="Model.Price" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Price)" class="cima-error-message" />
-                                </div>
+                                <MudSelect T="PropertyType" @bind-Value="Model.Type" Label="Tipo" 
+                                    Variant="Variant.Outlined" Required="true"
+                                    For="@(() => Model.Type)">
+                                    <MudSelectItem Value="PropertyType.House">Casa</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Apartment">Departamento</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Condo">Condominio</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Townhouse">Townhouse</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Villa">Villa</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Office">Oficina</MudSelectItem>
+                                </MudSelect>
 
-                                @* Land Area *@
-                                <div class="cima-form-group">
-                                    <label for="landArea" class="cima-label cima-label-required">Area Terreno (m2)</label>
-                                    <InputNumber id="landArea" @bind-Value="Model.LandArea" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.LandArea)" class="cima-error-message" />
-                                </div>
-
-                                @* Construction Area *@
-                                <div class="cima-form-group">
-                                    <label for="constructionArea" class="cima-label cima-label-required">Area Construccion (m2)</label>
-                                    <InputNumber id="constructionArea" @bind-Value="Model.ConstructionArea" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.ConstructionArea)" class="cima-error-message" />
-                                </div>
-
-                                @* Bedrooms *@
-                                <div class="cima-form-group">
-                                    <label for="bedrooms" class="cima-label cima-label-required">Recamaras</label>
-                                    <InputNumber id="bedrooms" @bind-Value="Model.Bedrooms" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Bedrooms)" class="cima-error-message" />
-                                </div>
-
-                                @* Bathrooms *@
-                                <div class="cima-form-group">
-                                    <label for="bathrooms" class="cima-label cima-label-required">Banos</label>
-                                    <InputNumber id="bathrooms" @bind-Value="Model.Bathrooms" class="cima-input" disabled="@IsSubmitting" />
-                                    <ValidationMessage For="@(() => Model.Bathrooms)" class="cima-error-message" />
-                                </div>
-
-                                @* Category *@
-                                <div class="cima-form-group">
-                                    <label for="category" class="cima-label cima-label-required">Categoria</label>
-                                    <select id="category" @bind="SelectedCategory" class="cima-input" disabled="@IsSubmitting">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="0">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</option>
-                                        <option value="1">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</option>
-                                        <option value="2">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Mixed)</option>
-                                        <option value="3">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Land)</option>
-                                    </select>
-                                    @if (string.IsNullOrEmpty(SelectedCategory))
-                                    {
-                                        <div class="cima-error-message">La categoria es requerida</div>
-                                    }
-                                </div>
-
-                                @* Type *@
-                                <div class="cima-form-group">
-                                    <label for="type" class="cima-label cima-label-required">Tipo</label>
-                                    <select id="type" @bind="SelectedType" class="cima-input" disabled="@IsSubmitting">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="0">@EnumLocalizer.GetPropertyTypeName(PropertyType.House)</option>
-                                        <option value="1">@EnumLocalizer.GetPropertyTypeName(PropertyType.Apartment)</option>
-                                        <option value="2">@EnumLocalizer.GetPropertyTypeName(PropertyType.Condo)</option>
-                                        <option value="3">@EnumLocalizer.GetPropertyTypeName(PropertyType.Townhouse)</option>
-                                        <option value="4">@EnumLocalizer.GetPropertyTypeName(PropertyType.Villa)</option>
-                                        <option value="5">@EnumLocalizer.GetPropertyTypeName(PropertyType.Office)</option>
-                                        <option value="6">@EnumLocalizer.GetPropertyTypeName(PropertyType.Warehouse)</option>
-                                        <option value="7">@EnumLocalizer.GetPropertyTypeName(PropertyType.RetailSpace)</option>
-                                    </select>
-                                    @if (string.IsNullOrEmpty(SelectedType))
-                                    {
-                                        <div class="cima-error-message">El tipo es requerido</div>
-                                    }
-                                </div>
-
-                                @* Transaction Type *@
-                                <div class="cima-form-group">
-                                    <label for="transaction" class="cima-label cima-label-required">Transaccion</label>
-                                    <select id="transaction" @bind="SelectedTransaction" class="cima-input" disabled="@IsSubmitting">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="0">@EnumLocalizer.GetTransactionTypeName(TransactionType.Sale)</option>
-                                        <option value="1">@EnumLocalizer.GetTransactionTypeName(TransactionType.Rent)</option>
-                                        <option value="2">@EnumLocalizer.GetTransactionTypeName(TransactionType.Lease)</option>
-                                    </select>
-                                    @if (string.IsNullOrEmpty(SelectedTransaction))
-                                    {
-                                        <div class="cima-error-message">El tipo de transaccion es requerido</div>
-                                    }
-                                </div>
-
-                                @* Architect *@
-                                <div class="cima-form-group">
-                                    <label for="architect" class="cima-label cima-label-required">Arquitecto</label>
-                                    <select id="architect" @bind="SelectedArchitectId" class="cima-input" disabled="@IsSubmitting">
-                                        <option value="">Seleccionar arquitecto...</option>
-                                        @if (Architects?.Any() == true)
+                                @* Admin siempre ve el selector de arquitecto si hay arquitectos disponibles *@
+                                @if (ShowArchitectSelector)
+                                {
+                                    <MudSelect T="Guid" @bind-Value="Model.ArchitectId" Label="Arquitecto" 
+                                        Variant="Variant.Outlined" Required="true"
+                                        For="@(() => Model.ArchitectId)">
+                                        @foreach (var arch in Architects!)
                                         {
-                                            @foreach (var architect in Architects)
-                                            {
-                                                <option value="@architect.Id">@architect.UserName</option>
-                                            }
+                                            <MudSelectItem Value="@arch.Id">@GetArchitectDisplayName(arch)</MudSelectItem>
                                         }
-                                    </select>
-                                    @if (string.IsNullOrEmpty(SelectedArchitectId))
-                                    {
-                                        <div class="cima-error-message">El arquitecto es requerido</div>
-                                    }
-                                </div>
+                                    </MudSelect>
+                                }
                             </div>
-                        </div>
+                        </MudCard>
 
-                        @* Images Section (Edit Mode Only) *@
-                        @if (IsEditMode && ExistingListing != null && Id.HasValue)
+                        @* Galería de imágenes - disponible siempre que tengamos un ID *@
+                        @if (CurrentListingId.HasValue)
                         {
-                            <div class="cima-card p-6">
-                                <ImageGalleryManager 
-                                    ListingId="@Id.Value" 
-                                    InitialImages="@ExistingListing.Images" 
+                            <MudCard Class="p-6">
+                                <ImageGalleryManager ListingId="@CurrentListingId.Value" 
+                                    InitialImages="@(ExistingListing?.Images ?? new())" 
                                     ImagesChanged="HandleImagesChanged" />
-                            </div>
+                            </MudCard>
                         }
-                        else if (!IsEditMode)
+                        else
                         {
-                            <div class="cima-card p-6">
+                            <MudCard Class="p-6">
                                 <div class="text-center py-8 text-neutral-500">
-                                    <svg class="mx-auto h-12 w-12 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                                    <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Size="Size.Large" Class="mb-4" />
                                     <p class="font-medium">Galeria de Imagenes</p>
                                     <p class="text-sm mt-1">Guarda la propiedad primero para agregar imagenes</p>
                                 </div>
-                            </div>
+                            </MudCard>
                         }
                     </div>
 
-                    @* Sidebar *@
                     <div class="lg:col-span-1">
-                        <div class="sticky top-6 space-y-6">
-                            <div class="cima-card p-6">
-                                <h3 class="font-semibold text-neutral-900 mb-4">Acciones</h3>
-                                <div class="space-y-3">
-                                    <button type="submit" class="cima-btn cima-btn-primary w-full" disabled="@IsSubmitting">
-                                        @if (IsSubmitting)
-                                        {
-                                            <span class="cima-loading-spinner mr-2"></span>
-                                            <span>Guardando...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>@L["Common:Save"]</span>
-                                        }
-                                    </button>
-                                    <a href="/admin/listings" class="cima-btn cima-btn-secondary w-full">@L["Common:Cancel"]</a>
-                                </div>
-                            </div>
+                        <div class="sticky top-24 space-y-6"> @* top-24 para navbar + padding *@
+                            <MudCard Class="p-6">
+                                <h3 class="font-semibold mb-4">Acciones</h3>
+                                
+                                @* Mostrar errores de validación si los hay *@
+                                <ValidationSummary class="text-red-600 text-sm mb-4" />
+                                
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" 
+                                    ButtonType="ButtonType.Submit" Disabled="@IsSubmitting" Class="mb-2">
+                                    @if (IsSubmitting)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <span>Guardando...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Guardar</span>
+                                    }
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" FullWidth="true" Href="/admin/listings">
+                                    Cancelar
+                                </MudButton>
+                            </MudCard>
 
                             @if (IsEditMode && ExistingListing != null)
                             {
-                                <div class="cima-card p-6">
-                                    <h3 class="font-semibold text-neutral-900 mb-4">Informacion</h3>
-                                    <div class="space-y-3 text-sm">
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-neutral-600">Estado:</span>
-                                            <span class="@GetStatusBadgeClass(ExistingListing.Status)">
-                                                @EnumLocalizer.GetListingStatusName(ExistingListing.Status)
-                                            </span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-neutral-600">Imagenes:</span>
-                                            <span class="font-medium">@(ExistingListing.Images?.Count ?? 0)</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-neutral-600">Creado:</span>
-                                            <span class="font-medium">@ExistingListing.CreatedAt.ToString("dd/MM/yyyy")</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <MudCard Class="p-6">
+                                    <h3 class="font-semibold mb-4">Estado</h3>
+                                    <MudChip T="string" Color="@GetStatusColor(ExistingListing.Status)" Class="mb-4">
+                                        @EnumLocalizer.GetListingStatusName(ExistingListing.Status)
+                                    </MudChip>
 
-                                @* Quick Actions *@
-                                <div class="cima-card p-6">
-                                    <h3 class="font-semibold text-neutral-900 mb-4">Acciones Rapidas</h3>
                                     <div class="space-y-2">
                                         @if (ExistingListing.Status == ListingStatus.Draft)
                                         {
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-success w-full cima-btn-sm"
-                                                    @onclick="PublishListing"
-                                                    disabled="@IsPerformingAction">
-                                                @if (IsPerformingAction)
-                                                {
-                                                    <span class="cima-loading-spinner mr-2"></span>
-                                                }
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
+                                                Size="Size.Small" OnClick="PublishListing">
                                                 Publicar
-                                            </button>
+                                            </MudButton>
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Published)
                                         {
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-secondary w-full cima-btn-sm"
-                                                    @onclick="UnpublishListing"
-                                                    disabled="@IsPerformingAction">
-                                                Despublicar
-                                            </button>
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-secondary w-full cima-btn-sm"
-                                                    @onclick="MoveToPortfolio"
-                                                    disabled="@IsPerformingAction">
-                                                Mover a Portafolio
-                                            </button>
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-warning w-full cima-btn-sm"
-                                                    @onclick="ArchiveListing"
-                                                    disabled="@IsPerformingAction">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
+                                                Size="Size.Small" OnClick="ArchiveListing">
                                                 Archivar
-                                            </button>
-                                        }
-                                        @if (ExistingListing.Status == ListingStatus.Archived)
-                                        {
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-success w-full cima-btn-sm"
-                                                    @onclick="UnarchiveListing"
-                                                    disabled="@IsPerformingAction">
-                                                Desarchivar
-                                            </button>
-                                        }
-                                        @if (ExistingListing.Status == ListingStatus.Portfolio)
-                                        {
-                                            <button type="button" 
-                                                    class="cima-btn cima-btn-warning w-full cima-btn-sm"
-                                                    @onclick="ArchiveListing"
-                                                    disabled="@IsPerformingAction">
-                                                Archivar
-                                            </button>
+                                            </MudButton>
                                         }
                                     </div>
-                                </div>
+                                </MudCard>
                             }
                         </div>
                     </div>
@@ -338,53 +219,114 @@
 </div>
 
 @code {
-    [Parameter]
-    public Guid? Id { get; set; }
+    [Parameter] public Guid? Id { get; set; }
+
+    // Cultura mexicana para formato de números (comas para miles, punto para decimales)
+    private static readonly CultureInfo MexicoCulture = new("es-MX");
 
     private bool IsEditMode => Id.HasValue && Id.Value != Guid.Empty;
-    private string PageTitle => IsEditMode ? L["Admin:Listings:Edit"] : L["Admin:Listings:Create"];
+    private string PageTitle => IsEditMode ? "Editar Propiedad" : "Nueva Propiedad";
 
     private bool IsLoading { get; set; } = true;
     private bool IsSubmitting { get; set; }
-    private bool IsPerformingAction { get; set; }
+    private bool IsAdmin { get; set; }
+    
+    // Usuario puede crear listings si:
+    // - Es arquitecto (tiene perfil propio), o
+    // - Es admin Y hay arquitectos disponibles para asignar
+    private bool CanCreateListings => CurrentArchitect != null || (IsAdmin && Architects?.Any() == true);
+    
+    // Mostrar selector de arquitecto si:
+    // - Es admin (siempre debe poder elegir a quién asignar)
+    // - O hay múltiples arquitectos y el usuario actual es uno de ellos
+    private bool ShowArchitectSelector => IsAdmin && Architects != null && Architects.Any();
     
     private CreateUpdateListingDto Model { get; set; } = new() 
     { 
-        Title = "",
-        Description = ""
+        Title = "", 
+        Description = "",
+        Category = PropertyCategory.Residential,
+        Type = PropertyType.House,
+        TransactionType = TransactionType.Sale
     };
+    
     private List<ArchitectDto>? Architects { get; set; }
+    private ArchitectDto? CurrentArchitect { get; set; }
     private ListingDto? ExistingListing { get; set; }
     
-    private string SelectedCategory { get; set; } = string.Empty;
-    private String SelectedType { get; set; } = string.Empty;
-    private String SelectedTransaction { get; set; } = string.Empty;
-    private String SelectedArchitectId { get; set; } = string.Empty;
+    // ID actual del listing (para modo edición o después de crear)
+    private Guid? CurrentListingId => ExistingListing?.Id ?? (IsEditMode ? Id : null);
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadArchitects();
-        if (IsEditMode)
+        try
         {
-            await LoadListing();
+            // Verificar si es admin
+            IsAdmin = CurrentUser.IsInRole("admin");
+            
+            // Siempre intentar obtener el arquitecto actual (puede ser null para admin puro)
+            try
+            {
+                CurrentArchitect = await ArchitectService.GetCurrentAsync();
+            }
+            catch
+            {
+                CurrentArchitect = null;
+            }
+            
+            // Si es admin, SIEMPRE cargar lista de arquitectos
+            if (IsAdmin)
+            {
+                await LoadArchitects();
+            }
+            
+            // Establecer el arquitecto por defecto
+            if (CurrentArchitect != null)
+            {
+                // Si el usuario tiene perfil de arquitecto, usarlo por defecto
+                Model.ArchitectId = CurrentArchitect.Id;
+            }
+            else if (Architects?.Any() == true)
+            {
+                // Si es admin sin perfil propio, usar el primer arquitecto disponible
+                Model.ArchitectId = Architects.First().Id;
+            }
+            
+            // Si es modo edición, cargar el listing existente
+            if (IsEditMode)
+            {
+                await LoadListing();
+            }
         }
-        IsLoading = false;
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al inicializar: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     private async Task LoadArchitects()
     {
         try
         {
-            var result = await ArchitectService.GetListAsync(new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto
-            {
-                MaxResultCount = 100,
-                Sorting = "UserName"
-            });
+            var result = await ArchitectService.GetListAsync(
+                new Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto { MaxResultCount = 100 });
             Architects = result.Items.ToList();
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
         }
         catch (Exception ex)
         {
-            await HandleErrorAsync(ex);
+            Snackbar.Add($"Error al cargar arquitectos: {ex.Message}", Severity.Error);
         }
     }
 
@@ -393,7 +335,6 @@
         try
         {
             if (!Id.HasValue) return;
-
             ExistingListing = await ListingService.GetAsync(Id.Value);
             
             Model = new CreateUpdateListingDto
@@ -411,63 +352,80 @@
                 TransactionType = ExistingListing.TransactionType,
                 ArchitectId = ExistingListing.ArchitectId
             };
-            
-            SelectedCategory = ((int)ExistingListing.Category).ToString();
-            SelectedType = ((int)ExistingListing.Type).ToString();
-            SelectedTransaction = ((int)ExistingListing.TransactionType).ToString();
-            SelectedArchitectId = ExistingListing.ArchitectId.ToString();
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
         }
         catch (Exception ex)
         {
-            await HandleErrorAsync(ex);
+            Snackbar.Add($"Error al cargar propiedad: {ex.Message}", Severity.Error);
             NavManager.NavigateTo("/admin/listings");
         }
+    }
+
+    private string GetArchitectDisplayName(ArchitectDto arch)
+    {
+        var name = arch.Name ?? arch.UserName ?? "Sin nombre";
+        var surname = arch.Surname ?? "";
+        return string.IsNullOrWhiteSpace(surname) ? name : $"{name} {surname}";
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        Snackbar.Add("Por favor corrige los errores en el formulario", Severity.Warning);
     }
 
     private async Task HandleSubmit()
     {
-        if (!ValidateForm()) return;
+        // Validar que tenemos un arquitecto asignado
+        if (Model.ArchitectId == Guid.Empty)
+        {
+            if (CurrentArchitect != null)
+            {
+                Model.ArchitectId = CurrentArchitect.Id;
+            }
+            else if (Architects?.Any() == true)
+            {
+                Model.ArchitectId = Architects.First().Id;
+            }
+            else
+            {
+                Snackbar.Add("Debes seleccionar un arquitecto", Severity.Error);
+                return;
+            }
+        }
 
         try
         {
             IsSubmitting = true;
-
-            Model.Category = (PropertyCategory)int.Parse(SelectedCategory);
-            Model.Type = (PropertyType)int.Parse(SelectedType);
-            Model.TransactionType = (TransactionType)int.Parse(SelectedTransaction);
-            Model.ArchitectId = Guid.Parse(SelectedArchitectId);
+            StateHasChanged();
 
             if (IsEditMode && Id.HasValue)
             {
                 await ListingService.UpdateAsync(Id.Value, Model);
-                await MessageService.Success("Propiedad actualizada exitosamente");
+                Snackbar.Add("Propiedad actualizada correctamente", Severity.Success);
+                NavManager.NavigateTo("/admin/listings");
             }
             else
             {
                 var created = await ListingService.CreateAsync(Model);
-                await MessageService.Success("Propiedad creada exitosamente. Ahora puedes agregar imagenes.");
-                NavManager.NavigateTo($"/admin/listings/edit/{created.Id}");
-                return;
+                ExistingListing = created; // Para poder cargar imágenes inmediatamente
+                Snackbar.Add("Propiedad creada. Ahora puedes agregar imagenes.", Severity.Success);
+                
+                // Redirigir a modo edición para poder agregar imágenes
+                NavManager.NavigateTo($"/admin/listings/edit/{created.Id}", replace: true);
             }
-
-            NavManager.NavigateTo("/admin/listings");
         }
         catch (Exception ex)
         {
-            await HandleErrorAsync(ex);
+            Snackbar.Add($"Error al guardar: {ex.Message}", Severity.Error);
         }
         finally
         {
             IsSubmitting = false;
+            StateHasChanged();
         }
-    }
-
-    private bool ValidateForm()
-    {
-        return !string.IsNullOrEmpty(SelectedCategory) &&
-               !string.IsNullOrEmpty(SelectedType) &&
-               !string.IsNullOrEmpty(SelectedTransaction) &&
-               !string.IsNullOrEmpty(SelectedArchitectId);
     }
 
     private void HandleImagesChanged(List<ListingImageDto> images)
@@ -479,80 +437,50 @@
         }
     }
 
-    #region Status Actions
-
     private async Task PublishListing()
     {
-        await PerformStatusAction(
-            () => ListingService.PublishAsync(Id!.Value),
-            "Propiedad publicada exitosamente");
-    }
-
-    private async Task UnpublishListing()
-    {
-        await PerformStatusAction(
-            () => ListingService.UnpublishAsync(Id!.Value),
-            "Propiedad despublicada");
+        if (!Id.HasValue) return;
+        
+        try
+        {
+            ExistingListing = await ListingService.PublishAsync(Id.Value);
+            Snackbar.Add("Propiedad publicada correctamente", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al publicar: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task ArchiveListing()
     {
-        var confirmed = await MessageService.Confirm(
-            "¿Estas seguro de archivar esta propiedad?",
-            "Archivar Propiedad");
-        if (!confirmed) return;
-
-        await PerformStatusAction(
-            () => ListingService.ArchiveAsync(Id!.Value),
-            "Propiedad archivada");
-    }
-
-    private async Task UnarchiveListing()
-    {
-        await PerformStatusAction(
-            () => ListingService.UnarchiveAsync(Id!.Value),
-            "Propiedad desarchivada y publicada");
-    }
-
-    private async Task MoveToPortfolio()
-    {
-        await PerformStatusAction(
-            () => ListingService.MoveToPortfolioAsync(Id!.Value),
-            "Propiedad movida al portafolio");
-    }
-
-    private async Task PerformStatusAction(Func<Task<ListingDto>> action, string successMessage)
-    {
-        try
+        var result = await DialogService.ShowMessageBox(
+            "Archivar Propiedad", 
+            "¿Estás seguro de archivar esta propiedad? Ya no será visible públicamente.",
+            yesText: "Archivar", cancelText: "Cancelar");
+        
+        if (result == true && Id.HasValue)
         {
-            IsPerformingAction = true;
-            StateHasChanged();
-
-            ExistingListing = await action();
-            await MessageService.Success(successMessage);
-        }
-        catch (Exception ex)
-        {
-            await HandleErrorAsync(ex);
-        }
-        finally
-        {
-            IsPerformingAction = false;
-            StateHasChanged();
+            try
+            {
+                ExistingListing = await ListingService.ArchiveAsync(Id.Value);
+                Snackbar.Add("Propiedad archivada", Severity.Success);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error al archivar: {ex.Message}", Severity.Error);
+            }
         }
     }
 
-    #endregion
-
-    private string GetStatusBadgeClass(ListingStatus status)
+    private Color GetStatusColor(ListingStatus status) => status switch
     {
-        return status switch
-        {
-            ListingStatus.Published => "px-2 py-1 text-xs font-medium rounded-full bg-success-light text-success",
-            ListingStatus.Draft => "px-2 py-1 text-xs font-medium rounded-full bg-warning-light text-warning",
-            ListingStatus.Archived => "px-2 py-1 text-xs font-medium rounded-full bg-neutral-200 text-neutral-700",
-            ListingStatus.Portfolio => "px-2 py-1 text-xs font-medium rounded-full bg-navy-100 text-navy-700",
-            _ => "px-2 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-600"
-        };
-    }
+        ListingStatus.Published => Color.Success,
+        ListingStatus.Draft => Color.Warning,
+        ListingStatus.Archived => Color.Default,
+        ListingStatus.Portfolio => Color.Info,
+        _ => Color.Default
+    };
 }
