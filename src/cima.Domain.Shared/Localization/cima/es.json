@@ -208,6 +208,8 @@
     "Unspecified": "Sistema",
     
     "Permission:Dashboard": "Panel de Control",
+    "Permission:Settings": "Configuración del Sitio",
+    "Permission:Settings.Manage": "Gestionar Configuración",
     
     "Admin:Title": "Panel Administrativo",
     "Admin:Listings:Title": "Gestión de Propiedades",

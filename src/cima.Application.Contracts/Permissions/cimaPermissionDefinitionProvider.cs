@@ -71,8 +71,15 @@ public class cimaPermissionDefinitionProvider : PermissionDefinitionProvider
             L("Permission:Dashboard.ViewStats")
         );
 
-        //Define your own permissions here. Example:
-        //myGroup.AddPermission(cimaPermissions.MyPermission1, L("Permission:MyPermission1"));
+        // Configuración del sitio (solo admin)
+        var settingsPermission = cimaGroup.AddPermission(
+            cimaPermissions.Settings.Default,
+            L("Permission:Settings")
+        );
+        settingsPermission.AddChild(
+            cimaPermissions.Settings.Manage,
+            L("Permission:Settings.Manage")
+        );
     }
 
 

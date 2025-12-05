@@ -51,6 +51,13 @@ public static class cimaPermissions
         public const string ViewStats = Default + ".ViewStats";
     }
 
+    // Permisos para configuración del sitio (solo admin)
+    public static class Settings
+    {
+        public const string Default = GroupName + ".Settings";
+        public const string Manage = Default + ".Manage";      // Gestionar configuración
+    }
+
     //Add your own permission names. Example:
     //public const string MyPermission1 = GroupName + ".MyPermission1";
 }

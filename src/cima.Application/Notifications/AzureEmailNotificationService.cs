@@ -2,49 +2,56 @@ using System;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Communication.Email;
+using cima.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Settings;
 
 namespace cima.Notifications;
 
 /// <summary>
 /// Implementación del servicio de notificaciones usando Azure Communication Services Email
 /// Tier gratuito: 100 emails/día
-/// Docs: https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/email/send-email
+/// 
+/// La configuración se obtiene de:
+/// 1. Settings de la BD (configurados por admin)
+/// 2. Fallback a appsettings.json
 /// </summary>
 public class AzureEmailNotificationService : IEmailNotificationService, ITransientDependency
 {
     private readonly IConfiguration _configuration;
+    private readonly ISettingProvider _settingProvider;
     private readonly ILogger<AzureEmailNotificationService> _logger;
-    private readonly EmailClient? _emailClient;
-    private readonly string _senderAddress;
 
     public AzureEmailNotificationService(
         IConfiguration configuration,
+        ISettingProvider settingProvider,
         ILogger<AzureEmailNotificationService> logger)
     {
         _configuration = configuration;
+        _settingProvider = settingProvider;
         _logger = logger;
-
-        var connectionString = _configuration["Email:AzureCommunicationServices:ConnectionString"];
-        _senderAddress = _configuration["Email:AzureCommunicationServices:SenderAddress"] ?? "";
-
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            _emailClient = new EmailClient(connectionString);
-        }
     }
 
     public async Task SendContactRequestNotificationAsync(ContactRequestNotificationDto notification)
     {
+        // Obtener email de admin desde settings (prioridad) o usar el del DTO
+        var adminEmail = await GetAdminEmailAsync() ?? notification.AdminEmail;
+        
+        if (string.IsNullOrEmpty(adminEmail))
+        {
+            _logger.LogWarning("No hay email de admin configurado. Notificación no enviada.");
+            return;
+        }
+
         var subject = notification.PropertyTitle != null
             ? $"[4cima] Nueva consulta sobre: {notification.PropertyTitle}"
             : "[4cima] Nueva solicitud de contacto";
 
         var htmlContent = BuildContactRequestNotificationHtml(notification);
 
-        await SendEmailAsync(notification.AdminEmail, subject, htmlContent);
+        await SendEmailAsync(adminEmail, subject, htmlContent);
     }
 
     public async Task SendContactRequestConfirmationAsync(ContactRequestConfirmationDto confirmation)
@@ -63,9 +70,49 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
         await SendEmailAsync(welcome.ArchitectEmail, subject, htmlContent);
     }
 
+    /// <summary>
+    /// Obtiene email de admin desde settings o config
+    /// </summary>
+    private async Task<string?> GetAdminEmailAsync()
+    {
+        // Primero intentar desde settings de BD
+        var settingEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail);
+        if (!string.IsNullOrEmpty(settingEmail))
+        {
+            return settingEmail;
+        }
+
+        // Fallback a configuración
+        return _configuration["Email:AdminNotification"];
+    }
+
+    /// <summary>
+    /// Obtiene configuración de Azure CS desde settings o config
+    /// </summary>
+    private async Task<(string? connectionString, string? senderAddress)> GetAzureConfigAsync()
+    {
+        // Intentar desde settings de BD
+        var connectionString = await _settingProvider.GetOrNullAsync(SiteSettingNames.AzureEmailConnectionString);
+        var senderAddress = await _settingProvider.GetOrNullAsync(SiteSettingNames.AzureEmailSenderAddress);
+
+        // Fallback a configuración si no hay en settings
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            connectionString = _configuration["Email:AzureCommunicationServices:ConnectionString"];
+        }
+        if (string.IsNullOrEmpty(senderAddress))
+        {
+            senderAddress = _configuration["Email:AzureCommunicationServices:SenderAddress"];
+        }
+
+        return (connectionString, senderAddress);
+    }
+
     private async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
-        if (_emailClient == null || string.IsNullOrEmpty(_senderAddress))
+        var (connectionString, senderAddress) = await GetAzureConfigAsync();
+
+        if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(senderAddress))
         {
             _logger.LogWarning("Azure Communication Services Email no configurado. Email no enviado a {To}: {Subject}", to, subject);
             return;
@@ -73,15 +120,17 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
 
         try
         {
+            var emailClient = new EmailClient(connectionString);
+
             var emailMessage = new EmailMessage(
-                senderAddress: _senderAddress,
+                senderAddress: senderAddress,
                 recipientAddress: to,
                 content: new EmailContent(subject)
                 {
                     Html = htmlBody
                 });
 
-            EmailSendOperation emailSendOperation = await _emailClient.SendAsync(
+            EmailSendOperation emailSendOperation = await emailClient.SendAsync(
                 WaitUntil.Completed,
                 emailMessage);
 
