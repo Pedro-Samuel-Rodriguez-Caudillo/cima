@@ -19,6 +19,9 @@
     "Menu:Architects": "Architects",
     "Menu:ContactRequests": "Contact Requests",
     "Menu:Dashboard": "Dashboard",
+    "Menu:User:Dashboard": "My Dashboard",
+    "Menu:User:MyListings": "My Properties",
+    "Menu:User:ChangePassword": "Change Password",
     
     "Home": "Home",
     "Welcome": "Welcome to 4cima",
