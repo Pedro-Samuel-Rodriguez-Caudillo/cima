@@ -1,26 +1,37 @@
 @page "/account/post-login"
 @using Microsoft.AspNetCore.Components.Authorization
 @using cima.Blazor.Client.Services
+@using cima.Architects
 @inject ILoginRedirectService RedirectService
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IArchitectAppService ArchitectService
 
 <PageTitle>Redireccionando...</PageTitle>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">
-    <div class="text-center">
+    <div class="text-center animate-fade-in">
+        @* Logo *@
+        <div class="mb-6">
+            <span class="text-3xl font-display font-bold text-navy-600">4cima</span>
+        </div>
+        
+        @* Loading indicator *@
         <div class="cima-saving-indicator mb-4 justify-center">
             <span class="cima-saving-dot"></span>
             <span class="cima-saving-dot"></span>
             <span class="cima-saving-dot"></span>
         </div>
-        <p class="text-gray-600">Redireccionando...</p>
+        
+        <p class="text-gray-600">@_message</p>
     </div>
 </div>
 
 @code {
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
+
+    private string _message = "Verificando sesión...";
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,10 +40,40 @@
 
         if (!user.Identity?.IsAuthenticated ?? true)
         {
-            // No autenticado, ir a login
+            // No autenticado, ir a home
             Navigation.NavigateTo("/", true);
             return;
         }
+
+        _message = "Verificando permisos...";
+        StateHasChanged();
+
+        // Verificar si debe cambiar contraseña
+        try
+        {
+            var mustChange = await ArchitectService.MustChangePasswordAsync();
+            if (mustChange)
+            {
+                _message = "Redirigiendo a cambio de contraseña...";
+                StateHasChanged();
+                
+                // Preservar returnUrl para después del cambio
+                var changePasswordUrl = string.IsNullOrEmpty(ReturnUrl)
+                    ? LoginRedirectService.ChangePasswordRoute
+                    : $"{LoginRedirectService.ChangePasswordRoute}?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+                
+                await Task.Delay(300);
+                Navigation.NavigateTo(changePasswordUrl, forceLoad: false);
+                return;
+            }
+        }
+        catch
+        {
+            // Si falla la verificación, continuar normalmente
+        }
+
+        _message = "Redireccionando...";
+        StateHasChanged();
 
         // Obtener URL de redirección según rol
         var redirectUrl = RedirectService.GetRedirectUrl(user, ReturnUrl);

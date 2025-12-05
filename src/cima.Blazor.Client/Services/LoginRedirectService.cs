@@ -15,6 +15,7 @@ public interface ILoginRedirectService
     string GetDefaultRouteForUser(ClaimsPrincipal user);
     string GetRedirectUrl(ClaimsPrincipal user, string? returnUrl = null);
     Task<string> GetRedirectUrlAsync(string? returnUrl = null);
+    bool IsValidReturnUrl(string returnUrl);
 }
 
 public class LoginRedirectService : ILoginRedirectService
@@ -23,10 +24,10 @@ public class LoginRedirectService : ILoginRedirectService
     private readonly NavigationManager _navigation;
 
     // Rutas por defecto según rol
-    private const string AdminDashboard = "/admin/dashboard";
-    private const string ArchitectDashboard = "/architect/dashboard";
-    private const string PublicHome = "/";
-    private const string ChangePasswordRoute = "/account/change-password";
+    public const string AdminDashboard = "/admin/dashboard";
+    public const string ArchitectDashboard = "/architect/dashboard";
+    public const string PublicHome = "/";
+    public const string ChangePasswordRoute = "/account/change-password";
 
     public LoginRedirectService(
         AuthenticationStateProvider authStateProvider,
@@ -40,11 +41,6 @@ public class LoginRedirectService : ILoginRedirectService
     {
         if (!user.Identity?.IsAuthenticated ?? true)
             return PublicHome;
-
-        // Verificar si debe cambiar contraseña
-        var mustChangePassword = user.FindFirst("MustChangePassword")?.Value;
-        if (mustChangePassword == "true")
-            return ChangePasswordRoute;
 
         // Admin tiene prioridad
         if (user.IsInRole("admin"))
@@ -60,20 +56,14 @@ public class LoginRedirectService : ILoginRedirectService
 
     public string GetRedirectUrl(ClaimsPrincipal user, string? returnUrl = null)
     {
-        // Si hay returnUrl válido, usarlo (excepto si debe cambiar contraseña)
-        var mustChangePassword = user.FindFirst("MustChangePassword")?.Value == "true";
-        
-        if (mustChangePassword)
-        {
-            // Preservar returnUrl para después del cambio de contraseña
-            return string.IsNullOrEmpty(returnUrl) 
-                ? ChangePasswordRoute 
-                : $"{ChangePasswordRoute}?returnUrl={Uri.EscapeDataString(returnUrl)}";
-        }
-
+        // Si hay returnUrl válido, usarlo
         if (!string.IsNullOrEmpty(returnUrl) && IsValidReturnUrl(returnUrl))
         {
-            return returnUrl;
+            // No redirigir a rutas de auth
+            if (!IsAuthRoute(returnUrl))
+            {
+                return returnUrl;
+            }
         }
 
         return GetDefaultRouteForUser(user);
@@ -85,7 +75,7 @@ public class LoginRedirectService : ILoginRedirectService
         return GetRedirectUrl(authState.User, returnUrl);
     }
 
-    private bool IsValidReturnUrl(string returnUrl)
+    public bool IsValidReturnUrl(string returnUrl)
     {
         // Solo permitir URLs relativas o del mismo dominio
         if (string.IsNullOrWhiteSpace(returnUrl))
@@ -110,6 +100,17 @@ public class LoginRedirectService : ILoginRedirectService
         {
             return false;
         }
+    }
+
+    private static bool IsAuthRoute(string url)
+    {
+        var lowerUrl = url.ToLowerInvariant();
+        return lowerUrl.Contains("/account/login") ||
+               lowerUrl.Contains("/account/logout") ||
+               lowerUrl.Contains("/account/post-login") ||
+               lowerUrl.Contains("/authentication") ||
+               lowerUrl.Contains("/signin-oidc") ||
+               lowerUrl.Contains("/signout-callback-oidc");
     }
 }
 
