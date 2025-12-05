@@ -1,0 +1,49 @@
+@* Indicador de guardado automático *@
+
+<div class="@ComputedClass" role="status" aria-live="polite">
+    @if (State == SavingState.Saving)
+    {
+        <div class="cima-saving-indicator">
+            <span class="cima-saving-dot"></span>
+            <span class="cima-saving-dot"></span>
+            <span class="cima-saving-dot"></span>
+            <span>@SavingText</span>
+        </div>
+    }
+    else if (State == SavingState.Saved)
+    {
+        <div class="cima-saved-indicator">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>@SavedText</span>
+        </div>
+    }
+    else if (State == SavingState.Error)
+    {
+        <div class="inline-flex items-center gap-1 text-sm text-red-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span>@ErrorText</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public SavingState State { get; set; } = SavingState.Idle;
+    [Parameter] public string SavingText { get; set; } = "Guardando...";
+    [Parameter] public string SavedText { get; set; } = "Guardado";
+    [Parameter] public string ErrorText { get; set; } = "Error al guardar";
+    [Parameter] public string? Class { get; set; }
+
+    private string ComputedClass => $"inline-block {Class}".Trim();
+
+    public enum SavingState
+    {
+        Idle,
+        Saving,
+        Saved,
+        Error
+    }
+}

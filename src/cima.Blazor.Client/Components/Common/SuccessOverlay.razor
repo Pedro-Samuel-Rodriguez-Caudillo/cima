@@ -1,0 +1,47 @@
+@* Overlay de éxito con animación *@
+
+@if (IsVisible)
+{
+    <div class="cima-success-overlay" @onclick="OnClose" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="cima-success-content" @onclick:stopPropagation>
+            <div class="cima-success-circle">
+                <svg class="cima-checkmark-svg" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="26" cy="26" r="24" stroke="currentColor" stroke-width="3" fill="none"/>
+                    <path d="M14 27l8 8 16-16" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+            </div>
+            
+            <h3 id="success-title" class="text-xl font-semibold text-gray-900 mb-2">
+                @Title
+            </h3>
+            
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <p class="text-gray-600 mb-6">@Message</p>
+            }
+            
+            @if (ChildContent != null)
+            {
+                <div class="mb-6">@ChildContent</div>
+            }
+            
+            <button class="cima-btn cima-btn-primary w-full" @onclick="HandleClose">
+                @ButtonText
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public string Title { get; set; } = "¡Éxito!";
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Continuar";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

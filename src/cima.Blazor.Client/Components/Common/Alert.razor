@@ -1,0 +1,114 @@
+@* Alert/Feedback box con variantes *@
+
+<div class="@ComputedClass" role="alert">
+    <div class="flex-shrink-0">
+        @if (Variant == AlertVariant.Success)
+        {
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        }
+        else if (Variant == AlertVariant.Error)
+        {
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        }
+        else if (Variant == AlertVariant.Warning)
+        {
+            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+        }
+        else
+        {
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        }
+    </div>
+    
+    <div class="flex-1">
+        @if (!string.IsNullOrEmpty(Title))
+        {
+            <h4 class="font-medium @TitleColorClass">@Title</h4>
+        }
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <p class="@MessageColorClass @(string.IsNullOrEmpty(Title) ? "" : "mt-1")">@Message</p>
+        }
+        @ChildContent
+    </div>
+    
+    @if (Dismissible)
+    {
+        <button class="flex-shrink-0 ml-4 @DismissColorClass hover:opacity-70 transition-opacity" 
+                @onclick="HandleDismiss"
+                aria-label="Cerrar">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public AlertVariant Variant { get; set; } = AlertVariant.Info;
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public bool Dismissible { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private string ComputedClass => $"{BaseClass} {Class}".Trim();
+
+    private string BaseClass => Variant switch
+    {
+        AlertVariant.Success => "bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3",
+        AlertVariant.Error => "cima-error-feedback",
+        AlertVariant.Warning => "cima-warning-feedback",
+        AlertVariant.Info => "cima-info-feedback",
+        _ => "cima-info-feedback"
+    };
+
+    private string TitleColorClass => Variant switch
+    {
+        AlertVariant.Success => "text-green-800",
+        AlertVariant.Error => "text-red-800",
+        AlertVariant.Warning => "text-yellow-800",
+        AlertVariant.Info => "text-blue-800",
+        _ => "text-gray-800"
+    };
+
+    private string MessageColorClass => Variant switch
+    {
+        AlertVariant.Success => "text-green-700",
+        AlertVariant.Error => "text-red-700",
+        AlertVariant.Warning => "text-yellow-700",
+        AlertVariant.Info => "text-blue-700",
+        _ => "text-gray-700"
+    };
+
+    private string DismissColorClass => Variant switch
+    {
+        AlertVariant.Success => "text-green-600",
+        AlertVariant.Error => "text-red-600",
+        AlertVariant.Warning => "text-yellow-600",
+        AlertVariant.Info => "text-blue-600",
+        _ => "text-gray-600"
+    };
+
+    private async Task HandleDismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+
+    public enum AlertVariant
+    {
+        Info,
+        Success,
+        Warning,
+        Error
+    }
+}

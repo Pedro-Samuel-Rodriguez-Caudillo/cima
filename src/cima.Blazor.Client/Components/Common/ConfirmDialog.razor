@@ -1,0 +1,133 @@
+@* Diálogo de confirmación con animación *@
+
+@if (IsVisible)
+{
+    <div class="cima-confirm-dialog @VariantClass" 
+         @onclick="HandleCancel" 
+         role="dialog" 
+         aria-modal="true" 
+         aria-labelledby="confirm-title"
+         aria-describedby="confirm-description">
+        <div class="cima-confirm-content" @onclick:stopPropagation>
+            <div class="p-6">
+                @* Icon *@
+                <div class="cima-confirm-icon @IconBgClass">
+                    @if (Variant == ConfirmVariant.Danger)
+                    {
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    }
+                    else if (Variant == ConfirmVariant.Warning)
+                    {
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    }
+                </div>
+
+                @* Title *@
+                <h3 id="confirm-title" class="text-lg font-semibold text-gray-900 text-center mb-2">
+                    @Title
+                </h3>
+
+                @* Message *@
+                @if (!string.IsNullOrEmpty(Message))
+                {
+                    <p id="confirm-description" class="text-gray-600 text-center mb-2">
+                        @Message
+                    </p>
+                }
+
+                @* Additional content *@
+                @if (ChildContent != null)
+                {
+                    <div class="mt-4">@ChildContent</div>
+                }
+            </div>
+
+            @* Buttons *@
+            <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end">
+                <button class="cima-btn cima-btn-ghost" @onclick="HandleCancel" disabled="@IsProcessing">
+                    @CancelText
+                </button>
+                <button class="cima-btn @ConfirmButtonClass" @onclick="HandleConfirm" disabled="@IsProcessing">
+                    @if (IsProcessing)
+                    {
+                        <svg class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        @ProcessingText
+                    }
+                    else
+                    {
+                        @ConfirmText
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public bool IsProcessing { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public string Title { get; set; } = "Confirmar";
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string ConfirmText { get; set; } = "Confirmar";
+    [Parameter] public string CancelText { get; set; } = "Cancelar";
+    [Parameter] public string ProcessingText { get; set; } = "Procesando...";
+    [Parameter] public ConfirmVariant Variant { get; set; } = ConfirmVariant.Default;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string VariantClass => Variant == ConfirmVariant.Danger ? "cima-confirm-danger" : "";
+
+    private string IconBgClass => Variant switch
+    {
+        ConfirmVariant.Danger => "bg-red-100 text-red-600",
+        ConfirmVariant.Warning => "bg-yellow-100 text-yellow-600",
+        _ => "bg-blue-100 text-blue-600"
+    };
+
+    private string ConfirmButtonClass => Variant switch
+    {
+        ConfirmVariant.Danger => "cima-btn-danger",
+        ConfirmVariant.Warning => "cima-btn-primary",
+        _ => "cima-btn-primary"
+    };
+
+    private async Task HandleConfirm()
+    {
+        if (!IsProcessing)
+        {
+            await OnConfirm.InvokeAsync();
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        if (!IsProcessing)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+
+    public enum ConfirmVariant
+    {
+        Default,
+        Warning,
+        Danger
+    }
+}
