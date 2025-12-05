@@ -1,0 +1,48 @@
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="page-transition @_animationClass">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string _animationClass = "page-enter";
+    private string _previousUri = "";
+
+    protected override void OnInitialized()
+    {
+        _previousUri = Navigation.Uri;
+        Navigation.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // Solo animar si cambió la página (no el hash/anchor)
+        var newPath = new Uri(e.Location).AbsolutePath;
+        var oldPath = new Uri(_previousUri).AbsolutePath;
+        
+        if (newPath != oldPath)
+        {
+            // Trigger exit animation
+            _animationClass = "page-exit";
+            await InvokeAsync(StateHasChanged);
+            
+            // Wait for exit animation
+            await Task.Delay(150);
+            
+            // Trigger enter animation
+            _animationClass = "page-enter";
+            await InvokeAsync(StateHasChanged);
+        }
+        
+        _previousUri = e.Location;
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

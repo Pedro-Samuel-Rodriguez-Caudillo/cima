@@ -1,0 +1,34 @@
+@* Skeleton Loader para texto/párrafos *@
+
+<div class="animate-pulse space-y-3" role="status" aria-label="@AriaLabel">
+    @for (int i = 0; i < Lines; i++)
+    {
+        var width = GetLineWidth(i);
+        <div class="h-@Height bg-gray-200 rounded" style="width: @width%"></div>
+    }
+    
+    <span class="sr-only">@AriaLabel</span>
+</div>
+
+@code {
+    [Parameter]
+    public int Lines { get; set; } = 3;
+    
+    [Parameter]
+    public int Height { get; set; } = 4;
+    
+    [Parameter]
+    public string AriaLabel { get; set; } = "Cargando contenido...";
+    
+    private int GetLineWidth(int index)
+    {
+        // Variar el ancho para que se vea más natural
+        return index switch
+        {
+            0 => 100,
+            1 => 85,
+            2 => 70,
+            _ => 60 + (index % 3) * 15
+        };
+    }
+}

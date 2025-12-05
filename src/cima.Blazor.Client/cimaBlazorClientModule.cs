@@ -46,6 +46,9 @@ public class cimaBlazorClientModule : AbpModule
     {
         context.Services.AddTransient<EnumLocalizationService>();
         context.Services.AddSingleton<SeoJsonLdService>();
+        
+        // Toast service con accesibilidad
+        context.Services.AddCimaToastService();
     }
 
     private void ConfigureLocalization()

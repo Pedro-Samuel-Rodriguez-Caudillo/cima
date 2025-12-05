@@ -10,14 +10,21 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
+@* Skip link para accesibilidad - navegación por teclado *@
+<a href="#main-content" class="skip-link">
+    Saltar al contenido principal
+</a>
+
 <MustChangePasswordGuard>
     <div class="flex flex-col min-h-screen bg-gray-50">
         <header class="sticky top-0 z-40 w-full">
             <Navbar />
         </header>
 
-        <main class="flex-grow">
-            @Body
+        <main id="main-content" class="flex-grow" tabindex="-1">
+            <PageTransition>
+                @Body
+            </PageTransition>
         </main>
 
         <Footer />
@@ -27,7 +34,6 @@
 <EnvironmentToast />
 
 @code {
-    // Removida la lógica de redirección en OnParametersSetAsync
-    // La autorización se maneja correctamente por el atributo [Authorize] 
+    // La autorización se maneja por el atributo [Authorize] 
     // en las páginas y por AuthorizeRouteView en Routes.razor
 }
