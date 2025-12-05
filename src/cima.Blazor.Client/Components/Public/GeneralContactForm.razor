@@ -1,4 +1,7 @@
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
 
 <EditForm Model="@_model" OnValidSubmit="HandleSubmit" class="space-y-6">
     <DataAnnotationsValidator />
@@ -6,37 +9,37 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Name -->
         <div class="space-y-2">
-            <label for="name" class="text-xs font-bold uppercase tracking-widest text-neutral-500">Nombre</label>
-            <InputText id="name" @bind-Value="_model.Name" class="cima-input" placeholder="Tu nombre completo" />
+            <label for="name" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Name"]</label>
+            <InputText id="name" @bind-Value="_model.Name" class="cima-input" placeholder="@L["ContactForm:NamePlaceholder"]" />
             <ValidationMessage For="@(() => _model.Name)" class="text-red-500 text-xs mt-1" />
         </div>
 
         <!-- Email -->
         <div class="space-y-2">
-            <label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-500">Email</label>
-            <InputText id="email" @bind-Value="_model.Email" class="cima-input" placeholder="tu@email.com" />
+            <label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Email"]</label>
+            <InputText id="email" @bind-Value="_model.Email" class="cima-input" placeholder="@L["ContactForm:EmailPlaceholder"]" />
             <ValidationMessage For="@(() => _model.Email)" class="text-red-500 text-xs mt-1" />
         </div>
     </div>
 
     <!-- Phone -->
     <div class="space-y-2">
-        <label for="phone" class="text-xs font-bold uppercase tracking-widest text-neutral-500">Teléfono</label>
-        <InputText id="phone" @bind-Value="_model.Phone" class="cima-input" placeholder="+52 (55) 1234 5678" />
+        <label for="phone" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Phone"]</label>
+        <InputText id="phone" @bind-Value="_model.Phone" class="cima-input" placeholder="@L["ContactForm:PhonePlaceholder"]" />
         <ValidationMessage For="@(() => _model.Phone)" class="text-red-500 text-xs mt-1" />
     </div>
 
     <!-- Message -->
     <div class="space-y-2">
-        <label for="message" class="text-xs font-bold uppercase tracking-widest text-neutral-500">Mensaje</label>
-        <InputTextArea id="message" @bind-Value="_model.Message" class="cima-input min-h-[120px] resize-y" placeholder="¿En qué podemos ayudarte?" />
+        <label for="message" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Message"]</label>
+        <InputTextArea id="message" @bind-Value="_model.Message" class="cima-input min-h-[120px] resize-y" placeholder="@L["ContactForm:GeneralMessagePlaceholder"]" />
         <ValidationMessage For="@(() => _model.Message)" class="text-red-500 text-xs mt-1" />
     </div>
 
     <!-- Submit -->
     <div class="pt-4">
         <button type="submit" class="cima-btn cima-btn-primary w-full sm:w-auto px-8 py-3 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
-            Enviar Mensaje
+            @L["ContactForm:Submit"]
         </button>
     </div>
 </EditForm>
