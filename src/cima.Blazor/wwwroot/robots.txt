@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://4cima.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /architect/
+Disallow: /Account/
+Disallow: /account/
+
+# Disallow API endpoints
+Disallow: /api/
+Disallow: /connect/
+Disallow: /.well-known/
+
+# Allow public pages
+Allow: /properties
+Allow: /propiedades
+Allow: /portfolio
+
+# Crawl delay (optional, be nice to crawlers)
+Crawl-delay: 1

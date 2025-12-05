@@ -1,3 +1,4 @@
+@using cima.Blazor.Client.Components.Common
 @inherits cimaComponentBase
 
 <section id="contact" class="bg-white py-20 md:py-28">
@@ -10,6 +11,15 @@
             <p class="text-lg md:text-xl text-neutral-600 font-light">
                 @L["Contact:HomeSubtitle"]
             </p>
+            
+            @* Opción rápida de WhatsApp *@
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <span class="text-neutral-500 text-sm">¿Prefieres contacto directo?</span>
+                <WhatsAppButton 
+                    ButtonText="Escríbenos por WhatsApp"
+                    ButtonClass="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                    ConfirmButtonClass="bg-green-600 text-white px-5 py-2.5 rounded-full font-medium shadow-lg animate-pulse" />
+            </div>
         </div>
 
         <!-- Form -->

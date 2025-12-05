@@ -6,6 +6,7 @@
         <img src="@CurrentImage" 
              alt="Imagen de la propiedad" 
              class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg shadow-lg cursor-pointer aspect-video"
+             loading="eager"
              @onclick="OpenFullscreen" />
         
         @if (Images.Count > 1)
@@ -13,11 +14,15 @@
             @* Botones de navegación *@
             <button @onclick="PreviousImage" 
                     class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition">
-                <i class="fas fa-chevron-left text-gray-800 text-sm sm:text-base"></i>
+                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
             </button>
             <button @onclick="NextImage" 
                     class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition">
-                <i class="fas fa-chevron-right text-gray-800 text-sm sm:text-base"></i>
+                <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </button>
             
             @* Contador *@
@@ -27,19 +32,20 @@
         }
     </div>
     
-    @* Miniaturas responsive *@
+    @* Miniaturas responsive con lazy loading *@
     @if (Images.Count > 1)
     {
         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
             @for (int i = 0; i < Images.Count; i++)
             {
-                var index = i; // Captura para el closure
+                var index = i;
                 var isActive = index == currentIndex;
-                <div class="relative cursor-pointer @(isActive ? "ring-2 ring-blue-600" : "")" 
+                <div class="relative cursor-pointer @(isActive ? "ring-2 ring-navy-600" : "")" 
                      @onclick="() => SetCurrentImage(index)">
                     <img src="@Images[index]" 
                          alt="Miniatura @(index + 1)" 
-                         class="w-full h-16 sm:h-20 object-cover rounded-lg aspect-video @(isActive ? "" : "opacity-60 hover:opacity-100") transition" />
+                         class="w-full h-16 sm:h-20 object-cover rounded-lg aspect-video @(isActive ? "" : "opacity-60 hover:opacity-100") transition"
+                         loading="lazy" />
                 </div>
             }
         </div>
@@ -51,8 +57,10 @@
 {
     <div class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" @onclick="CloseFullscreen">
         <button @onclick="CloseFullscreen" 
-                class="absolute top-4 right-4 text-white hover:text-gray-300 text-2xl sm:text-3xl z-10">
-            <i class="fas fa-times"></i>
+                class="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
         </button>
         
         <div class="relative max-w-7xl w-full" @onclick:stopPropagation>
@@ -65,12 +73,16 @@
                 <button @onclick="PreviousImage" 
                         @onclick:stopPropagation
                         class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 p-3 sm:p-4 rounded-full transition">
-                    <i class="fas fa-chevron-left text-white text-xl sm:text-2xl"></i>
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </button>
                 <button @onclick="NextImage" 
                         @onclick:stopPropagation
                         class="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 p-3 sm:p-4 rounded-full transition">
-                    <i class="fas fa-chevron-right text-white text-xl sm:text-2xl"></i>
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </button>
             }
         </div>
