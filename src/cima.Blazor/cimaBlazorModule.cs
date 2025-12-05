@@ -3,6 +3,7 @@ using cima.Blazor.Client.Navigation;
 using cima.Blazor.Components;
 using cima.Blazor.HealthChecks;
 using cima.Blazor.Services;
+using cima.Blazor.Infrastructure.Security;
 using MudBlazor.Services;
 using cima.Blazor.Infrastructure;
 using cima.Data;
@@ -179,6 +180,13 @@ public class cimaBlazorModule : AbpModule
 
         // Configurar CascadingAuthenticationState para Blazor Web App
         context.Services.AddCascadingAuthenticationState();
+
+        // ========================================
+        // CONFIGURACIÓN DE SEGURIDAD DE IDENTITY
+        // ========================================
+        context.Services.ConfigureCimaIdentityOptions();
+        context.Services.ConfigureCimaAuthCookies();
+        context.Services.ConfigureCimaSecurityStamp();
 
         if (!configuration.GetValue<bool>("App:DisablePII"))
         {

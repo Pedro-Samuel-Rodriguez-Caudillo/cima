@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Solicitud de Contacto - 4cima</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1d2a4b 0%, #0f172a 100%); padding: 30px; text-align: center;">
+                            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 700;">Nueva Solicitud de Contacto</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 30px;">
+                            <!-- Contact Info Card -->
+                            <table role="presentation" style="width: 100%; background: #f9fafb; border-radius: 12px; overflow: hidden;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <!-- Name -->
+                                        <table role="presentation" style="width: 100%; margin-bottom: 15px;">
+                                            <tr>
+                                                <td style="width: 100px; vertical-align: top;">
+                                                    <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Nombre</span>
+                                                </td>
+                                                <td>
+                                                    <span style="color: #1d2a4b; font-size: 15px; font-weight: 500;">{{CustomerName}}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Email -->
+                                        <table role="presentation" style="width: 100%; margin-bottom: 15px;">
+                                            <tr>
+                                                <td style="width: 100px; vertical-align: top;">
+                                                    <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Email</span>
+                                                </td>
+                                                <td>
+                                                    <a href="mailto:{{CustomerEmail}}" style="color: #1d2a4b; font-size: 15px; text-decoration: none;">{{CustomerEmail}}</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Phone -->
+                                        <table role="presentation" style="width: 100%; margin-bottom: 15px;">
+                                            <tr>
+                                                <td style="width: 100px; vertical-align: top;">
+                                                    <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Teléfono</span>
+                                                </td>
+                                                <td>
+                                                    <span style="color: #1d2a4b; font-size: 15px;">{{CustomerPhone}}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- Property (if exists) -->
+                                        {{#if PropertyTitle}}
+                                        <table role="presentation" style="width: 100%; margin-bottom: 15px;">
+                                            <tr>
+                                                <td style="width: 100px; vertical-align: top;">
+                                                    <span style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600;">Propiedad</span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{PropertyUrl}}" style="color: #1d2a4b; font-size: 15px; text-decoration: none;">{{PropertyTitle}}</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {{/if}}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Message -->
+                            <table role="presentation" style="width: 100%; margin-top: 25px;">
+                                <tr>
+                                    <td>
+                                        <p style="color: #6b7280; font-size: 12px; text-transform: uppercase; font-weight: 600; margin: 0 0 10px 0;">Mensaje</p>
+                                        <div style="background: #f9fafb; border-left: 4px solid #1d2a4b; padding: 15px; border-radius: 0 8px 8px 0;">
+                                            <p style="color: #374151; margin: 0; line-height: 1.6; white-space: pre-wrap;">{{Message}}</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Quick Actions -->
+                            <table role="presentation" style="width: 100%; margin-top: 30px;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="mailto:{{CustomerEmail}}?subject=Re: Solicitud de información - 4cima" style="display: inline-block; background: linear-gradient(135deg, #1d2a4b 0%, #2d3a5b 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                                            Responder por Email
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background: #f9fafb; padding: 20px 30px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #9ca3af; margin: 0; font-size: 11px; text-align: center;">
+                                Recibido el {{ReceivedDate}} a través del formulario de contacto de 4cima
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -18,6 +18,9 @@ public static class EmailNotificationServiceExtensions
         this IServiceCollection services, 
         IConfiguration configuration)
     {
+        // Registrar servicio de plantillas
+        services.AddTransient<IEmailTemplateService, EmailTemplateService>();
+        
         var provider = configuration["Email:Provider"]?.ToLowerInvariant() ?? "smtp";
 
         switch (provider)
