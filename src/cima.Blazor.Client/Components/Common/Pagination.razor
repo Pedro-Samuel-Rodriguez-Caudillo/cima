@@ -1,0 +1,96 @@
+@* Pagination con animación *@
+
+<nav class="cima-pagination" role="navigation" aria-label="Paginación">
+    @* Previous *@
+    <button class="cima-pagination-item" 
+            disabled="@(CurrentPage <= 1)"
+            @onclick="() => GoToPage(CurrentPage - 1)"
+            aria-label="Página anterior">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+
+    @* Page numbers *@
+    @foreach (var pageNum in GetVisiblePages())
+    {
+        @if (pageNum == -1)
+        {
+            <span class="cima-pagination-dots">...</span>
+        }
+        else
+        {
+            <button class="cima-pagination-item @(pageNum == CurrentPage ? "cima-pagination-item-active" : "")"
+                    @onclick="() => GoToPage(pageNum)"
+                    aria-label="@($"Página {pageNum}")"
+                    aria-current="@(pageNum == CurrentPage ? "page" : null)">
+                @pageNum
+            </button>
+        }
+    }
+
+    @* Next *@
+    <button class="cima-pagination-item" 
+            disabled="@(CurrentPage >= TotalPages)"
+            @onclick="() => GoToPage(CurrentPage + 1)"
+            aria-label="Página siguiente">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+    </button>
+</nav>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int TotalPages { get; set; } = 1;
+    [Parameter] public int VisiblePages { get; set; } = 5;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task GoToPage(int pageNumber)
+    {
+        if (pageNumber >= 1 && pageNumber <= TotalPages && pageNumber != CurrentPage)
+        {
+            await OnPageChanged.InvokeAsync(pageNumber);
+        }
+    }
+
+    private IEnumerable<int> GetVisiblePages()
+    {
+        if (TotalPages <= VisiblePages)
+        {
+            return Enumerable.Range(1, TotalPages);
+        }
+
+        var pages = new List<int>();
+        var half = VisiblePages / 2;
+        var start = Math.Max(1, CurrentPage - half);
+        var end = Math.Min(TotalPages, start + VisiblePages - 1);
+
+        if (end - start < VisiblePages - 1)
+        {
+            start = Math.Max(1, end - VisiblePages + 1);
+        }
+
+        // First page number
+        if (start > 1)
+        {
+            pages.Add(1);
+            if (start > 2) pages.Add(-1); // dots
+        }
+
+        // Middle pages
+        for (var i = start; i <= end; i++)
+        {
+            pages.Add(i);
+        }
+
+        // Last page number
+        if (end < TotalPages)
+        {
+            if (end < TotalPages - 1) pages.Add(-1); // dots
+            pages.Add(TotalPages);
+        }
+
+        return pages;
+    }
+}

@@ -1,0 +1,32 @@
+@* Botón de regreso con animación *@
+@inject NavigationManager Navigation
+
+<button class="cima-back-btn" @onclick="HandleClick" aria-label="@AriaLabel">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+</button>
+
+@code {
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Volver";
+    [Parameter] public bool UseHistoryBack { get; set; } = true;
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+        else if (!string.IsNullOrEmpty(Href))
+        {
+            Navigation.NavigateTo(Href);
+        }
+        else if (UseHistoryBack)
+        {
+            // Note: This requires JS interop for history.back()
+            Navigation.NavigateTo("/");
+        }
+    }
+}

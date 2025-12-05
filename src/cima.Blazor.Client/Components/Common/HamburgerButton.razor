@@ -1,0 +1,23 @@
+@* Hamburger menu button animado *@
+
+<button class="cima-hamburger @(IsOpen ? "cima-hamburger-open" : "")"
+        @onclick="Toggle"
+        aria-label="@(IsOpen ? "Cerrar menú" : "Abrir menú")"
+        aria-expanded="@IsOpen.ToString().ToLower()">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public EventCallback OnToggle { get; set; }
+
+    private async Task Toggle()
+    {
+        var newState = !IsOpen;
+        await IsOpenChanged.InvokeAsync(newState);
+        await OnToggle.InvokeAsync();
+    }
+}
