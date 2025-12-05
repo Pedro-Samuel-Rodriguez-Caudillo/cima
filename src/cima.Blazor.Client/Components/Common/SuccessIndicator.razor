@@ -1,0 +1,61 @@
+@* Indicador de éxito con animación de checkmark *@
+
+<div class="@ComputedClass" role="status" aria-label="@AriaLabel">
+    <div class="@CircleClass">
+        <svg class="@IconSizeClass animate-checkmark" 
+             viewBox="0 0 24 24" 
+             fill="none" 
+             xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 13l4 4L19 7" 
+                  stroke="currentColor" 
+                  stroke-width="3" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round"/>
+        </svg>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(Text))
+    {
+        <p class="@TextClass">@Text</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public SuccessSize Size { get; set; } = SuccessSize.Medium;
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Operación exitosa";
+
+    private string ComputedClass => $"flex flex-col items-center gap-3 {Class}".Trim();
+
+    private string CircleClass => Size switch
+    {
+        SuccessSize.Small => "w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center",
+        SuccessSize.Medium => "w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center",
+        SuccessSize.Large => "w-24 h-24 rounded-full bg-green-100 text-green-600 flex items-center justify-center",
+        _ => "w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center"
+    };
+
+    private string IconSizeClass => Size switch
+    {
+        SuccessSize.Small => "w-5 h-5",
+        SuccessSize.Medium => "w-8 h-8",
+        SuccessSize.Large => "w-12 h-12",
+        _ => "w-8 h-8"
+    };
+
+    private string TextClass => Size switch
+    {
+        SuccessSize.Small => "text-sm text-gray-600",
+        SuccessSize.Medium => "text-base text-gray-700 font-medium",
+        SuccessSize.Large => "text-lg text-gray-800 font-semibold",
+        _ => "text-base text-gray-700 font-medium"
+    };
+
+    public enum SuccessSize
+    {
+        Small,
+        Medium,
+        Large
+    }
+}

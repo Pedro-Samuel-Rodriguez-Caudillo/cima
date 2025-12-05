@@ -22,6 +22,188 @@
     }
 }
 
+/* ========================================
+   MICRO-INTERACTIONS - FASE 1: Botones y Controles
+   ======================================== */
+
+@layer components {
+    /* Primary Button con micro-interacciones */
+    .cima-btn {
+        @apply inline-flex items-center justify-center px-6 py-3 
+               font-medium rounded-lg transition-all duration-200 ease-out
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+        transform: translateY(0);
+    }
+
+    .cima-btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .cima-btn:active {
+        transform: translateY(0) scale(0.98);
+        transition-duration: 0.1s;
+    }
+
+    .cima-btn-primary {
+        @apply bg-navy-600 text-white shadow-md
+               hover:bg-navy-700 hover:shadow-lg
+               focus-visible:ring-navy-500
+               active:bg-navy-800;
+    }
+
+    .cima-btn-secondary {
+        @apply bg-white text-navy-600 border-2 border-navy-600
+               hover:bg-navy-50 hover:shadow-md
+               focus-visible:ring-navy-500
+               active:bg-navy-100;
+    }
+
+    .cima-btn-ghost {
+        @apply bg-transparent text-navy-600
+               hover:bg-navy-50
+               focus-visible:ring-navy-500
+               active:bg-navy-100;
+    }
+
+    .cima-btn-danger {
+        @apply bg-red-600 text-white shadow-md
+               hover:bg-red-700 hover:shadow-lg
+               focus-visible:ring-red-500
+               active:bg-red-800;
+    }
+
+    /* Button loading state */
+    .cima-btn-loading {
+        @apply relative pointer-events-none;
+    }
+
+    .cima-btn-loading::after {
+        content: '';
+        @apply absolute inset-0 flex items-center justify-center;
+        background: inherit;
+        border-radius: inherit;
+    }
+
+    .cima-btn-loading .btn-text {
+        @apply opacity-0;
+    }
+
+    .cima-btn-loading .btn-spinner {
+        @apply absolute;
+    }
+
+    /* Icon buttons con rotación/bounce */
+    .cima-icon-btn {
+        @apply p-2 rounded-lg transition-all duration-200 ease-out
+               hover:bg-gray-100 active:scale-90
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500;
+    }
+
+    .cima-icon-btn:hover svg {
+        transform: scale(1.1);
+    }
+
+    .cima-icon-btn-rotate:hover svg {
+        transform: rotate(90deg);
+    }
+
+    .cima-icon-btn-bounce:hover svg {
+        animation: icon-bounce 0.4s ease-out;
+    }
+
+    @keyframes icon-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+    }
+
+    /* Inputs con animación de focus */
+    .cima-input {
+        @apply w-full px-4 py-3 border border-gray-300 rounded-lg
+               transition-all duration-200 ease-out
+               placeholder:text-gray-400
+               focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-500/20
+               hover:border-gray-400;
+    }
+
+    .cima-input:focus {
+        box-shadow: 0 0 0 3px rgba(29, 42, 75, 0.1);
+    }
+
+    /* Input con label flotante */
+    .cima-input-group {
+        @apply relative;
+    }
+
+    .cima-input-group .cima-input {
+        @apply pt-6 pb-2;
+    }
+
+    .cima-input-group .cima-label {
+        @apply absolute left-4 top-1/2 -translate-y-1/2 
+               text-gray-500 transition-all duration-200 ease-out
+               pointer-events-none;
+    }
+
+    .cima-input-group .cima-input:focus ~ .cima-label,
+    .cima-input-group .cima-input:not(:placeholder-shown) ~ .cima-label {
+        @apply text-xs top-3 text-navy-600;
+    }
+
+    /* Checkbox animado */
+    .cima-checkbox {
+        @apply relative w-5 h-5 appearance-none border-2 border-gray-300 rounded
+               transition-all duration-200 ease-out cursor-pointer
+               checked:bg-navy-600 checked:border-navy-600
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2
+               hover:border-navy-400;
+    }
+
+    .cima-checkbox:checked {
+        background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+        animation: checkbox-pop 0.2s ease-out;
+    }
+
+    @keyframes checkbox-pop {
+        0% { transform: scale(0.8); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Toggle switch */
+    .cima-toggle {
+        @apply relative w-11 h-6 bg-gray-300 rounded-full cursor-pointer
+               transition-colors duration-200 ease-out
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
+    }
+
+    .cima-toggle::after {
+        content: '';
+        @apply absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow
+               transition-transform duration-200 ease-out;
+    }
+
+    .cima-toggle:checked {
+        @apply bg-navy-600;
+    }
+
+    .cima-toggle:checked::after {
+        transform: translateX(100%);
+    }
+
+    /* Select dropdown */
+    .cima-select {
+        @apply w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg
+               appearance-none bg-white cursor-pointer
+               transition-all duration-200 ease-out
+               focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-500/20
+               hover:border-gray-400;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.25rem;
+    }
+}
+
 /* Page Transition Animations */
 @layer utilities {
     /* Fade in animation */
@@ -75,7 +257,7 @@
         }
     }
 
-    /* Skeleton pulse animation - más suave */
+    /* Skeleton pulse animation */
     @keyframes skeleton-pulse {
         0%, 100% {
             opacity: 1;
@@ -153,6 +335,44 @@
         animation: scale-in 0.2s ease-out forwards;
     }
 
+    /* Spinner animation */
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    /* Shake animation (for errors) */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+        20%, 40%, 60%, 80% { transform: translateX(4px); }
+    }
+
+    .animate-shake {
+        animation: shake 0.5s ease-out;
+    }
+
+    /* Success checkmark animation */
+    @keyframes checkmark-draw {
+        0% {
+            stroke-dashoffset: 50;
+        }
+        100% {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    .animate-checkmark path {
+        stroke-dasharray: 50;
+        stroke-dashoffset: 50;
+        animation: checkmark-draw 0.3s ease-out 0.1s forwards;
+    }
+
     /* Staggered children animation */
     .stagger-children > * {
         opacity: 0;
@@ -194,7 +414,11 @@
     .animate-slide-in-left,
     .animate-slide-in-right,
     .animate-scale-in,
-    .stagger-children > * {
+    .animate-shake,
+    .stagger-children > *,
+    .cima-btn,
+    .cima-checkbox:checked,
+    .cima-toggle::after {
         animation: none !important;
         transition: none !important;
     }
@@ -202,5 +426,10 @@
     .animate-pulse {
         animation: none !important;
         opacity: 0.7;
+    }
+
+    .cima-btn:hover,
+    .cima-btn:active {
+        transform: none !important;
     }
 }
