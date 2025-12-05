@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
+using cima.Notifications;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -14,20 +17,26 @@ using Volo.Abp.Domain.Repositories;
 
 namespace cima.ContactRequests;
 
-public  class ContactRequestAppService : cimaAppService, IContactRequestAppService
+public class ContactRequestAppService : cimaAppService, IContactRequestAppService
 {
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
     private readonly IRepository<Listing, Guid> _propertyRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly IEmailNotificationService _emailService;
+    private readonly IConfiguration _configuration;
 
     public ContactRequestAppService(
         IRepository<ContactRequest, Guid> contactRequestRepository,
         IRepository<Listing, Guid> propertyRepository,
-        IRepository<Architect, Guid> architectRepository)
+        IRepository<Architect, Guid> architectRepository,
+        IEmailNotificationService emailService,
+        IConfiguration configuration)
     {
         _contactRequestRepository = contactRequestRepository;
         _propertyRepository = propertyRepository;
         _architectRepository = architectRepository;
+        _emailService = emailService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -92,7 +101,56 @@ public  class ContactRequestAppService : cimaAppService, IContactRequestAppServi
         };
 
         await _contactRequestRepository.InsertAsync(contactRequest);
+
+        // Enviar notificaciones por email (fire and forget)
+        _ = SendNotificationsAsync(contactRequest, property, normalizedName!, normalizedEmail!, normalizedMessage!);
+
         return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);
+    }
+
+    /// <summary>
+    /// Envía notificaciones por email de forma asíncrona
+    /// </summary>
+    private async Task SendNotificationsAsync(
+        ContactRequest contactRequest, 
+        Listing property,
+        string customerName,
+        string customerEmail,
+        string message)
+    {
+        try
+        {
+            var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
+            var adminEmail = _configuration["Email:AdminNotification"] ?? _configuration["Email:Smtp:FromAddress"];
+
+            // Notificar al admin
+            if (!string.IsNullOrEmpty(adminEmail))
+            {
+                await _emailService.SendContactRequestNotificationAsync(new ContactRequestNotificationDto
+                {
+                    AdminEmail = adminEmail,
+                    CustomerName = customerName,
+                    CustomerEmail = customerEmail,
+                    CustomerPhone = contactRequest.Phone,
+                    Message = message,
+                    PropertyTitle = property.Title,
+                    PropertyUrl = $"{baseUrl}/properties/{property.Id}"
+                });
+            }
+
+            // Confirmar al cliente
+            await _emailService.SendContactRequestConfirmationAsync(new ContactRequestConfirmationDto
+            {
+                CustomerEmail = customerEmail,
+                CustomerName = customerName,
+                PropertyTitle = property.Title
+            });
+        }
+        catch (Exception ex)
+        {
+            // Log pero no interrumpir el flujo
+            Logger.LogWarning(ex, "Error al enviar notificaciones de solicitud de contacto {ContactRequestId}", contactRequest.Id);
+        }
     }
 
     [Authorize(cimaPermissions.ContactRequests.View)]

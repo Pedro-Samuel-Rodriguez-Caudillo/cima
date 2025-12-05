@@ -4,8 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using cima.Domain.Entities;
 using cima.Listings;
+using cima.Notifications;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -27,6 +30,8 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
     private readonly IIdentityUserRepository _userRepository;
     private readonly IdentityUserManager _userManager;
     private readonly IGuidGenerator _guidGenerator;
+    private readonly IEmailNotificationService _emailService;
+    private readonly IConfiguration _configuration;
 
     // Claim personalizado para marcar que debe cambiar contraseña
     private const string MustChangePasswordClaim = "MustChangePassword";
@@ -36,13 +41,17 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         IRepository<Listing, Guid> listingRepository,
         IIdentityUserRepository userRepository,
         IdentityUserManager userManager,
-        IGuidGenerator guidGenerator)
+        IGuidGenerator guidGenerator,
+        IEmailNotificationService emailService,
+        IConfiguration configuration)
     {
         _architectRepository = architectRepository;
         _listingRepository = listingRepository;
         _userRepository = userRepository;
         _userManager = userManager;
         _guidGenerator = guidGenerator;
+        _emailService = emailService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -298,12 +307,39 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         dto.Surname = user.Surname;
         dto.MustChangePassword = true;
 
+        // Enviar email de bienvenida con credenciales (fire and forget)
+        _ = SendWelcomeEmailAsync(input.Email, input.Name ?? "", input.Surname ?? "", temporaryPassword);
+
         return new CreateArchitectResultDto
         {
             Architect = dto,
             TemporaryPassword = temporaryPassword,
             Message = $"Arquitecto creado. Contraseña temporal: {temporaryPassword}"
         };
+    }
+
+    /// <summary>
+    /// Envía email de bienvenida al nuevo arquitecto
+    /// </summary>
+    private async Task SendWelcomeEmailAsync(string email, string name, string surname, string temporaryPassword)
+    {
+        try
+        {
+            var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
+            var fullName = string.IsNullOrEmpty(surname) ? name : $"{name} {surname}";
+
+            await _emailService.SendArchitectWelcomeEmailAsync(new ArchitectWelcomeEmailDto
+            {
+                ArchitectEmail = email,
+                ArchitectName = fullName,
+                TemporaryPassword = temporaryPassword,
+                LoginUrl = $"{baseUrl}/Account/Login"
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Error al enviar email de bienvenida a arquitecto {Email}", email);
+        }
     }
 
     /// <summary>
