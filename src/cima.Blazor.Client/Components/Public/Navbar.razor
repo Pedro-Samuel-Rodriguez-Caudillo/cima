@@ -1,8 +1,13 @@
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @using System.Security.Claims
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject PersistentComponentState PersistentState
+@inject IStringLocalizer<cimaResource> L
 @implements IAsyncDisposable
 @rendermode InteractiveAuto
 
@@ -19,33 +24,51 @@
 
         <!-- Desktop Menu -->
         <nav class="hidden md:flex items-center gap-8">
-            <NavLink href="/" class="@GetLinkClass()" Match="NavLinkMatch.All">Inicio</NavLink>
-            <NavLink href="/properties" class="@GetLinkClass()">Propiedades</NavLink>
-            <NavLink href="/portfolio" class="@GetLinkClass()">Portafolio</NavLink>
+            <NavLink href="/" class="@GetLinkClass()" Match="NavLinkMatch.All">@L["Menu:Home"]</NavLink>
+            <NavLink href="/properties" class="@GetLinkClass()">@L["Menu:Properties"]</NavLink>
+            <NavLink href="/portfolio" class="@GetLinkClass()">@L["Menu:Portfolio"]</NavLink>
             
             @if (_isAuthenticated)
             {
-                <NavLink href="/listings" class="@GetLinkClass()">Listings</NavLink>
+                <NavLink href="/listings" class="@GetLinkClass()">@L["Menu:Listings"]</NavLink>
                 
                 @if (_isAdmin)
                 {
-                    <!-- Admin Dropdown -->
-                    <div class="relative" @onmouseenter="() => _adminMenuOpen = true" @onmouseleave="() => _adminMenuOpen = false">
-                        <button class="@GetLinkClass() flex items-center gap-1">
-                            Admin
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <!-- Admin Dropdown - con área de padding para evitar cierre accidental -->
+                    <div class="relative group">
+                        <button class="@GetLinkClass() flex items-center gap-1 py-2"
+                                @onclick="ToggleAdminMenu"
+                                @onclick:stopPropagation="true">
+                            @L["Menu:Admin"]
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                                 class="w-4 h-4 transition-transform duration-200 @(_adminMenuOpen ? "rotate-180" : "")">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                             </svg>
                         </button>
                         
                         @if (_adminMenuOpen)
                         {
-                            <div class="absolute top-full left-0 mt-2 w-48 bg-navy-950 border border-white/10 rounded-lg shadow-xl py-2 animate-fade-in">
-                                <a href="/admin/listings" class="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">
-                                    Gestionar Listings
+                            <!-- Área invisible de conexión entre botón y menú -->
+                            <div class="absolute top-full left-0 w-full h-2"></div>
+                            <div class="absolute top-[calc(100%+0.5rem)] left-0 w-56 bg-navy-950 border border-white/10 rounded-lg shadow-xl py-2 animate-fade-in"
+                                 @onmouseleave="CloseAdminMenuWithDelay">
+                                <a href="/admin/listings" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                   @onclick="CloseAdminMenu">
+                                    <div class="flex items-center gap-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                                        </svg>
+                                        @L["Menu:Admin:Listings"]
+                                    </div>
                                 </a>
-                                <a href="/admin/architects" class="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">
-                                    Gestionar Arquitectos
+                                <a href="/admin/architects" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                   @onclick="CloseAdminMenu">
+                                    <div class="flex items-center gap-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                        </svg>
+                                        @L["Menu:Admin:Architects"]
+                                    </div>
                                 </a>
                             </div>
                         }
@@ -61,29 +84,53 @@
             @if (_isAuthenticated)
             {
                 <!-- User Menu Dropdown -->
-                <div class="relative" @onmouseenter="() => _userMenuOpen = true" @onmouseleave="() => _userMenuOpen = false">
-                    <button class="@GetLinkClass() flex items-center gap-2">
+                <div class="relative group">
+                    <button class="@GetLinkClass() flex items-center gap-2 py-2"
+                            @onclick="ToggleUserMenu"
+                            @onclick:stopPropagation="true">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                         </svg>
                         @_userName
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                             class="w-4 h-4 transition-transform duration-200 @(_userMenuOpen ? "rotate-180" : "")">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
                     
                     @if (_userMenuOpen)
                     {
-                        <div class="absolute top-full right-0 mt-2 w-48 bg-navy-950 border border-white/10 rounded-lg shadow-xl py-2 animate-fade-in">
-                            <a href="/account/profile" class="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">
-                                Mi Perfil
+                        <!-- Área invisible de conexión entre botón y menú -->
+                        <div class="absolute top-full right-0 w-full h-2"></div>
+                        <div class="absolute top-[calc(100%+0.5rem)] right-0 w-56 bg-navy-950 border border-white/10 rounded-lg shadow-xl py-2 animate-fade-in"
+                             @onmouseleave="CloseUserMenuWithDelay">
+                            <a href="/account/profile" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                               @onclick="CloseUserMenu">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    @L["Menu:User:Profile"]
+                                </div>
                             </a>
-                            <a href="/account/settings" class="block px-4 py-2 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors">
-                                Configuración
+                            <a href="/account/settings" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                               @onclick="CloseUserMenu">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    @L["Menu:User:Settings"]
+                                </div>
                             </a>
                             <hr class="my-2 border-white/10" />
-                            <a href="/Account/Logout" class="block px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors">
-                                Cerrar Sesión
+                            <a href="/Account/Logout" class="block px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                                    </svg>
+                                    @L["Menu:User:Logout"]
+                                </div>
                             </a>
                         </div>
                     }
@@ -92,7 +139,7 @@
             else
             {
                 <a href="/Account/Login" class="@GetLinkClass()">
-                    Acceso
+                    @L["Menu:Login"]
                 </a>
             }
         </div>
@@ -106,6 +153,12 @@
     </div>
 </header>
 
+<!-- Overlay para cerrar menús al hacer clic fuera -->
+@if (_adminMenuOpen || _userMenuOpen)
+{
+    <div class="fixed inset-0 z-40" @onclick="CloseAllMenus"></div>
+}
+
 <!-- Mobile Menu Overlay -->
 @if (_mobileMenuOpen)
 {
@@ -117,43 +170,43 @@
         </button>
 
         <nav class="flex flex-col items-center gap-8 text-center">
-            <a href="/" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">Inicio</a>
-            <a href="/properties" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">Propiedades</a>
-            <a href="/portfolio" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">Portafolio</a>
+            <a href="/" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">@L["Menu:Home"]</a>
+            <a href="/properties" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">@L["Menu:Properties"]</a>
+            <a href="/portfolio" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">@L["Menu:Portfolio"]</a>
             
             @if (_isAuthenticated)
             {
-                <a href="/listings" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">Listings</a>
+                <a href="/listings" class="text-2xl font-display font-medium text-white hover:text-navy-300 transition-colors" @onclick="ToggleMobileMenu">@L["Menu:Listings"]</a>
                 
                 @if (_isAdmin)
                 {
                     <div class="mt-4 pt-4 border-t border-white/10 w-full">
-                        <p class="text-sm text-white/60 uppercase tracking-wider mb-3">Admin</p>
+                        <p class="text-sm text-white/60 uppercase tracking-wider mb-3">@L["Menu:Admin"]</p>
                         <a href="/admin/listings" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
-                            Gestionar Listings
+                            @L["Menu:Admin:Listings"]
                         </a>
                         <a href="/admin/architects" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors" @onclick="ToggleMobileMenu">
-                            Gestionar Arquitectos
+                            @L["Menu:Admin:Architects"]
                         </a>
                     </div>
                 }
                 
                 <div class="mt-4 pt-4 border-t border-white/10 w-full">
                     <a href="/account/profile" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
-                        Mi Perfil
+                        @L["Menu:User:Profile"]
                     </a>
                     <a href="/account/settings" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
-                        Configuración
+                        @L["Menu:User:Settings"]
                     </a>
                     <a href="/Account/Logout" class="block text-xl font-display font-medium text-red-400 hover:text-red-300 transition-colors" @onclick="ToggleMobileMenu">
-                        Cerrar Sesión
+                        @L["Menu:User:Logout"]
                     </a>
                 </div>
             }
             else
             {
                 <a href="/Account/Login" class="text-xl font-display font-medium text-white/80 hover:text-white transition-colors mt-4" @onclick="ToggleMobileMenu">
-                    Acceso
+                    @L["Menu:Login"]
                 </a>
             }
         </nav>
@@ -161,12 +214,16 @@
 }
 
 @code {
+    private const string NavbarStatePersistenceKey = "NavbarAuthState";
+    
     private bool _isScrolled = false;
     private bool _mobileMenuOpen = false;
     private bool _adminMenuOpen = false;
     private bool _userMenuOpen = false;
     private DotNetObjectReference<Navbar>? _dotNetHelper;
     private IJSObjectReference? _scrollListener;
+    private PersistingComponentStateSubscription _persistingSubscription;
+    private System.Timers.Timer? _closeMenuTimer;
     
     // Estado de autenticación cacheado - evita re-renders innecesarios
     private bool _isAuthenticated = false;
@@ -176,18 +233,36 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Cargar estado de autenticación UNA sola vez al inicio
-        await LoadAuthenticationState();
+        // Intentar restaurar estado persistido (de pre-renderizado)
+        _persistingSubscription = PersistentState.RegisterOnPersisting(PersistNavbarState);
         
-        // Suscribirse a cambios de autenticación (solo para login/logout real)
-        if (AuthenticationStateProvider is IHostEnvironmentAuthenticationStateProvider)
+        if (PersistentState.TryTakeFromJson<NavbarPersistedState>(NavbarStatePersistenceKey, out var restoredState) && restoredState is not null)
         {
-            // En servidor, no necesitamos suscribirnos
+            // Usar estado restaurado del pre-renderizado
+            _isAuthenticated = restoredState.IsAuthenticated;
+            _isAdmin = restoredState.IsAdmin;
+            _userName = restoredState.UserName;
+            _authStateLoaded = true;
         }
         else
         {
-            AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+            // Cargar estado fresco
+            await LoadAuthenticationState();
         }
+        
+        // Solo suscribirse a cambios en WASM (no en servidor)
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    private Task PersistNavbarState()
+    {
+        PersistentState.PersistAsJson(NavbarStatePersistenceKey, new NavbarPersistedState
+        {
+            IsAuthenticated = _isAuthenticated,
+            IsAdmin = _isAdmin,
+            UserName = _userName
+        });
+        return Task.CompletedTask;
     }
 
     private async Task LoadAuthenticationState()
@@ -212,17 +287,22 @@
         }
     }
 
-    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        _ = HandleAuthenticationStateChangedAsync(task);
+    }
+
+    private async Task HandleAuthenticationStateChangedAsync(Task<AuthenticationState> task)
     {
         try
         {
             var authState = await task;
             var user = authState.User;
-            
+
             var newIsAuthenticated = user.Identity?.IsAuthenticated ?? false;
             var newIsAdmin = user.IsInRole("admin");
             var newUserName = user.Identity?.Name ?? "";
-            
+
             // Solo actualizar si realmente cambió algo significativo
             if (newIsAuthenticated != _isAuthenticated || newIsAdmin != _isAdmin || newUserName != _userName)
             {
@@ -232,9 +312,9 @@
                 await InvokeAsync(StateHasChanged);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignorar errores durante cambios de estado
+            Console.WriteLine($"Error al manejar cambio de autenticación en Navbar: {ex.Message}");
         }
     }
 
@@ -262,11 +342,10 @@
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        if (_isScrolled)
-        {
-            _isScrolled = false;
-            StateHasChanged();
-        }
+        _isScrolled = false;
+        _adminMenuOpen = false;
+        _userMenuOpen = false;
+        StateHasChanged();
     }
 
     [JSInvokable]
@@ -291,8 +370,80 @@
         _mobileMenuOpen = !_mobileMenuOpen;
     }
 
+    private void ToggleAdminMenu()
+    {
+        _adminMenuOpen = !_adminMenuOpen;
+        if (_adminMenuOpen)
+        {
+            _userMenuOpen = false;
+        }
+    }
+
+    private void ToggleUserMenu()
+    {
+        _userMenuOpen = !_userMenuOpen;
+        if (_userMenuOpen)
+        {
+            _adminMenuOpen = false;
+        }
+    }
+
+    private void CloseAdminMenu()
+    {
+        _adminMenuOpen = false;
+    }
+
+    private void CloseUserMenu()
+    {
+        _userMenuOpen = false;
+    }
+
+    private void CloseAllMenus()
+    {
+        _adminMenuOpen = false;
+        _userMenuOpen = false;
+    }
+
+    private void CloseAdminMenuWithDelay()
+    {
+        // Pequeño delay para permitir el movimiento del mouse hacia los items del menú
+        _closeMenuTimer?.Dispose();
+        _closeMenuTimer = new System.Timers.Timer(150);
+        _closeMenuTimer.Elapsed += (s, e) =>
+        {
+            _closeMenuTimer?.Dispose();
+            InvokeAsync(() =>
+            {
+                _adminMenuOpen = false;
+                StateHasChanged();
+            });
+        };
+        _closeMenuTimer.AutoReset = false;
+        _closeMenuTimer.Start();
+    }
+
+    private void CloseUserMenuWithDelay()
+    {
+        _closeMenuTimer?.Dispose();
+        _closeMenuTimer = new System.Timers.Timer(150);
+        _closeMenuTimer.Elapsed += (s, e) =>
+        {
+            _closeMenuTimer?.Dispose();
+            InvokeAsync(() =>
+            {
+                _userMenuOpen = false;
+                StateHasChanged();
+            });
+        };
+        _closeMenuTimer.AutoReset = false;
+        _closeMenuTimer.Start();
+    }
+
     public async ValueTask DisposeAsync()
     {
+        _persistingSubscription.Dispose();
+        _closeMenuTimer?.Dispose();
+        
         try
         {
             Navigation.LocationChanged -= OnLocationChanged;
@@ -319,5 +470,15 @@
             // Siempre liberar la referencia de .NET
             _dotNetHelper?.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Estado persistido del navbar entre pre-renderizado y hidratación WASM
+    /// </summary>
+    private sealed class NavbarPersistedState
+    {
+        public bool IsAuthenticated { get; set; }
+        public bool IsAdmin { get; set; }
+        public string UserName { get; set; } = "";
     }
 }
