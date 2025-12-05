@@ -1,123 +1,158 @@
 @using cima.Listings
 @using cima.Blazor.Client.Services
+@using System.Linq
 @inject NavigationManager Navigation
 @inject EnumLocalizationService EnumLocalizer
-@inherits cimaComponentBase
 
-@*
-    Card de propiedad moderna estilo case study
-    Dise√±o limpio y corporativo
-*@
-
-<div class="group cursor-pointer" @onclick="NavigateToDetail">
-    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+<article class="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1" 
+         @onclick="NavigateToDetail"
+         @onclick:stopPropagation="true">
+    
+    @* Image Container *@
+    <div class="relative aspect-[4/3] overflow-hidden">
+        @{
+            var imageUrl = Listing.Images?.FirstOrDefault()?.Url;
+        }
+        @if (!string.IsNullOrEmpty(imageUrl))
+        {
+            <img src="@imageUrl" 
+                 alt="@Listing.Title" 
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                 loading="lazy" />
+        }
+        else
+        {
+            <div class="w-full h-full bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center">
+                <svg class="w-16 h-16 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                          d="M9 22V12h6v10" />
+                </svg>
+            </div>
+        }
         
-        @* Imagen *@
-        <div class="relative aspect-[4/3] overflow-hidden">
-            @if (Listing.Images?.Any() == true)
+        @* Overlay gradient *@
+        <div class="absolute inset-0 bg-gradient-to-t from-navy-950/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        
+        @* Top badges *@
+        <div class="absolute top-3 left-3 right-3 flex justify-between items-start">
+            @* Image count badge (if multiple) *@
+            @if (Listing.Images?.Count > 1)
             {
-                var mainImage = Listing.Images.FirstOrDefault(i => i.PreviousImageId == null) 
-                             ?? Listing.Images.First();
-                <img 
-                    src="@mainImage.Url" 
-                    alt="@mainImage.AltText"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy" />
-            }
-            else
-            {
-                <div class="w-full h-full bg-neutral-100 flex items-center justify-center">
-                    <svg class="w-16 h-16 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span class="flex items-center gap-1 px-2 py-1 bg-navy-900/70 backdrop-blur-sm text-white text-xs font-medium rounded-lg ml-auto">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
+                    @Listing.Images.Count
+                </span>
+            }
+        </div>
+        
+        @* Property type badge *@
+        <div class="absolute bottom-3 left-3">
+            <span class="px-3 py-1.5 bg-white/95 backdrop-blur-sm text-navy-800 text-xs font-semibold rounded-lg shadow-sm">
+                @EnumLocalizer.GetPropertyTypeName(Listing.Type)
+            </span>
+        </div>
+    </div>
+    
+    @* Content *@
+    <div class="p-5">
+        @* Location *@
+        <div class="flex items-center gap-1.5 text-neutral-500 text-sm mb-2">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="truncate">@(Listing.Location ?? "UbicaciÛn no especificada")</span>
+        </div>
+        
+        @* Title *@
+        <h3 class="text-lg font-display font-bold text-navy-900 mb-3 line-clamp-2 group-hover:text-navy-700 transition-colors">
+            @Listing.Title
+        </h3>
+        
+        @* Features *@
+        <div class="flex items-center gap-4 text-sm text-neutral-600 mb-4 pb-4 border-b border-neutral-100">
+            @if (Listing.Bedrooms > 0)
+            {
+                <div class="flex items-center gap-1.5" title="Rec·maras">
+                    @* Icono de cama *@
+                    <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 7v11m0-4h18m0 4V8a2 2 0 00-2-2H9a2 2 0 00-2 2v3" />
+                    </svg>
+                    <span class="font-medium">@Listing.Bedrooms</span>
                 </div>
             }
-            
-            @* Badge superior izquierdo *@
-            @if (Listing.Status == ListingStatus.Portfolio)
+            @if (Listing.Bathrooms > 0)
             {
-                <div class="absolute top-4 left-4 px-3 py-1 bg-navy-900/90 backdrop-blur-sm text-white text-xs font-medium rounded-full">
-                    @L["ListingStatus:Portfolio"]
+                <div class="flex items-center gap-1.5" title="BaÒos">
+                    @* Icono de baÒera/ducha *@
+                    <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M3 13h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M5 13V6a2 2 0 012-2h1" />
+                        <circle cx="8" cy="4" r="1" fill="currentColor" />
+                    </svg>
+                    <span class="font-medium">@Listing.Bathrooms</span>
+                </div>
+            }
+            @if (Listing.ConstructionArea > 0)
+            {
+                <div class="flex items-center gap-1.5" title="¡rea de construcciÛn">
+                    <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    <span class="font-medium">@Listing.ConstructionArea<span class="text-xs text-neutral-400 ml-0.5">m≤</span></span>
                 </div>
             }
         </div>
         
-        @* Contenido *@
-        <div class="p-6 flex-1 flex flex-col">
-            <div class="flex-1">
-                @* Ubicaci√≥n *@
-                <div class="flex items-center gap-2 text-sm text-neutral-500 mb-3">
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span class="truncate font-medium">@(Listing.Location ?? "Ubicaci√≥n no disponible")</span>
-                </div>
-                
-                @* T√≠tulo *@
-                <h3 class="text-xl font-display font-bold text-navy-900 mb-4 leading-tight line-clamp-2">
-                    @Listing.Title
-                </h3>
-                
-                @* Caracter√≠sticas *@
-                <div class="grid grid-cols-3 gap-4 mb-5 py-4 border-t border-b border-neutral-100">
-                    <div>
-                        <div class="text-xs text-neutral-500 font-medium mb-1">@L["Properties:Bedrooms"]</div>
-                        <div class="text-lg font-bold text-navy-600">@Listing.Bedrooms</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-neutral-500 font-medium mb-1">@L["Properties:Bathrooms"]</div>
-                        <div class="text-lg font-bold text-navy-600">@Listing.Bathrooms</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-neutral-500 font-medium mb-1">m¬≤</div>
-                        <div class="text-lg font-bold text-navy-600">@Listing.ConstructionArea.ToString("N0")</div>
-                    </div>
-                </div>
+        @* Price and CTA *@
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs text-neutral-500 uppercase tracking-wide mb-0.5">Precio</p>
+                <p class="text-xl font-display font-bold text-navy-900">
+                    @FormatPrice(Listing.Price)
+                </p>
             </div>
             
-            @* Precio y bot√≥n *@
-            <div class="flex items-end justify-between gap-4">
-                <div>
-                    <div class="text-xs text-neutral-500 font-medium mb-1">Precio</div>
-                    <div class="text-2xl font-bold text-navy-900">
-                        @Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
-                    </div>
-                </div>
-                
-                <button 
-                    type="button"
-                    class="px-4 py-2 bg-navy-600 hover:bg-navy-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 group-hover:bg-navy-700"
-                    @onclick:stopPropagation="true">
-                    <span>Ver detalles</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
+            <div class="flex items-center text-navy-600 font-semibold text-sm group-hover:text-navy-800 transition-colors">
+                <span>Ver m·s</span>
+                <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
             </div>
         </div>
     </div>
-</div>
+</article>
 
 @code {
     [Parameter]
     public ListingDto Listing { get; set; } = default!;
-
-    [Parameter]
-    public EventCallback<Guid> OnCardFlipped { get; set; }
 
     private void NavigateToDetail()
     {
         Navigation.NavigateTo($"/properties/{Listing.Id}");
     }
 
-    // Compatibility method for legacy code
-    public void Close()
+    private string FormatPrice(decimal price)
     {
-        // No-op in new design
-        StateHasChanged();
+        if (price >= 1_000_000)
+        {
+            return $"${price / 1_000_000:N2}M MXN";
+        }
+        else if (price >= 1_000)
+        {
+            return $"${price / 1_000:N0}K MXN";
+        }
+        return price.ToString("C0") + " MXN";
     }
 }
