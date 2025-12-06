@@ -55,7 +55,7 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         try
         {
             // Crear usuarios fijos
-            _logger.LogInformation("[SEEDER] Creando usuarios...");
+            _logger.LogInformation("[SEEDER] Creando/actualizando usuarios...");
             await SeedUsersAndArchitect();
 
             _logger.LogInformation("========================================");
@@ -75,7 +75,9 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
 
     private async Task SeedUsersAndArchitect()
     {
-        // Admin user
+        const string defaultPassword = "1q2w3E*";
+        
+        // Admin user (admin@cima.com)
         var admin = await _userRepository.FindByNormalizedUserNameAsync("ADMIN@CIMA.COM");
         if (admin == null)
         {
@@ -84,9 +86,20 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
                 Name = "Admin",
                 Surname = "CIMA"
             };
-            await _userManager.CreateAsync(admin, "1q2w3E*");
-            await _userManager.AddToRoleAsync(admin, "admin");
-            _logger.LogInformation("Created admin user: admin@cima.com / 1q2w3E*");
+            var createResult = await _userManager.CreateAsync(admin, defaultPassword);
+            if (createResult.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(admin, "admin");
+                _logger.LogInformation("Created admin user: admin@cima.com / {Password}", defaultPassword);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to create admin@cima.com: {Errors}", string.Join(", ", createResult.Errors));
+            }
+        }
+        else
+        {
+            _logger.LogInformation("Admin user admin@cima.com already exists (password not modified in DbMigrator)");
         }
 
         // Architect user
@@ -98,8 +111,15 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
                 Name = "Juan",
                 Surname = "Arquitecto"
             };
-            await _userManager.CreateAsync(architectUser, "1q2w3E*");
-            _logger.LogInformation("Created architect user: arq@cima.com / 1q2w3E*");
+            var createResult = await _userManager.CreateAsync(architectUser, defaultPassword);
+            if (createResult.Succeeded)
+            {
+                _logger.LogInformation("Created architect user: arq@cima.com / {Password}", defaultPassword);
+            }
+        }
+        else
+        {
+            _logger.LogInformation("Architect user arq@cima.com already exists");
         }
 
         // Architect profile

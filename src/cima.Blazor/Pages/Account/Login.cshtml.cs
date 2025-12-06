@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -6,16 +7,20 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.Account.Web.Pages.Account;
 using Volo.Abp.Identity;
+using Volo.Abp.Validation;
 
 namespace cima.Blazor.Pages.Account;
 
+// Disable automatic validation - we'll handle it manually
+[DisableValidation]
 public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
 {
     private readonly ILogger<LoginModel> _logger;
-
+    
     public LoginModel(
         IAuthenticationSchemeProvider schemeProvider,
         IOptions<AbpAccountOptions> accountOptions,
@@ -30,122 +35,129 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
 
     public override async Task<IActionResult> OnGetAsync()
     {
-        _logger.LogDebug("Login OnGetAsync iniciado");
-        
-        // Si ya está autenticado, redirigir
         if (CurrentUser.IsAuthenticated)
         {
-            _logger.LogDebug("Usuario ya autenticado, redirigiendo a post-login");
             return LocalRedirect("/account/post-login");
         }
         
-        // Inicializar LoginInput para evitar null
-        LoginInput = new LoginInputModel();
+        // Let the base class initialize LoginInput properly
+        await base.OnGetAsync();
         
-        // IMPORTANTE: Forzar EnableLocalLogin a true ANTES de llamar a base
-        // Este proyecto usa autenticación local exclusivamente
-        EnableLocalLogin = true;
+        // Ensure LoginInput is initialized after base call
+        LoginInput ??= new LoginInputModel();
         
-        try
-        {
-            var result = await base.OnGetAsync();
-            
-            // Forzar EnableLocalLogin nuevamente después de base.OnGetAsync()
-            // porque la clase base puede haberlo modificado
-            EnableLocalLogin = true;
-            
-            _logger.LogDebug("Login OnGetAsync completado. EnableLocalLogin={EnableLocalLogin}", EnableLocalLogin);
-            
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error en OnGetAsync de Login");
-            // En caso de error, asegurar que la página se muestre correctamente
-            EnableLocalLogin = true;
-            return Page();
-        }
+        return Page();
     }
 
     public override async Task<IActionResult> OnPostAsync(string action)
     {
-        _logger.LogDebug("Login OnPostAsync iniciado para usuario: {User}", LoginInput?.UserNameOrEmailAddress);
+        _logger.LogInformation("=== LOGIN ATTEMPT START ===");
+        _logger.LogInformation("Action parameter: {Action}", action ?? "(null)");
+        _logger.LogInformation("LoginInput is null: {IsNull}", LoginInput == null);
         
-        // Asegurar que EnableLocalLogin esté habilitado para el POST también
-        EnableLocalLogin = true;
+        if (LoginInput != null)
+        {
+            _logger.LogInformation("User: {User}", LoginInput.UserNameOrEmailAddress ?? "(null)");
+            _logger.LogInformation("Password provided: {HasPassword}", !string.IsNullOrEmpty(LoginInput.Password));
+            _logger.LogInformation("RememberMe: {RememberMe}", LoginInput.RememberMe);
+        }
+        
+        // Manual binding if LoginInput is null or empty
+        if (LoginInput == null)
+        {
+            _logger.LogWarning("LoginInput is null, creating new instance");
+            LoginInput = new LoginInputModel();
+        }
+        
+        // Always try to bind from form data to ensure we have the values
+        if (string.IsNullOrWhiteSpace(LoginInput.UserNameOrEmailAddress))
+        {
+            LoginInput.UserNameOrEmailAddress = Request.Form["LoginInput.UserNameOrEmailAddress"].ToString();
+            _logger.LogInformation("Manually bound UserNameOrEmailAddress: {User}", LoginInput.UserNameOrEmailAddress);
+        }
+        
+        if (string.IsNullOrWhiteSpace(LoginInput.Password))
+        {
+            LoginInput.Password = Request.Form["LoginInput.Password"].ToString();
+            _logger.LogInformation("Manually bound Password length: {Length}", LoginInput.Password?.Length ?? 0);
+        }
+        
+        // Handle RememberMe checkbox
+        var rememberMeValue = Request.Form["LoginInput.RememberMe"].ToString();
+        LoginInput.RememberMe = rememberMeValue == "true" || rememberMeValue == "on";
+        
+        // Validate manually
+        if (string.IsNullOrWhiteSpace(LoginInput.UserNameOrEmailAddress))
+        {
+            _logger.LogWarning("Username/Email is empty after binding");
+            ModelState.AddModelError(string.Empty, "El usuario o correo es requerido");
+            return Page();
+        }
+        
+        if (string.IsNullOrWhiteSpace(LoginInput.Password))
+        {
+            _logger.LogWarning("Password is empty after binding");
+            ModelState.AddModelError(string.Empty, "La contraseña es requerida");
+            return Page();
+        }
+        
+        _logger.LogInformation("Validation passed, attempting login with user: {User}", LoginInput.UserNameOrEmailAddress);
+        
+        // Clear ModelState before calling base to avoid validation errors from the base class
+        ModelState.Clear();
         
         try
         {
-            // Validar que los campos requeridos estén presentes
-            if (string.IsNullOrWhiteSpace(LoginInput?.UserNameOrEmailAddress))
-            {
-                ModelState.AddModelError(string.Empty, "El correo electrónico es requerido");
-                return Page();
-            }
+            // Pass the action parameter (or default to "Login")
+            var result = await base.OnPostAsync(action ?? "Login");
             
-            if (string.IsNullOrWhiteSpace(LoginInput?.Password))
-            {
-                ModelState.AddModelError(string.Empty, "La contraseña es requerida");
-                return Page();
-            }
-
-            var result = await base.OnPostAsync(action);
+            _logger.LogInformation("Login result type: {Type}", result?.GetType().Name);
             
-            _logger.LogDebug("Login OnPostAsync resultado: {ResultType}", result?.GetType().Name);
-            
-            // Si el login fue exitoso, redirigir a post-login para manejo por rol
-            if (result is RedirectResult || result is LocalRedirectResult || result is RedirectToPageResult)
+            if (result is RedirectResult rr)
             {
-                // Preservar returnUrl si existe
-                var returnUrl = ReturnUrl;
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                {
-                    _logger.LogDebug("Login exitoso, redirigiendo a post-login con returnUrl: {ReturnUrl}", returnUrl);
-                    return LocalRedirect($"/account/post-login?returnUrl={Uri.EscapeDataString(returnUrl)}");
-                }
-                _logger.LogDebug("Login exitoso, redirigiendo a post-login");
+                _logger.LogInformation("Redirect to: {Url}", rr.Url);
                 return LocalRedirect("/account/post-login");
+            }
+            if (result is LocalRedirectResult lr)
+            {
+                _logger.LogInformation("LocalRedirect to: {Url}", lr.Url);
+                return LocalRedirect("/account/post-login");
+            }
+            if (result is RedirectToPageResult rp)
+            {
+                _logger.LogInformation("RedirectToPage: {Page}", rp.PageName);
+                return LocalRedirect("/account/post-login");
+            }
+            
+            _logger.LogWarning("Login returned Page() - checking ModelState");
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                _logger.LogWarning("ModelState error: {Error}", error.ErrorMessage);
             }
             
             return result;
         }
-        catch (Volo.Abp.Validation.AbpValidationException ex)
+        catch (AbpValidationException vex)
         {
-            _logger.LogWarning(ex, "Error de validación en login");
-            // Mostrar errores de validación específicos
-            foreach (var error in ex.ValidationErrors)
+            _logger.LogError(vex, "ABP Validation exception during login");
+            foreach (var error in vex.ValidationErrors)
             {
-                ModelState.AddModelError(string.Empty, error.ErrorMessage ?? "Error de validación");
+                var members = string.Join(",", error.MemberNames);
+                _logger.LogError("Validation error - Member: {Member}, Message: {Message}", members, error.ErrorMessage);
             }
+            ModelState.AddModelError(string.Empty, "Error de validación. Verifique sus credenciales.");
             return Page();
         }
-        catch (Volo.Abp.UserFriendlyException ex)
+        catch (UserFriendlyException ufe)
         {
-            _logger.LogWarning(ex, "Error amigable en login: {Message}", ex.Message);
-            // Errores amigables de ABP
-            ModelState.AddModelError(string.Empty, ex.Message);
-            return Page();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("locked", StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning(ex, "Cuenta bloqueada");
-            // Cuenta bloqueada
-            ModelState.AddModelError(string.Empty, "Tu cuenta ha sido bloqueada temporalmente. Intenta más tarde.");
-            return Page();
-        }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase) ||
-                                                    ex.Message.Contains("credential", StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning(ex, "Credenciales incorrectas");
-            // Credenciales incorrectas
-            ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos");
+            _logger.LogError(ufe, "User friendly exception: {Message}", ufe.Message);
+            ModelState.AddModelError(string.Empty, ufe.Message);
             return Page();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error no manejado en login");
-            // Error genérico - no revelar detalles por seguridad
-            ModelState.AddModelError(string.Empty, "No se pudo iniciar sesión. Verifica tus credenciales e intenta de nuevo.");
+            _logger.LogError(ex, "Login exception: {Message}", ex.Message);
+            ModelState.AddModelError(string.Empty, "Error al iniciar sesión");
             return Page();
         }
     }

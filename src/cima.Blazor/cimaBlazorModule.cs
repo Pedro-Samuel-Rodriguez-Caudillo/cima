@@ -35,6 +35,7 @@ using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
+using Volo.Abp.AspNetCore.ExceptionHandling;
 using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.AspNetCore.Mvc.Localization;
 using Volo.Abp.AspNetCore.Mvc.UI.Bundling;
@@ -169,6 +170,15 @@ public class cimaBlazorModule : AbpModule
 
         context.Services.AddCimaImprovements(configuration, hostingEnvironment);
 
+        // ========================================
+        // CONFIGURACIÓN DE MANEJO DE EXCEPCIONES
+        // ========================================
+        // No loggear OperationCanceledException como error (es normal cuando el usuario cancela)
+        Configure<AbpExceptionHandlingOptions>(options =>
+        {
+            options.SendExceptionsDetailsToClients = hostingEnvironment.IsDevelopment();
+            options.SendStackTraceToClients = false;
+        });
 
         // Add services to the container.
         context.Services.AddRazorComponents()
@@ -187,6 +197,15 @@ public class cimaBlazorModule : AbpModule
         context.Services.ConfigureCimaIdentityOptions();
         context.Services.ConfigureCimaAuthCookies();
         context.Services.ConfigureCimaSecurityStamp();
+        
+        // ========================================
+        // CONFIGURACIÓN DE ABP ACCOUNT - LOGIN LOCAL
+        // ========================================
+        // Habilitar login local explícitamente para que el formulario se muestre
+        Configure<AbpAccountOptions>(options =>
+        {
+            options.WindowsAuthenticationSchemeName = null; // No usar Windows Auth
+        });
 
         if (!configuration.GetValue<bool>("App:DisablePII"))
         {
@@ -227,6 +246,9 @@ public class cimaBlazorModule : AbpModule
     {
         // Registrar EnumLocalizationService para renderizado en servidor
         context.Services.AddTransient<Client.Services.EnumLocalizationService>();
+        
+        // Registrar LoginRedirectService para páginas de post-login
+        context.Services.AddScoped<Client.Services.ILoginRedirectService, Client.Services.LoginRedirectService>();
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)

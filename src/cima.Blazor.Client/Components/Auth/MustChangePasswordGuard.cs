@@ -12,7 +12,10 @@ namespace cima.Blazor.Client.Components.Auth;
 
 /// <summary>
 /// Componente que verifica si el usuario debe cambiar su contraseña
-/// y redirige automáticamente a la página de cambio
+/// y redirige automáticamente a la página de cambio.
+/// Implementado de forma no intrusiva: se ejecuta solo en el primer render
+/// y evita redirecciones en rutas "admin" o rutas excluidas para no bloquear
+/// flujos administrativos.
 /// </summary>
 public partial class MustChangePasswordGuard : ComponentBase
 {
@@ -26,6 +29,11 @@ public partial class MustChangePasswordGuard : ComponentBase
     private bool _isChecking = true;
     private bool _mustChangePassword = false;
 
+    // Evita múltiples redirecciones simultáneas
+    private bool _navigationInitiated = false;
+    // Evita volver a comprobar repetidamente si ya se comprobó con éxito
+    private bool _checkedOnce = false;
+
     // Rutas excluidas de la verificación
     private static readonly string[] ExcludedPaths = 
     {
@@ -38,20 +46,41 @@ public partial class MustChangePasswordGuard : ComponentBase
         "/signout-callback-oidc"
     };
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await CheckMustChangePassword();
+        if (firstRender)
+        {
+            await CheckMustChangePassword();
+        }
     }
 
     private async Task CheckMustChangePassword()
     {
         try
         {
-            // No verificar en rutas excluidas (verificar primero para evitar llamadas innecesarias)
             var currentPath = new Uri(Navigation.Uri).AbsolutePath;
+
+            // No verificar en rutas excluidas (evita llamadas innecesarias)
             if (ExcludedPaths.Any(p => currentPath.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
             {
                 _isChecking = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Evitar bloquear paneles administrativos: permitir /admin/* directamente
+            if (currentPath.StartsWith("/admin", StringComparison.OrdinalIgnoreCase))
+            {
+                _isChecking = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Si ya comprobamos y no hay cambio obligatorio, no volver a comprobar
+            if (_checkedOnce)
+            {
+                _isChecking = false;
+                await InvokeAsync(StateHasChanged);
                 return;
             }
 
@@ -62,6 +91,15 @@ public partial class MustChangePasswordGuard : ComponentBase
             if (user.Identity?.IsAuthenticated != true)
             {
                 _isChecking = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Si el usuario es administrador, no forzar el cambio aquí (permite operaciones administrativas)
+            if (user.IsInRole("admin"))
+            {
+                _isChecking = false;
+                await InvokeAsync(StateHasChanged);
                 return;
             }
 
@@ -70,11 +108,26 @@ public partial class MustChangePasswordGuard : ComponentBase
             {
                 _mustChangePassword = await ArchitectService.MustChangePasswordAsync();
 
+                _checkedOnce = true;
+
                 if (_mustChangePassword)
                 {
-                    Logger.LogInformation("Usuario debe cambiar contraseña, redirigiendo...");
-                    Navigation.NavigateTo("/account/change-password", forceLoad: false);
+                    var target = "/account/change-password";
+
+                    // Evitar redireccionar si ya estamos en la ruta objetivo o si ya iniciamos navegación
+                    if (!_navigationInitiated && !new Uri(Navigation.Uri).AbsolutePath.StartsWith(target, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _navigationInitiated = true;
+                        Logger.LogInformation("Usuario debe cambiar contraseña, redirigiendo...");
+
+                        // Reemplaza la entrada de historial para evitar loops al pulsar atrás
+                        Navigation.NavigateTo(target, replace: true);
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.LogDebug("Verificación de MustChangePassword cancelada");
             }
             catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -96,6 +149,14 @@ public partial class MustChangePasswordGuard : ComponentBase
         finally
         {
             _isChecking = false;
+            await InvokeAsync(StateHasChanged);
         }
+    }
+
+    // Render fragment: mostrar children siempre, el guard solo redirige cuando aplica
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        parameters.SetParameterProperties(this);
+        return base.SetParametersAsync(ParameterView.Empty);
     }
 }

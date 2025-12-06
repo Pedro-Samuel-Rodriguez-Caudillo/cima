@@ -7,6 +7,9 @@
 @{
     Layout = null;
     var tokens = Antiforgery.GetAndStoreTokens(HttpContext);
+    // Si no hay proveedores externos y EnableLocalLogin es false, 
+    // significa que deberíamos mostrar el formulario local de todos modos
+    var showLocalLogin = Model.EnableLocalLogin || (Model.ExternalProviders?.Count() ?? 0) == 0;
 }
 
 <!DOCTYPE html>
@@ -282,10 +285,11 @@
                 <p>Ingresa tus credenciales</p>
             </div>
 
-            @if (Model.EnableLocalLogin)
+            @if (showLocalLogin)
             {
                 <form method="post" id="loginForm">
                     <input name="__RequestVerificationToken" type="hidden" value="@tokens.RequestToken" />
+                    <input type="hidden" name="action" value="Login" />
                     
                     @if (!ViewData.ModelState.IsValid)
                     {
@@ -304,7 +308,7 @@
                                name="LoginInput.UserNameOrEmailAddress"
                                class="form-input" 
                                placeholder="tu@email.com"
-                               value="@Model.LoginInput.UserNameOrEmailAddress"
+                               value="@Model.LoginInput?.UserNameOrEmailAddress"
                                autocomplete="username"
                                required 
                                autofocus />
@@ -348,7 +352,7 @@
             else
             {
                 <div class="alert alert-error">
-                    <span>Login no disponible</span>
+                    <span>Login no disponible - No hay métodos de autenticación configurados</span>
                 </div>
             }
         </div>

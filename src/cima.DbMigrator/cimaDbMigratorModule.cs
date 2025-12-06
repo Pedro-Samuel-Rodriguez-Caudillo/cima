@@ -7,7 +7,7 @@ namespace cima.DbMigrator;
 [DependsOn(
     typeof(AbpAutofacModule),
     typeof(cimaEntityFrameworkCoreModule),
-    typeof(cimaApplicationContractsModule)
+    typeof(cimaApplicationModule)  // Cambiado de ApplicationContractsModule para incluir DevelopmentDataSeeder
 )]
 public class cimaDbMigratorModule : AbpModule
 {

@@ -549,13 +549,28 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             return false;
         }
 
-        var user = await _userRepository.FindAsync(CurrentUser.Id.Value, cancellationToken: cancellationToken);
-        if (user == null)
+        try
         {
+            // If caller already requested cancellation, return quickly
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
+            var user = await _userRepository.FindAsync(CurrentUser.Id.Value, cancellationToken: cancellationToken);
+            if (user == null)
+            {
+                return false;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.Any(c => c.Type == MustChangePasswordClaim && c.Value == "true");
+        }
+        catch (OperationCanceledException)
+        {
+            // The operation was cancelled (client disconnected, timeout, or debugger pause).
+            // Treat as non-critical and return false instead of bubbling the exception.
             return false;
         }
-
-        var claims = await _userManager.GetClaimsAsync(user);
-        return claims.Any(c => c.Type == MustChangePasswordClaim && c.Value == "true");
     }
 }
