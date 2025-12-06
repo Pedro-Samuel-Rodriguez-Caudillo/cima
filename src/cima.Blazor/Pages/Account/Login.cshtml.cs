@@ -42,10 +42,15 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
         try
         {
             // Validar que los campos requeridos estén presentes
-            if (string.IsNullOrWhiteSpace(LoginInput?.UserNameOrEmailAddress) || 
-                string.IsNullOrWhiteSpace(LoginInput?.Password))
+            if (string.IsNullOrWhiteSpace(LoginInput?.UserNameOrEmailAddress))
             {
-                ModelState.AddModelError(string.Empty, "Correo y contraseña son requeridos");
+                ModelState.AddModelError(string.Empty, "El correo electrónico es requerido");
+                return Page();
+            }
+            
+            if (string.IsNullOrWhiteSpace(LoginInput?.Password))
+            {
+                ModelState.AddModelError(string.Empty, "La contraseña es requerida");
                 return Page();
             }
 
@@ -65,15 +70,38 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
             
             return result;
         }
-        catch (Volo.Abp.Validation.AbpValidationException)
+        catch (Volo.Abp.Validation.AbpValidationException ex)
         {
-            // Si hay error de validación, mostrar mensaje genérico
-            ModelState.AddModelError(string.Empty, "Credenciales incorrectas");
+            // Mostrar errores de validación específicos
+            foreach (var error in ex.ValidationErrors)
+            {
+                ModelState.AddModelError(string.Empty, error.ErrorMessage ?? "Error de validación");
+            }
+            return Page();
+        }
+        catch (Volo.Abp.UserFriendlyException ex)
+        {
+            // Errores amigables de ABP
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return Page();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("locked", StringComparison.OrdinalIgnoreCase))
+        {
+            // Cuenta bloqueada
+            ModelState.AddModelError(string.Empty, "Tu cuenta ha sido bloqueada temporalmente. Intenta más tarde.");
+            return Page();
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+                                                    ex.Message.Contains("credential", StringComparison.OrdinalIgnoreCase))
+        {
+            // Credenciales incorrectas
+            ModelState.AddModelError(string.Empty, "Correo o contraseña incorrectos");
             return Page();
         }
         catch (Exception)
         {
-            ModelState.AddModelError(string.Empty, "Error al iniciar sesión. Intenta de nuevo.");
+            // Error genérico - no revelar detalles por seguridad
+            ModelState.AddModelError(string.Empty, "No se pudo iniciar sesión. Verifica tus credenciales e intenta de nuevo.");
             return Page();
         }
     }
