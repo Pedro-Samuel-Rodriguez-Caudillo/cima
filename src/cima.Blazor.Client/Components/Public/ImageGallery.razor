@@ -3,15 +3,15 @@
 <div class="image-gallery">
     @* Imagen principal con altura responsive *@
     <div class="relative mb-4">
-        <img src="@CurrentImage" 
-             alt="Imagen de la propiedad" 
+        <img src="@CurrentImage"
+             alt="@GetMainAltText()"
              class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg shadow-lg cursor-pointer aspect-video"
              loading="eager"
              @onclick="OpenFullscreen" />
         
         @if (Images.Count > 1)
         {
-            @* Botones de navegación *@
+            @* Botones de navegacion *@
             <button @onclick="PreviousImage" 
                     class="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 sm:p-3 rounded-full shadow-lg transition">
                 <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,8 +42,8 @@
                 var isActive = index == currentIndex;
                 <div class="relative cursor-pointer @(isActive ? "ring-2 ring-navy-600" : "")" 
                      @onclick="() => SetCurrentImage(index)">
-                    <img src="@Images[index]" 
-                         alt="Miniatura @(index + 1)" 
+                    <img src="@Images[index]"
+                         alt="@GetThumbnailAltText(index)"
                          class="w-full h-16 sm:h-20 object-cover rounded-lg aspect-video @(isActive ? "" : "opacity-60 hover:opacity-100") transition"
                          loading="lazy" />
                 </div>
@@ -64,8 +64,8 @@
         </button>
         
         <div class="relative max-w-7xl w-full" @onclick:stopPropagation>
-            <img src="@CurrentImage" 
-                 alt="Imagen ampliada" 
+            <img src="@CurrentImage"
+                 alt="@GetFullscreenAltText()"
                  class="w-full max-h-screen object-contain" />
             
             @if (Images.Count > 1)
@@ -91,11 +91,30 @@
 
 @code {
     [Parameter] public List<string> Images { get; set; } = new();
-    
+
     private int currentIndex = 0;
     private bool showFullscreen = false;
-    
-    private string CurrentImage => Images.Count > 0 ? Images[currentIndex] : "/images/placeholder.jpg";
+
+    private const string PlaceholderImage = "/images/placeholder.jpg";
+    private string CurrentImage => Images.Count > 0 ? Images[currentIndex] : PlaceholderImage;
+
+    private bool IsPlaceholder(string image) => string.Equals(image, PlaceholderImage, StringComparison.OrdinalIgnoreCase);
+
+    private string GetMainAltText() => IsPlaceholder(CurrentImage)
+        ? "Imagen no disponible, se muestra una foto de referencia de la propiedad"
+        : "Imagen de la propiedad";
+
+    private string GetThumbnailAltText(int index)
+    {
+        var image = Images.ElementAtOrDefault(index) ?? PlaceholderImage;
+        return IsPlaceholder(image)
+            ? "Miniatura de imagen de referencia de la propiedad"
+            : $"Miniatura {index + 1} de la propiedad";
+    }
+
+    private string GetFullscreenAltText() => IsPlaceholder(CurrentImage)
+        ? "Imagen de referencia ampliada de la propiedad"
+        : "Imagen ampliada de la propiedad";
     
     private void NextImage()
     {
@@ -130,7 +149,7 @@
     
     protected override void OnInitialized()
     {
-        // Si no hay imágenes, agregar una de placeholder
+        // Si no hay imagenes, agregar una de placeholder
         if (Images.Count == 0)
         {
             Images.Add("/images/placeholder.jpg");
