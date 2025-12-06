@@ -76,11 +76,8 @@ else
             </div>
         </div>
 
-        @* Galería de Imágenes *@
-        @if (Listing.Images?.Any() == true)
-        {
-            <ImageGallery Images="@Listing.Images.Select(i => i.Url).ToList()" />
-        }
+        @* GalerÃ­a de ImÃ¡genes *@
+        <ImageGallery Images="@GetGalleryImages()" />
 
         @* Contenido Principal *@
         <div class="cima-section">
@@ -116,7 +113,7 @@ else
                                 </div>
                             </div>
 
-                            @* Características principales *@
+                            @* CaracterÃ­sticas principales *@
                             <div class="flex flex-wrap gap-6 p-6 bg-navy-50 rounded-lg">
                                 <div class="flex items-center gap-3">
                                     <svg class="w-6 h-6 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,13 +144,13 @@ else
                                     </svg>
                                     <div>
                                         <div class="text-sm text-neutral-600">@L["Properties:Area"]</div>
-                                        <div class="text-xl font-semibold text-neutral-900">@Listing.Area.ToString("N0") m²</div>
+                                        <div class="text-xl font-semibold text-neutral-900">@Listing.Area.ToString("N0") mÂ²</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        @* Descripción *@
+                        @* DescripciÃ³n *@
                         <div>
                             <h2 class="text-2xl font-display font-semibold text-neutral-900 mb-4">
                                 @L["PropertyDetail:Description"]
@@ -215,9 +212,9 @@ else
                     @* Sidebar (1/3) *@
                     <div class="lg:col-span-1">
                         <div class="sticky top-6 space-y-4">
-                            @* Botón de WhatsApp prominente *@
+                            @* BotÃ³n de WhatsApp prominente *@
                             <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <p class="text-sm text-green-800 mb-3 font-medium">¿Quieres respuesta inmediata?</p>
+                                <p class="text-sm text-green-800 mb-3 font-medium">Â¿Quieres respuesta inmediata?</p>
                                 <WhatsAppButton 
                                     PropertyTitle="@Listing.Title"
                                     PropertyUrl="@GetPropertyFullUrl()"
@@ -242,6 +239,7 @@ else
 
     private bool IsLoading { get; set; } = true;
     private ListingDto? Listing { get; set; }
+    private const string PlaceholderImage = "/images/placeholder.jpg";
 
     protected override async Task OnInitializedAsync()
     {
@@ -276,8 +274,8 @@ else
         if (Listing == null) return "";
         
         var desc = $"{Listing.Title} en {Listing.Location}. ";
-        if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} recámaras. ";
-        if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} baños. ";
+        if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} recÃ¡maras. ";
+        if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} baÃ±os. ";
         desc += $"Precio: {Listing.Price:C0}";
         
         return desc.Length > 160 ? desc[..157] + "..." : desc;
@@ -305,5 +303,20 @@ else
     {
         if (Listing == null) return "";
         return SeoService.GeneratePropertyJsonLd(Listing, NavManager.BaseUri.TrimEnd('/'));
+    }
+
+    private List<string> GetGalleryImages()
+    {
+        var images = Listing?.Images?
+            .Where(image => !string.IsNullOrWhiteSpace(image.Url))
+            .Select(image => image.Url)
+            .ToList() ?? new List<string>();
+
+        if (images.Count == 0)
+        {
+            images.Add(PlaceholderImage);
+        }
+
+        return images;
     }
 }
