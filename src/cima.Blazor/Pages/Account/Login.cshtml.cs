@@ -25,7 +25,7 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
 
     public override async Task<IActionResult> OnGetAsync()
     {
-        // Si ya est· autenticado, redirigir
+        // Si ya est√° autenticado, redirigir
         if (CurrentUser.IsAuthenticated)
         {
             return LocalRedirect("/account/post-login");
@@ -34,23 +34,30 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
         // Inicializar LoginInput para evitar null
         LoginInput = new LoginInputModel();
         
-        return await base.OnGetAsync();
+        var result = await base.OnGetAsync();
+        
+        // Forzar EnableLocalLogin a true ya que este proyecto usa autenticaci√≥n local
+        // Esto soluciona el problema de "Login no disponible" que ocurre cuando
+        // ABP no detecta correctamente la configuraci√≥n de login local
+        EnableLocalLogin = true;
+        
+        return result;
     }
 
     public override async Task<IActionResult> OnPostAsync(string action)
     {
         try
         {
-            // Validar que los campos requeridos estÈn presentes
+            // Validar que los campos requeridos est√©n presentes
             if (string.IsNullOrWhiteSpace(LoginInput?.UserNameOrEmailAddress))
             {
-                ModelState.AddModelError(string.Empty, "El correo electrÛnico es requerido");
+                ModelState.AddModelError(string.Empty, "El correo electr√≥nico es requerido");
                 return Page();
             }
             
             if (string.IsNullOrWhiteSpace(LoginInput?.Password))
             {
-                ModelState.AddModelError(string.Empty, "La contraseÒa es requerida");
+                ModelState.AddModelError(string.Empty, "La contrase√±a es requerida");
                 return Page();
             }
 
@@ -72,10 +79,10 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
         }
         catch (Volo.Abp.Validation.AbpValidationException ex)
         {
-            // Mostrar errores de validaciÛn especÌficos
+            // Mostrar errores de validaci√≥n espec√≠ficos
             foreach (var error in ex.ValidationErrors)
             {
-                ModelState.AddModelError(string.Empty, error.ErrorMessage ?? "Error de validaciÛn");
+                ModelState.AddModelError(string.Empty, error.ErrorMessage ?? "Error de validaci√≥n");
             }
             return Page();
         }
@@ -88,20 +95,20 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
         catch (InvalidOperationException ex) when (ex.Message.Contains("locked", StringComparison.OrdinalIgnoreCase))
         {
             // Cuenta bloqueada
-            ModelState.AddModelError(string.Empty, "Tu cuenta ha sido bloqueada temporalmente. Intenta m·s tarde.");
+            ModelState.AddModelError(string.Empty, "Tu cuenta ha sido bloqueada temporalmente. Intenta m√°s tarde.");
             return Page();
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("password", StringComparison.OrdinalIgnoreCase) ||
                                                     ex.Message.Contains("credential", StringComparison.OrdinalIgnoreCase))
         {
             // Credenciales incorrectas
-            ModelState.AddModelError(string.Empty, "Correo o contraseÒa incorrectos");
+            ModelState.AddModelError(string.Empty, "Correo o contrase√±a incorrectos");
             return Page();
         }
         catch (Exception)
         {
-            // Error genÈrico - no revelar detalles por seguridad
-            ModelState.AddModelError(string.Empty, "No se pudo iniciar sesiÛn. Verifica tus credenciales e intenta de nuevo.");
+            // Error gen√©rico - no revelar detalles por seguridad
+            ModelState.AddModelError(string.Empty, "No se pudo iniciar sesi√≥n. Verifica tus credenciales e intenta de nuevo.");
             return Page();
         }
     }
