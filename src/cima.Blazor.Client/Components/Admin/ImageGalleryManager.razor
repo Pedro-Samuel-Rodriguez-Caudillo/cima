@@ -9,6 +9,13 @@
 @inherits cimaComponentBase
 
 <div class="space-y-4">
+    <InputFile id="@FileInputId"
+               OnChange="HandleFileSelection"
+               multiple
+               accept=".jpg,.jpeg,.png,.webp"
+               class="hidden"
+               disabled="@IsUploading" />
+
     @* Header *@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-neutral-900">
@@ -18,8 +25,8 @@
                 <span class="ml-2 text-sm font-normal text-neutral-500">(@Images.Count imagenes)</span>
             }
         </h3>
-        
-        <label class="cima-btn cima-btn-primary cima-btn-sm cursor-pointer @(IsUploading ? "opacity-50 pointer-events-none" : "")">
+
+        <label for="@FileInputId" class="cima-btn cima-btn-primary cima-btn-sm cursor-pointer @(IsUploading ? "opacity-50 pointer-events-none" : "")">
             @if (IsUploading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -30,20 +37,18 @@
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-2" />
                 <span>Agregar Imagenes</span>
             }
-            <InputFile OnChange="HandleFileSelection" multiple accept=".jpg,.jpeg,.png,.webp" class="hidden" disabled="@IsUploading" />
         </label>
     </div>
 
     @* Upload Zone *@
     @if (!Images.Any() && !IsUploading)
     {
-        <label class="block border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center cursor-pointer hover:border-navy-400 hover:bg-navy-50/50 transition-colors">
+        <label for="@FileInputId" class="block border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center cursor-pointer hover:border-navy-400 hover:bg-navy-50/50 transition-colors">
             <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Class="text-neutral-400" />
             <p class="mt-4 text-neutral-600">
                 <span class="text-navy-600 font-medium">Haz clic para subir</span> o arrastra imagenes aqui
             </p>
             <p class="mt-2 text-sm text-neutral-500">PNG, JPG, WEBP hasta 5MB</p>
-            <InputFile OnChange="HandleFileSelection" multiple accept=".jpg,.jpeg,.png,.webp" class="hidden" />
         </label>
     }
 
@@ -120,6 +125,8 @@
 </div>
 
 @code {
+    private const string FileInputId = "listing-gallery-file-input";
+
     [Parameter, EditorRequired]
     public Guid ListingId { get; set; }
     

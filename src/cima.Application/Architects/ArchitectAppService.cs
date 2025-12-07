@@ -63,12 +63,12 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         CancellationToken cancellationToken = default)
     {
         var queryable = await _architectRepository.GetQueryableAsync();
-        var totalCount = await AsyncExecuter.CountAsync(queryable, cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(input.Sorting))
-        {
-            queryable = queryable.OrderBy(input.Sorting);
-        }
+        queryable = string.IsNullOrWhiteSpace(input.Sorting)
+            ? queryable.OrderByDescending(a => a.RegistrationDate)
+            : queryable.OrderBy(input.Sorting);
+
+        var totalCount = await AsyncExecuter.CountAsync(queryable, cancellationToken);
 
         var architects = await AsyncExecuter.ToListAsync(
             queryable.Skip(input.SkipCount).Take(input.MaxResultCount),
