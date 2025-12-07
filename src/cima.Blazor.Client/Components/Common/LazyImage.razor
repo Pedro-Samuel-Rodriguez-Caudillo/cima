@@ -51,6 +51,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!System.OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
         if (firstRender)
         {
             _objRef = DotNetObjectReference.Create(this);

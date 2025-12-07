@@ -4,6 +4,9 @@ Sistema de gestión inmobiliaria desarrollado con ABP Framework y Blazor WebAssem
 
 ## Estructura de Documentación
 
+### Catálogo
+- [docs/DOCUMENTATION_CATALOG.md](DOCUMENTATION_CATALOG.md) - Mapa actualizado de los puntos de entrada activos y notas archivadas.
+
 ### ?? [01-getting-started/](01-getting-started/)
 Guías de inicio rápido y configuración inicial
 - [README.md](01-getting-started/README.md) - Inicio aquí
@@ -26,6 +29,11 @@ Guías de desarrollo y historia de sprints
 #### Sprints
 - [sprints/sprint-01/](03-development/sprints/sprint-01/) - Sprint 1: Configuración inicial y CRUD básico
 - [sprints/sprint-02/](03-development/sprints/sprint-02/) - Sprint 2: Sitio público y mejoras UX
+- [sprints/sprint-03/](03-development/sprints/sprint-03/) - Sprint 3: Resumenes de DIA_9 a DIA_12
+
+### ?? Registros por dia
+- [docs/03-development/sprints/sprint-03/](03-development/sprints/sprint-03/) - Resumenes finales de DIA_9 a DIA_12 concentrados en sprint-03.
+- [docs/archive/sprints/](archive/sprints/) - Archivos extras consolidados por sprint y dia; un archivo por dia sustituye a las carpetas antiguas.
 
 ### ?? [04-deployment/](04-deployment/)
 Configuración de despliegue y CI/CD
@@ -40,6 +48,8 @@ Solución de problemas y fixes documentados
 
 ### ?? [archive/](archive/)
 Documentación histórica archivada
+- [docs/archive/root-notes/](archive/root-notes/) - Resúmenes y reportes que se movieron desde la raíz para mantener el directorio principal limpio.
+
 
 ## Inicio Rápido
 

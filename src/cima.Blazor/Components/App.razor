@@ -37,12 +37,6 @@
     
     <HeadOutlet @rendermode="InteractiveAuto" />
 
-    <!-- Loading indicator styles - DESACTIVADO -->
-    <style>
-        #blazor-loading-indicator {
-            display: none !important;
-        }
-    </style>
 </head>
 <body class="abp-application-layout @rtl">
 
@@ -74,21 +68,11 @@
     
     <script src="_content/Volo.Abp.AspNetCore.Components.Web/libs/abp/js/abp.js"></script>
     
-    <!-- Script de Blazor con autostart=false para controlar inicio -->
-    <script src="_framework/blazor.web.js" autostart="false"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <!-- Script de Blazor -->
+    <script src="_framework/blazor.web.js"></script>
     
-    <!-- Control de inicio de Blazor -->
-    <script>
-        (function() {
-            // Iniciar Blazor manualmente
-            Blazor.start().then(function() {
-                console.log('[cima] Blazor iniciado');
-            }).catch(function(err) {
-                console.error('[cima] Error iniciando Blazor:', err);
-            });
-        })();
-    </script>
+    <!-- Script de MudBlazor - cargar después de Blazor pero de forma estática -->
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 
 </body>
 </html>

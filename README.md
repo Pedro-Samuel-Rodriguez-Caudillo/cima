@@ -114,6 +114,14 @@ Ver [docs/01-getting-started/quick-reference.md](docs/01-getting-started/quick-r
 - **Issues:** [GitHub Issues](https://github.com/Pedro-Samuel-Rodriguez-Caudillo/cima/issues)
 - **ABP Docs:** [docs.abp.io](https://docs.abp.io)
 
+## Documentacion reorganizada
+
+- **[docs/DOCUMENTATION_CATALOG.md](docs/DOCUMENTATION_CATALOG.md)** - catalogo actualizado de los puntos de entrada activos, sprint y notas archivadas.
+- **[docs/archive/root-notes/](docs/archive/root-notes/)** - los resumenes, checklists y reportes historicos movidos desde la raiz para mantener limpio el directorio principal.
+- **[docs/03-development/sprints/](docs/03-development/sprints/)** - sprint 1-3 concentran los dias activos y los resumenes DIA_9 a DIA_12 dentro de sprint-03.
+- **[docs/archive/sprints/](docs/archive/sprints/)** - archivos extra consolidados por sprint y dia (un archivo por dia) que reemplazan las carpetas antiguas de day-logs.
+
+
 ---
 
 **Versión:** 2.0  

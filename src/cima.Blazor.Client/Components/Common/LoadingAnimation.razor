@@ -7,26 +7,6 @@
     <p class="mt-4 text-navy-700 font-display animate-pulse">Cargando...</p>
 </div>
 
-<style>
-    .cima-cad-animation path, .cima-cad-animation rect {
-        animation: draw 2s infinite;
-    }
-
-    @@keyframes draw {
-        0% {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-        }
-        50% {
-            stroke-dashoffset: 0;
-        }
-        100% {
-            stroke-dashoffset: 0;
-            opacity: 0;
-        }
-    }
-</style>
-
 @code {
     // Componente estático
 }

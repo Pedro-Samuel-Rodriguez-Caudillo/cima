@@ -42,7 +42,7 @@
             <p class="mt-4 text-neutral-600">
                 <span class="text-navy-600 font-medium">Haz clic para subir</span> o arrastra imagenes aqui
             </p>
-            <p class="mt-2 text-sm text-neutral-500">PNG, JPG, WEBP hasta 10MB</p>
+            <p class="mt-2 text-sm text-neutral-500">PNG, JPG, WEBP hasta 5MB</p>
             <InputFile OnChange="HandleFileSelection" multiple accept=".jpg,.jpeg,.png,.webp" class="hidden" />
         </label>
     }
@@ -183,16 +183,16 @@
         {
             foreach (var file in files)
             {
-                if (file.Size > 10 * 1024 * 1024)
+                if (file.Size > 5 * 1024 * 1024)
                 {
-                    Snackbar.Add($"El archivo {file.Name} excede 10MB", Severity.Warning);
+                    Snackbar.Add($"El archivo {file.Name} excede 5MB", Severity.Warning);
                     continue;
                 }
 
                 UploadProgress[file.Name] = 0;
                 StateHasChanged();
 
-                using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
                 using var ms = new MemoryStream();
                 
                 var buffer = new byte[81920];
@@ -250,7 +250,7 @@
     {
         var result = await DialogService.ShowMessageBox(
             "Eliminar Imagen",
-            "¿Eliminar esta imagen?",
+            "ï¿½Eliminar esta imagen?",
             yesText: "Eliminar", cancelText: "Cancelar");
         
         if (result != true) return;
@@ -339,3 +339,4 @@
             await ImagesChanged.InvokeAsync(Images.ToList());
     }
 }
+

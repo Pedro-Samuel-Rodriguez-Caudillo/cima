@@ -59,22 +59,31 @@ else if (Listing == null)
 else
 {
     <div class="min-h-screen bg-white">
-        @* Breadcrumbs *@
-        <div class="bg-neutral-50 border-b border-neutral-200">
-            <div class="cima-container py-4">
-                <nav class="flex items-center text-sm text-neutral-600 gap-2" aria-label="Breadcrumb">
-                    <a href="/" class="hover:text-navy-600 transition-colors">@L["Home"]</a>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <a href="/properties" class="hover:text-navy-600 transition-colors">@L["Properties:Title"]</a>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span class="text-neutral-900 font-medium">@Listing.Title</span>
-                </nav>
+        @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
+        <section class="bg-navy-900">
+            <div class="cima-container py-20 md:py-28">
+                <div class="max-w-4xl">
+                    @* Breadcrumbs *@
+                    <nav class="flex items-center text-sm text-navy-200 gap-2 mb-6" aria-label="Breadcrumb">
+                        <a href="/" class="hover:text-white transition-colors">@L["Home"]</a>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <a href="/properties" class="hover:text-white transition-colors">@L["Properties:Title"]</a>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span class="text-white font-medium">@Listing.Title</span>
+                    </nav>
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 tracking-tight text-white">
+                        @Listing.Title
+                    </h1>
+                    <p class="text-xl md:text-2xl text-navy-200 leading-relaxed max-w-2xl">
+                        @Listing.Location
+                    </p>
+                </div>
             </div>
-        </div>
+        </section>
 
         @* Galería de Imágenes *@
         <ImageGallery Images="@GetGalleryImages()" />

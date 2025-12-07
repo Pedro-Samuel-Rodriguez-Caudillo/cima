@@ -54,6 +54,7 @@ using Volo.Abp.Swashbuckle;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
+using Volo.Abp.AspNetCore.Components.Messages;
 
 namespace cima.Blazor;
 
@@ -171,7 +172,7 @@ public class cimaBlazorModule : AbpModule
         context.Services.AddCimaImprovements(configuration, hostingEnvironment);
 
         // ========================================
-        // CONFIGURACIÓN DE MANEJO DE EXCEPCIONES
+        // CONFIGURACIÃ“N DE MANEJO DE EXCEPCIONES
         // ========================================
         // No loggear OperationCanceledException como error (es normal cuando el usuario cancela)
         Configure<AbpExceptionHandlingOptions>(options =>
@@ -192,16 +193,16 @@ public class cimaBlazorModule : AbpModule
         context.Services.AddCascadingAuthenticationState();
 
         // ========================================
-        // CONFIGURACIÓN DE SEGURIDAD DE IDENTITY
+        // CONFIGURACIï¿½N DE SEGURIDAD DE IDENTITY
         // ========================================
         context.Services.ConfigureCimaIdentityOptions();
         context.Services.ConfigureCimaAuthCookies();
         context.Services.ConfigureCimaSecurityStamp();
         
         // ========================================
-        // CONFIGURACIÓN DE ABP ACCOUNT - LOGIN LOCAL
+        // CONFIGURACIï¿½N DE ABP ACCOUNT - LOGIN LOCAL
         // ========================================
-        // Habilitar login local explícitamente para que el formulario se muestre
+        // Habilitar login local explï¿½citamente para que el formulario se muestre
         Configure<AbpAccountOptions>(options =>
         {
             options.WindowsAuthenticationSchemeName = null; // No usar Windows Auth
@@ -247,8 +248,14 @@ public class cimaBlazorModule : AbpModule
         // Registrar EnumLocalizationService para renderizado en servidor
         context.Services.AddTransient<Client.Services.EnumLocalizationService>();
         
-        // Registrar LoginRedirectService para páginas de post-login
+        // Registrar LoginRedirectService para paginas de post-login
         context.Services.AddScoped<Client.Services.ILoginRedirectService, Client.Services.LoginRedirectService>();
+        
+        // SEO helpers usados en prerender (paginas publicas)
+        context.Services.AddSingleton<Client.Services.SeoJsonLdService>();
+
+        // Nota: IUiMessageService es registrado automÃ¡ticamente por ABP Framework
+        // a travÃ©s de AbpAspNetCoreComponentsWebModule cuando se ejecuta en modo interactivo
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -498,7 +505,9 @@ public class cimaBlazorModule : AbpModule
             app.UseStaticFilesForPatterns("appsettings*.json");
         }
         
-        app.MapAbpStaticAssets();
+        // Archivos estÃ¡ticos bÃ¡sicos - debe ir antes de MapAbpStaticAssets
+        app.UseStaticFiles();
+        // app.MapAbpStaticAssets();
         app.UseAbpSecurityHeaders();
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
@@ -600,3 +609,5 @@ public class cimaBlazorModule : AbpModule
         }
     }
 }
+
+

@@ -11,7 +11,7 @@
 @implements IAsyncDisposable
 @rendermode InteractiveAuto
 
-<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-navy-950 @(_isScrolled ? "shadow-lg" : "border-b border-white/10")">
+<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(_isScrolled ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10")">
     <div class="cima-container h-20 flex items-center justify-between">
         <!-- Brand -->
         <a href="/"
@@ -364,6 +364,11 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!System.OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
         if (firstRender)
         {
             try

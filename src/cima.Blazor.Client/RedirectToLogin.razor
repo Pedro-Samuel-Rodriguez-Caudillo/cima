@@ -1,9 +1,9 @@
 @using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
 
-@* 
-    Componente que redirige a la página de login de ABP.
-    Preserva la URL actual como returnUrl para regresar después del login.
+@*
+    Componente que redirige a la pÃ¡gina de login de ABP.
+    Preserva la URL actual como returnUrl para regresar despuÃ©s del login.
 *@
 
 @code {
@@ -12,19 +12,20 @@
     protected override void OnInitialized()
     {
         // Determinar returnUrl
-        var returnUrl = !string.IsNullOrEmpty(CustomReturnUrl) 
-            ? CustomReturnUrl 
+        var returnUrl = !string.IsNullOrEmpty(CustomReturnUrl)
+            ? CustomReturnUrl
             : Navigation.Uri;
 
-        // Evitar loops de redirección
+        // Evitar loops de redirecciÃ³n
         if (returnUrl.Contains("/Account/Login", StringComparison.OrdinalIgnoreCase))
         {
             returnUrl = "/";
         }
 
         var encodedReturnUrl = Uri.EscapeDataString(returnUrl);
-        
-        // ABP Account usa /Account/Login para la página de login
-        Navigation.NavigateTo($"Account/Login?ReturnUrl={encodedReturnUrl}", forceLoad: true);
+
+        // ABP Account usa /Account/Login para la pÃ¡gina de login
+        // Nota: usar ruta absoluta para evitar redirecciones relativas (p. ej. /account/register -> /account/Account/Login)
+        Navigation.NavigateTo($"/Account/Login?ReturnUrl={encodedReturnUrl}", forceLoad: true);
     }
 }

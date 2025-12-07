@@ -13,179 +13,38 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cerrar Sesión - 4cima</title>
+    <title>Cerrar Sesi¢n - 4cima</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo/4cima.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #1d2a4b;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        
-        .container {
-            max-width: 420px;
-            width: 100%;
-            animation: slideUp 0.5s ease-out;
-        }
-        
-        @@keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .logo-section {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-        
-        .logo-section img {
-            height: 120px;
-            width: auto;
-            filter: brightness(0) invert(1);
-        }
-        
-        .card {
-            background: white;
-            border-radius: 1.25rem;
-            padding: 2.5rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-            text-align: center;
-        }
-        
-        .icon-circle {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-        }
-        
-        .icon-circle svg { width: 32px; height: 32px; }
-        
-        .icon-circle.warning { background: #fef3cd; }
-        .icon-circle.warning svg { color: #f59e0b; }
-        
-        .icon-circle.success { background: #ecfdf5; }
-        .icon-circle.success svg { color: #059669; }
-        
-        h1 { font-size: 1.5rem; font-weight: 700; color: #1d2a4b; margin-bottom: 0.5rem; }
-        
-        .subtitle { color: #6b7280; font-size: 0.9rem; margin-bottom: 1.5rem; }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            background: #f9fafb;
-            border-radius: 0.625rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: #1d2a4b;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .user-details { text-align: left; }
-        .user-name { font-weight: 600; color: #1d2a4b; font-size: 0.95rem; }
-        .user-email { color: #6b7280; font-size: 0.8rem; }
-        
-        .buttons { display: flex; flex-direction: column; gap: 0.75rem; }
-        
-        .btn {
-            width: 100%;
-            padding: 0.875rem;
-            border-radius: 0.625rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            border: none;
-        }
-        
-        .btn svg { width: 18px; height: 18px; }
-        
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-        
-        .btn-danger:hover { background: #b91c1c; }
-        
-        .btn-primary {
-            background: #1d2a4b;
-            color: white;
-        }
-        
-        .btn-primary:hover { background: #2d3a5b; }
-        
-        .btn-secondary {
-            background: white;
-            color: #1d2a4b;
-            border: 2px solid #e5e7eb;
-        }
-        
-        .btn-secondary:hover { background: #f9fafb; }
-        
-        .note {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
-            color: #9ca3af;
-            font-size: 0.75rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/app.min.css" />
 </head>
-<body>
-    <div class="container">
-        <div class="logo-section">
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-logo">
             <img src="/images/logo/4cima.svg" alt="4cima" onerror="this.src='/images/logo/4cima.png'" />
         </div>
 
-        <div class="card">
+        <div class="auth-card auth-card-centered">
             @if (Model.LoggedOut)
             {
-                <div class="icon-circle success">
+                <div class="auth-icon-circle auth-icon-success">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                 </div>
-                <h1>¡Sesión cerrada!</h1>
-                <p class="subtitle">Has cerrado sesión exitosamente.</p>
+                <h1 class="auth-title">­Sesi¢n cerrada!</h1>
+                <p class="auth-subtitle">Has cerrado sesi¢n exitosamente.</p>
                 
-                <div class="buttons">
-                    <a href="/Account/Login" class="btn btn-primary">
+                <div class="auth-buttons">
+                    <a href="/Account/Login" class="auth-btn auth-btn-primary">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                         </svg>
-                        Iniciar sesión
+                        Iniciar sesi¢n
                     </a>
-                    <a href="/" class="btn btn-secondary">
+                    <a href="/" class="auth-btn auth-btn-secondary">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
@@ -195,23 +54,23 @@
             }
             else
             {
-                <div class="icon-circle warning">
+                <div class="auth-icon-circle auth-icon-warning">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
                 </div>
-                <h1>¿Cerrar sesión?</h1>
-                <p class="subtitle">¿Estás seguro?</p>
+                <h1 class="auth-title">¨Cerrar sesi¢n?</h1>
+                <p class="auth-subtitle">¨Est s seguro?</p>
 
                 @if (!string.IsNullOrEmpty(Model.UserName))
                 {
-                    <div class="user-info">
-                        <div class="user-avatar">@(Model.UserName?.Substring(0, 1).ToUpper() ?? "U")</div>
-                        <div class="user-details">
-                            <div class="user-name">@Model.UserName</div>
+                    <div class="auth-user-info">
+                        <div class="auth-user-avatar">@(Model.UserName?.Substring(0, 1).ToUpper() ?? "U")</div>
+                        <div class="auth-user-details">
+                            <div class="auth-user-name">@Model.UserName</div>
                             @if (!string.IsNullOrEmpty(Model.UserEmail))
                             {
-                                <div class="user-email">@Model.UserEmail</div>
+                                <div class="auth-user-email">@Model.UserEmail</div>
                             }
                         </div>
                     </div>
@@ -220,14 +79,14 @@
                 <form method="post">
                     <input name="__RequestVerificationToken" type="hidden" value="@tokens.RequestToken" />
                     
-                    <div class="buttons">
-                        <button type="submit" class="btn btn-danger">
+                    <div class="auth-buttons">
+                        <button type="submit" class="auth-btn auth-btn-danger">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                             </svg>
-                            Sí, cerrar sesión
+                            S¡, cerrar sesi¢n
                         </button>
-                        <a href="javascript:history.back()" class="btn btn-secondary">
+                        <a href="javascript:history.back()" class="auth-btn auth-btn-secondary">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
@@ -236,7 +95,7 @@
                     </div>
                 </form>
 
-                <p class="note">Tu sesión se cerrará en todos los dispositivos.</p>
+                <p class="auth-note">Tu sesi¢n se cerrar  en todos los dispositivos.</p>
             }
         </div>
     </div>
