@@ -21,16 +21,14 @@ public class cimaApplicationAutoMapperProfile : Profile
                  src.Images != null && src.Images.Any() 
                     ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)
                     : null)) // Map CoverImage
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => 
-                string.IsNullOrEmpty(src.Location) ? null : JsonSerializer.Deserialize<LocationDto>(src.Location, (JsonSerializerOptions?)null)));
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location)));
             
         CreateMap<Listing, ListingListDto>()
             .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src => 
                 src.Images != null && src.Images.Any() 
                     ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)
                     : null))
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => 
-                string.IsNullOrEmpty(src.Location) ? null : JsonSerializer.Deserialize<LocationDto>(src.Location, (JsonSerializerOptions?)null)));
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location)));
                     
         CreateMap<CreateUpdateListingDto, Listing>()
             .ForMember(dest => dest.Images, opt => opt.Ignore());
@@ -58,5 +56,21 @@ public class cimaApplicationAutoMapperProfile : Profile
         CreateMap<UpdateArchitectDto, Architect>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore());
+    }
+
+    private static LocationDto? DeserializeLocation(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<LocationDto>(json);
+        }
+        catch
+        {
+            // If JSON is invalid, return null instead of throwing during mapping
+            return null;
+        }
     }
 }

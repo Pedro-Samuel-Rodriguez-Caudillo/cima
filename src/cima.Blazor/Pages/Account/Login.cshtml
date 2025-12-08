@@ -17,7 +17,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Iniciar Sesi¢n - 4cima</title>
+    <title>Iniciar Sesión - 4cima</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo/4cima.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
 
         <div class="auth-card">
             <div class="auth-card-centered">
-                <h1 class="auth-title">Iniciar Sesi¢n</h1>
+                <h1 class="auth-title">Iniciar Sesión</h1>
                 <p class="auth-subtitle">Ingresa tus credenciales</p>
             </div>
 
@@ -53,7 +53,7 @@
                     }
 
                     <div class="auth-form-group">
-                        <label class="auth-label" for="LoginInput_UserNameOrEmailAddress">Correo electr¢nico</label>
+                        <label class="auth-label" for="LoginInput_UserNameOrEmailAddress">Correo electrónico</label>
                         <input type="text" 
                                id="LoginInput_UserNameOrEmailAddress" 
                                name="LoginInput.UserNameOrEmailAddress"
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="auth-form-group">
-                        <label class="auth-label" for="LoginInput_Password">Contrase¤a</label>
+                        <label class="auth-label" for="LoginInput_Password">Contraseña</label>
                         <div class="auth-password-wrapper">
                             <input type="password" 
                                    id="LoginInput_Password" 
@@ -75,7 +75,7 @@
                                    placeholder="********"
                                    autocomplete="current-password"
                                    required />
-                            <button type="button" class="auth-password-toggle" onclick="togglePassword()" aria-label="Mostrar contrase¤a">
+                            <button type="button" class="auth-password-toggle" onclick="togglePassword()" aria-label="Mostrar contraseña">
                                 <svg id="eyeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -93,18 +93,18 @@
                                    class="auth-checkbox" />
                             <span>Recordarme</span>
                         </label>
-                        <a href="/Account/ForgotPassword" class="auth-link">¨Olvidaste tu contrase¤a?</a>
+                        <a href="/Account/ForgotPassword" class="auth-link">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <button type="submit" class="auth-submit" id="submitBtn">
-                        Iniciar Sesi¢n
+                        Iniciar Sesión
                     </button>
                 </form>
             }
             else
             {
                 <div class="auth-alert auth-alert-error">
-                    <span>Login no disponible - No hay m‚todos de autenticaci¢n configurados</span>
+                    <span>Login no disponible - No hay métodos de autenticación configurados</span>
                 </div>
             }
         </div>

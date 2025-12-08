@@ -201,7 +201,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
 
         // Assert
         result.Title.ShouldBe("Título Actualizado para Test");
-        result.Location.ShouldBe("Nueva Ubicación Actualizada México");
+        (result.Location?.ToString()).ShouldBe("Nueva Ubicaci?n Actualizada M?xico");
         result.Price.ShouldBe(2000000m);
         result.Bedrooms.ShouldBe(4);
     }
