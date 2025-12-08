@@ -68,7 +68,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span class="truncate">@(Listing.Location ?? "Ubicación no especificada")</span>
+            <span class="truncate">@GetLocationDisplay()</span>
         </div>
         
         @* Title *@
@@ -154,5 +154,11 @@
             return $"${price / 1_000:N0}K MXN";
         }
         return price.ToString("C0") + " MXN";
+    }
+
+    private string GetLocationDisplay()
+    {
+        var location = Listing.Location?.ToString();
+        return string.IsNullOrWhiteSpace(location) ? "Ubicación no especificada" : location;
     }
 }

@@ -15,8 +15,8 @@ using Volo.Abp.Domain.Repositories;
 namespace cima.Listings;
 
 /// <summary>
-/// ImplementaciÛn del servicio de propiedades destacadas.
-/// Usa cachÈ inteligente para respuestas r·pidas manteniendo variedad visual.
+/// Implementaci√≥n del servicio de propiedades destacadas.
+/// Usa cach√© inteligente para respuestas r√°pidas manteniendo variedad visual.
 /// </summary>
 public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppService
 {
@@ -26,7 +26,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     private const int MAX_FEATURED_LISTINGS = 12;
     private const string CACHE_KEY = "FeaturedListingsForHomepage";
     /// <summary>
-    /// DuraciÛn del cachÈ reducida a 5 minutos para mayor frescura
+    /// Duraci√≥n del cach√© reducida a 5 minutos para mayor frescura
     /// mientras mantiene buena performance
     /// </summary>
     private const int CACHE_DURATION_MINUTES = 5;
@@ -56,7 +56,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     }
 
     /// <summary>
-    /// Obtiene propiedades destacadas con paginaciÛn
+    /// Obtiene propiedades destacadas con paginaci√≥n
     /// Siempre en orden aleatorio
     /// </summary>
     [AllowAnonymous]
@@ -64,7 +64,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     {
         var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing!);
 
-        // Filtrar solo listings que estÈn publicados o en portafolio
+        // Filtrar solo listings que est√©n publicados o en portafolio
         queryable = queryable.Where(fl => 
             fl.Listing != null &&
             (fl.Listing.Status == ListingStatus.Published || 
@@ -72,7 +72,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         var allFeatured = await AsyncExecuter.ToListAsync(queryable);
 
-        // Orden aleatorio usando Random para mejor distribuciÛn
+        // Orden aleatorio usando Random para mejor distribuci√≥n
         var random = new Random();
         var orderedFeatured = allFeatured.OrderBy(x => random.Next());
 
@@ -93,10 +93,10 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     /// <summary>
     /// Obtiene propiedades destacadas para mostrar en homepage.
     /// 
-    /// Estrategia de cachÈ optimizada para responsividad:
-    /// - CachÈ de 5 minutos para respuestas r·pidas (mejora percepciÛn de velocidad)
-    /// - El orden se aleatoriza en cada peticiÛn desde el cachÈ
-    /// - La p·gina se siente m·s responsiva al cargar instant·neamente
+    /// Estrategia de cach√© optimizada para responsividad:
+    /// - Cach√© de 5 minutos para respuestas r√°pidas (mejora percepci√≥n de velocidad)
+    /// - El orden se aleatoriza en cada petici√≥n desde el cach√©
+    /// - La p√°gina se siente m√°s responsiva al cargar instant√°neamente
     /// </summary>
     [AllowAnonymous]
     public async Task<List<ListingDto>> GetForHomepageAsync(int count = 6)
@@ -106,22 +106,22 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             count = 12;
         }
 
-        // Intentar obtener del cachÈ
-        var cachedListings = await _cache.GetAsync(CACHE_KEY);
-        if (cachedListings != null && cachedListings.Count > 0)
+        // Intentar obtener del cach√©
+        var cachedListings = await _cache.GetAsync(CACHE_KEY) ?? new List<ListingDto>();
+        if (cachedListings.Count > 0)
         {
-            // Aleatorizar el orden en cada peticiÛn para variedad visual
-            // El cachÈ guarda los datos, pero el orden cambia cada vez
+            // Aleatorizar el orden en cada petici√≥n para variedad visual
+            // El cach√© guarda los datos, pero el orden cambia cada vez
             var random = new Random();
             var randomized = cachedListings
                 .OrderBy(_ => random.Next())
                 .Take(count)
                 .ToList();
-            
-            return randomized;
+
+            return randomized!;
         }
 
-        // Si no hay cachÈ, obtener de BD
+        // Si no hay cach√©, obtener de BD
         var queryable = await _featuredListingRepository.WithDetailsAsync(
             fl => fl.Listing,
             fl => fl.Listing!.Architect,
@@ -135,15 +135,16 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         var allFeatured = await AsyncExecuter.ToListAsync(queryable);
 
-        // Extraer listings (sin aleatorizar para el cachÈ)
+        // Extraer listings (sin aleatorizar para el cach√©)
         var allListings = allFeatured
             .Where(fl => fl.Listing != null)
             .Select(fl => fl.Listing!)
             .ToList();
 
-        var listings = ObjectMapper.Map<List<Listing>, List<ListingDto>>(allListings);
+        var listings = ObjectMapper.Map<List<Listing>, List<ListingDto>>(allListings)
+                        ?? new List<ListingDto>();
 
-        // Guardar TODOS en cachÈ (sin orden especÌfico)
+        // Guardar TODOS en cach√© (sin orden espec√≠fico)
         // El orden se aleatoriza al recuperar
         if (listings.Count > 0)
         {
@@ -159,7 +160,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         // Retornar aleatorizado
         var random2 = new Random();
-        return listings
+        return (listings ?? new List<ListingDto>())
             .OrderBy(_ => random2.Next())
             .Take(count)
             .ToList();
@@ -167,7 +168,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
     /// <summary>
     /// Agrega una propiedad a destacados
-    /// Valida lÌmite m·ximo de 12 e invalida cachÈ
+    /// Valida l√≠mite m√°ximo de 12 e invalida cach√©
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<FeaturedListingDto> AddAsync(CreateFeaturedListingDto input)
@@ -175,7 +176,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         // Validar que la propiedad existe
         var listing = await _listingRepository.GetAsync(input.ListingId);
 
-        // Validar que la propiedad estÈ publicada o en portafolio
+        // Validar que la propiedad est√© publicada o en portafolio
         if (listing.Status != ListingStatus.Published && listing.Status != ListingStatus.Portfolio)
         {
             throw new BusinessException("FeaturedListing:ListingNotPublished")
@@ -183,7 +184,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
                 .WithData("Status", listing.Status);
         }
 
-        // Validar que no estÈ ya destacada
+        // Validar que no est√© ya destacada
         var exists = await _featuredListingRepository.AnyAsync(fl => fl.ListingId == input.ListingId);
         if (exists)
         {
@@ -191,7 +192,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
                 .WithData("ListingId", input.ListingId);
         }
 
-        // Validar lÌmite m·ximo
+        // Validar l√≠mite m√°ximo
         var currentCount = await _featuredListingRepository.CountAsync();
         if (currentCount >= MAX_FEATURED_LISTINGS)
         {
@@ -206,7 +207,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         await _featuredListingRepository.InsertAsync(featuredListing);
 
-        // Invalidar cachÈ para que se recarguen las destacadas
+        // Invalidar cach√© para que se recarguen las destacadas
         await _cache.RemoveAsync(CACHE_KEY);
 
         // Cargar con detalles para retornar
@@ -224,7 +225,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     }
 
     /// <summary>
-    /// Remueve una propiedad de destacados e invalida cachÈ
+    /// Remueve una propiedad de destacados e invalida cach√©
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveAsync(Guid featuredListingId)
@@ -234,7 +235,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     }
 
     /// <summary>
-    /// Remueve una propiedad de destacados por ListingId e invalida cachÈ
+    /// Remueve una propiedad de destacados por ListingId e invalida cach√©
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveByListingIdAsync(Guid listingId)
@@ -250,7 +251,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     }
 
     /// <summary>
-    /// Verifica si una propiedad est· en destacados
+    /// Verifica si una propiedad est√° en destacados
     /// </summary>
     [AllowAnonymous]
     public async Task<bool> IsListingFeaturedAsync(Guid listingId)

@@ -1365,6 +1365,292 @@
     }
 }
 
+@layer components {
+    /* === FLUJOS DE AUTENTICACION === */
+    .auth-page {
+        @apply min-h-screen flex items-center justify-center p-4;
+        background: #1d2a4b;
+    }
+
+    .auth-container {
+        @apply w-full max-w-[420px];
+        animation: auth-slide-up 0.5s ease-out;
+    }
+
+    .auth-logo {
+        @apply text-center mb-10;
+    }
+
+    .auth-logo img {
+        @apply mx-auto;
+        height: 120px;
+        width: auto;
+        filter: brightness(0) invert(1);
+    }
+
+    .auth-card {
+        @apply bg-white rounded-2xl p-10 shadow-2xl;
+    }
+
+    .auth-card-centered {
+        @apply text-center;
+    }
+
+    .auth-title {
+        @apply text-2xl font-bold text-navy-900 mb-2;
+    }
+
+    .auth-subtitle {
+        @apply text-sm text-neutral-500 mb-6 leading-relaxed;
+    }
+
+    .auth-form-group {
+        @apply mb-5 text-left;
+    }
+
+    .auth-label {
+        @apply block text-sm font-medium text-neutral-700 mb-2;
+    }
+
+    .auth-input {
+        @apply w-full px-4 py-3 text-base rounded-xl transition-all;
+        @apply border-2 border-neutral-200 bg-neutral-50;
+    }
+
+    .auth-input:focus {
+        @apply outline-none border-navy-800 ring-4 ring-navy-900/10 bg-white;
+    }
+
+    .auth-input::placeholder {
+        @apply text-neutral-400;
+    }
+
+    .auth-password-wrapper {
+        @apply relative;
+    }
+
+    .auth-password-toggle {
+        @apply absolute right-4 top-1/2 -translate-y-1/2 text-neutral-500 transition-colors;
+    }
+
+    .auth-password-toggle:hover {
+        @apply text-navy-800;
+    }
+
+    .auth-options {
+        @apply flex items-center justify-between flex-wrap gap-2 mb-6;
+    }
+
+    .auth-remember {
+        @apply inline-flex items-center gap-2 cursor-pointer text-neutral-600;
+    }
+
+    .auth-checkbox {
+        width: 1rem;
+        height: 1rem;
+        accent-color: #1d2a4b;
+        cursor: pointer;
+    }
+
+    .auth-link {
+        @apply text-sm font-medium text-navy-800 hover:underline;
+    }
+
+    .auth-link-light {
+        @apply text-sm text-white;
+        opacity: 0.8;
+    }
+
+    .auth-link-light:hover {
+        opacity: 1;
+    }
+
+    .auth-alert {
+        @apply mb-5 flex items-center gap-3 rounded-lg border px-4 py-3 text-sm;
+    }
+
+    .auth-alert svg {
+        @apply w-5 h-5 shrink-0;
+    }
+
+    .auth-alert-error {
+        @apply bg-red-50 border-red-200 text-red-800;
+    }
+
+    .auth-submit {
+        @apply w-full rounded-xl bg-[#1d2a4b] px-4 py-3 text-white font-semibold transition;
+    }
+
+    .auth-submit:hover {
+        @apply bg-navy-800 -translate-y-0.5 shadow-lg;
+    }
+
+    .auth-submit:disabled {
+        @apply opacity-70 cursor-not-allowed translate-y-0 shadow-none;
+    }
+
+    .auth-back-link {
+        @apply mt-6 flex items-center justify-center gap-2 text-sm transition-colors;
+        @apply text-white;
+        opacity: 0.8;
+    }
+
+    .auth-back-link:hover {
+        opacity: 1;
+    }
+
+    .auth-back-link svg {
+        @apply w-4 h-4;
+    }
+
+    .auth-icon-circle {
+        @apply w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6;
+        background: #eff6ff;
+    }
+
+    .auth-icon-circle svg {
+        @apply w-8 h-8 text-navy-900;
+    }
+
+    .auth-icon-success {
+        background: #ecfdf5;
+    }
+
+    .auth-icon-success svg {
+        color: #059669;
+    }
+
+    .auth-icon-error {
+        background: #fef2f2;
+    }
+
+    .auth-icon-error svg {
+        color: #dc2626;
+    }
+
+    .auth-icon-warning {
+        background: #fef3cd;
+    }
+
+    .auth-icon-warning svg {
+        color: #f59e0b;
+    }
+
+    .auth-requirements {
+        @apply mb-5 rounded-lg bg-neutral-50 p-4 text-left;
+    }
+
+    .auth-req-title {
+        @apply mb-2 text-xs font-semibold uppercase text-neutral-700;
+    }
+
+    .auth-req-list {
+        @apply list-none space-y-2 text-sm text-neutral-600;
+    }
+
+    .auth-req-item {
+        @apply flex items-center gap-2;
+    }
+
+    .auth-req-item svg {
+        @apply w-3.5 h-3.5 text-neutral-400;
+    }
+
+    .auth-req-valid svg {
+        @apply text-green-600;
+    }
+
+    .auth-text-muted {
+        @apply text-xs text-neutral-400;
+    }
+
+    .auth-text-link {
+        @apply text-sm text-navy-800 underline;
+    }
+
+    .auth-user-info {
+        @apply mb-6 flex items-center justify-center gap-3 rounded-xl bg-neutral-50 p-4;
+    }
+
+    .auth-user-avatar {
+        @apply flex h-10 w-10 items-center justify-center rounded-full bg-[#1d2a4b] text-sm font-semibold text-white;
+    }
+
+    .auth-user-details {
+        @apply text-left;
+    }
+
+    .auth-user-name {
+        @apply text-sm font-semibold text-navy-900;
+    }
+
+    .auth-user-email {
+        @apply text-xs text-neutral-500;
+    }
+
+    .auth-buttons {
+        @apply flex flex-col gap-3;
+    }
+
+    .auth-btn {
+        @apply inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-base font-semibold transition;
+    }
+
+    .auth-btn svg {
+        @apply w-5 h-5;
+    }
+
+    .auth-btn-primary {
+        @apply bg-[#1d2a4b] text-white hover:bg-navy-800;
+    }
+
+    .auth-btn-secondary {
+        @apply bg-white text-navy-900 border-2 border-neutral-200 hover:bg-neutral-50;
+    }
+
+    .auth-btn-danger {
+        @apply bg-red-600 text-white hover:bg-red-700;
+    }
+
+    .auth-note {
+        @apply mt-4 border-t border-neutral-200 pt-4 text-xs text-neutral-400;
+    }
+
+    .auth-link-inline {
+        @apply text-navy-800 underline;
+    }
+
+    .field-validation-error {
+        @apply mt-1 block text-xs text-red-600;
+    }
+
+    .auth-loading {
+        @apply inline-flex items-center gap-2;
+    }
+
+    .auth-spinner {
+        animation: auth-spin 1s linear infinite;
+    }
+}
+
+/* === ANIMACIONES DE AUTENTICACION === */
+@keyframes auth-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes auth-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* Actualizar reduced motion para fase 4 */
 @media (prefers-reduced-motion: reduce) {
     .cima-mobile-menu,

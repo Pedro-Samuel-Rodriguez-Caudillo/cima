@@ -9,7 +9,7 @@ using Volo.Abp.DependencyInjection;
 namespace cima.Notifications;
 
 /// <summary>
-/// Implementación del servicio de notificaciones por email usando SMTP
+/// ImplementaciÃ³n del servicio de notificaciones por email usando SMTP
 /// </summary>
 public class SmtpEmailNotificationService : IEmailNotificationService, ITransientDependency
 {
@@ -52,13 +52,13 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
             </tr>
             {(string.IsNullOrEmpty(notification.CustomerPhone) ? "" : $@"
             <tr>
-                <td style='padding: 8px 0; font-weight: bold;'>Teléfono:</td>
+                <td style='padding: 8px 0; font-weight: bold;'>TelÃ©fono:</td>
                 <td style='padding: 8px 0;'><a href='tel:{notification.CustomerPhone}'>{notification.CustomerPhone}</a></td>
             </tr>")}
         </table>
         
         {(string.IsNullOrEmpty(notification.PropertyTitle) ? "" : $@"
-        <h3 style='color: #1a365d; margin-top: 20px;'>Propiedad de interés</h3>
+        <h3 style='color: #1a365d; margin-top: 20px;'>Propiedad de interÃ©s</h3>
         <p><a href='{notification.PropertyUrl}' style='color: #1a365d;'>{WebUtility.HtmlEncode(notification.PropertyTitle)}</a></p>")}
         
         <h3 style='color: #1a365d; margin-top: 20px;'>Mensaje</h3>
@@ -68,7 +68,7 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
     </div>
     
     <div style='padding: 15px; text-align: center; color: #666; font-size: 12px;'>
-        <p>Este email fue enviado automáticamente desde el sitio web de 4cima.</p>
+        <p>Este email fue enviado automÃ¡ticamente desde el sitio web de 4cima.</p>
     </div>
 </body>
 </html>";
@@ -88,23 +88,23 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
     </div>
     
     <div style='padding: 20px;'>
-        <h2 style='color: #1a365d;'>¡Gracias por contactarnos, {WebUtility.HtmlEncode(confirmation.CustomerName)}!</h2>
+        <h2 style='color: #1a365d;'>Â¡Gracias por contactarnos, {WebUtility.HtmlEncode(confirmation.CustomerName)}!</h2>
         
         <p>Hemos recibido tu mensaje{(string.IsNullOrEmpty(confirmation.PropertyTitle) ? "" : $" sobre la propiedad <strong>{WebUtility.HtmlEncode(confirmation.PropertyTitle)}</strong>")}.</p>
         
-        <p>Nuestro equipo revisará tu solicitud y te contactaremos a la brevedad posible.</p>
+        <p>Nuestro equipo revisarÃ¡ tu solicitud y te contactaremos a la brevedad posible.</p>
         
         <div style='background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;'>
             <p style='margin: 0; color: #666;'>
-                <strong>Horario de atención:</strong><br>
+                <strong>Horario de atenciÃ³n:</strong><br>
                 Lunes a Viernes: 9:00 AM - 6:00 PM<br>
-                Sábado: 10:00 AM - 2:00 PM
+                SÃ¡bado: 10:00 AM - 2:00 PM
             </p>
         </div>
     </div>
     
     <div style='padding: 15px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #eee;'>
-        <p>4cima - Arquitectura · Diseño · Exclusividad</p>
+        <p>4cima - Arquitectura Â· DiseÃ±o Â· Exclusividad</p>
     </div>
 </body>
 </html>";
@@ -125,25 +125,25 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
     </div>
     
     <div style='padding: 20px;'>
-        <h2 style='color: #1a365d;'>¡Bienvenido, {WebUtility.HtmlEncode(welcome.ArchitectName)}!</h2>
+        <h2 style='color: #1a365d;'>Â¡Bienvenido, {WebUtility.HtmlEncode(welcome.ArchitectName)}!</h2>
         
         <p>Tu cuenta de arquitecto en 4cima ha sido creada exitosamente.</p>
         
         <div style='background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0;'>
             <p style='margin: 0; color: #856404;'>
-                <strong>?? Importante:</strong> Por seguridad, deberás cambiar tu contraseña temporal en tu primer inicio de sesión.
+                <strong>?? Importante:</strong> Por seguridad, deberÃ¡s cambiar tu contraseÃ±a temporal en tu primer inicio de sesiÃ³n.
             </p>
         </div>
         
         <div style='background-color: #f8f9fa; padding: 20px; border-radius: 5px;'>
             <h3 style='margin-top: 0; color: #1a365d;'>Credenciales de acceso</h3>
             <p><strong>Email:</strong> {welcome.ArchitectEmail}</p>
-            <p><strong>Contraseña temporal:</strong> <code style='background: #e9ecef; padding: 2px 6px; border-radius: 3px;'>{welcome.TemporaryPassword}</code></p>
+            <p><strong>ContraseÃ±a temporal:</strong> <code style='background: #e9ecef; padding: 2px 6px; border-radius: 3px;'>{welcome.TemporaryPassword}</code></p>
         </div>
         
         <div style='text-align: center; margin-top: 25px;'>
             <a href='{welcome.LoginUrl}' style='display: inline-block; background-color: #1a365d; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;'>
-                Iniciar Sesión
+                Iniciar SesiÃ³n
             </a>
         </div>
     </div>
@@ -169,7 +169,7 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
         var fromName = smtpSettings["FromName"] ?? "4cima";
         var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
 
-        if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(userName))
+        if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(fromAddress))
         {
             _logger.LogWarning("Email SMTP no configurado. Email no enviado a {To}: {Subject}", to, subject);
             return;
@@ -199,7 +199,7 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al enviar email a {To}: {Subject}", to, subject);
-            // No lanzar excepción para no interrumpir el flujo principal
+            // No lanzar excepciÃ³n para no interrumpir el flujo principal
         }
     }
 }

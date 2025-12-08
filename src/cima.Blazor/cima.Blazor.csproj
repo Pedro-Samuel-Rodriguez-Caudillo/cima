@@ -106,4 +106,15 @@
     <Folder Include="wwwroot\js\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\css\app.min.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="wwwroot\images\logo\4cima.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

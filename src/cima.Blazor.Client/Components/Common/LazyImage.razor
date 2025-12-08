@@ -46,7 +46,6 @@
     private ElementReference _imageRef;
     private bool _shouldLoad;
     private bool _isLoaded;
-    private bool _hasError;
     private DotNetObjectReference<LazyImage>? _objRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -82,7 +81,6 @@
 
     private async Task OnImageError()
     {
-        _hasError = true;
         await OnError.InvokeAsync();
     }
 

@@ -254,8 +254,8 @@ public class cimaBlazorModule : AbpModule
         // SEO helpers usados en prerender (paginas publicas)
         context.Services.AddSingleton<Client.Services.SeoJsonLdService>();
 
-        // Nota: IUiMessageService es registrado automáticamente por ABP Framework
-        // a través de AbpAspNetCoreComponentsWebModule cuando se ejecuta en modo interactivo
+        // Mensajeria UI (toast/dialog) utilizada por ContactForm y otros componentes prerenderizados
+        context.Services.AddTransient<IUiMessageService, FallbackUiMessageService>();
     }
     
     private void ConfigureAuthentication(ServiceConfigurationContext context)
@@ -505,9 +505,7 @@ public class cimaBlazorModule : AbpModule
             app.UseStaticFilesForPatterns("appsettings*.json");
         }
         
-        // Archivos estáticos básicos - debe ir antes de MapAbpStaticAssets
-        app.UseStaticFiles();
-        // app.MapAbpStaticAssets();
+        app.MapAbpStaticAssets();
         app.UseAbpSecurityHeaders();
         app.UseAuthentication();
         app.UseAbpOpenIddictValidation();
@@ -609,5 +607,4 @@ public class cimaBlazorModule : AbpModule
         }
     }
 }
-
 

@@ -135,7 +135,7 @@ public class LoginModel : Volo.Abp.Account.Web.Pages.Account.LoginModel
                 _logger.LogWarning("ModelState error: {Error}", error.ErrorMessage);
             }
             
-            return result;
+            return result ?? Page();
         }
         catch (AbpValidationException vex)
         {

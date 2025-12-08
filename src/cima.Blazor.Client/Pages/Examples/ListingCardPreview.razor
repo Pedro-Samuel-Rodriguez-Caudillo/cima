@@ -1,166 +1,75 @@
 @page "/examples/listing-card"
-@rendermode InteractiveAuto
-@attribute [AllowAnonymous]
 @using cima.Listings
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Components.Public
 
-<PageTitle>Preview - Tarjeta de Propiedad con Animaciones</PageTitle>
+<PageTitle>Listing Card Preview</PageTitle>
 
 <div class="container mx-auto px-4 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-2">Preview de ListingCard</h1>
-        <p class="text-neutral-600">Haz clic en el icono de información (i) para ver la animación de descripción</p>
-    </div>
-    
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @* Ejemplo 1: Casa Moderna *@
-        <div class="h-[400px]">
-            <ListingCard Listing="@GetMockListing1()" />
-        </div>
-        
-        @* Ejemplo 2: Departamento *@
-        <div class="h-[400px]">
-            <ListingCard Listing="@GetMockListing2()" />
-        </div>
-        
-        @* Ejemplo 3: Villa *@
-        <div class="h-[400px]">
-            <ListingCard Listing="@GetMockListing3()" />
-        </div>
-    </div>
+    <h1 class="text-3xl font-bold mb-8">Listing Card Preview</h1>
 
-    <div class="mt-12 p-6 bg-navy-50 rounded-lg">
-        <h2 class="text-xl font-semibold mb-4">Características de la Animación</h2>
-        <ul class="space-y-2 text-sm text-neutral-700">
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Efecto <strong>ripple</strong> en el icono de información al hacer clic</span>
-            </li>
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Transición <strong>flip 3D</strong> suave (0.6s) con cubic-bezier</span>
-            </li>
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Animaciones de entrada escalonadas para el contenido de la descripción</span>
-            </li>
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Gradiente de fondo en el reverso de la tarjeta</span>
-            </li>
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Botón "Leer más" para expandir descripciones largas</span>
-            </li>
-            <li class="flex items-start">
-                <svg class="w-5 h-5 text-navy-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Hover state mejorado con escala y shadow en el icono</span>
-            </li>
-        </ul>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Standard Card</h2>
+            <ListingCard Listing="@Listing1" />
+        </div>
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Without Image</h2>
+            <ListingCard Listing="@Listing2" />
+        </div>
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Portfolio</h2>
+            <ListingCard Listing="@Listing3" />
+        </div>
     </div>
 </div>
 
 @code {
-    private ListingDto GetMockListing1()
+    private ListingDto Listing1 = new()
     {
-        return new ListingDto
-        {
-            Id = Guid.NewGuid(),
-            Title = "Casa Moderna en Polanco",
-            Description = "Increíble casa moderna en el corazón de Polanco. Esta propiedad cuenta con acabados de lujo, espacios amplios y una ubicación privilegiada. Perfecta para familias que buscan confort y estilo en una de las mejores zonas de la ciudad.",
-            Location = "Polanco, CDMX",
-            Price = 12500000,
-            LandArea = 350,
-            ConstructionArea = 280,
-            Bedrooms = 4,
-            Bathrooms = 3,
-            Status = ListingStatus.Published,
-            Category = PropertyCategory.Residential,
-            Type = PropertyType.House,
-            TransactionType = TransactionType.Sale,
-            ArchitectId = Guid.NewGuid(),
-            Images = new List<ListingImageDto>
-            {
-                new ListingImageDto
-                {
-                    Url = "/images/getting-started/bg-01.png",
-                    AltText = "Casa Moderna",
-                    PreviousImageId = null
-                }
-            }
-        };
-    }
+        Id = Guid.NewGuid(),
+        Title = "Casa Moderna en Santa Fe",
+        Location = new LocationDto { City = "Santa Fe", State = "CDMX" },
+        Price = 12500000,
+        LandArea = 450,
+        ConstructionArea = 380,
+        Bedrooms = 4,
+        Bathrooms = 3,
+        Category = PropertyCategory.Residential,
+        TransactionType = TransactionType.Sale,
+        Status = ListingStatus.Published,
+        Images = new List<ListingImageDto> 
+        { 
+            new ListingImageDto { Url = "/images/listing-1.jpg", IsCover = true }
+        },
+        CoverImage = new ListingImageDto { Url = "/images/listing-1.jpg", IsCover = true }
+    };
 
-    private ListingDto GetMockListing2()
+    private ListingDto Listing2 = new()
     {
-        return new ListingDto
-        {
-            Id = Guid.NewGuid(),
-            Title = "Departamento en Reforma",
-            Description = "Moderno departamento con vista panorámica a Paseo de la Reforma. Excelentes acabados, cocina integral y amenidades de primer nivel.",
-            Location = "Reforma, CDMX",
-            Price = 8500000,
-            LandArea = 120,
-            ConstructionArea = 100,
-            Bedrooms = 2,
-            Bathrooms = 2,
-            Status = ListingStatus.Published,
-            Category = PropertyCategory.Residential,
-            Type = PropertyType.Apartment,
-            TransactionType = TransactionType.Sale,
-            ArchitectId = Guid.NewGuid(),
-            Images = new List<ListingImageDto>
-            {
-                new ListingImageDto
-                {
-                    Url = "/images/getting-started/bg-01.png",
-                    AltText = "Departamento Reforma",
-                    PreviousImageId = null
-                }
-            }
-        };
-    }
+        Id = Guid.NewGuid(),
+        Title = "Terreno Comercial",
+        Location = new LocationDto { City = "Juriquilla", State = "QuerÃ©taro" },
+        Price = 4500000,
+        LandArea = 1000,
+        Category = PropertyCategory.Commercial,
+        TransactionType = TransactionType.Sale,
+        Status = ListingStatus.Published
+    };
 
-    private ListingDto GetMockListing3()
+    private ListingDto Listing3 = new()
     {
-        return new ListingDto
-        {
-            Id = Guid.NewGuid(),
-            Title = "Villa en Santa Fe",
-            Description = "Espectacular villa contemporánea con jardín privado, alberca y diseño arquitectónico de vanguardia. Esta propiedad ofrece privacidad, confort y un estilo de vida exclusivo en una de las zonas más prestigiosas de Santa Fe.",
-            Location = "Santa Fe, CDMX",
-            Price = 5500000,
-            LandArea = 180,
-            ConstructionArea = 150,
-            Bedrooms = 3,
-            Bathrooms = 2,
-            Status = ListingStatus.Portfolio,
-            Category = PropertyCategory.Residential,
-            Type = PropertyType.Villa,
-            TransactionType = TransactionType.Rent,
-            ArchitectId = Guid.NewGuid(),
-            Images = new List<ListingImageDto>
-            {
-                new ListingImageDto
-                {
-                    Url = "/images/getting-started/bg-01.png",
-                    AltText = "Villa Santa Fe",
-                    PreviousImageId = null
-                }
-            }
-        };
-    }
+        Id = Guid.NewGuid(),
+        Title = "Departamento de Lujo",
+        Location = new LocationDto { City = "Polanco", State = "CDMX" },
+        Description = "Exclusivo departamento con acabados de lujo.",
+        Price = 0, 
+        Category = PropertyCategory.Residential,
+        Status = ListingStatus.Portfolio,
+        Images = new List<ListingImageDto> 
+        { 
+            new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true } 
+        },
+        CoverImage = new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true }
+    };
 }

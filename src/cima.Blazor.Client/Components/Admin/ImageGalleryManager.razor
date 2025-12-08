@@ -85,11 +85,11 @@
                             {
                                 <MudIconButton Icon="@Icons.Material.Filled.FirstPage" Size="Size.Small" 
                                     Color="Color.Default" Variant="Variant.Filled"
-                                    OnClick="@(() => MoveToFirst(index))" Title="Mover al inicio" />
+                                    OnClick="@(() => MoveToFirst(index))" title="Mover al inicio" aria-label="Mover al inicio" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
                                 Color="Color.Error" Variant="Variant.Filled"
-                                OnClick="@(() => RemoveImage(image))" Disabled="@IsDeleting" Title="Eliminar" />
+                                OnClick="@(() => RemoveImage(image))" Disabled="@IsDeleting" title="Eliminar" aria-label="Eliminar" />
                         </div>
                     </div>
                     

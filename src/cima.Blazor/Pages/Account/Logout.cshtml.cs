@@ -20,16 +20,16 @@ public class LogoutModel : Volo.Abp.Account.Web.Pages.Account.LogoutModel
         _signInManager = signInManager;
     }
 
-    public override async Task<IActionResult> OnGetAsync()
+    public override Task<IActionResult> OnGetAsync()
     {
-        // Obtener información del usuario actual antes de mostrar confirmación
+        // Obtener informaciÃ³n del usuario actual antes de mostrar confirmaciÃ³n
         if (User.Identity?.IsAuthenticated == true)
         {
             UserName = User.Identity.Name;
             UserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
         }
 
-        return Page();
+        return Task.FromResult<IActionResult>(Page());
     }
 
     public override async Task<IActionResult> OnPostAsync()

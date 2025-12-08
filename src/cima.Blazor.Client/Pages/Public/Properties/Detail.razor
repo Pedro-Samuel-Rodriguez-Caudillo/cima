@@ -79,7 +79,7 @@ else
                         @Listing.Title
                     </h1>
                     <p class="text-xl md:text-2xl text-navy-200 leading-relaxed max-w-2xl">
-                        @Listing.Location
+                        @(Listing.Location?.ToString() ?? "Ubicaci�n no disponible")
                     </p>
                 </div>
             </div>
@@ -108,7 +108,7 @@ else
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                                   d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
-                                        @Listing.Location
+                                        @(Listing.Location?.ToString() ?? "Ubicaci�n no disponible")
                                     </div>
                                 </div>
 
@@ -282,7 +282,10 @@ else
     {
         if (Listing == null) return "";
         
-        var desc = $"{Listing.Title} en {Listing.Location}. ";
+        var location = Listing.Location?.ToString();
+        var desc = string.IsNullOrWhiteSpace(location)
+            ? $"{Listing.Title}. "
+            : $"{Listing.Title} en {location}. ";
         if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} recámaras. ";
         if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} baños. ";
         desc += $"Precio: {Listing.Price:C0}";
@@ -296,7 +299,7 @@ else
         
         var keywords = new List<string>
         {
-            Listing.Location ?? "",
+            Listing.Location?.ToString() ?? "",
             EnumLocalizer.GetPropertyTypeName(Listing.Type),
             EnumLocalizer.GetPropertyCategoryName(Listing.Category),
             EnumLocalizer.GetTransactionTypeName(Listing.TransactionType),
