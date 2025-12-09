@@ -11,7 +11,7 @@
 @implements IAsyncDisposable
 @rendermode InteractiveAuto
 
-<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(_isScrolled ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10")">
+<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(GetNavbarBackgroundClass())">
     <div class="cima-container h-20 flex items-center justify-between">
         <!-- Brand -->
         <a href="/"
@@ -96,6 +96,16 @@
 
         <!-- Actions -->
         <div class="hidden md:flex items-center gap-6">
+            @if (_isAuthenticated && !_isAdmin && _isArchitect)
+            {
+                <a href="/architect/listings" class="text-sm font-medium text-white/90 hover:text-white transition-colors">
+                    Mis propiedades
+                </a>
+                <a href="/admin/listings/create" class="cima-btn cima-btn-primary">
+                    Nueva propiedad
+                </a>
+            }
+
             <LanguageSelector ButtonClass="text-white/80 hover:text-white text-xs font-medium tracking-widest uppercase transition-colors flex items-center gap-1" />
             
             @if (_isAuthenticated)
@@ -142,6 +152,24 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                                         </svg>
                                         @L["Menu:User:Dashboard"]
+                                    </div>
+                                </a>
+                                <a href="/architect/listings" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                   @onclick="CloseUserMenu">
+                                    <div class="flex items-center gap-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5h10.5M8.25 9h10.5m-10.5 4.5h10.5M8.25 18h10.5M3 4.5h.008v.008H3V4.5zm0 4.5h.008v.008H3V9zm0 4.5h.008v.008H3V13.5zm0 4.5h.008v.008H3V18z" />
+                                        </svg>
+                                        Mis propiedades
+                                    </div>
+                                </a>
+                                <a href="/admin/listings/create" class="block px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                   @onclick="CloseUserMenu">
+                                    <div class="flex items-center gap-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        Nueva propiedad
                                     </div>
                                 </a>
                             }
@@ -235,6 +263,9 @@
                         <a href="/architect/listings" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors" @onclick="ToggleMobileMenu">
                             @L["Menu:User:MyListings"]
                         </a>
+                        <a href="/admin/listings/create" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors" @onclick="ToggleMobileMenu">
+                            Nueva propiedad
+                        </a>
                     </div>
                 }
                 
@@ -261,6 +292,7 @@
     private const string NavbarStatePersistenceKey = "NavbarAuthState";
     
     private bool _isScrolled = false;
+    private bool _useTransparentNavbar = true;
     private bool _mobileMenuOpen = false;
     private bool _adminMenuOpen = false;
     private bool _userMenuOpen = false;
@@ -272,6 +304,7 @@
     // Estado de autenticación cacheado - evita re-renders innecesarios
     private bool _isAuthenticated = false;
     private bool _isAdmin = false;
+    private bool _isArchitect = false;
     private string _userName = "";
     private bool _authStateLoaded = false;
 
@@ -285,6 +318,7 @@
             // Usar estado restaurado del pre-renderizado
             _isAuthenticated = restoredState.IsAuthenticated;
             _isAdmin = restoredState.IsAdmin;
+            _isArchitect = restoredState.IsArchitect;
             _userName = restoredState.UserName;
             _authStateLoaded = true;
         }
@@ -293,6 +327,8 @@
             // Cargar estado fresco
             await LoadAuthenticationState();
         }
+
+        UpdateNavbarMode();
         
         // Solo suscribirse a cambios en WASM (no en servidor)
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
@@ -304,6 +340,7 @@
         {
             IsAuthenticated = _isAuthenticated,
             IsAdmin = _isAdmin,
+            IsArchitect = _isArchitect,
             UserName = _userName
         });
         return Task.CompletedTask;
@@ -321,14 +358,27 @@
             _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
             _userName = user.Identity?.Name ?? "";
             _isAdmin = user.IsInRole("admin");
+            _isArchitect = user.IsInRole("architect");
             _authStateLoaded = true;
         }
         catch
         {
             _isAuthenticated = false;
             _isAdmin = false;
+            _isArchitect = false;
             _userName = "";
         }
+    }
+
+    private void UpdateNavbarMode(string? absoluteUri = null)
+    {
+        var relative = Navigation.ToBaseRelativePath(absoluteUri ?? Navigation.Uri);
+        var path = relative.Split('?', '#')[0].Trim('/').ToLowerInvariant();
+
+        // Navbar transparente solo en Home (hero), listados públicos y portafolio
+        _useTransparentNavbar = string.IsNullOrEmpty(path)
+            || path.StartsWith("properties")
+            || path.StartsWith("portfolio");
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
@@ -345,13 +395,15 @@
 
             var newIsAuthenticated = user.Identity?.IsAuthenticated ?? false;
             var newIsAdmin = user.IsInRole("admin");
+            var newIsArchitect = user.IsInRole("architect");
             var newUserName = user.Identity?.Name ?? "";
 
             // Solo actualizar si realmente cambió algo significativo
-            if (newIsAuthenticated != _isAuthenticated || newIsAdmin != _isAdmin || newUserName != _userName)
+            if (newIsAuthenticated != _isAuthenticated || newIsAdmin != _isAdmin || newIsArchitect != _isArchitect || newUserName != _userName)
             {
                 _isAuthenticated = newIsAuthenticated;
                 _isAdmin = newIsAdmin;
+                _isArchitect = newIsArchitect;
                 _userName = newUserName;
                 await InvokeAsync(StateHasChanged);
             }
@@ -391,6 +443,7 @@
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
+        UpdateNavbarMode(e.Location);
         _isScrolled = false;
         _adminMenuOpen = false;
         _userMenuOpen = false;
@@ -400,6 +453,17 @@
     [JSInvokable]
     public Task OnScroll(bool isScrolled)
     {
+        // En vistas con navbar sálido, el scroll no debe modificar el fondo
+        if (!_useTransparentNavbar)
+        {
+            if (_isScrolled)
+            {
+                _isScrolled = false;
+                StateHasChanged();
+            }
+            return Task.CompletedTask;
+        }
+
         if (_isScrolled != isScrolled)
         {
             _isScrolled = isScrolled;
@@ -410,8 +474,15 @@
 
     private string GetLinkClass()
     {
+        var solidBackground = !_useTransparentNavbar || _isScrolled;
         return "text-sm font-medium tracking-wide transition-colors duration-200 " + 
-               (_isScrolled ? "text-white hover:text-navy-300" : "text-white/90 hover:text-white");
+               (solidBackground ? "text-white hover:text-navy-300" : "text-white/90 hover:text-white");
+    }
+
+    private string GetNavbarBackgroundClass()
+    {
+        var solidBackground = !_useTransparentNavbar || _isScrolled;
+        return solidBackground ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10";
     }
 
     private void ToggleMobileMenu()
@@ -528,6 +599,7 @@
     {
         public bool IsAuthenticated { get; set; }
         public bool IsAdmin { get; set; }
+        public bool IsArchitect { get; set; }
         public string UserName { get; set; } = "";
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -32,7 +33,9 @@ public class Program
         {
             Log.Information("Starting cima web host");
             var builder = WebApplication.CreateBuilder(args);
-            
+
+            builder.Logging.ClearProviders();
+
             // Configuración de puerto dinámico para Railway/Docker/Cloud
             var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
             var port = Environment.GetEnvironmentVariable("PORT");

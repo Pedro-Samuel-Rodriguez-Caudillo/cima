@@ -87,12 +87,12 @@
                                     Culture="@MexicoCulture"
                                     Format="N0"
                                     For="@(() => Model.Price)" />
-                                <MudNumericField @bind-Value="Model.LandArea" Label="Area Terreno (m�)" 
+                                <MudNumericField @bind-Value="Model.LandArea" Label="Area Terreno (m²)" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N2"
                                     For="@(() => Model.LandArea)" />
-                                <MudNumericField @bind-Value="Model.ConstructionArea" Label="Area Construccion (m�)" 
+                                <MudNumericField @bind-Value="Model.ConstructionArea" Label="Area Construccion (m²)" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N2"
@@ -100,7 +100,7 @@
                                 <MudNumericField @bind-Value="Model.Bedrooms" Label="Recamaras" 
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Bedrooms)" />
-                                <MudNumericField @bind-Value="Model.Bathrooms" Label="Banos" 
+                                <MudNumericField @bind-Value="Model.Bathrooms" Label="baños" 
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Bathrooms)" />
                                 
@@ -139,7 +139,7 @@
                             </div>
                         </MudCard>
 
-                        @* Galer�a de im�genes - disponible siempre que tengamos un ID *@
+                        @* Galería de imágenes - disponible siempre que tengamos un ID *@
                         @if (CurrentListingId.HasValue)
                         {
                             <MudCard Class="p-6">
@@ -165,7 +165,7 @@
                             <MudCard Class="p-6">
                                 <h3 class="font-semibold mb-4">Acciones</h3>
                                 
-                                @* Mostrar errores de validaci�n si los hay *@
+                                @* Mostrar errores de validación si los hay *@
                                 <ValidationSummary class="text-red-600 text-sm mb-4" />
                                 
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" 
@@ -222,7 +222,7 @@
                                         @if (ExistingListing.Status == ListingStatus.Portfolio)
                                         {
                                             <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
-                                                Esta propiedad est� en el portafolio como proyecto completado.
+                                                Esta propiedad está en el portafolio como proyecto completado.
                                             </MudAlert>
                                             <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
                                                 Size="Size.Small" OnClick="ArchiveListing">
@@ -243,7 +243,7 @@
 @code {
     [Parameter] public Guid? Id { get; set; }
 
-    // Cultura mexicana para formato de n�meros (comas para miles, punto para decimales)
+    // Cultura mexicana para formato de números (comas para miles, punto para decimales)
     private static readonly CultureInfo MexicoCulture = new("es-MX");
 
     private bool IsEditMode => Id.HasValue && Id.Value != Guid.Empty;
@@ -259,8 +259,8 @@
     private bool CanCreateListings => CurrentArchitect != null || (IsAdmin && Architects?.Any() == true);
     
     // Mostrar selector de arquitecto si:
-    // - Es admin (siempre debe poder elegir a qui�n asignar)
-    // - O hay m�ltiples arquitectos y el usuario actual es uno de ellos
+    // - Es admin (siempre debe poder elegir a quién asignar)
+    // - O hay múltiples arquitectos y el usuario actual es uno de ellos
     private bool ShowArchitectSelector => IsAdmin && Architects != null && Architects.Any();
     
     private CreateUpdateListingDto Model { get; set; } = new() 
@@ -276,7 +276,7 @@
     private ArchitectDto? CurrentArchitect { get; set; }
     private ListingDto? ExistingListing { get; set; }
     
-    // ID actual del listing (para modo edici�n o despu�s de crear)
+    // ID actual del listing (para modo edición o después de crear)
     private Guid? CurrentListingId => ExistingListing?.Id ?? (IsEditMode ? Id : null);
 
     protected override async Task OnInitializedAsync()
@@ -314,7 +314,7 @@
                 Model.ArchitectId = Architects.First().Id;
             }
             
-            // Si es modo edici�n, cargar el listing existente
+            // Si es modo edición, cargar el listing existente
             if (IsEditMode)
             {
                 await LoadListing();
@@ -322,7 +322,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - navegaci�n en progreso
+            // Ignorar - navegación en progreso
         }
         catch (Exception ex)
         {
@@ -344,7 +344,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - navegaci�n en progreso
+            // Ignorar - navegación en progreso
         }
         catch (Exception ex)
         {
@@ -377,7 +377,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - navegaci�n en progreso
+            // Ignorar - navegación en progreso
         }
         catch (Exception ex)
         {
@@ -432,10 +432,10 @@
             else
             {
                 var created = await ListingService.CreateAsync(Model);
-                ExistingListing = created; // Para poder cargar im�genes inmediatamente
+                ExistingListing = created; // Para poder cargar imágenes inmediatamente
                 Snackbar.Add("Propiedad creada. Ahora puedes agregar imagenes.", Severity.Success);
                 
-                // Redirigir a modo edici�n para poder agregar im�genes
+                // Redirigir a modo edición para poder agregar imágenes
                 NavManager.NavigateTo($"/admin/listings/edit/{created.Id}", replace: true);
             }
         }
@@ -479,7 +479,7 @@
     {
         var result = await DialogService.ShowMessageBox(
             "Archivar Propiedad", 
-            "�Est�s seguro de archivar esta propiedad? Ya no ser� visible p�blicamente.",
+            "¿Estás seguro de archivar esta propiedad? Ya no será visible públicamente.",
             yesText: "Archivar", cancelText: "Cancelar");
         
         if (result == true && Id.HasValue)
@@ -517,7 +517,7 @@
     {
         var result = await DialogService.ShowMessageBox(
             "Mover a Portafolio", 
-            "�Mover esta propiedad al portafolio? Se mostrar� como proyecto completado y dejar� de aparecer en propiedades disponibles.",
+            "¿Mover esta propiedad al portafolio? Se mostrará como proyecto completado y dejará de aparecer en propiedades disponibles.",
             yesText: "Mover a Portafolio", cancelText: "Cancelar");
         
         if (result == true && Id.HasValue)

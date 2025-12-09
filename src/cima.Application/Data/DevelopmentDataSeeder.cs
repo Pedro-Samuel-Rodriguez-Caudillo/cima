@@ -102,6 +102,26 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             _logger.LogInformation("Admin user admin@cima.com already exists (password not modified in DbMigrator)");
         }
 
+        // Crear perfil de arquitecto para admin (para que sea tratado como arquitecto)
+        var persistedAdmin = await _userRepository.FindByNormalizedUserNameAsync("ADMIN@CIMA.COM");
+        if (persistedAdmin != null)
+        {
+            var adminArchitect = await _architectRepository.FirstOrDefaultAsync(a => a.UserId == persistedAdmin.Id);
+            if (adminArchitect == null)
+            {
+                adminArchitect = new Architect
+                {
+                    UserId = persistedAdmin.Id,
+                    TotalListingsPublished = 0,
+                    ActiveListings = 0,
+                    RegistrationDate = DateTime.UtcNow.AddDays(-120),
+                    IsActive = true
+                };
+                await _architectRepository.InsertAsync(adminArchitect);
+                _logger.LogInformation("Created architect profile for admin user");
+            }
+        }
+
         // Architect user
         var architectUser = await _userRepository.FindByNormalizedUserNameAsync("ARQ@CIMA.COM");
         if (architectUser == null)

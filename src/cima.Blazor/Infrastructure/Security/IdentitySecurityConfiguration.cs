@@ -5,19 +5,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace cima.Blazor.Infrastructure.Security;
 
 /// <summary>
-/// Configuraci髇 de pol韙icas de seguridad para Identity
+/// CONFIGURACI脫N de polticas de seguridad para Identity
 /// </summary>
 public static class IdentitySecurityConfiguration
 {
     /// <summary>
-    /// Configura las pol韙icas de contrase馻, lockout y seguridad
+    /// Configura las polticas de contrase帽a, lockout y seguridad
     /// </summary>
     public static IServiceCollection ConfigureCimaIdentityOptions(this IServiceCollection services)
     {
         services.Configure<IdentityOptions>(options =>
         {
             // ========================================
-            // POL蚑ICAS DE CONTRASE袮
+            // POLTICAS DE CONtrase帽A
             // ========================================
             options.Password.RequiredLength = 6;
             options.Password.RequireDigit = true;
@@ -27,20 +27,20 @@ public static class IdentitySecurityConfiguration
             options.Password.RequiredUniqueChars = 1;
 
             // ========================================
-            // POL蚑ICAS DE LOCKOUT (Bloqueo por intentos fallidos)
+            // POLTICAS DE LOCKOUT (Bloqueo por intentos fallidos)
             // ========================================
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             options.Lockout.MaxFailedAccessAttempts = 5;
             options.Lockout.AllowedForNewUsers = true;
 
             // ========================================
-            // POL蚑ICAS DE USUARIO
+            // POLTICAS DE USUARIO
             // ========================================
             options.User.RequireUniqueEmail = true;
             options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
 
             // ========================================
-            // POL蚑ICAS DE SIGN-IN
+            // POLTICAS DE SIGN-IN
             // ========================================
             options.SignIn.RequireConfirmedEmail = false; // Para arquitectos, el admin crea las cuentas
             options.SignIn.RequireConfirmedPhoneNumber = false;
@@ -51,14 +51,14 @@ public static class IdentitySecurityConfiguration
     }
 
     /// <summary>
-    /// Configura opciones de cookies de autenticaci髇
+    /// Configura opciones de cookies de autenticaci贸n
     /// </summary>
     public static IServiceCollection ConfigureCimaAuthCookies(this IServiceCollection services)
     {
         services.ConfigureApplicationCookie(options =>
         {
             // ========================================
-            // CONFIGURACI覰 DE COOKIES
+            // CONFIGURACI脫N DE COOKIES
             // ========================================
             options.Cookie.Name = "cima.Auth";
             options.Cookie.HttpOnly = true;
@@ -66,13 +66,13 @@ public static class IdentitySecurityConfiguration
             options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
 
             // ========================================
-            // TIEMPOS DE EXPIRACI覰
+            // TIEMPOS DE EXPIRAci贸n
             // ========================================
             options.ExpireTimeSpan = TimeSpan.FromDays(14); // Remember me duration
             options.SlidingExpiration = true; // Renovar cookie en cada request
 
             // ========================================
-            // RUTAS DE AUTENTICACI覰
+            // RUTAS DE autenticaci贸n
             // ========================================
             options.LoginPath = "/Account/Login";
             options.LogoutPath = "/Account/Logout";
@@ -91,7 +91,7 @@ public static class IdentitySecurityConfiguration
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
             // Validar el security stamp cada 30 minutos
-            // Si el usuario cambia su contrase馻 en otro dispositivo, se invalida la sesi髇
+            // Si el usuario cambia su contrase帽a en otro dispositivo, se invalida la sesi贸n
             options.ValidationInterval = TimeSpan.FromMinutes(30);
         });
 

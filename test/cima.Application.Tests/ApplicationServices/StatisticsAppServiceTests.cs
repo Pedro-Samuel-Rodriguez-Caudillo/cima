@@ -11,7 +11,7 @@ using Volo.Abp.Users;
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests de integración para StatisticsAppService
+/// Tests de integracin para StatisticsAppService
 /// </summary>
 public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -197,7 +197,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
 
     private async Task<Architect> CreateTestArchitectAsync()
     {
-        var adminUserId = _currentUser.Id ?? Guid.NewGuid();
+        var adminUserId = Guid.NewGuid(); // usar siempre un usuario nuevo para evitar colisiones en tests
         
         var architect = new Architect
         {

@@ -9,9 +9,9 @@ using Volo.Abp.DependencyInjection;
 namespace cima.Images;
 
 /// <summary>
-/// Implementaci髇 del servicio de almacenamiento de im醙enes en disco local
-/// NOTA: Esta es una implementaci髇 simple para desarrollo
-/// En producci髇 se recomienda usar Azure Blob Storage o AWS S3
+/// Implementaci贸n del servicio de almacenamiento de im谩genes en disco local
+/// NOTA: Esta es una implementaci贸n simple para desarrollo
+/// En producci贸n se recomienda usar Azure Blob Storage o AWS S3
 /// </summary>
 public class LocalImageStorageService : IImageStorageService, ITransientDependency
 {
@@ -40,7 +40,7 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
             );
         }
 
-        // Generar nombre 鷑ico
+        // Generar nombre 煤nico
         var uniqueFileName = $"{Guid.NewGuid()}{extension}";
         
         // Construir ruta completa (usando ContentRootPath)
@@ -78,7 +78,7 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
             return Task.CompletedTask;
         }
 
-        // Construir ruta f韘ica
+        // Construir ruta f铆sica
         var relativePath = imageUrl.TrimStart('/');
         var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", relativePath);
 
@@ -92,7 +92,7 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
             catch
             {
                 // Log error pero no fallar
-                // En producci髇 usar ILogger
+                // En producci贸n usar ILogger
             }
         }
 
@@ -101,13 +101,13 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
 
     public bool ValidateImage(string fileName, long fileSize)
     {
-        // Validar tama駉
+        // Validar tama帽o
         if (fileSize > MaxFileSize)
         {
             return false;
         }
 
-        // Validar extensi髇
+        // Validar extensi贸n
         var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(extension) || !AllowedExtensions.Contains(extension))
         {

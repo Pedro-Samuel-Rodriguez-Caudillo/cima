@@ -224,6 +224,12 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
             cancellationToken
         );
 
+        // Si es admin y no tiene perfil, crearlo automáticamente para que sea tratado como arquitecto
+        if (architect == null && CurrentUser.IsInRole("admin"))
+        {
+            architect = await EnsureArchitectProfileForUserAsync(CurrentUser.Id.Value, cancellationToken);
+        }
+
         if (architect == null)
         {
             return null;
@@ -351,6 +357,36 @@ public class ArchitectAppService : ApplicationService, IArchitectAppService
         var random = new Random();
         var digits = random.Next(1000, 9999);
         return $"Cima{digits}!";
+    }
+
+    /// <summary>
+    /// Garantiza que el usuario tenga un perfil de arquitecto.
+    /// Si no existe, lo crea con valores por defecto.
+    /// </summary>
+    private async Task<Architect> EnsureArchitectProfileForUserAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var queryable = await _architectRepository.GetQueryableAsync();
+        var existing = await AsyncExecuter.FirstOrDefaultAsync(
+            queryable.Where(a => a.UserId == userId),
+            cancellationToken
+        );
+
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        var architect = new Architect
+        {
+            UserId = userId,
+            TotalListingsPublished = 0,
+            ActiveListings = 0,
+            RegistrationDate = Clock.Now,
+            IsActive = true
+        };
+
+        await _architectRepository.InsertAsync(architect, autoSave: true, cancellationToken: cancellationToken);
+        return architect;
     }
 
     /// <summary>

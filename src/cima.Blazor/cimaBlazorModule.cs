@@ -186,6 +186,15 @@ public class cimaBlazorModule : AbpModule
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
 
+        // Aumentar límite de tamaño para mensajes SignalR (uploads de imágenes en Blazor Server)
+        context.Services.AddSignalR(options =>
+        {
+            // 10MB por mensaje permite imágenes base64 de hasta 5MB sin timeouts
+            options.MaximumReceiveMessageSize = 10 * 1024 * 1024;
+            options.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
+            options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+        });
+
         // Added MudBlazor
         context.Services.AddMudServices();
 
@@ -193,16 +202,16 @@ public class cimaBlazorModule : AbpModule
         context.Services.AddCascadingAuthenticationState();
 
         // ========================================
-        // CONFIGURACI�N DE SEGURIDAD DE IDENTITY
+        // CONFIGURACIÓN DE SEGURIDAD DE IDENTITY
         // ========================================
         context.Services.ConfigureCimaIdentityOptions();
         context.Services.ConfigureCimaAuthCookies();
         context.Services.ConfigureCimaSecurityStamp();
         
         // ========================================
-        // CONFIGURACI�N DE ABP ACCOUNT - LOGIN LOCAL
+        // CONFIGURACIÓN DE ABP ACCOUNT - LOGIN LOCAL
         // ========================================
-        // Habilitar login local expl�citamente para que el formulario se muestre
+        // Habilitar login local explícitamente para que el formulario se muestre
         Configure<AbpAccountOptions>(options =>
         {
             options.WindowsAuthenticationSchemeName = null; // No usar Windows Auth

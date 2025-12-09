@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
+using System.IO;
 using Volo.Abp;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
@@ -41,6 +44,9 @@ public class cimaApplicationTestModule : AbpModule
         });
         
         context.Services.AddAlwaysDisableUnitOfWorkTransaction();
+
+        // Registrar un entorno de host básico para servicios que dependen de IHostEnvironment (ej. LocalImageStorageService)
+        context.Services.AddSingleton<IHostEnvironment>(_ => new TestHostEnvironment());
 
         ConfigureInMemorySqlite(context.Services);
     }
@@ -97,5 +103,13 @@ public class cimaApplicationTestModule : AbpModule
         }
 
         return connection;
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "cima.Application.Tests";
+        public string ContentRootPath { get; set; } = Path.GetTempPath();
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

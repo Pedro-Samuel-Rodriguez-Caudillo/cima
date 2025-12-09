@@ -22,6 +22,10 @@
                 <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/architect/dashboard">
                     Mi Panel
                 </MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddHome" Href="/admin/listings/create">
+                    Nueva propiedad
+                </MudButton>
             </div>
             <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">Mis Propiedades</h1>
             <p class="text-neutral-600 mt-1">Todas las propiedades que has publicado</p>
@@ -69,17 +73,17 @@
 
                                 <div class="flex flex-wrap items-center gap-4 mt-2 text-sm text-neutral-600">
                                     <span>@EnumLocalizer.GetPropertyCategoryName(listing.Category)</span>
-                                    <span>•</span>
+                                    <span></span>
                                     <span>@EnumLocalizer.GetPropertyTypeName(listing.Type)</span>
                                     @if (listing.Bedrooms > 0)
                                     {
-                                        <span>•</span>
+                                        <span></span>
                                         <span>@listing.Bedrooms hab.</span>
                                     }
                                     @if (listing.Bathrooms > 0)
                                     {
-                                        <span>•</span>
-                                        <span>@listing.Bathrooms baños</span>
+                                        <span></span>
+                                        <span>@listing.Bathrooms baos</span>
                                     }
                                 </div>
 
@@ -93,7 +97,7 @@
                                             <MudButton Variant="Variant.Outlined" Size="Size.Small" 
                                                 Href="@($"/properties/{listing.Id}")" Target="_blank"
                                                 StartIcon="@Icons.Material.Filled.Visibility">
-                                                Ver Publicación
+                                                Ver PublicacÃ³n
                                             </MudButton>
                                         }
                                     </div>

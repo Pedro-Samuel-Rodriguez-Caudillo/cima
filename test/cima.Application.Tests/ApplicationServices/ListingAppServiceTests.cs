@@ -15,7 +15,7 @@ using Volo.Abp.Users;
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests de integración para ListingAppService
+/// Tests de integraciï¿½n para ListingAppService
 /// </summary>
 public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -84,7 +84,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     public async Task GetListAsync_Should_Filter_By_SearchTerm()
     {
         // Arrange
-        await CreateTestListingAsync(title: "Casa en Polanco Única");
+        await CreateTestListingAsync(title: "Casa en Polanco ï¿½nica");
         await CreateTestListingAsync(title: "Departamento Centro");
 
         var input = new GetListingsInput
@@ -139,8 +139,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var input = new CreateUpdateListingDto
         {
             Title = "Nueva Propiedad Test",
-            Description = "Descripción de prueba con más de 20 caracteres para validación",
-            Location = "Guadalajara, Jalisco, México",
+            Description = "Descripciï¿½n de prueba con mï¿½s de 20 caracteres para validaciï¿½n",
+            Location = "Guadalajara, Jalisco, Mï¿½xico",
             Price = 1500000m,
             LandArea = 200m,
             ConstructionArea = 120m,
@@ -178,9 +178,9 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var listing = await CreateTestListingAsync();
         var input = new CreateUpdateListingDto
         {
-            Title = "Título Actualizado para Test",
+            Title = "Tï¿½tulo Actualizado para Test",
             Description = listing.Description,
-            Location = "Nueva Ubicación Actualizada México",
+            Location = "Nueva Ubicaciï¿½n Actualizada Mï¿½xico",
             Price = 2000000m,
             LandArea = listing.LandArea,
             ConstructionArea = listing.ConstructionArea,
@@ -200,7 +200,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         });
 
         // Assert
-        result.Title.ShouldBe("Título Actualizado para Test");
+        result.Title.ShouldBe("Tï¿½tulo Actualizado para Test");
         (result.Location?.ToString()).ShouldBe("Nueva Ubicaci?n Actualizada M?xico");
         result.Price.ShouldBe(2000000m);
         result.Bedrooms.ShouldBe(4);
@@ -328,7 +328,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         // Assert
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(original.Id); // Diferente ID
-        result.Title.ShouldContain("Copia"); // Título con (Copia)
+        result.Title.ShouldContain("Copia"); // Tï¿½tulo con (Copia)
         result.Price.ShouldBe(original.Price); // Mismo precio
         result.Status.ShouldBe(ListingStatus.Draft); // Estado Draft
     }
@@ -477,6 +477,16 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     private async Task<Architect> CreateTestArchitectAsync()
     {
         var adminUserId = _currentUser.Id ?? Guid.NewGuid();
+
+        var existing = await WithUnitOfWorkAsync(async () =>
+        {
+            return await _architectRepository.FirstOrDefaultAsync(a => a.UserId == adminUserId);
+        });
+
+        if (existing != null)
+        {
+            return existing;
+        }
         
         var architect = new Architect
         {

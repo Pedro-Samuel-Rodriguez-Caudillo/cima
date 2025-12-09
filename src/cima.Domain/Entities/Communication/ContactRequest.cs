@@ -21,7 +21,6 @@ namespace cima.Domain.Entities
         
         /// <summary>
         /// ID del arquitecto que publicó (solo para tracking interno)
-        /// El contacto NO va directo al arquitecto, sino al correo administrativo
         /// </summary>
         public Guid ArchitectId { get; set; }
         #endregion

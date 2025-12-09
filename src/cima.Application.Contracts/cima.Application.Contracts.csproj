@@ -22,7 +22,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="Dtos\" />
     <Folder Include="Email\" />
     <Folder Include="Properties\" />
   </ItemGroup>

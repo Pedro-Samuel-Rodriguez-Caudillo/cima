@@ -124,7 +124,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Aplica ordenamiento a la consulta.
-    /// Soporta m�ltiples formatos de entrada para flexibilidad.
+    /// Soporta múltiples formatos de entrada para flexibilidad.
     /// </summary>
     private IQueryable<Listing> ApplySorting(IQueryable<Listing> queryable, string? sorting)
     {
@@ -133,7 +133,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             return queryable.OrderByDescending(p => p.CreatedAt);
         }
 
-        // Normalizar: quitar espacios extras y convertir a min�sculas
+        // Normalizar: quitar espacios extras y convertir a minúsculas
         var normalizedSorting = sorting.Trim().ToLower().Replace(" ", "");
 
         return normalizedSorting switch
@@ -158,7 +158,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             "title" or "titleasc" => queryable.OrderBy(p => p.Title),
             "titledesc" => queryable.OrderByDescending(p => p.Title),
             
-            // Default - m�s recientes primero
+            // Default - más recientes primero
             _ => queryable.OrderByDescending(p => p.CreatedAt)
         };
     }
@@ -224,7 +224,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes editar tus propias propiedades");
         }
 
-        // Validar que el arquitecto est� activo
+        // Validar que el arquitecto está activo
         if (!architect.IsActive)
         {
             throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
@@ -283,7 +283,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Cambia estado de Draft a Published usando ListingManager
-    /// Los eventos de dominio actualizan las estad�sticas del arquitecto
+    /// Los eventos de dominio actualizan las estadásticas del arquitecto
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
     public async Task<ListingDto> PublishAsync(Guid id)
@@ -297,7 +297,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");
         }
 
-        // Validar que el arquitecto est� activo
+        // Validar que el arquitecto está activo
         if (!architect.IsActive)
         {
             throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
@@ -307,7 +307,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Warning si no tiene imagenes (pero permite publicar)
         if (listing.Images == null || !listing.Images.Any())
         {
-            Logger.LogWarning("Publicando propiedad {ListingId} sin im�genes", id);
+            Logger.LogWarning("Publicando propiedad {ListingId} sin imágenes", id);
         }
 
         // Usar ListingManager - dispara eventos de dominio
@@ -354,7 +354,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException("Solo puedes desarchivar tus propias propiedades");
         }
 
-        // Validar que el arquitecto est� activo
+        // Validar que el arquitecto está activo
         if (!architect.IsActive)
         {
             throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
@@ -414,14 +414,14 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Duplica una propiedad existente creando una copia en estado Draft
-    /// No copia las im�genes, solo los datos de la propiedad
+    /// No copia las imágenes, solo los datos de la propiedad
     /// </summary>
     [Authorize(cimaPermissions.Listings.Create)]
     public async Task<ListingDto> DuplicateAsync(Guid id)
     {
         var original = await _listingRepository.GetAsync(id);
 
-        // Validacion: Solo el due�o o admin puede duplicar
+        // Validacion: Solo el dueño o admin puede duplicar
         var architect = await _architectRepository.GetAsync(original.ArchitectId);
         if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
@@ -454,7 +454,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Obtiene solo propiedades publicadas (p�blico - sin autenticaci�n)
+    /// Obtiene solo propiedades publicadas (público - sin autenticación)
     /// </summary>
     [AllowAnonymous]
     public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
@@ -548,7 +548,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Verifica si el usuario actual es administrador (m�todo sincr�nico)
+    /// Verifica si el usuario actual es administrador (método sincrónico)
     /// </summary>
     private bool IsAdmin()
     {
@@ -557,18 +557,18 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Agrega una imagen a una propiedad usando lista enlazada.
-    /// La nueva imagen se agrega al final de la galer�a.
+    /// La nueva imagen se agrega al final de la galería.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
         var listing = await GetListingWithImagesAsync(listingId);
 
-        // Validaci�n de propiedad
+        // Validación de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
         if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
-            throw new AbpAuthorizationException("Solo puedes editar im�genes de tus propias propiedades");
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
         }
 
         // Guardar imagen en almacenamiento si viene como data URL
@@ -577,7 +577,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Crear nuevo ID para la imagen
         var newImageId = Guid.NewGuid();
         
-        // Encontrar la �ltima imagen (NextImageId == null)
+        // Encontrar la última imagen (NextImageId == null)
         ListingImage? lastImage = null;
         if (listing.Images.Any())
         {
@@ -595,12 +595,12 @@ public class ListingAppService : cimaAppService, IListingAppService
             nextImageId: null
         );
 
-        // Si hay una �ltima imagen, actualizarla para que apunte a la nueva
+        // Si hay una última imagen, actualizarla para que apunte a la nueva
         if (lastImage != null)
         {
             var updatedLastImage = lastImage.WithNextImage(newImageId);
             
-            // Reemplazar la imagen en la colecci�n (ValueObject es inmutable)
+            // Reemplazar la imagen en la colección (ValueObject es inmutable)
             var imagesList = listing.Images.ToList();
             var lastImageIndex = imagesList.FindIndex(img => img.ImageId == lastImage.ImageId);
             if (lastImageIndex >= 0)
@@ -641,11 +641,11 @@ public class ListingAppService : cimaAppService, IListingAppService
     {
         var listing = await GetListingWithImagesAsync(listingId);
 
-        // Validaci�n de propiedad
+        // Validación de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
         if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
-            throw new AbpAuthorizationException("Solo puedes editar im�genes de tus propias propiedades");
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
         }
 
         var imageToRemove = listing.Images.FirstOrDefault(img => img.ImageId == imageId);
@@ -693,7 +693,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Actualiza el orden de las im�genes reconstruyendo la lista enlazada.
+    /// Actualiza el orden de las imágenes reconstruyendo la lista enlazada.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
@@ -705,20 +705,20 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         var listing = await GetListingWithImagesAsync(listingId);
 
-        // Validaci�n de propiedad
+        // Validación de propiedad
         var architect = await _architectRepository.GetAsync(listing.ArchitectId);
         if (architect.UserId != CurrentUser.Id && !IsAdmin())
         {
-            throw new AbpAuthorizationException("Solo puedes editar im�genes de tus propias propiedades");
+            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
         }
 
         // Ordenar por DisplayOrder del input
         var orderedInput = input.OrderBy(x => x.DisplayOrder).ToList();
         
-        // Crear diccionario de im�genes existentes
+        // Crear diccionario de imágenes existentes
         var existingImages = listing.Images.ToDictionary(img => img.ImageId);
         
-        // Verificar que todas las im�genes del input existen
+        // Verificar que todas las imágenes del input existen
         foreach (var item in orderedInput)
         {
             if (!existingImages.ContainsKey(item.ImageId))
@@ -729,7 +729,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             }
         }
 
-        // Reconstruir la lista enlazada seg�n el nuevo orden
+        // Reconstruir la lista enlazada según el nuevo orden
         var newImagesList = new List<ListingImage>();
         
         for (int i = 0; i < orderedInput.Count; i++)
@@ -761,8 +761,8 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// B�squeda avanzada de propiedades con filtros
-    /// Incluye validaci�n autom�tica por DataAnnotations de ABP
+    /// Búsqueda avanzada de propiedades con filtros
+    /// Incluye Validación automática por DataAnnotations de ABP
     /// </summary>
     [AllowAnonymous]
     public async Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto)
@@ -771,16 +771,16 @@ public class ListingAppService : cimaAppService, IListingAppService
             listing => listing.Architect!,  // ? null-forgiving
             listing => listing.Images!);    // ? null-forgiving
 
-        // Solo propiedades publicadas para b�squeda p�blica
+        // Solo propiedades publicadas para búsqueda pública
         queryable = queryable.Where(p => p.Status == ListingStatus.Published);
 
-        // Filtro por tipo de transacci�n
+        // Filtro por tipo de transacción
         if (searchDto.TransactionType.HasValue)
         {
             queryable = queryable.Where(p => p.TransactionType == searchDto.TransactionType.Value);
         }
 
-        // Filtro por categor�a
+        // Filtro por categoría
         if (searchDto.Category.HasValue)
         {
             queryable = queryable.Where(p => p.Category == searchDto.Category.Value);
@@ -792,7 +792,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Type == searchDto.Type.Value);
         }
 
-        // Filtro por ubicaci�n (ya validado por RegEx en DTO)
+        // Filtro por ubicación (ya validado por RegEx en DTO)
         if (!string.IsNullOrWhiteSpace(searchDto.Location))
         {
             queryable = queryable.Where(p => p.Location != null && p.Location.Contains(searchDto.Location));  // ? null check
@@ -808,7 +808,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Price <= searchDto.MaxPrice.Value);
         }
 
-        // Filtros de rec�maras y ba�os
+        // Filtros de recámaras y baños
         if (searchDto.MinBedrooms.HasValue)
         {
             queryable = queryable.Where(p => p.Bedrooms >= searchDto.MinBedrooms.Value);
@@ -818,7 +818,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Bathrooms >= searchDto.MinBathrooms.Value);
         }
 
-        // Rango de �rea (usar LandArea para backward compatibility)
+        // Rango de área (usar LandArea para backward compatibility)
         if (searchDto.MinArea.HasValue)
         {   
             queryable = queryable.Where(p => p.LandArea >= searchDto.MinArea.Value);
@@ -868,7 +868,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Solo propiedades en estado Portfolio
         queryable = queryable.Where(p => p.Status == ListingStatus.Portfolio);
 
-        // Aplicar filtros b�sicos
+        // Aplicar filtros básicos
         if (!string.IsNullOrWhiteSpace(input.SearchTerm))
         {
             queryable = queryable.Where(p =>
@@ -920,7 +920,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         var queryable = await _listingRepository.GetQueryableAsync();
 
-        // Solo propiedades publicadas o en portafolio, con ubicaci�n definida
+        // Solo propiedades publicadas o en portafolio, con ubicación definida
         // Proyectar SOLO el campo Location para minimizar transferencia de datos
         var suggestions = await AsyncExecuter.ToListAsync(
             queryable

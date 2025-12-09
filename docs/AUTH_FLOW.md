@@ -1,59 +1,59 @@
-# Flujo de Autenticaci�n - 4cima
+# Flujo de autenticación - 4cima
 
-Este documento describe el flujo completo de autenticaci�n en la aplicaci�n 4cima, incluyendo login, redirecci�n por rol, cambio de contrase�a obligatorio y recuperaci�n de contrase�a.
+Este documento describe el flujo completo de autenticación en la aplicación 4cima, incluyendo login, redirección por rol, cambio de contraseña obligatorio y recuperación de contraseña.
 
 ## Diagrama General del Flujo
 
 ```mermaid
 flowchart TD
     subgraph "Acceso Inicial"
-        A[Usuario accede a ruta] --> B{�Ruta protegida?}
-        B -->|No| C[Mostrar p�gina p�blica]
-        B -->|S�| D{�Autenticado?}
+        A[Usuario accede a ruta] --> B{¿Ruta protegida?}
+        B -->|No| C[Mostrar página pública]
+        B -->|Sí| D{¿Autenticado?}
     end
 
-    subgraph "Verificaci�n de Autenticaci�n"
+    subgraph "Verificación de autenticación"
         D -->|No| E[RedirectToLogin.razor]
         E --> F[ABP Account/Login<br/>con returnUrl]
-        D -->|S�| G{�Tiene permisos?}
+        D -->|Sí| G{¿Tiene permisos?}
         G -->|No| H[AccessDenied.razor]
-        G -->|S�| I[MustChangePasswordGuard]
+        G -->|Sí| I[MustChangePasswordGuard]
     end
 
     subgraph "Flujo de Login ABP"
-        F --> J[P�gina de Login]
-        J --> K{Credenciales v�lidas?}
+        F --> J[página de Login]
+        J --> K{Credenciales válidas?}
         K -->|No| L[Mostrar error]
         L --> J
-        K -->|S�| M[Crear sesi�n]
+        K -->|Sí| M[Crear sesión]
         M --> N{Remember Me?}
-        N -->|S�| O[Cookie persistente<br/>14 d�as]
-        N -->|No| P[Cookie de sesi�n]
+        N -->|Sí| O[Cookie persistente<br/>14 días]
+        N -->|No| P[Cookie de sesión]
         O --> Q[Redirect post-login]
         P --> Q
     end
 
-    subgraph "Verificaci�n MustChangePassword"
-        I --> R{�MustChangePassword?}
-        R -->|S�| S[Redirect a<br/>/account/change-password]
+    subgraph "Verificacón MustChangePassword"
+        I --> R{¿MustChangePassword?}
+        R -->|Sí| S[Redirect a<br/>/account/change-password]
         S --> T[ChangePassword.razor]
-        T --> U{Contrase�a cambiada?}
+        T --> U{Contraseña cambiada?}
         U -->|No| T
-        U -->|S�| V[Actualizar flag]
+        U -->|Sí| V[Actualizar flag]
         V --> W[Redirect a destino original]
         R -->|No| X[Continuar al destino]
     end
 
-    subgraph "Redirecci�n por Rol"
+    subgraph "redirección por Rol"
         Q --> Y[PostLogin.razor]
         Y --> Z{Verificar rol}
         Z -->|Admin| AA[/admin/dashboard]
         Z -->|Architect| AB[/architect/dashboard]
-        Z -->|returnUrl v�lido| AC[returnUrl]
+        Z -->|returnUrl válido| AC[returnUrl]
         Z -->|Otro| AD[/]
     end
 
-    X --> AE[Mostrar p�gina solicitada]
+    X --> AE[Mostrar página solicitada]
 
     style A fill:#e1f5fe
     style J fill:#fff3e0
@@ -62,37 +62,37 @@ flowchart TD
     style H fill:#ffebee
 ```
 
-## Flujo de Recuperaci�n de Contrase�a
+## Flujo de Recuperación de Contraseña
 
 ```mermaid
 flowchart TD
-    subgraph "Solicitud de Recuperaci�n"
-        A[Usuario en Login] --> B[Click: �Olvidaste tu contrase�a?]
+    subgraph "Solicitud de Recuperación"
+        A[Usuario en Login] --> B[Click: ¿Olvidaste tu contraseña?]
         B --> C[ABP Account/ForgotPassword]
         C --> D[Ingresar email]
-        D --> E{�Email existe?}
-        E -->|No| F[Mostrar mensaje gen�rico<br/>por seguridad]
-        E -->|S�| G[Generar token reset]
+        D --> E{¿Email existe?}
+        E -->|No| F[Mostrar mensaje genérico<br/>por seguridad]
+        E -->|Sí| G[Generar token reset]
     end
 
-    subgraph "Env�o de Email"
+    subgraph "Envío de Email"
         G --> H[Crear URL con token]
         H --> I[Enviar email<br/>SmtpEmailNotificationService<br/>o AzureEmailNotificationService]
-        I --> J[Mostrar confirmaci�n]
+        I --> J[Mostrar confirmación]
     end
 
-    subgraph "Reset de Contrase�a"
+    subgraph "Reset de Contraseña"
         K[Usuario abre email] --> L[Click en enlace]
         L --> M[ABP Account/ResetPassword]
-        M --> N{�Token v�lido?}
-        N -->|No| O[Token expirado/inv�lido]
-        N -->|S�| P[Formulario nueva contrase�a]
-        P --> Q{Contrase�a v�lida?}
-        Q -->|No| R[Mostrar errores<br/>validaci�n]
+        M --> N{¿Token válido?}
+        N -->|No| O[Token expirado/inválido]
+        N -->|Sí| P[Formulario nueva contraseña]
+        P --> Q{Contraseña válida?}
+        Q -->|No| R[Mostrar errores<br/>Validación]
         R --> P
-        Q -->|S�| S[Actualizar contrase�a]
+        Q -->|Sí| S[Actualizar contraseña]
         S --> T[Redirect a Login]
-        T --> U[Mostrar �xito]
+        T --> U[Mostrar éxito]
     end
 
     style A fill:#e1f5fe
@@ -105,32 +105,32 @@ flowchart TD
 
 ### Cliente (Blazor WebAssembly)
 
-| Componente | Ruta | Descripci�n |
+| Componente | Ruta | Descripción |
 |------------|------|-------------|
 | `RedirectToLogin.razor` | - | Redirige a ABP Login preservando returnUrl |
-| `PostLogin.razor` | `/account/post-login` | Maneja redirecci�n post-login por rol |
-| `AccessDenied.razor` | `/account/access-denied` | P�gina de acceso denegado |
-| `ChangePassword.razor` | `/account/change-password` | Cambio de contrase�a (obligatorio o voluntario) |
-| `MustChangePasswordGuard.razor` | - | Guarda que verifica si debe cambiar contrase�a |
-| `LoginRedirectService.cs` | - | Servicio de l�gica de redirecci�n |
+| `PostLogin.razor` | `/account/post-login` | Maneja redirección post-login por rol |
+| `AccessDenied.razor` | `/account/access-denied` | página de acceso denegado |
+| `ChangePassword.razor` | `/account/change-password` | Cambio de contraseña (obligatorio o voluntario) |
+| `MustChangePasswordGuard.razor` | - | Guarda que verifica si debe cambiar contraseña |
+| `LoginRedirectService.cs` | - | Servicio de lógica de redirección |
 
 ### Servidor (ABP Account Module)
 
-| P�gina | Ruta | Descripci�n |
+| página | Ruta | Descripción |
 |--------|------|-------------|
-| Login.cshtml | `/Account/Login` | P�gina de login |
+| Login.cshtml | `/Account/Login` | página de login |
 | ForgotPassword.cshtml | `/Account/ForgotPassword` | Solicitar reset |
-| ResetPassword.cshtml | `/Account/ResetPassword` | Cambiar contrase�a con token |
-| Logout | `/Account/Logout` | Cerrar sesi�n |
+| ResetPassword.cshtml | `/Account/ResetPassword` | Cambiar contraseña con token |
+| Logout | `/Account/Logout` | Cerrar sesión |
 
-## Configuraci�n de Remember Me
+## CONFIGURACIÓN de Remember Me
 
-ABP Identity configura autom�ticamente la cookie de autenticaci�n. La opci�n "Remember Me" en el login:
+ABP Identity configura automáticamente la cookie de autenticación. La opción "Remember Me" en el login:
 
-- **Activada**: Cookie persiste 14 d�as (configurable)
+- **Activada**: Cookie persiste 14 días (configurable)
 - **Desactivada**: Cookie expira al cerrar el navegador
 
-### Configurar duraci�n de Remember Me
+### Configurar duración de Remember Me
 
 ```csharp
 // En cimaBlazorModule.cs o IdentityModule
@@ -141,12 +141,12 @@ Configure<SecurityStampValidatorOptions>(options =>
 
 Configure<IdentityOptions>(options =>
 {
-    // Duraci�n del refresh token
+    // Duración del refresh token
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
 });
 ```
 
-## Configuraci�n de Recuperaci�n de Contrase�a
+## CONFIGURACIÓN de Recuperación de Contraseña
 
 ### 1. Configurar servicio de email
 
@@ -190,7 +190,7 @@ src/cima.Application/Notifications/
 
 ### 3. Plantillas de Email
 
-ABP usa el sistema de Virtual File System para plantillas. Las plantillas predeterminadas est�n en:
+ABP usa el sistema de Virtual File System para plantillas. Las plantillas predeterminadas están en:
 
 ```
 Volo.Abp.Account.Web/Pages/Account/
@@ -220,8 +220,8 @@ sequenceDiagram
     participant CP as ChangePassword.razor
     participant DB as Database
 
-    U->>G: Navega a p�gina protegida
-    G->>G: �Ruta excluida?
+    U->>G: Navega a página protegida
+    G->>G: ¿Ruta excluida?
     alt Ruta excluida
         G->>U: Continuar sin verificar
     else Ruta normal
@@ -232,14 +232,14 @@ sequenceDiagram
         alt mustChange = true
             G->>CP: Redirect /account/change-password
             CP->>U: Mostrar formulario
-            U->>CP: Nueva contrase�a
+            U->>CP: Nueva contraseña
             CP->>API: ChangePasswordAsync(dto)
             API->>DB: UPDATE password, MustChangePassword=false
             DB-->>API: OK
             API-->>CP: Success
             CP->>U: Redirect a destino original
         else mustChange = false
-            G->>U: Mostrar p�gina solicitada
+            G->>U: Mostrar página solicitada
         end
     end
 ```
@@ -263,7 +263,7 @@ private static readonly string[] ExcludedPaths =
 
 ## Seguridad
 
-### Validaci�n de ReturnUrl
+### Validación de ReturnUrl
 
 El `LoginRedirectService` valida returnUrl para prevenir open redirect:
 
@@ -283,25 +283,25 @@ private bool IsValidReturnUrl(string returnUrl)
 
 ### Tokens de Reset
 
-- Tokens de reset tienen expiraci�n configurable (default: 24h)
+- Tokens de reset tienen expiración configurable (default: 24h)
 - Son de un solo uso
-- Se invalidan al cambiar la contrase�a
+- Se invalidan al cambiar la contraseña
 
-## Logs y Diagn�stico
+## Logs y Diagnóstico
 
-El sistema genera logs para diagn�stico:
+El sistema genera logs para diagnóstico:
 
 ```
-[INF] Usuario debe cambiar contrase�a, redirigiendo...
-[DBG] Token no autorizado durante verificaci�n de cambio de contrase�a
-[DBG] Sin permisos para verificar cambio de contrase�a
-[WRN] Error durante verificaci�n de cambio de contrase�a obligatorio
+[INF] Usuario debe cambiar contraseña, redirigiendo...
+[DBG] Token no autorizado durante verificacón de cambio de contraseña
+[DBG] Sin permisos para verificar cambio de contraseña
+[WRN] Error durante verificacón de cambio de contraseña obligatorio
 ```
 
-## Pr�ximos Pasos
+## Próximos Pasos
 
 1. [ ] Personalizar UI de Login con branding CIMA
 2. [ ] Configurar plantillas de email personalizadas
 3. [ ] Implementar 2FA (opcional)
-4. [ ] Configurar pol�tica de contrase�as
+4. [ ] Configurar política de contraseñas
 5. [ ] Implementar bloqueo por intentos fallidos
