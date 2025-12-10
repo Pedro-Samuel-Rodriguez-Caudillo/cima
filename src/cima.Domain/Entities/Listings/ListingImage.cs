@@ -45,21 +45,21 @@ namespace cima.Domain.Entities
         public ListingImage(
             Guid imageId,
             string url,
-            string thumbnailUrl,
-            string altText,
-            long fileSize,
-            string contentType,
+            string thumbnailUrl = "",
+            string altText = "",
+            long fileSize = 0,
+            string contentType = "image/jpeg",
             Guid? previousImageId = null,
             Guid? nextImageId = null)
         {
             ImageId = imageId;
             Url = url ?? throw new ArgumentNullException(nameof(url));
-            ThumbnailUrl = thumbnailUrl ?? url ?? string.Empty;
+            ThumbnailUrl = string.IsNullOrWhiteSpace(thumbnailUrl) ? url ?? string.Empty : thumbnailUrl;
             PreviousImageId = previousImageId;
             NextImageId = nextImageId;
             AltText = altText ?? string.Empty;
             FileSize = fileSize;
-            ContentType = contentType ?? "image/jpeg";
+            ContentType = string.IsNullOrWhiteSpace(contentType) ? "image/jpeg" : contentType;
         }
 
         /// <summary>

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Hosting;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Volo.Abp.DependencyInjection;
@@ -34,7 +33,6 @@ public class LocalImageStorageServiceTests : cimaApplicationTestBase<cimaApplica
     {
         // Arrange: crear imagen pequeña en memoria
         using var image = new Image<Rgba32>(width: 50, height: 50);
-        image.Mutate(ctx => ctx.Fill(Color.Red));
 
         await using var ms = new MemoryStream();
         await image.SaveAsPngAsync(ms);

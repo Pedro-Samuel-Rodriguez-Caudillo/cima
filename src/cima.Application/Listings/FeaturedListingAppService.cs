@@ -99,6 +99,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     /// - La página se siente más responsiva al cargar instantáneamente
     /// </summary>
     [AllowAnonymous]
+#pragma warning disable CS8603
     public async Task<List<ListingDto>> GetForHomepageAsync(int count = 6)
     {
         if (count > 12)
@@ -107,8 +108,8 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         }
 
         // Intentar obtener del caché
-        var cachedListings = await _cache.GetAsync(CACHE_KEY) ?? new List<ListingDto>();
-        if (cachedListings.Count > 0)
+        var cachedListings = await _cache.GetAsync(CACHE_KEY);
+        if (cachedListings != null && cachedListings.Count > 0)
         {
             // Aleatorizar el orden en cada petición para variedad visual
             // El caché guarda los datos, pero el orden cambia cada vez
@@ -118,7 +119,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
                 .Take(count)
                 .ToList();
 
-            return randomized!;
+            return randomized ?? new List<ListingDto>();
         }
 
         // Si no hay caché, obtener de BD
@@ -160,11 +161,14 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         // Retornar aleatorizado
         var random2 = new Random();
-        return (listings ?? new List<ListingDto>())
+        var randomizedList = listings
             .OrderBy(_ => random2.Next())
             .Take(count)
             .ToList();
+
+        return randomizedList ?? new List<ListingDto>();
     }
+#pragma warning restore CS8603
 
     /// <summary>
     /// Agrega una propiedad a destacados

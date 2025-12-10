@@ -307,7 +307,7 @@
     private string SearchTerm = "";
     private string? StatusFilter;
     private string? CategoryFilter;
-    private string? TransactionFilter;
+    private string? TransactionFilter { get; set; }
     private System.Timers.Timer? _searchTimer;
     
     private bool IsAllSelected => Listings.Any() && Listings.All(l => SelectedIds.Contains(l.Id));

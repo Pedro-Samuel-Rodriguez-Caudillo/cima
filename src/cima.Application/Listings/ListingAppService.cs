@@ -590,7 +590,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             imageId: newImageId,
             url: storedImage.Url,
             thumbnailUrl: storedImage.ThumbnailUrl,
-            altText: input.AltText,
+            altText: input.AltText ?? string.Empty,
             fileSize: input.FileSize,
             contentType: input.ContentType,
             previousImageId: lastImage?.ImageId,

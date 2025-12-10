@@ -108,7 +108,7 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
 
         // Assert
         image.PreviousImageId.ShouldBe(previousId);
-        image.NextImageId.ShouldBeNull(); // Es la última
+        image.NextImageId.ShouldBeNull(); // Es la ï¿½ltima
     }
 
     [Fact]
@@ -278,14 +278,35 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
         var img3Id = Guid.NewGuid();
 
         // Act - Create chain: img1 -> img2 -> img3
-        var img1 = new ListingImage(img1Id, "https://example.com/1.jpg", "First", 1024000L, "image/jpeg", 
-            previousImageId: null, nextImageId: img2Id);
+        var img1 = new ListingImage(
+            imageId: img1Id,
+            url: "https://example.com/1.jpg",
+            thumbnailUrl: "",
+            altText: "First",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: null,
+            nextImageId: img2Id);
         
-        var img2 = new ListingImage(img2Id, "https://example.com/2.jpg", "Middle", 1024000L, "image/jpeg",
-            previousImageId: img1Id, nextImageId: img3Id);
+        var img2 = new ListingImage(
+            imageId: img2Id,
+            url: "https://example.com/2.jpg",
+            thumbnailUrl: "",
+            altText: "Middle",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: img1Id,
+            nextImageId: img3Id);
         
-        var img3 = new ListingImage(img3Id, "https://example.com/3.jpg", "Last", 1024000L, "image/jpeg",
-            previousImageId: img2Id, nextImageId: null);
+        var img3 = new ListingImage(
+            imageId: img3Id,
+            url: "https://example.com/3.jpg",
+            thumbnailUrl: "",
+            altText: "Last",
+            fileSize: 1024000L,
+            contentType: "image/jpeg",
+            previousImageId: img2Id,
+            nextImageId: null);
 
         // Assert
         // img1 is first

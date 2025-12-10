@@ -143,5 +143,5 @@ public class PropertySearchDto : PagedAndSortedResultRequestDto
     public string? SortBy { get; set; }
     
     public int PageNumber { get; set; } // Service uses this explicitly
-    public new int PageSize { get; set; } = 10;
+    public int PageSize { get; set; } = 10;
 }
