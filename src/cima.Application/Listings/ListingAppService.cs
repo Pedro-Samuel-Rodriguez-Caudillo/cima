@@ -7,6 +7,7 @@ using cima.Architects;
 using cima.Domain.Entities;
 using cima.Domain.Services.Listings;
 using cima.Domain.Shared;
+using cima.Images;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
@@ -572,7 +573,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         }
 
         // Guardar imagen en almacenamiento si viene como data URL
-        var storedUrl = await StoreImageIfNeededAsync(input);
+        var storedImage = await StoreImageIfNeededAsync(input);
 
         // Crear nuevo ID para la imagen
         var newImageId = Guid.NewGuid();
@@ -587,7 +588,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Crear la nueva imagen
         var newImage = new ListingImage(
             imageId: newImageId,
-            url: storedUrl,
+            url: storedImage.Url,
+            thumbnailUrl: storedImage.ThumbnailUrl,
             altText: input.AltText,
             fileSize: input.FileSize,
             contentType: input.ContentType,
@@ -626,6 +628,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             ImageId = newImage.ImageId,
             Url = newImage.Url,
+            ThumbnailUrl = storedImage.ThumbnailUrl,
             AltText = newImage.AltText,
             PreviousImageId = newImage.PreviousImageId,
             NextImageId = newImage.NextImageId
@@ -743,6 +746,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             var reorderedImage = new ListingImage(
                 imageId: originalImage.ImageId,
                 url: originalImage.Url,
+                thumbnailUrl: originalImage.ThumbnailUrl,
                 altText: originalImage.AltText,
                 fileSize: originalImage.FileSize,
                 contentType: originalImage.ContentType,
@@ -969,7 +973,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         };
     }
 
-    private async Task<string> StoreImageIfNeededAsync(CreateListingImageDto input)
+    private async Task<UploadImageResult> StoreImageIfNeededAsync(CreateListingImageDto input)
     {
         if (string.IsNullOrWhiteSpace(input.Url))
         {
@@ -1036,7 +1040,12 @@ public class ListingAppService : cimaAppService, IListingAppService
             return await _imageStorageService.UploadImageAsync(stream, fileName, "listings");
         }
 
-        return input.Url;
+        // URL ya alojada: se reutiliza como original y thumbnail
+        return new UploadImageResult
+        {
+            Url = input.Url,
+            ThumbnailUrl = input.Url
+        };
     }
 }
 

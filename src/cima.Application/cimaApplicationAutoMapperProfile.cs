@@ -37,7 +37,8 @@ public class cimaApplicationAutoMapperProfile : Profile
         CreateMap<ListingImage, ListingImageDto>()
             .ForMember(dest => dest.PreviousImageId, opt => opt.MapFrom(src => src.PreviousImageId))
             .ForMember(dest => dest.NextImageId, opt => opt.MapFrom(src => src.NextImageId))
-            .ForMember(dest => dest.ImageId, opt => opt.MapFrom(src => src.ImageId));
+            .ForMember(dest => dest.ImageId, opt => opt.MapFrom(src => src.ImageId))
+            .ForMember(dest => dest.ThumbnailUrl, opt => opt.MapFrom(src => src.ThumbnailUrl));
 
         // Featured Listings
         CreateMap<FeaturedListing, FeaturedListingDto>()

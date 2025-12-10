@@ -20,6 +20,7 @@ namespace cima.Domain.Entities
     {
         public Guid ImageId { get; private set; }
         public string Url { get; private set; } = string.Empty;
+        public string ThumbnailUrl { get; private set; } = string.Empty;
         
         /// <summary>
         /// ID of the previous image in the gallery (null if this is the first image)
@@ -44,6 +45,7 @@ namespace cima.Domain.Entities
         public ListingImage(
             Guid imageId,
             string url,
+            string thumbnailUrl,
             string altText,
             long fileSize,
             string contentType,
@@ -52,6 +54,7 @@ namespace cima.Domain.Entities
         {
             ImageId = imageId;
             Url = url ?? throw new ArgumentNullException(nameof(url));
+            ThumbnailUrl = thumbnailUrl ?? url ?? string.Empty;
             PreviousImageId = previousImageId;
             NextImageId = nextImageId;
             AltText = altText ?? string.Empty;
@@ -67,6 +70,7 @@ namespace cima.Domain.Entities
             return new ListingImage(
                 ImageId, 
                 Url, 
+                ThumbnailUrl,
                 AltText, 
                 FileSize, 
                 ContentType,
@@ -95,6 +99,7 @@ namespace cima.Domain.Entities
         {
             yield return ImageId;
             yield return Url;
+            yield return ThumbnailUrl;
             yield return PreviousImageId ?? Guid.Empty;
             yield return NextImageId ?? Guid.Empty;
             yield return AltText;

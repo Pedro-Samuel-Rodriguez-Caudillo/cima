@@ -2327,6 +2327,10 @@ namespace cima.Migrations
                             b1.Property<Guid?>("PreviousImageId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("ThumbnailUrl")
+                                .IsRequired()
+                                .HasColumnType("text");
+
                             b1.Property<string>("Url")
                                 .IsRequired()
                                 .HasColumnType("text");

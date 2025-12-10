@@ -5,18 +5,18 @@ using System.Threading.Tasks;
 namespace cima.Images;
 
 /// <summary>
-/// Servicio para almacenar y gestionar imágenes
+/// Servicio para almacenar y gestionar imï¿½genes
 /// </summary>
 public interface IImageStorageService
 {
     /// <summary>
-    /// Sube una imagen y retorna la URL relativa
+    /// Sube una imagen y retorna URLs (original + thumbnail si aplica).
     /// </summary>
     /// <param name="imageStream">Stream de la imagen</param>
     /// <param name="fileName">Nombre original del archivo</param>
     /// <param name="folder">Carpeta destino (ej: "listings")</param>
-    /// <returns>URL relativa de la imagen subida</returns>
-    Task<string> UploadImageAsync(Stream imageStream, string fileName, string folder = "listings");
+    /// <returns>Resultado con URL y ThumbnailUrl</returns>
+    Task<UploadImageResult> UploadImageAsync(Stream imageStream, string fileName, string folder = "listings");
     
     /// <summary>
     /// Elimina una imagen por su URL
@@ -25,10 +25,19 @@ public interface IImageStorageService
     Task DeleteImageAsync(string imageUrl);
     
     /// <summary>
-    /// Valida que el archivo sea una imagen válida
+    /// Valida que el archivo sea una imagen vï¿½lida
     /// </summary>
     /// <param name="fileName">Nombre del archivo</param>
-    /// <param name="fileSize">Tamaño en bytes</param>
-    /// <returns>True si es válido</returns>
+    /// <param name="fileSize">Tamaï¿½o en bytes</param>
+    /// <returns>True si es vï¿½lido</returns>
     bool ValidateImage(string fileName, long fileSize);
+}
+
+/// <summary>
+/// Resultado de subida de imagen con URLs calculadas.
+/// </summary>
+public class UploadImageResult
+{
+    public string Url { get; set; } = string.Empty;
+    public string ThumbnailUrl { get; set; } = string.Empty;
 }
