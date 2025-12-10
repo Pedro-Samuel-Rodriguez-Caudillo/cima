@@ -179,10 +179,14 @@
                                 @* Property Info *@
                                 <div class="col-span-1 lg:col-span-4 flex items-center gap-4">
                                     <div class="w-16 h-12 bg-neutral-200 rounded overflow-hidden flex-shrink-0 relative">
-                                        @if (listing.CoverImage != null)
+                                        @{
+                                            var coverUrl = listing.CoverImage?.Url 
+                                                ?? ImageOrderingHelper.GetCoverUrl(listing.Images);
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(coverUrl))
                                         {
-                                            <img src="@listing.CoverImage.ThumbnailUrl" 
-                                                 alt="@listing.Title" 
+                                            <img src="@coverUrl"
+                                                 alt="@listing.Title"
                                                  class="w-full h-full object-cover" />
                                         }
                                         else

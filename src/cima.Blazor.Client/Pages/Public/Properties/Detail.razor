@@ -20,7 +20,7 @@
         Title="@Listing.Title"
         Description="@GetSeoDescription()"
         Keywords="@GetSeoKeywords()"
-        ImageUrl="@(Listing.Images?.FirstOrDefault()?.Url)"
+        ImageUrl="@GetCoverImageUrl()"
         OgType="product"
         Price="@Listing.Price"
         JsonLd="@GetPropertyJsonLd()" />
@@ -317,18 +317,26 @@ else
         return SeoService.GeneratePropertyJsonLd(Listing, NavManager.BaseUri.TrimEnd('/'));
     }
 
+    private string? GetCoverImageUrl()
+    {
+        var cover = Listing?.CoverImage?.Url
+            ?? ImageOrderingHelper.GetCoverUrl(Listing?.Images);
+
+        return string.IsNullOrWhiteSpace(cover) ? PlaceholderImage : cover;
+    }
+
     private List<string> GetGalleryImages()
     {
-        var images = Listing?.Images?
-            .Where(image => !string.IsNullOrWhiteSpace(image.Url))
-            .Select(image => image.Url)
-            .ToList() ?? new List<string>();
+        var orderedImages = ImageOrderingHelper.OrderImages(Listing?.Images)
+            .Where(img => !string.IsNullOrWhiteSpace(img.Url))
+            .Select(img => img.Url)
+            .ToList();
 
-        if (images.Count == 0)
+        if (orderedImages.Count == 0)
         {
-            images.Add(PlaceholderImage);
+            orderedImages.Add(PlaceholderImage);
         }
 
-        return images;
+        return orderedImages;
     }
 }
