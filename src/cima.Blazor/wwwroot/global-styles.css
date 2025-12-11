@@ -1,3 +1,24 @@
+:root {
+    --cima-primary-600: #3f51c5;
+    --cima-primary-700: #1e3a8a;
+    --cima-primary-800: #192f70;
+    --cima-primary-900: #15255a;
+    --cima-surface: #ffffff;
+    --cima-surface-alt: #f1f3f5;
+    --cima-text: #0f172a;
+    --cima-muted: #475569;
+}
+
+html, body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--cima-surface-alt);
+    color: var(--cima-text);
+}
+
+a {
+    color: var(--cima-primary-700);
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

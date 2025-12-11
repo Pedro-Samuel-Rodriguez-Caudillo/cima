@@ -5,7 +5,7 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_cimaTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -31,4 +31,34 @@
 @code {
     // La autorización se maneja por el atributo [Authorize] 
     // en las páginas y por AuthorizeRouteView en Routes.razor
+    private readonly MudTheme _cimaTheme = new()
+    {
+        Palette = new Palette
+        {
+            Primary = "#1e3a8a",
+            Secondary = "#3f51c5",
+            Info = "#0ea5e9",
+            Success = "#22c55e",
+            Warning = "#f59e0b",
+            Error = "#dc2626",
+            Background = "#f8f9fa",
+            Surface = "#ffffff",
+            AppbarBackground = "#1e3a8a",
+            DrawerBackground = "#15255a",
+            TextPrimary = "#0f172a",
+            TextSecondary = "#475569",
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "10px",
+            DefaultBorderRadius2 = "14px",
+        },
+        Typography = new Typography
+        {
+            Default = new Default
+            {
+                FontFamily = new[] { "Inter", "Segoe UI", "system-ui", "sans-serif" },
+            }
+        }
+    };
 }

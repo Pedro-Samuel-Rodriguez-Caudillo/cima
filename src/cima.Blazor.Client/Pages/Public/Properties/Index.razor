@@ -8,17 +8,17 @@
 <PageTitle>@L["Properties:Title"] - @L["CompanyName"]</PageTitle>
 
 <div class="min-h-screen bg-neutral-50">
-    @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
-    <section class="bg-navy-900">
+    @* Header Section - Clean Design (diseï¿½ado para ir detrï¿½s del navbar transparente) *@
+    <section class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white">
         <div class="cima-container py-20 md:py-28">
             <div class="max-w-4xl">
-                <span class="inline-block px-4 py-1.5 bg-navy-700 text-navy-100 text-sm font-medium rounded-full mb-6">
-                    Catálogo de Propiedades
+                <span class="inline-block px-4 py-1.5 bg-white/10 border border-white/10 text-white text-sm font-medium rounded-full mb-6 backdrop-blur-md">
+                    Catï¿½logo de Propiedades
                 </span>
-                <h1 class="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 tracking-tight text-white">
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 tracking-tight text-white drop-shadow-lg">
                     @L["Properties:Title"]
                 </h1>
-                <p class="text-xl md:text-2xl text-navy-200 leading-relaxed max-w-2xl">
+                <p class="text-xl md:text-2xl text-white/80 leading-relaxed max-w-2xl">
                     @L["Properties:Subtitle"]
                 </p>
             </div>
@@ -89,7 +89,7 @@
                     </div>
                 </div>
 
-                @* Grid responsive: 1 col móvil, 2 cols tablet, 3 cols desktop, 4 cols wide *@
+                @* Grid responsive: 1 col mï¿½vil, 2 cols tablet, 3 cols desktop, 4 cols wide *@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8">
                     @foreach (var listing in Listings)
                     {
@@ -97,7 +97,7 @@
                     }
                 </div>
 
-                @* Paginación Premium *@
+                @* Paginaciï¿½n Premium *@
                 @if (TotalPages > 1)
                 {
                     <div class="mt-16 flex justify-center">
@@ -173,7 +173,7 @@
                         @L["Search:NoResults"]
                     </h3>
                     <p class="text-neutral-600 mb-8 max-w-md mx-auto">
-                        No encontramos propiedades que coincidan con tu búsqueda. Intenta ajustar los filtros.
+                        No encontramos propiedades que coincidan con tu bï¿½squeda. Intenta ajustar los filtros.
                     </p>
                     <button 
                         @onclick="HandleClearFilters"
@@ -204,7 +204,7 @@
     {
         try
         {
-            // Leer parámetros de query string
+            // Leer parï¿½metros de query string
             var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
             var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
             
@@ -217,7 +217,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegación/cambio de idioma
+            // Ignorar - ocurre durante navegaciï¿½n/cambio de idioma
         }
     }
 
@@ -249,7 +249,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegación/cambio de idioma
+            // Ignorar - ocurre durante navegaciï¿½n/cambio de idioma
         }
         catch (Exception ex)
         {

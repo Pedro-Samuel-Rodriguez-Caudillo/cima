@@ -1,9 +1,20 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Custom Base Styles */
 @layer base {
+    :root {
+        --cima-primary-600: #3f51c5;
+        --cima-primary-700: #1e3a8a;
+        --cima-primary-800: #192f70;
+        --cima-primary-900: #15255a;
+        --cima-surface: #ffffff;
+        --cima-surface-alt: #f1f3f5;
+        --cima-text: #0f172a;
+        --cima-muted: #475569;
+    }
+
     html {
         scroll-behavior: smooth;
     }
@@ -1369,7 +1380,9 @@
     /* === FLUJOS DE AUTENTICACION === */
     .auth-page {
         @apply min-h-screen flex items-center justify-center p-4;
-        background: #1d2a4b;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(30, 58, 138, 0.28), rgba(21, 37, 90, 0.75)),
+            linear-gradient(135deg, var(--cima-primary-700), var(--cima-primary-900));
     }
 
     .auth-container {
@@ -1448,7 +1461,7 @@
     .auth-checkbox {
         width: 1rem;
         height: 1rem;
-        accent-color: #1d2a4b;
+        accent-color: var(--cima-primary-700);
         cursor: pointer;
     }
 
@@ -1478,7 +1491,7 @@
     }
 
     .auth-submit {
-        @apply w-full rounded-xl bg-[#1d2a4b] px-4 py-3 text-white font-semibold transition;
+        @apply w-full rounded-xl bg-navy-700 px-4 py-3 text-white font-semibold transition;
     }
 
     .auth-submit:hover {
@@ -1573,7 +1586,7 @@
     }
 
     .auth-user-avatar {
-        @apply flex h-10 w-10 items-center justify-center rounded-full bg-[#1d2a4b] text-sm font-semibold text-white;
+        @apply flex h-10 w-10 items-center justify-center rounded-full bg-navy-700 text-sm font-semibold text-white;
     }
 
     .auth-user-details {
@@ -1601,7 +1614,7 @@
     }
 
     .auth-btn-primary {
-        @apply bg-[#1d2a4b] text-white hover:bg-navy-800;
+        @apply bg-navy-700 text-white hover:bg-navy-800;
     }
 
     .auth-btn-secondary {

@@ -15,10 +15,11 @@
     <div class="cima-container h-20 flex items-center justify-between">
         <!-- Brand -->
         <a href="/"
-           class="text-white font-display font-semibold tracking-[0.35em] uppercase text-lg hover:opacity-80 transition-opacity">
-            <img src="@($"{Navigation.BaseUri}images/logo/4cima - B&W.png")"
-                 alt="logo"
-                 class="h-16 w-auto" />
+           class="text-white font-display font-semibold tracking-[0.35em] uppercase text-lg hover:opacity-80 transition-opacity"
+           aria-label="Volver a inicio">
+            <img src="@($"{Navigation.BaseUri}images/logo/4cima.svg")"
+                 alt="CIMA"
+                 class="h-16 w-auto drop-shadow-lg" />
         </a>
 
         <!-- Desktop Menu -->
@@ -375,7 +376,7 @@
         var relative = Navigation.ToBaseRelativePath(absoluteUri ?? Navigation.Uri);
         var path = relative.Split('?', '#')[0].Trim('/').ToLowerInvariant();
 
-        // Navbar transparente solo en Home (hero), listados públicos y portafolio
+        // Navbar transparente solo en Home (hero), listados públicos y portafolio; sólido en el resto
         _useTransparentNavbar = string.IsNullOrEmpty(path)
             || path.StartsWith("properties")
             || path.StartsWith("portfolio");
@@ -475,14 +476,16 @@
     private string GetLinkClass()
     {
         var solidBackground = !_useTransparentNavbar || _isScrolled;
-        return "text-sm font-medium tracking-wide transition-colors duration-200 " + 
-               (solidBackground ? "text-white hover:text-navy-300" : "text-white/90 hover:text-white");
+        return "text-sm font-medium tracking-wide transition-colors duration-200 " +
+               (solidBackground ? "text-neutral-100 hover:text-white" : "text-white/90 hover:text-white");
     }
 
     private string GetNavbarBackgroundClass()
     {
         var solidBackground = !_useTransparentNavbar || _isScrolled;
-        return solidBackground ? "bg-navy-950 shadow-lg" : "bg-transparent border-b border-white/10";
+        return solidBackground
+            ? "bg-gradient-to-b from-navy-900/95 via-navy-900/90 to-navy-950/90 shadow-lg backdrop-blur-md border-b border-navy-900/40"
+            : "bg-transparent border-b border-white/10";
     }
 
     private void ToggleMobileMenu()

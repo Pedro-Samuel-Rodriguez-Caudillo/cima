@@ -1,10 +1,13 @@
 @using cima.Listings
 @using cima.Blazor.Client.Services
 @using System.Linq
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @inject NavigationManager Navigation
 @inject EnumLocalizationService EnumLocalizer
+@inject IStringLocalizer<cimaResource> L
 
-<article class="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1" 
+<article class="group cima-card shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1 border border-neutral-100" 
          @onclick="NavigateToDetail"
          @onclick:stopPropagation="true">
     
@@ -33,7 +36,7 @@
         }
         
         @* Overlay gradient *@
-        <div class="absolute inset-0 bg-gradient-to-t from-navy-950/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-navy-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
         @* Top badges *@
         <div class="absolute top-3 left-3 right-3 flex justify-between items-start">
@@ -80,7 +83,7 @@
         <div class="flex items-center gap-4 text-sm text-neutral-600 mb-4 pb-4 border-b border-neutral-100">
             @if (Listing.Bedrooms > 0)
             {
-                <div class="flex items-center gap-1.5" title="Recámaras">
+                <div class="flex items-center gap-1.5" title="@L["ListingCard:Bedrooms"]">
                     @* Icono de cama *@
                     <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -91,8 +94,8 @@
             }
             @if (Listing.Bathrooms > 0)
             {
-                <div class="flex items-center gap-1.5" title="Baños">
-                    @* Icono de bañera/ducha *@
+                <div class="flex items-center gap-1.5" title="@L["ListingCard:Bathrooms"]">
+                    @* Icono de baï¿½era/ducha *@
                     <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M3 13h18v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4z" />
@@ -105,12 +108,12 @@
             }
             @if (Listing.ConstructionArea > 0)
             {
-                <div class="flex items-center gap-1.5" title="Área de construcción">
+                <div class="flex items-center gap-1.5" title="@L["ListingCard:ConstructionArea"]">
                     <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                               d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                     </svg>
-                    <span class="font-medium">@Listing.ConstructionArea<span class="text-xs text-neutral-400 ml-0.5">m²</span></span>
+                    <span class="font-medium">@Listing.ConstructionArea<span class="text-xs text-neutral-400 ml-0.5">mÂ²</span></span>
                 </div>
             }
         </div>
@@ -118,14 +121,14 @@
         @* Price and CTA *@
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-xs text-neutral-500 uppercase tracking-wide mb-0.5">Precio</p>
+                <p class="text-xs text-neutral-500 uppercase tracking-wide mb-0.5">@L["ListingCard:Price"]</p>
                 <p class="text-xl font-display font-bold text-navy-900">
                     @FormatPrice(Listing.Price)
                 </p>
             </div>
             
-            <div class="flex items-center text-navy-600 font-semibold text-sm group-hover:text-navy-800 transition-colors">
-                <span>Ver más</span>
+            <div class="flex items-center text-navy-700 font-semibold text-sm group-hover:text-navy-900 transition-colors">
+                <span>@L["ListingCard:ViewMore"]</span>
                 <svg class="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
@@ -159,6 +162,6 @@
     private string GetLocationDisplay()
     {
         var location = Listing.Location?.ToString();
-        return string.IsNullOrWhiteSpace(location) ? "Ubicación no especificada" : location;
+        return string.IsNullOrWhiteSpace(location) ? L["ListingCard:LocationFallback"] : location;
     }
 }
