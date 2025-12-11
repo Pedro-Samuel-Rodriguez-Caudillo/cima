@@ -25,7 +25,7 @@
         <div class="cima-container py-6">
             <div class="flex items-center gap-4 mb-2">
                 <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/admin/listings">
-                    Volver
+                    @L["Common:Back"]
                 </MudButton>
             </div>
             <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">@PageTitle</h1>
@@ -37,23 +37,23 @@
         {
             <MudCard Class="p-8">
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-                <p class="text-center mt-4">Cargando...</p>
+                <p class="text-center mt-4">@L["Common:Loading"]</p>
             </MudCard>
         }
         else if (!CanCreateListings)
         {
             <MudAlert Severity="Severity.Warning" Class="mb-4">
-                <strong>Sin perfil de arquitecto</strong>
-                <p>Tu cuenta no tiene un perfil de arquitecto asociado. Contacta al administrador.</p>
+                <strong>@L["Admin:Listings:Form:NoArchitectProfileTitle"]</strong>
+                <p>@L["Admin:Listings:Form:NoArchitectProfileBody"]</p>
             </MudAlert>
         }
         else if (IsAdmin && (Architects == null || !Architects.Any()))
         {
             <MudAlert Severity="Severity.Warning" Class="mb-4">
-                <strong>No hay arquitectos disponibles</strong>
-                <p>Primero debes crear al menos un arquitecto antes de poder crear propiedades.</p>
+                <strong>@L["Admin:Listings:Form:NoArchitectsTitle"]</strong>
+                <p>@L["Admin:Listings:Form:NoArchitectsBody"]</p>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/admin/architects/create" Class="mt-2">
-                    Crear Arquitecto
+                    @L["Admin:Architects:Create"]
                 </MudButton>
             </MudAlert>
         }
@@ -65,77 +65,64 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 space-y-6">
                         <MudCard Class="p-6">
-                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">Informacion Basica</h2>
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">@L["Admin:Listings:Form:BasicInfo"]</h2>
                             <div class="space-y-4">
-                                <MudTextField @bind-Value="Model.Title" Label="Titulo" Required="true" 
+                                <MudTextField @bind-Value="Model.Title" Label="@L["Admin:Listings:Form:Title"]" Required="true" 
                                     Variant="Variant.Outlined" Class="mb-4"
                                     For="@(() => Model.Title)" />
-                                <MudTextField @bind-Value="Model.Description" Label="Descripcion" 
+                                <MudTextField @bind-Value="Model.Description" Label="@L["Admin:Listings:Form:Description"]" 
                                     Lines="4" Variant="Variant.Outlined" Class="mb-4"
                                     For="@(() => Model.Description)" />
-                                <MudTextField @bind-Value="Model.Location" Label="Ubicacion" Required="true" 
+                                <MudTextField @bind-Value="Model.Location" Label="@L["Admin:Listings:Form:Location"]" Required="true" 
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Location)" />
                             </div>
                         </MudCard>
 
                         <MudCard Class="p-6">
-                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">Detalles</h2>
+                            <h2 class="text-xl font-semibold text-neutral-900 mb-6">@L["Admin:Listings:Form:Details"]</h2>
                             <div class="grid grid-cols-2 gap-4">
-                                <MudNumericField @bind-Value="Model.Price" Label="Precio (MXN)" 
+                                <MudNumericField @bind-Value="Model.Price" Label="@L["Admin:Listings:Form:Price"]" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N0"
                                     For="@(() => Model.Price)" />
-                                <MudNumericField @bind-Value="Model.LandArea" Label="Area Terreno (m²)" 
+                                <MudNumericField @bind-Value="Model.LandArea" Label="@L["Admin:Listings:Form:LandArea"]" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N2"
                                     For="@(() => Model.LandArea)" />
-                                <MudNumericField @bind-Value="Model.ConstructionArea" Label="Area Construccion (m²)" 
+                                <MudNumericField @bind-Value="Model.ConstructionArea" Label="@L["Admin:Listings:Form:ConstructionArea"]" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N2"
                                     For="@(() => Model.ConstructionArea)" />
-                                <MudNumericField @bind-Value="Model.Bedrooms" Label="Recamaras" 
+                                <MudNumericField @bind-Value="Model.Bedrooms" Label="@L["Admin:Listings:Form:Bedrooms"]" 
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Bedrooms)" />
-                                <MudNumericField @bind-Value="Model.Bathrooms" Label="baños" 
+                                <MudNumericField @bind-Value="Model.Bathrooms" Label="@L["Admin:Listings:Form:Bathrooms"]" 
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Bathrooms)" />
                                 
-                                <MudSelect T="PropertyCategory" @bind-Value="Model.Category" Label="Categoria" 
+                                <MudSelect T="PropertyCategory" @bind-Value="Model.Category" Label="@L["Admin:Listings:Form:Category"]" 
                                     Variant="Variant.Outlined" Required="true"
                                     For="@(() => Model.Category)">
-                                    <MudSelectItem Value="PropertyCategory.Residential">Residencial</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Commercial">Comercial</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Mixed">Mixto</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Land">Terreno</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Residential">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Commercial">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Mixed">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Mixed)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyCategory.Land">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Land)</MudSelectItem>
                                 </MudSelect>
 
-                                <MudSelect T="PropertyType" @bind-Value="Model.Type" Label="Tipo" 
+                                <MudSelect T="PropertyType" @bind-Value="Model.Type" Label="@L["Admin:Listings:Form:Type"]" 
                                     Variant="Variant.Outlined" Required="true"
                                     For="@(() => Model.Type)">
-                                    <MudSelectItem Value="PropertyType.House">Casa</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Apartment">Departamento</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Condo">Condominio</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Townhouse">Townhouse</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Villa">Villa</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Office">Oficina</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.House">@EnumLocalizer.GetPropertyTypeName(PropertyType.House)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Apartment">@EnumLocalizer.GetPropertyTypeName(PropertyType.Apartment)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Condo">@EnumLocalizer.GetPropertyTypeName(PropertyType.Condo)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Townhouse">@EnumLocalizer.GetPropertyTypeName(PropertyType.Townhouse)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Villa">@EnumLocalizer.GetPropertyTypeName(PropertyType.Villa)</MudSelectItem>
+                                    <MudSelectItem Value="PropertyType.Office">@EnumLocalizer.GetPropertyTypeName(PropertyType.Office)</MudSelectItem>
                                 </MudSelect>
-
-                                @* Admin siempre ve el selector de arquitecto si hay arquitectos disponibles *@
-                                @if (ShowArchitectSelector)
-                                {
-                                    <MudSelect T="Guid" @bind-Value="Model.ArchitectId" Label="Arquitecto" 
-                                        Variant="Variant.Outlined" Required="true"
-                                        For="@(() => Model.ArchitectId)">
-                                        @foreach (var arch in Architects!)
-                                        {
-                                            <MudSelectItem Value="@arch.Id">@GetArchitectDisplayName(arch)</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                }
                             </div>
                         </MudCard>
 
@@ -153,8 +140,8 @@
                             <MudCard Class="p-6">
                                 <div class="text-center py-8 text-neutral-500">
                                     <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Size="Size.Large" Class="mb-4" />
-                                    <p class="font-medium">Galeria de Imagenes</p>
-                                    <p class="text-sm mt-1">Guarda la propiedad primero para agregar imagenes</p>
+                                    <p class="font-medium">@L["Admin:Listings:Form:GalleryPlaceholderTitle"]</p>
+                                    <p class="text-sm mt-1">@L["Admin:Listings:Form:GalleryPlaceholderDescription"]</p>
                                 </div>
                             </MudCard>
                         }
@@ -163,7 +150,7 @@
                     <div class="lg:col-span-1">
                         <div class="sticky top-24 space-y-6"> @* top-24 para navbar + padding *@
                             <MudCard Class="p-6">
-                                <h3 class="font-semibold mb-4">Acciones</h3>
+                                <h3 class="font-semibold mb-4">@L["Common:Actions"]</h3>
                                 
                                 @* Mostrar errores de validación si los hay *@
                                 <ValidationSummary class="text-red-600 text-sm mb-4" />
@@ -173,22 +160,22 @@
                                     @if (IsSubmitting)
                                     {
                                         <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                        <span>Guardando...</span>
+                                        <span>@L["Common:Saving"]</span>
                                     }
                                     else
                                     {
-                                        <span>Guardar</span>
+                                        <span>@L["Common:Save"]</span>
                                     }
                                 </MudButton>
                                 <MudButton Variant="Variant.Outlined" FullWidth="true" Href="/admin/listings">
-                                    Cancelar
+                                    @L["Common:Cancel"]
                                 </MudButton>
                             </MudCard>
 
                             @if (IsEditMode && ExistingListing != null)
                             {
                                 <MudCard Class="p-6">
-                                    <h3 class="font-semibold mb-4">Estado</h3>
+                                    <h3 class="font-semibold mb-4">@L["Common:Status"]</h3>
                                     <MudChip T="string" Color="@GetStatusColor(ExistingListing.Status)" Class="mb-4">
                                         @EnumLocalizer.GetListingStatusName(ExistingListing.Status)
                                     </MudChip>
@@ -198,35 +185,35 @@
                                         {
                                             <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
                                                 Size="Size.Small" OnClick="PublishListing">
-                                                Publicar
+                                                @L["Admin:Listings:Publish"]
                                             </MudButton>
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Published)
                                         {
                                             <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true" 
                                                 Size="Size.Small" OnClick="MoveToPortfolio">
-                                                Mover a Portafolio
+                                                @L["Admin:Listings:Form:MoveToPortfolioAction"]
                                             </MudButton>
                                             <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
                                                 Size="Size.Small" OnClick="ArchiveListing">
-                                                Archivar
+                                                @L["Admin:Listings:Archive"]
                                             </MudButton>
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Archived)
                                         {
                                             <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
                                                 Size="Size.Small" OnClick="UnarchiveListing">
-                                                Reactivar (Publicar)
+                                                @L["Admin:Listings:Form:Reactivate"]
                                             </MudButton>
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Portfolio)
                                         {
                                             <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
-                                                Esta propiedad está en el portafolio como proyecto completado.
+                                                @L["Admin:Listings:Form:PortfolioInfo"]
                                             </MudAlert>
                                             <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
                                                 Size="Size.Small" OnClick="ArchiveListing">
-                                                Archivar
+                                                @L["Admin:Listings:Archive"]
                                             </MudButton>
                                         }
                                     </div>
@@ -247,7 +234,7 @@
     private static readonly CultureInfo MexicoCulture = new("es-MX");
 
     private bool IsEditMode => Id.HasValue && Id.Value != Guid.Empty;
-    private string PageTitle => IsEditMode ? "Editar Propiedad" : "Nueva Propiedad";
+    private string PageTitle => IsEditMode ? L["Admin:Listings:Edit"] : L["Admin:Listings:Create"];
 
     private bool IsLoading { get; set; } = true;
     private bool IsSubmitting { get; set; }
@@ -257,11 +244,6 @@
     // - Es arquitecto (tiene perfil propio), o
     // - Es admin Y hay arquitectos disponibles para asignar
     private bool CanCreateListings => CurrentArchitect != null || (IsAdmin && Architects?.Any() == true);
-    
-    // Mostrar selector de arquitecto si:
-    // - Es admin (siempre debe poder elegir a quién asignar)
-    // - O hay múltiples arquitectos y el usuario actual es uno de ellos
-    private bool ShowArchitectSelector => IsAdmin && Architects != null && Architects.Any();
     
     private CreateUpdateListingDto Model { get; set; } = new() 
     { 
@@ -326,7 +308,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al inicializar: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:InitError", ex.Message], Severity.Error);
         }
         finally
         {
@@ -348,7 +330,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar arquitectos: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:ArchitectsLoadError", ex.Message], Severity.Error);
         }
     }
 
@@ -381,7 +363,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar propiedad: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:LoadError", ex.Message], Severity.Error);
             NavManager.NavigateTo("/admin/listings");
         }
     }
@@ -395,7 +377,7 @@
 
     private void HandleInvalidSubmit()
     {
-        Snackbar.Add("Por favor corrige los errores en el formulario", Severity.Warning);
+        Snackbar.Add(L["Admin:Listings:Form:InvalidForm"], Severity.Warning);
     }
 
     private async Task HandleSubmit()
@@ -413,7 +395,7 @@
             }
             else
             {
-                Snackbar.Add("Debes seleccionar un arquitecto", Severity.Error);
+                Snackbar.Add(L["Admin:Listings:Form:ArchitectRequired"], Severity.Error);
                 return;
             }
         }
@@ -426,14 +408,14 @@
             if (IsEditMode && Id.HasValue)
             {
                 await ListingService.UpdateAsync(Id.Value, Model);
-                Snackbar.Add("Propiedad actualizada correctamente", Severity.Success);
+                Snackbar.Add(L["Admin:Listings:Form:UpdateSuccess"], Severity.Success);
                 NavManager.NavigateTo("/admin/listings");
             }
             else
             {
                 var created = await ListingService.CreateAsync(Model);
                 ExistingListing = created; // Para poder cargar imágenes inmediatamente
-                Snackbar.Add("Propiedad creada. Ahora puedes agregar imagenes.", Severity.Success);
+                Snackbar.Add(L["Admin:Listings:Form:CreateSuccess"], Severity.Success);
                 
                 // Redirigir a modo edición para poder agregar imágenes
                 NavManager.NavigateTo($"/admin/listings/edit/{created.Id}", replace: true);
@@ -441,7 +423,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al guardar: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:SaveError", ex.Message], Severity.Error);
         }
         finally
         {
@@ -466,33 +448,33 @@
         try
         {
             ExistingListing = await ListingService.PublishAsync(Id.Value);
-            Snackbar.Add("Propiedad publicada correctamente", Severity.Success);
+            Snackbar.Add(L["Admin:Listings:Form:PublishSuccess"], Severity.Success);
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al publicar: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:PublishError", ex.Message], Severity.Error);
         }
     }
 
     private async Task ArchiveListing()
     {
         var result = await DialogService.ShowMessageBox(
-            "Archivar Propiedad", 
-            "¿Estás seguro de archivar esta propiedad? Ya no será visible públicamente.",
-            yesText: "Archivar", cancelText: "Cancelar");
+            L["Admin:Listings:Form:ArchiveTitle"], 
+            L["Admin:Listings:Form:ArchiveConfirm"],
+            yesText: L["Admin:Listings:Archive"], cancelText: L["Common:Cancel"]);
         
         if (result == true && Id.HasValue)
         {
             try
             {
                 ExistingListing = await ListingService.ArchiveAsync(Id.Value);
-                Snackbar.Add("Propiedad archivada", Severity.Success);
+                Snackbar.Add(L["Admin:Listings:Form:ArchiveSuccess"], Severity.Success);
                 StateHasChanged();
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error al archivar: {ex.Message}", Severity.Error);
+                Snackbar.Add(L["Admin:Listings:Form:ArchiveError", ex.Message], Severity.Error);
             }
         }
     }
@@ -504,33 +486,33 @@
         try
         {
             ExistingListing = await ListingService.UnarchiveAsync(Id.Value);
-            Snackbar.Add("Propiedad reactivada y publicada", Severity.Success);
+            Snackbar.Add(L["Admin:Listings:Form:UnarchiveSuccess"], Severity.Success);
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al reactivar: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["Admin:Listings:Form:UnarchiveError", ex.Message], Severity.Error);
         }
     }
 
     private async Task MoveToPortfolio()
     {
         var result = await DialogService.ShowMessageBox(
-            "Mover a Portafolio", 
-            "¿Mover esta propiedad al portafolio? Se mostrará como proyecto completado y dejará de aparecer en propiedades disponibles.",
-            yesText: "Mover a Portafolio", cancelText: "Cancelar");
+            L["Admin:Listings:Form:MoveToPortfolioTitle"], 
+            L["Admin:Listings:Form:MoveToPortfolioConfirm"],
+            yesText: L["Admin:Listings:Form:MoveToPortfolioAction"], cancelText: L["Common:Cancel"]);
         
         if (result == true && Id.HasValue)
         {
             try
             {
                 ExistingListing = await ListingService.MoveToPortfolioAsync(Id.Value);
-                Snackbar.Add("Propiedad movida al portafolio", Severity.Success);
+                Snackbar.Add(L["Admin:Listings:Form:MoveToPortfolioSuccess"], Severity.Success);
                 StateHasChanged();
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error al mover a portafolio: {ex.Message}", Severity.Error);
+                Snackbar.Add(L["Admin:Listings:Form:MoveToPortfolioError", ex.Message], Severity.Error);
             }
         }
     }
