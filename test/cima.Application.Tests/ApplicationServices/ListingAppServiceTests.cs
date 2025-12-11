@@ -15,7 +15,7 @@ using Volo.Abp.Users;
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests de integraci�n para ListingAppService
+/// Tests de integración para ListingAppService
 /// </summary>
 public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -84,7 +84,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     public async Task GetListAsync_Should_Filter_By_SearchTerm()
     {
         // Arrange
-        await CreateTestListingAsync(title: "Casa en Polanco �nica");
+        await CreateTestListingAsync(title: "Casa en Polanco única");
         await CreateTestListingAsync(title: "Departamento Centro");
 
         var input = new GetListingsInput
@@ -139,8 +139,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var input = new CreateUpdateListingDto
         {
             Title = "Nueva Propiedad Test",
-            Description = "Descripci�n de prueba con m�s de 20 caracteres para validaci�n",
-            Location = "Guadalajara, Jalisco, M�xico",
+            Description = "Descripción de prueba con más de 20 caracteres para validación",
+            Location = "Guadalajara, Jalisco, México",
             Price = 1500000m,
             LandArea = 200m,
             ConstructionArea = 120m,
@@ -328,7 +328,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         // Assert
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(original.Id); // Diferente ID
-        result.Title.ShouldContain("Copia"); // T�tulo con (Copia)
+        result.Title.ShouldContain("Copia"); // Título con (Copia)
         result.Price.ShouldBe(original.Price); // Mismo precio
         result.Status.ShouldBe(ListingStatus.Draft); // Estado Draft
     }

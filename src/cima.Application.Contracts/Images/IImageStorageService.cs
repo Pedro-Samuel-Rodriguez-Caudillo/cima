@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace cima.Images;
 
 /// <summary>
-/// Servicio para almacenar y gestionar im�genes
+/// Servicio para almacenar y gestionar imágenes
 /// </summary>
 public interface IImageStorageService
 {
@@ -25,11 +25,11 @@ public interface IImageStorageService
     Task DeleteImageAsync(string imageUrl);
     
     /// <summary>
-    /// Valida que el archivo sea una imagen v�lida
+    /// Valida que el archivo sea una imagen válida
     /// </summary>
     /// <param name="fileName">Nombre del archivo</param>
-    /// <param name="fileSize">Tama�o en bytes</param>
-    /// <returns>True si es v�lido</returns>
+    /// <param name="fileSize">Tamaño en bytes</param>
+    /// <returns>True si es válido</return>
     bool ValidateImage(string fileName, long fileSize);
 }
 

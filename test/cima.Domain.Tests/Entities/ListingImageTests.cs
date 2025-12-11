@@ -108,7 +108,7 @@ public sealed class ListingImageTests : cimaDomainTestBase<cimaDomainTestModule>
 
         // Assert
         image.PreviousImageId.ShouldBe(previousId);
-        image.NextImageId.ShouldBeNull(); // Es la �ltima
+        image.NextImageId.ShouldBeNull(); // Es la última
     }
 
     [Fact]
