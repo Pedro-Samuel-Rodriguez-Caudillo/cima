@@ -88,19 +88,33 @@ module.exports = {
         extend: {
             // === PALETA CORPORATIVA MEJORADA ===
             colors: {
-                // Azul oscuro corporativo tendiendo a negro
+                // Azul corporativo centralizado (#1e3a8a) y derivados
                 navy: {
-                    50: '#e8eef5',
-                    100: '#c1d3e6',
-                    200: '#97b6d6',
-                    300: '#6d99c6',
-                    400: '#4982ba',
-                    500: '#1a5490', // Principal - azul oscuro corporativo
-                    600: '#164879',
-                    700: '#123c62',
-                    800: '#0e304b',
-                    900: '#0a2434', // Muy oscuro, casi negro
-                    950: '#05121a', // Negro azulado
+                    50: '#eef2ff',
+                    100: '#e0e7ff',
+                    200: '#c7d2fe',
+                    300: '#a5b4fc',
+                    400: '#818cf8',
+                    500: '#5f70e0',
+                    600: '#3f51c5',
+                    700: '#1e3a8a', // Principal
+                    800: '#192f70',
+                    900: '#15255a',
+                    950: '#0f1a40',
+                },
+                // Alias explícito para usar como color primario
+                primary: {
+                    50: '#eef2ff',
+                    100: '#e0e7ff',
+                    200: '#c7d2fe',
+                    300: '#a5b4fc',
+                    400: '#818cf8',
+                    500: '#5f70e0',
+                    600: '#3f51c5',
+                    700: '#1e3a8a',
+                    800: '#192f70',
+                    900: '#15255a',
+                    950: '#0f1a40',
                 },
 
                 // Grises corporativos suaves

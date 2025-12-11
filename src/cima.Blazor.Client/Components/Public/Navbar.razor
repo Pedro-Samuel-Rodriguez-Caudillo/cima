@@ -19,7 +19,7 @@
            aria-label="Volver a inicio">
             <img src="@($"{Navigation.BaseUri}images/logo/4cima.svg")"
                  alt="CIMA"
-                 class="h-16 w-auto drop-shadow-lg" />
+                 class="h-20 w-auto drop-shadow-lg" />
         </a>
 
         <!-- Desktop Menu -->
@@ -379,6 +379,7 @@
         // Navbar transparente solo en Home (hero), listados públicos y portafolio; sólido en el resto
         _useTransparentNavbar = string.IsNullOrEmpty(path)
             || path.StartsWith("properties")
+            || path.StartsWith("propiedades")
             || path.StartsWith("portfolio");
     }
 
