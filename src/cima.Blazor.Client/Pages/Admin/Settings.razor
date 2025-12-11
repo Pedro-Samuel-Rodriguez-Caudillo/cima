@@ -24,7 +24,7 @@
         else if (CurrentSettings != null)
         {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                @* Configuraci�n de Email *@
+                @* Configuración de Email *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -99,7 +99,7 @@
                     </EditForm>
                 </div>
 
-                @* Configuraci�n de WhatsApp *@
+                @* Configuración de WhatsApp *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -175,7 +175,7 @@
                     </EditForm>
                 </div>
 
-                @* Informaci�n del Negocio *@
+                @* Información del Negocio *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-2">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
@@ -290,7 +290,7 @@
             IsLoading = true;
             CurrentSettings = await SettingsService.GetAsync();
             
-            // Mapear a DTOs de edici�n
+            // Mapear a DTOs de edición
             EmailSettings = new UpdateEmailSettingsDto
             {
                 AdminNotificationEmail = CurrentSettings.AdminNotificationEmail ?? "",

@@ -52,7 +52,7 @@
                     <div class="text-3xl font-bold text-gray-900">@Stats.TotalListings</div>
                     <div class="flex items-center gap-2 mt-2 text-sm">
                         <span class="text-green-600 font-medium">@Stats.PublishedListings publicadas</span>
-                        <span class="text-gray-400">�</span>
+                        <span class="text-gray-400">&bull;</span>
                         <span class="text-yellow-600">@Stats.DraftListings borradores</span>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                     </div>
                     <div>
                         <div class="font-medium text-gray-900">Nueva Propiedad</div>
-                        <div class="text-xs text-gray-500">Agregar al cat�logo</div>
+                        <div class="text-xs text-gray-500">Agregar al catálogo</div>
                     </div>
                 </button>
 
@@ -243,7 +243,7 @@
                     </div>
                     <div>
                         <div class="font-medium text-gray-900">Ver Propiedades</div>
-                        <div class="text-xs text-gray-500">Gestionar cat�logo</div>
+                        <div class="text-xs text-gray-500">Gestionar catálogo</div>
                     </div>
                 </button>
 
@@ -256,7 +256,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="font-medium text-gray-900">Configuraci�n</div>
+                        <div class="font-medium text-gray-900">Configuración</div>
                         <div class="text-xs text-gray-500">Email, WhatsApp, etc.</div>
                     </div>
                 </button>
@@ -281,7 +281,7 @@
                         <span class="text-xs font-medium text-green-700">Operacional</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span class="text-sm text-gray-600">�ltima actualizaci�n</span>
+                        <span class="text-sm text-gray-600">Última actualización</span>
                         <span class="text-sm font-medium text-gray-900">@Stats.LastUpdated.ToLocalTime().ToString("HH:mm")</span>
                     </div>
                 </div>
@@ -294,7 +294,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
-                <p class="text-gray-500 mb-4">No se pudieron obtener las estad�sticas</p>
+                <p class="text-gray-500 mb-4">No se pudieron obtener las estadísticas</p>
                 <button @onclick="LoadStats" class="cima-btn cima-btn-primary">
                     Reintentar
                 </button>
@@ -332,7 +332,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar estad�sticas: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error al cargar estadísticas: {ex.Message}", Severity.Error);
             Stats = null;
         }
         finally

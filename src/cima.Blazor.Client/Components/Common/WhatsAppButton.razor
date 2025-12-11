@@ -5,11 +5,11 @@
 @inject IStringLocalizer<cimaResource> L
 
 @* 
-    Bot�n de WhatsApp con protecci�n anti-click accidental.
-    - Primer click: muestra confirmaci�n
+    Botón de WhatsApp con protección anti-click accidental.
+    - Primer click: muestra confirmación
     - Segundo click: abre WhatsApp
-    - Se resetea despu�s de 3 segundos sin interacci�n
-*@
+    - Se resetea después de 3 segundos sin interacción
+*@ 
 
 @if (IsEnabled && !string.IsNullOrEmpty(WhatsAppUrl))
 {
@@ -30,7 +30,7 @@
         }
         else
         {
-            @* Confirmaci�n con animaci�n *@
+            @* Confirmación con animación *@
             <div class="flex items-center gap-2 animate-fade-in">
                 <a href="@WhatsAppUrl" 
                    target="_blank" 
@@ -62,7 +62,7 @@
     public string? CustomMessage { get; set; }
 
     /// <summary>
-    /// T�tulo de la propiedad (para mensajes contextuales)
+    /// Título de la propiedad (para mensajes contextuales)
     /// </summary>
     [Parameter]
     public string? PropertyTitle { get; set; }
@@ -74,31 +74,31 @@
     public string? PropertyUrl { get; set; }
 
     /// <summary>
-    /// Texto del bot�n (opcional)
+    /// Texto del botón (opcional)
     /// </summary>
     [Parameter]
     public string? ButtonText { get; set; }
 
     /// <summary>
-    /// Clases CSS para el bot�n principal
+    /// Clases CSS para el botón principal
     /// </summary>
     [Parameter]
     public string ButtonClass { get; set; } = "bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium";
 
     /// <summary>
-    /// Clases CSS para el bot�n de confirmaci�n
+    /// Clases CSS para el botón de confirmación
     /// </summary>
     [Parameter]
     public string ConfirmButtonClass { get; set; } = "bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium";
 
     /// <summary>
-    /// Clases CSS para el �cono
+    /// Clases CSS para el ícono
     /// </summary>
     [Parameter]
     public string IconClass { get; set; } = "";
 
     /// <summary>
-    /// Variante del bot�n
+    /// Variante del botón
     /// </summary>
     [Parameter]
     public WhatsAppButtonVariant Variant { get; set; } = WhatsAppButtonVariant.Default;
@@ -161,11 +161,11 @@
                 message += $"\n\nEnlace: {PropertyUrl}";
             }
             
-            message += "\n\n�Podr�an darme m�s informaci�n?";
+            message += "\n\n¿Podrían darme más información?";
             return message;
         }
 
-        // Mensaje gen�rico (se usar� el configurado en settings)
+        // Mensaje genérico (se usará el configurado en settings)
         return "";
     }
 
@@ -173,7 +173,7 @@
     {
         ShowConfirmation = true;
         
-        // Auto-reset despu�s de 3 segundos
+        // Auto-reset después de 3 segundos
         _resetTimer?.Dispose();
         _resetTimer = new System.Timers.Timer(3000);
         _resetTimer.Elapsed += (s, e) =>

@@ -8,12 +8,12 @@
 <PageTitle>@L["Properties:Title"] - @L["CompanyName"]</PageTitle>
 
 <div class="min-h-screen bg-neutral-50">
-    @* Header Section - Clean Design (dise�ado para ir detr�s del navbar transparente) *@
+    @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
     <section class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white">
         <div class="cima-container py-20 md:py-28">
             <div class="max-w-4xl">
                 <span class="inline-block px-4 py-1.5 bg-white/10 border border-white/10 text-white text-sm font-medium rounded-full mb-6 backdrop-blur-md">
-                    Cat�logo de Propiedades
+                    @L["Properties:Title"]
                 </span>
                 <h1 class="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-8 tracking-tight text-white drop-shadow-lg">
                     @L["Properties:Title"]
@@ -71,12 +71,12 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
                         <p class="text-neutral-600 text-lg">
-                            <span class="font-semibold text-navy-900">@TotalCount</span> propiedades encontradas
+                            @L["Search:ResultsFound", TotalCount]
                         </p>
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-neutral-500 hidden md:inline">Ordenar por:</span>
+                        <span class="text-sm text-neutral-500 hidden md:inline">@L["Properties:SortBy"]</span>
                         <select 
                             class="cima-input w-auto min-w-[200px] bg-white"
                             value="@SortOption"
@@ -89,7 +89,7 @@
                     </div>
                 </div>
 
-                @* Grid responsive: 1 col m�vil, 2 cols tablet, 3 cols desktop, 4 cols wide *@
+                @* Grid responsive: 1 col móvil, 2 cols tablet, 3 cols desktop, 4 cols wide *@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 xl:gap-8">
                     @foreach (var listing in Listings)
                     {
@@ -97,7 +97,7 @@
                     }
                 </div>
 
-                @* Paginaci�n Premium *@
+                @* Paginación Premium *@
                 @if (TotalPages > 1)
                 {
                     <div class="mt-16 flex justify-center">
@@ -173,7 +173,7 @@
                         @L["Search:NoResults"]
                     </h3>
                     <p class="text-neutral-600 mb-8 max-w-md mx-auto">
-                        No encontramos propiedades que coincidan con tu b�squeda. Intenta ajustar los filtros.
+                        @L["Search:NoResults"]
                     </p>
                     <button 
                         @onclick="HandleClearFilters"
@@ -204,7 +204,7 @@
     {
         try
         {
-            // Leer par�metros de query string
+        // Leer parámetros de query string
             var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
             var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
             
@@ -217,7 +217,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegaci�n/cambio de idioma
+            // Ignorar - ocurre durante navegación/cambio de idioma
         }
     }
 
@@ -249,7 +249,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegaci�n/cambio de idioma
+            // Ignorar - ocurre durante navegación/cambio de idioma
         }
         catch (Exception ex)
         {

@@ -54,7 +54,7 @@
         _message = L["PostLogin:VerifyingPermissions"];
         StateHasChanged();
 
-        // Verificar si debe cambiar contrase�a
+        // Verificar si debe cambiar contraseña
         try
         {
             var mustChange = await ArchitectService.MustChangePasswordAsync();
@@ -63,7 +63,7 @@
                 _message = L["PostLogin:RedirectingChangePassword"];
                 StateHasChanged();
                 
-                // Preservar returnUrl para despu�s del cambio
+                // Preservar returnUrl para después del cambio
                 var changePasswordUrl = string.IsNullOrEmpty(ReturnUrl)
                     ? LoginRedirectService.ChangePasswordRoute
                     : $"{LoginRedirectService.ChangePasswordRoute}?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
@@ -75,16 +75,16 @@
         }
         catch
         {
-            // Si falla la verificaci�n, continuar normalmente
+        // Si falla la verificación, continuar normalmente
         }
 
         _message = L["PostLogin:Redirecting"];
         StateHasChanged();
 
-        // Obtener URL de redirecci�n seg�n rol
+        // Obtener URL de redirección según rol
         var redirectUrl = RedirectService.GetRedirectUrl(user, ReturnUrl);
         
-        // Peque�o delay para mostrar la animaci�n
+        // Pequeño delay para mostrar la animación
         await Task.Delay(300);
         
         Navigation.NavigateTo(redirectUrl, forceLoad: false);
