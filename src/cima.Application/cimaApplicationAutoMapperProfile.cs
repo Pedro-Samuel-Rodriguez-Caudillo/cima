@@ -70,8 +70,8 @@ public class cimaApplicationAutoMapperProfile : Profile
         }
         catch
         {
-            // If JSON is invalid, return null instead of throwing during mapping
-            return null;
+            // Si no es JSON válido, devolver el string como Address para no perder datos
+            return new LocationDto { Address = json };
         }
     }
 }

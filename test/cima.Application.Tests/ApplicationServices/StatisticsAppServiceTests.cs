@@ -220,9 +220,16 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         Guid listingId,
         ContactRequestStatus status = ContactRequestStatus.New)
     {
+        Listing listing = null!;
+        await WithUnitOfWorkAsync(async () =>
+        {
+            listing = await _listingRepository.GetAsync(listingId);
+        });
+
         var contactRequest = new ContactRequest
         {
             ListingId = listingId,
+            ArchitectId = listing.ArchitectId,
             Name = "Test User",
             Email = $"test{Guid.NewGuid():N}@example.com",
             Phone = "1234567890",

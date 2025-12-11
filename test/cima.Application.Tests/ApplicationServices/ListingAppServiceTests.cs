@@ -178,9 +178,9 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var listing = await CreateTestListingAsync();
         var input = new CreateUpdateListingDto
         {
-            Title = "T�tulo Actualizado para Test",
+            Title = "Titulo Actualizado para Test",
             Description = listing.Description,
-            Location = "Nueva Ubicaci�n Actualizada M�xico",
+            Location = "Nueva Ubicacion Actualizada Mexico",
             Price = 2000000m,
             LandArea = listing.LandArea,
             ConstructionArea = listing.ConstructionArea,
@@ -200,8 +200,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         });
 
         // Assert
-        result.Title.ShouldBe("T�tulo Actualizado para Test");
-        (result.Location?.ToString()).ShouldBe("Nueva Ubicaci?n Actualizada M?xico");
+        result.Title.ShouldBe(input.Title);
+        (result.Location?.ToString()).ShouldBe(input.Location);
         result.Price.ShouldBe(2000000m);
         result.Bedrooms.ShouldBe(4);
     }

@@ -50,8 +50,8 @@ public class LocalImageStorageServiceTests : cimaApplicationTestBase<cimaApplica
         result.ThumbnailUrl.Should().NotBeNullOrWhiteSpace();
 
         // Assert: archivos creados en disco
-        var originalPath = Path.Combine(_env.ContentRootPath, result.Url.TrimStart('/'));
-        var thumbPath = Path.Combine(_env.ContentRootPath, result.ThumbnailUrl.TrimStart('/'));
+        var originalPath = Path.Combine(_env.ContentRootPath, "wwwroot", result.Url.TrimStart('/'));
+        var thumbPath = Path.Combine(_env.ContentRootPath, "wwwroot", result.ThumbnailUrl.TrimStart('/'));
         File.Exists(originalPath).Should().BeTrue();
         File.Exists(thumbPath).Should().BeTrue();
 
