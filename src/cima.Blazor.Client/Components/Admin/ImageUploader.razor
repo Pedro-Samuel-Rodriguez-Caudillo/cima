@@ -1,9 +1,12 @@
 @using MudBlazor
 @using cima.Listings
 @using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
 
 <MudPaper Class="p-4" Elevation="0" Outlined="true">
-    <MudText Typo="Typo.h6" Class="mb-4">Imágenes de la Propiedad</MudText>
+    <MudText Typo="Typo.h6" Class="mb-4">@L["ImageUploader:Title"]</MudText>
 
     <InputFile id="fileInput" OnChange="OnInputFileChange" multiple accept=".jpg, .jpeg, .png, .webp" hidden />
     
@@ -12,7 +15,7 @@
                Color="Color.Primary"
                StartIcon="@Icons.Material.Filled.CloudUpload"
                for="fileInput">
-        Subir Imágenes
+        @L["ImageUploader:Upload"]
     </MudButton>
 
     @if (uploadedImages.Any())
@@ -27,7 +30,7 @@
                             <MudCardMedia Image="@image.Url" Height="200" />
                         }
                         <MudCardContent>
-                            <MudText Typo="Typo.caption">@(image.AltText ?? "Sin nombre")</MudText>
+                            <MudText Typo="Typo.caption">@(image.AltText ?? L["ImageUploader:AltFallback"])</MudText>
                         </MudCardContent>
                         <MudCardActions>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" 
@@ -41,7 +44,7 @@
     }
     else
     {
-        <MudAlert Severity="Severity.Info" Class="mt-4">No hay imágenes seleccionadas.</MudAlert>
+        <MudAlert Severity="Severity.Info" Class="mt-4">@L["ImageUploader:NoImages"]</MudAlert>
     }
 </MudPaper>
 

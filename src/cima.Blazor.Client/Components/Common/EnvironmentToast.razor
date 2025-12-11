@@ -1,5 +1,8 @@
 @using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @inject IConfiguration Configuration
+@inject IStringLocalizer<cimaResource> L
 
 @if (ShouldShowToast)
 {
@@ -19,12 +22,12 @@
         if (environment == "development")
         {
             ShouldShowToast = true;
-            EnvironmentName = "DEVELOPMENT";
+            EnvironmentName = L["Environment:Development"];
         }
         else if (environment == "staging")
         {
             ShouldShowToast = true;
-            EnvironmentName = "STAGING";
+            EnvironmentName = L["Environment:Staging"];
         }
     }
 

@@ -1,23 +1,27 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
+
 <div class="bg-neutral-950 border-t border-white/10">
     <div class="cima-container py-6">
         <div class="flex flex-col lg:flex-row items-center gap-6 lg:gap-12">
             <!-- Title -->
             <div class="hidden lg:block shrink-0">
-                <span class="text-[0.65rem] uppercase tracking-[0.35em] text-neutral-400 block mb-1">Encuentra tu</span>
-                <span class="text-lg font-display text-white tracking-widest">ESPACIO</span>
+                <span class="text-[0.65rem] uppercase tracking-[0.35em] text-neutral-400 block mb-1">@L["Booking:FindYour"]</span>
+                <span class="text-lg font-display text-white tracking-widest">@L["Booking:Space"]</span>
             </div>
 
             <!-- Form -->
             <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 flex-1">
                 <!-- Location -->
                 <div class="flex flex-col gap-2">
-                    <label class="uppercase tracking-[0.25em] text-[0.6rem] text-neutral-500 font-semibold">Ubicación</label>
+                    <label class="uppercase tracking-[0.25em] text-[0.6rem] text-neutral-500 font-semibold">@L["Booking:LocationLabel"]</label>
                     <div class="relative">
                         <select class="w-full bg-neutral-900/50 border border-neutral-800 text-white text-sm rounded-lg px-4 py-3 focus:ring-1 focus:ring-navy-400 focus:border-navy-400 outline-none appearance-none transition-all hover:border-neutral-700">
-                            <option>Todas las zonas</option>
-                            <option>Zona Norte</option>
-                            <option>Centro Histórico</option>
-                            <option>Zona Sur</option>
+                            <option>@L["Booking:AllZones"]</option>
+                            <option>@L["Booking:ZoneNorth"]</option>
+                            <option>@L["Booking:ZoneDowntown"]</option>
+                            <option>@L["Booking:ZoneSouth"]</option>
                         </select>
                         <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -29,13 +33,13 @@
 
                 <!-- Type -->
                 <div class="flex flex-col gap-2">
-                    <label class="uppercase tracking-[0.25em] text-[0.6rem] text-neutral-500 font-semibold">Tipo</label>
+                    <label class="uppercase tracking-[0.25em] text-[0.6rem] text-neutral-500 font-semibold">@L["Booking:TypeLabel"]</label>
                     <div class="relative">
                         <select class="w-full bg-neutral-900/50 border border-neutral-800 text-white text-sm rounded-lg px-4 py-3 focus:ring-1 focus:ring-navy-400 focus:border-navy-400 outline-none appearance-none transition-all hover:border-neutral-700">
-                            <option>Cualquier tipo</option>
-                            <option>Casa</option>
-                            <option>Departamento</option>
-                            <option>Terreno</option>
+                            <option>@L["Booking:AnyType"]</option>
+                            <option>@L["Booking:TypeHouse"]</option>
+                            <option>@L["Booking:TypeApartment"]</option>
+                            <option>@L["Booking:TypeLand"]</option>
                         </select>
                         <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -48,7 +52,7 @@
                 <!-- Action -->
                 <div class="flex items-end">
                     <button class="w-full bg-white text-neutral-950 hover:bg-neutral-200 font-medium text-sm px-6 py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
-                        <span>BUSCAR</span>
+                        <span>@L["Booking:Search"]</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>

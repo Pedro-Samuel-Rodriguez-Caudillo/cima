@@ -1,7 +1,10 @@
-@* Botón de regreso con animación *@
+@* Botï¿½n de regreso con animaciï¿½n *@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @inject NavigationManager Navigation
+@inject IStringLocalizer<cimaResource> L
 
-<button class="cima-back-btn" @onclick="HandleClick" aria-label="@AriaLabel">
+<button class="cima-back-btn" @onclick="HandleClick" aria-label="@GetAriaLabel()">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
     </svg>
@@ -10,7 +13,7 @@
 @code {
     [Parameter] public string? Href { get; set; }
     [Parameter] public EventCallback OnClick { get; set; }
-    [Parameter] public string AriaLabel { get; set; } = "Volver";
+    [Parameter] public string AriaLabel { get; set; } = string.Empty;
     [Parameter] public bool UseHistoryBack { get; set; } = true;
 
     private async Task HandleClick()
@@ -29,4 +32,8 @@
             Navigation.NavigateTo("/");
         }
     }
+
+    private string GetAriaLabel() => string.IsNullOrWhiteSpace(AriaLabel)
+        ? L["Common:BackButtonAria"]
+        : AriaLabel;
 }

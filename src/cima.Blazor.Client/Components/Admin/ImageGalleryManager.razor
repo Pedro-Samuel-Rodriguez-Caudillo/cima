@@ -19,10 +19,10 @@
     @* Header *@
     <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-neutral-900">
-            Galeria de Imagenes
+            @L["GalleryManager:Title"]
             @if (Images.Any())
             {
-                <span class="ml-2 text-sm font-normal text-neutral-500">(@Images.Count imagenes)</span>
+                <span class="ml-2 text-sm font-normal text-neutral-500">@L["GalleryManager:Count", Images.Count]</span>
             }
         </h3>
 
@@ -30,12 +30,12 @@
             @if (IsUploading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                <span>Subiendo...</span>
+                <span>@L["GalleryManager:Uploading"]</span>
             }
             else
             {
                 <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-2" />
-                <span>Agregar Imagenes</span>
+                <span>@L["GalleryManager:AddImages"]</span>
             }
         </label>
     </div>
@@ -46,9 +46,9 @@
         <label for="@FileInputId" class="block border-2 border-dashed border-neutral-300 rounded-xl p-8 text-center cursor-pointer hover:border-navy-400 hover:bg-navy-50/50 transition-colors">
             <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Class="text-neutral-400" />
             <p class="mt-4 text-neutral-600">
-                <span class="text-navy-600 font-medium">Haz clic para subir</span> o arrastra imagenes aqui
+                <span class="text-navy-600 font-medium">@L["GalleryManager:UploadCta"]</span> @L["GalleryManager:UploadHint"]
             </p>
-            <p class="mt-2 text-sm text-neutral-500">PNG, JPG, WEBP hasta 5MB</p>
+            <p class="mt-2 text-sm text-neutral-500">@L["GalleryManager:UploadFormats"]</p>
         </label>
     }
 
@@ -71,7 +71,7 @@
                     @if (index == 0)
                     {
                         <div class="absolute top-2 left-2">
-                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">Principal</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@L["GalleryManager:PrimaryBadge"]</MudChip>
                         </div>
                     }
                     
@@ -85,23 +85,23 @@
                             {
                                 <MudIconButton Icon="@Icons.Material.Filled.FirstPage" Size="Size.Small" 
                                     Color="Color.Default" Variant="Variant.Filled"
-                                    OnClick="@(() => MoveToFirst(index))" title="Mover al inicio" aria-label="Mover al inicio" />
+                                    OnClick="@(() => MoveToFirst(index))" title="@L["GalleryManager:MoveToFirst"]" aria-label="@L["GalleryManager:MoveToFirst"]" />
                             }
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
                                 Color="Color.Error" Variant="Variant.Filled"
-                                OnClick="@(() => RemoveImage(image))" Disabled="@IsDeleting" title="Eliminar" aria-label="Eliminar" />
+                                OnClick="@(() => RemoveImage(image))" Disabled="@IsDeleting" title="@L["GalleryManager:Delete"]" aria-label="@L["GalleryManager:Delete"]" />
                         </div>
                     </div>
                     
                     <div class="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div class="px-3 py-1 bg-black/60 rounded-full text-white text-xs">Arrastra para reordenar</div>
+                        <div class="px-3 py-1 bg-black/60 rounded-full text-white text-xs">@L["GalleryManager:DragHint"]</div>
                     </div>
                 </div>
             }
         </div>
         
         <p class="text-sm text-neutral-500 text-center">
-            Arrastra las imagenes para cambiar el orden. La primera imagen sera la principal.
+            @L["GalleryManager:OrderHelp"]
         </p>
     }
 
@@ -109,7 +109,7 @@
     @if (UploadProgress.Any())
     {
         <div class="space-y-2 bg-neutral-50 rounded-lg p-4">
-            <p class="text-sm font-medium text-neutral-700">Subiendo imagenes...</p>
+            <p class="text-sm font-medium text-neutral-700">@L["GalleryManager:UploadingFiles"]</p>
             @foreach (var item in UploadProgress)
             {
                 <div class="space-y-1">
@@ -192,7 +192,7 @@
             {
                 if (file.Size > 5 * 1024 * 1024)
                 {
-                    Snackbar.Add($"El archivo {file.Name} excede 5MB", Severity.Warning);
+                    Snackbar.Add(L["GalleryManager:FileTooLarge", file.Name], Severity.Warning);
                     continue;
                 }
 
@@ -233,11 +233,11 @@
             }
 
             await NotifyImagesChanged();
-            Snackbar.Add("Imagenes subidas exitosamente", Severity.Success);
+            Snackbar.Add(L["GalleryManager:UploadSuccess"], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["GalleryManager:UploadError", ex.Message], Severity.Error);
         }
         finally
         {
@@ -256,9 +256,9 @@
     private async Task RemoveImage(ListingImageDto image)
     {
         var result = await DialogService.ShowMessageBox(
-            "Eliminar Imagen",
-            "¿Eliminar esta imagen?",
-            yesText: "Eliminar", cancelText: "Cancelar");
+            L["GalleryManager:DeleteConfirmTitle"],
+            L["GalleryManager:DeleteConfirmMessage"],
+            yesText: L["GalleryManager:Delete"], cancelText: L["Common:Cancel"]);
         
         if (result != true) return;
 
@@ -270,11 +270,11 @@
             await ListingService.RemoveImageAsync(ListingId, image.ImageId);
             Images.Remove(image);
             await NotifyImagesChanged();
-            Snackbar.Add("Imagen eliminada", Severity.Success);
+            Snackbar.Add(L["GalleryManager:DeleteSuccess"], Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["GalleryManager:UploadError", ex.Message], Severity.Error);
         }
         finally
         {
@@ -334,7 +334,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al reordenar: {ex.Message}", Severity.Error);
+            Snackbar.Add(L["GalleryManager:ReorderError", ex.Message], Severity.Error);
             Images = InitialImages?.ToList() ?? new List<ListingImageDto>();
             Images = GetOrderedImages();
         }

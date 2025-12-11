@@ -1,4 +1,8 @@
-@* Diálogo de confirmación con animación *@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
+
+@* Di?logo de confirmaci?n con animaci?n *@
 
 @if (IsVisible)
 {
@@ -37,7 +41,7 @@
 
                 @* Title *@
                 <h3 id="confirm-title" class="text-lg font-semibold text-gray-900 text-center mb-2">
-                    @Title
+                    @ResolveTitle()
                 </h3>
 
                 @* Message *@
@@ -58,7 +62,7 @@
             @* Buttons *@
             <div class="bg-gray-50 px-6 py-4 flex gap-3 justify-end">
                 <button class="cima-btn cima-btn-ghost" @onclick="HandleCancel" disabled="@IsProcessing">
-                    @CancelText
+                    @ResolveCancelText()
                 </button>
                 <button class="cima-btn @ConfirmButtonClass" @onclick="HandleConfirm" disabled="@IsProcessing">
                     @if (IsProcessing)
@@ -67,11 +71,11 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                         </svg>
-                        @ProcessingText
+                        @ResolveProcessingText()
                     }
                     else
                     {
-                        @ConfirmText
+                        @ResolveConfirmText()
                     }
                 </button>
             </div>
@@ -84,11 +88,11 @@
     [Parameter] public bool IsProcessing { get; set; }
     [Parameter] public EventCallback OnConfirm { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public string Title { get; set; } = "Confirmar";
+    [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public string? Message { get; set; }
-    [Parameter] public string ConfirmText { get; set; } = "Confirmar";
-    [Parameter] public string CancelText { get; set; } = "Cancelar";
-    [Parameter] public string ProcessingText { get; set; } = "Procesando...";
+    [Parameter] public string ConfirmText { get; set; } = string.Empty;
+    [Parameter] public string CancelText { get; set; } = string.Empty;
+    [Parameter] public string ProcessingText { get; set; } = string.Empty;
     [Parameter] public ConfirmVariant Variant { get; set; } = ConfirmVariant.Default;
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
@@ -107,6 +111,11 @@
         ConfirmVariant.Warning => "cima-btn-primary",
         _ => "cima-btn-primary"
     };
+
+    private string ResolveTitle() => string.IsNullOrEmpty(Title) ? L["ConfirmDialog:Title"] : Title;
+    private string ResolveConfirmText() => string.IsNullOrEmpty(ConfirmText) ? L["ConfirmDialog:Confirm"] : ConfirmText;
+    private string ResolveCancelText() => string.IsNullOrEmpty(CancelText) ? L["ConfirmDialog:Cancel"] : CancelText;
+    private string ResolveProcessingText() => string.IsNullOrEmpty(ProcessingText) ? L["ConfirmDialog:Processing"] : ProcessingText;
 
     private async Task HandleConfirm()
     {

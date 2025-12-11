@@ -1,4 +1,7 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @inject NavigationManager Navigation
+@inject IStringLocalizer<cimaResource> L
 
 <footer class="bg-neutral-950 text-white py-12 border-t border-white/10">
     <div class="cima-container">
@@ -13,30 +16,30 @@
                 </a>
 
                 <p class="text-neutral-400 max-w-sm font-light leading-relaxed">
-                    Redefiniendo el estándar inmobiliario con propiedades exclusivas y un servicio arquitectónico de primer nivel.
+                    @L["Footer:Tagline"]
                 </p>
             </div>
             
             <div>
-                <h4 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-6">Navegación</h4>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-6">@L["Footer:Navigation"]</h4>
                 <ul class="space-y-4">
-                    <li><a href="/" class="text-neutral-300 hover:text-white transition-colors">Inicio</a></li>
-                    <li><a href="/properties" class="text-neutral-300 hover:text-white transition-colors">Propiedades</a></li>
-                    <li><a href="/contact" class="text-neutral-300 hover:text-white transition-colors">Contacto</a></li>
+                    <li><a href="/" class="text-neutral-300 hover:text-white transition-colors">@L["Menu:Home"]</a></li>
+                    <li><a href="/properties" class="text-neutral-300 hover:text-white transition-colors">@L["Menu:Properties"]</a></li>
+                    <li><a href="/contact" class="text-neutral-300 hover:text-white transition-colors">@L["Menu:Contact"]</a></li>
                 </ul>
             </div>
             
             <div>
-                <h4 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-6">Legal</h4>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-6">@L["Footer:Legal"]</h4>
                 <ul class="space-y-4">
-                    <li><a href="/privacy" class="text-neutral-300 hover:text-white transition-colors">Privacidad</a></li>
-                    <li><a href="/terms" class="text-neutral-300 hover:text-white transition-colors">Términos</a></li>
+                    <li><a href="/privacy" class="text-neutral-300 hover:text-white transition-colors">@L["Footer:Privacy"]</a></li>
+                    <li><a href="/terms" class="text-neutral-300 hover:text-white transition-colors">@L["Footer:Terms"]</a></li>
                 </ul>
             </div>
         </div>
         
         <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-neutral-500">
-            <p>&copy; @DateTime.Now.Year CIMA Inmobiliaria. Todos los derechos reservados.</p>
+            <p>@L["Footer:Copyright", DateTime.Now.Year]</p>
             <div class="flex items-center gap-6">
                 <!-- Social icons placeholder -->
             </div>

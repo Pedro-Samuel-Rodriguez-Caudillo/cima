@@ -6,13 +6,13 @@
 @inject ISnackbar Snackbar
 @inherits cimaComponentBase
 
-<PageTitle>Configuración del Sitio - 4cima Admin</PageTitle>
+<PageTitle>@L["Admin:Settings:PageTitle"]</PageTitle>
 
 <div class="min-h-screen bg-gray-50 pt-20">
     <div class="cima-container py-8">
         <div class="mb-8">
-            <h1 class="text-3xl font-display font-bold text-gray-900">Configuración del Sitio</h1>
-            <p class="mt-2 text-gray-600">Gestiona la configuración de email, WhatsApp y datos del negocio</p>
+            <h1 class="text-3xl font-display font-bold text-gray-900">@L["Admin:Settings:Title"]</h1>
+            <p class="mt-2 text-gray-600">@L["Admin:Settings:Subtitle"]</p>
         </div>
 
         @if (IsLoading)
@@ -24,7 +24,7 @@
         else if (CurrentSettings != null)
         {
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                @* Configuración de Email *@
+                @* Configuraciï¿½n de Email *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -33,16 +33,16 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900">Configuración de Email</h2>
-                            <p class="text-sm text-gray-500">Azure Communication Services</p>
+                            <h2 class="text-lg font-semibold text-gray-900">@L["Admin:Settings:Email:Title"]</h2>
+                            <p class="text-sm text-gray-500">@L["Admin:Settings:Email:Subtitle"]</p>
                         </div>
                         @if (CurrentSettings.IsEmailConfigured)
                         {
-                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Configurado</span>
+                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">@L["Admin:Settings:Email:Configured"]</span>
                         }
                         else
                         {
-                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pendiente</span>
+                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">@L["Admin:Settings:Email:Pending"]</span>
                         }
                     </div>
 
@@ -52,7 +52,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Email para notificaciones *
+                                    @L["Admin:Settings:Email:NotificationEmail"]
                                 </label>
                                 <InputText @bind-Value="EmailSettings.AdminNotificationEmail" 
                                            class="cima-input" 
@@ -62,17 +62,17 @@
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Connection String (Azure CS)
+                                    @L["Admin:Settings:Email:Connection"]
                                 </label>
                                 <InputText @bind-Value="EmailSettings.AzureEmailConnectionString" 
                                            class="cima-input font-mono text-sm" 
                                            placeholder="endpoint=https://xxx.communication.azure.com/;accesskey=..." />
-                                <p class="text-xs text-gray-500 mt-1">Obtén esto desde el portal de Azure</p>
+                                <p class="text-xs text-gray-500 mt-1">@L["Admin:Settings:Email:ConnectionHint"]</p>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Dirección del remitente
+                                    @L["Admin:Settings:Email:Sender"]
                                 </label>
                                 <InputText @bind-Value="EmailSettings.AzureEmailSenderAddress" 
                                            class="cima-input" 
@@ -85,21 +85,21 @@
                                     {
                                         <span class="cima-spinner-sm mr-2"></span>
                                     }
-                                    Guardar Email
+                                    @L["Admin:Settings:Email:Save"]
                                 </button>
                                 <button type="button" @onclick="TestEmail" class="cima-btn cima-btn-secondary" disabled="@IsTestingEmail">
                                     @if (IsTestingEmail)
                                     {
                                         <span class="cima-spinner-sm mr-2"></span>
                                     }
-                                    Probar Email
+                                    @L["Admin:Settings:Email:Test"]
                                 </button>
                             </div>
                         </div>
                     </EditForm>
                 </div>
 
-                @* Configuración de WhatsApp *@
+                @* Configuraciï¿½n de WhatsApp *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -108,12 +108,12 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900">WhatsApp Business</h2>
-                            <p class="text-sm text-gray-500">Botón de contacto directo</p>
+                            <h2 class="text-lg font-semibold text-gray-900">@L["Admin:Settings:WhatsApp:Title"]</h2>
+                            <p class="text-sm text-gray-500">@L["Admin:Settings:WhatsApp:Subtitle"]</p>
                         </div>
                         @if (CurrentSettings.IsWhatsAppConfigured)
                         {
-                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Activo</span>
+                            <span class="ml-auto px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">@L["Admin:Settings:WhatsApp:Active"]</span>
                         }
                     </div>
 
@@ -123,12 +123,12 @@
                         <div class="space-y-4">
                             <div class="flex items-center gap-3">
                                 <InputCheckbox @bind-Value="WhatsAppSettings.Enabled" class="w-5 h-5 text-green-600 rounded" />
-                                <label class="text-sm font-medium text-gray-700">Habilitar botón de WhatsApp</label>
+                                <label class="text-sm font-medium text-gray-700">@L["Admin:Settings:WhatsApp:EnableLabel"]</label>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Número de WhatsApp
+                                    @L["Admin:Settings:WhatsApp:Number"]
                                 </label>
                                 <div class="flex items-center gap-2">
                                     <span class="text-gray-500">+</span>
@@ -137,25 +137,25 @@
                                                placeholder="5215512345678"
                                                disabled="@(!WhatsAppSettings.Enabled)" />
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">Formato internacional sin el signo +. Ejemplo: 5215512345678</p>
+                                <p class="text-xs text-gray-500 mt-1">@L["Admin:Settings:WhatsApp:NumberHint"]</p>
                                 <ValidationMessage For="@(() => WhatsAppSettings.PhoneNumber)" class="text-red-500 text-sm" />
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Mensaje predeterminado
+                                    @L["Admin:Settings:WhatsApp:DefaultMessage"]
                                 </label>
                                 <InputTextArea @bind-Value="WhatsAppSettings.DefaultMessage" 
                                                class="cima-input" 
                                                rows="3"
-                                               placeholder="Hola, me interesa obtener más información..."
+                                               placeholder="Hola, me interesa obtener mÃ¡s informaciÃ³n..."
                                                disabled="@(!WhatsAppSettings.Enabled)" />
                             </div>
 
                             @if (WhatsAppSettings.Enabled && !string.IsNullOrEmpty(WhatsAppSettings.PhoneNumber))
                             {
                                 <div class="p-4 bg-green-50 rounded-lg">
-                                    <p class="text-sm text-green-800 mb-2">Vista previa del enlace:</p>
+                                    <p class="text-sm text-green-800 mb-2">@L["Admin:Settings:WhatsApp:Preview"]</p>
                                     <a href="@GetWhatsAppUrl()" target="_blank" class="text-green-600 hover:underline text-sm break-all">
                                         @GetWhatsAppUrl()
                                     </a>
@@ -168,14 +168,14 @@
                                     {
                                         <span class="cima-spinner-sm mr-2"></span>
                                     }
-                                    Guardar WhatsApp
+                                    @L["Admin:Settings:WhatsApp:Save"]
                                 </button>
                             </div>
                         </div>
                     </EditForm>
                 </div>
 
-                @* Información del Negocio *@
+                @* Informaciï¿½n del Negocio *@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-2">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
@@ -184,8 +184,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="text-lg font-semibold text-gray-900">Información del Negocio</h2>
-                            <p class="text-sm text-gray-500">Datos de contacto y redes sociales</p>
+                            <h2 class="text-lg font-semibold text-gray-900">@L["Admin:Settings:Business:Title"]</h2>
+                            <p class="text-sm text-gray-500">@L["Admin:Settings:Business:Subtitle"]</p>
                         </div>
                     </div>
 
@@ -194,56 +194,56 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del negocio</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">@L["Admin:Settings:Business:Name"]</label>
                                 <InputText @bind-Value="BusinessInfo.BusinessName" class="cima-input" />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email de contacto público</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">@L["Admin:Settings:Business:PublicEmail"]</label>
                                 <InputText @bind-Value="BusinessInfo.ContactEmail" class="cima-input" placeholder="contacto@4cima.com" />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono de contacto</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">@L["Admin:Settings:Business:Phone"]</label>
                                 <InputText @bind-Value="BusinessInfo.ContactPhone" class="cima-input" placeholder="+52 55 1234 5678" />
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">@L["Admin:Settings:Business:Address"]</label>
                                 <InputText @bind-Value="BusinessInfo.Address" class="cima-input" placeholder="Col. Polanco, CDMX" />
                             </div>
 
                             <div class="md:col-span-2">
-                                <h3 class="text-sm font-medium text-gray-700 mb-3">Redes Sociales</h3>
+                                <h3 class="text-sm font-medium text-gray-700 mb-3">@L["Admin:Settings:Business:Social"]</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">Facebook</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:Facebook"]</label>
                                         <InputText @bind-Value="BusinessInfo.FacebookUrl" class="cima-input" placeholder="https://facebook.com/4cima" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">Instagram</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:Instagram"]</label>
                                         <InputText @bind-Value="BusinessInfo.InstagramUrl" class="cima-input" placeholder="https://instagram.com/4cima" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">LinkedIn</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:LinkedIn"]</label>
                                         <InputText @bind-Value="BusinessInfo.LinkedInUrl" class="cima-input" placeholder="https://linkedin.com/company/4cima" />
                                     </div>
                                 </div>
                             </div>
 
                             <div class="md:col-span-2">
-                                <h3 class="text-sm font-medium text-gray-700 mb-3">Horarios de atención</h3>
+                                <h3 class="text-sm font-medium text-gray-700 mb-3">@L["Admin:Settings:Business:Hours"]</h3>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">Lunes a Viernes</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:Weekday"]</label>
                                         <InputText @bind-Value="BusinessInfo.BusinessHoursWeekday" class="cima-input" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">Sábado</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:Saturday"]</label>
                                         <InputText @bind-Value="BusinessInfo.BusinessHoursSaturday" class="cima-input" />
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1">Domingo</label>
+                                        <label class="block text-xs text-gray-500 mb-1">@L["Admin:Settings:Business:Sunday"]</label>
                                         <InputText @bind-Value="BusinessInfo.BusinessHoursSunday" class="cima-input" />
                                     </div>
                                 </div>
@@ -256,7 +256,7 @@
                                 {
                                     <span class="cima-spinner-sm mr-2"></span>
                                 }
-                                Guardar Información
+                                @L["Admin:Settings:Business:Save"]
                             </button>
                         </div>
                     </EditForm>
@@ -290,7 +290,7 @@
             IsLoading = true;
             CurrentSettings = await SettingsService.GetAsync();
             
-            // Mapear a DTOs de edición
+            // Mapear a DTOs de ediciï¿½n
             EmailSettings = new UpdateEmailSettingsDto
             {
                 AdminNotificationEmail = CurrentSettings.AdminNotificationEmail ?? "",
@@ -335,7 +335,7 @@
         {
             IsSavingEmail = true;
             await SettingsService.UpdateEmailSettingsAsync(EmailSettings);
-            Snackbar.Add("Configuración de email guardada", Severity.Success);
+            Snackbar.Add(L["Admin:Settings:Email:Saved"], Severity.Success);
             await LoadSettings();
         }
         catch (Exception ex)
@@ -354,7 +354,7 @@
         {
             IsSavingWhatsApp = true;
             await SettingsService.UpdateWhatsAppSettingsAsync(WhatsAppSettings);
-            Snackbar.Add("Configuración de WhatsApp guardada", Severity.Success);
+            Snackbar.Add(L["Admin:Settings:WhatsApp:Saved"], Severity.Success);
             await LoadSettings();
         }
         catch (Exception ex)
@@ -373,7 +373,7 @@
         {
             IsSavingBusiness = true;
             await SettingsService.UpdateBusinessInfoAsync(BusinessInfo);
-            Snackbar.Add("Información del negocio guardada", Severity.Success);
+            Snackbar.Add(L["Admin:Settings:Business:Saved"], Severity.Success);
             await LoadSettings();
         }
         catch (Exception ex)
@@ -390,7 +390,7 @@
     {
         if (string.IsNullOrEmpty(EmailSettings.AdminNotificationEmail))
         {
-            Snackbar.Add("Ingresa un email primero", Severity.Warning);
+            Snackbar.Add(L["Admin:Settings:Email:MissingEmail"], Severity.Warning);
             return;
         }
 
@@ -401,11 +401,11 @@
             
             if (success)
             {
-                Snackbar.Add($"Email de prueba enviado a {EmailSettings.AdminNotificationEmail}", Severity.Success);
+                Snackbar.Add(L["Admin:Settings:Email:TestSuccess", EmailSettings.AdminNotificationEmail], Severity.Success);
             }
             else
             {
-                Snackbar.Add("Error al enviar email. Verifica la configuración de Azure CS", Severity.Error);
+                Snackbar.Add(L["Admin:Settings:Email:TestError"], Severity.Error);
             }
         }
         catch (Exception ex)

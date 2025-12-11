@@ -1,4 +1,7 @@
+@using Microsoft.Extensions.Localization
+@using cima.Localization
 @inject IJSRuntime JS
+@inject IStringLocalizer<cimaResource> L
 
 <div class="image-gallery">
     @* Imagen principal con altura responsive *@
@@ -101,20 +104,20 @@
     private bool IsPlaceholder(string image) => string.Equals(image, PlaceholderImage, StringComparison.OrdinalIgnoreCase);
 
     private string GetMainAltText() => IsPlaceholder(CurrentImage)
-        ? "Imagen no disponible, se muestra una foto de referencia de la propiedad"
-        : "Imagen de la propiedad";
+        ? L["ImageGallery:PlaceholderAltMain"]
+        : L["ImageGallery:MainAlt"];
 
     private string GetThumbnailAltText(int index)
     {
         var image = Images.ElementAtOrDefault(index) ?? PlaceholderImage;
         return IsPlaceholder(image)
-            ? "Miniatura de imagen de referencia de la propiedad"
-            : $"Miniatura {index + 1} de la propiedad";
+            ? L["ImageGallery:PlaceholderAltThumb"]
+            : L["ImageGallery:ThumbAlt", index + 1];
     }
 
     private string GetFullscreenAltText() => IsPlaceholder(CurrentImage)
-        ? "Imagen de referencia ampliada de la propiedad"
-        : "Imagen ampliada de la propiedad";
+        ? L["ImageGallery:PlaceholderAltFullscreen"]
+        : L["ImageGallery:FullscreenAlt"];
     
     private void NextImage()
     {

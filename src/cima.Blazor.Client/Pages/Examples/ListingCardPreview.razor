@@ -2,23 +2,26 @@
 @using cima.Listings
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Components.Public
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
 
-<PageTitle>Listing Card Preview</PageTitle>
+<PageTitle>@L["Examples:ListingCard:PageTitle"]</PageTitle>
 
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Listing Card Preview</h1>
+    <h1 class="text-3xl font-bold mb-8">@L["Examples:ListingCard:Heading"]</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-            <h2 class="text-xl font-semibold mb-4">Standard Card</h2>
+            <h2 class="text-xl font-semibold mb-4">@L["Examples:ListingCard:Standard"]</h2>
             <ListingCard Listing="@Listing1" />
         </div>
         <div>
-            <h2 class="text-xl font-semibold mb-4">Without Image</h2>
+            <h2 class="text-xl font-semibold mb-4">@L["Examples:ListingCard:WithoutImage"]</h2>
             <ListingCard Listing="@Listing2" />
         </div>
         <div>
-            <h2 class="text-xl font-semibold mb-4">Portfolio</h2>
+            <h2 class="text-xl font-semibold mb-4">@L["Examples:ListingCard:Portfolio"]</h2>
             <ListingCard Listing="@Listing3" />
         </div>
     </div>
