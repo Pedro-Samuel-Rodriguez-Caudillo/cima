@@ -33,7 +33,7 @@
     // en las páginas y por AuthorizeRouteView en Routes.razor
     private readonly MudTheme _cimaTheme = new()
     {
-        Palette = new Palette
+        PaletteLight = new PaletteLight
         {
             Primary = "#1e3a8a",
             Secondary = "#3f51c5",
@@ -51,14 +51,6 @@
         LayoutProperties = new LayoutProperties
         {
             DefaultBorderRadius = "10px",
-            DefaultBorderRadius2 = "14px",
         },
-        Typography = new Typography
-        {
-            Default = new Default
-            {
-                FontFamily = new[] { "Inter", "Segoe UI", "system-ui", "sans-serif" },
-            }
-        }
     };
 }
