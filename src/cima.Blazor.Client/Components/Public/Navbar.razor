@@ -19,7 +19,7 @@
            aria-label="Volver a inicio">
             <img src="@($"{Navigation.BaseUri}images/logo/4cima.svg")"
                  alt="CIMA"
-                 class="h-20 w-auto drop-shadow-lg" />
+                 class="h-24 w-auto drop-shadow-lg" />
         </a>
 
         <!-- Desktop Menu -->
@@ -485,7 +485,7 @@
     {
         var solidBackground = !_useTransparentNavbar || _isScrolled;
         return solidBackground
-            ? "bg-gradient-to-b from-navy-900/95 via-navy-900/90 to-navy-950/90 shadow-lg backdrop-blur-md border-b border-navy-900/40"
+            ? "bg-[#0f172a] shadow-lg backdrop-blur-md border-b border-black/20"
             : "bg-transparent border-b border-white/10";
     }
 
