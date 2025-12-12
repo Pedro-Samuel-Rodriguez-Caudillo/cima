@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -197,12 +197,7 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
         var contactRequest = await _contactRequestRepository.GetAsync(id);
 
         // VALIDACION: Solo el arquitecto dueno puede responder
-        var architect = await _architectRepository.GetAsync(contactRequest.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !CurrentUser.IsInRole("admin"))
-        {
-            throw new AbpAuthorizationException(
-                "Solo puedes responder solicitudes de tus propiedades");
-        }
+        await ValidateArchitectOwnershipAsync(contactRequest.ArchitectId, "responder");
 
         contactRequest.Status = ContactRequestStatus.Replied;
         contactRequest.ReplyNotes = input.ReplyNotes;
@@ -217,12 +212,7 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     {
         var contactRequest = await _contactRequestRepository.GetAsync(id);
 
-        var architect = await _architectRepository.GetAsync(contactRequest.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !CurrentUser.IsInRole("admin"))
-        {
-            throw new AbpAuthorizationException(
-                "Solo puedes cerrar solicitudes de tus propiedades");
-        }
+        await ValidateArchitectOwnershipAsync(contactRequest.ArchitectId, "cerrar");
 
         contactRequest.Status = ContactRequestStatus.Closed;
 
@@ -235,5 +225,18 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     {
         var contactRequest = await _contactRequestRepository.GetAsync(id);
         return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);
+    }
+
+    /// <summary>
+    /// Valida que el usuario actual sea el propietario del arquitecto o un administrador
+    /// </summary>
+    private async Task<Architect> ValidateArchitectOwnershipAsync(Guid architectId, string operationName)
+    {
+        var architect = await _architectRepository.GetAsync(architectId);
+        if (architect.UserId != CurrentUser.Id && !CurrentUser.IsInRole("admin"))
+        {
+            throw new AbpAuthorizationException($"Solo puedes {operationName} solicitudes de tus propiedades");
+        }
+        return architect;
     }
 }

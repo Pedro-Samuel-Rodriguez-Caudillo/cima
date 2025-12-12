@@ -2312,11 +2312,13 @@ namespace cima.Migrations
 
                             b1.Property<string>("AltText")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
 
                             b1.Property<string>("ContentType")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<long>("FileSize")
                                 .HasColumnType("bigint");
@@ -2329,11 +2331,15 @@ namespace cima.Migrations
 
                             b1.Property<string>("ThumbnailUrl")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(2048)
+                                .HasColumnType("character varying(2048)")
+                                .HasDefaultValue("");
 
                             b1.Property<string>("Url")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(2048)
+                                .HasColumnType("character varying(2048)");
 
                             b1.HasKey("ListingId", "ImageId");
 

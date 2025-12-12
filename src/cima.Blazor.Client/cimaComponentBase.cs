@@ -1,4 +1,4 @@
-﻿using cima.Localization;
+using cima.Localization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Volo.Abp.Localization;
@@ -27,13 +27,28 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
     [Inject]
     protected IJSRuntime JSRuntime { get; set; } = default!;
 
-    private ICurrentUser? _currentUser;
+    private CurrentUserWrapper? _currentUser;
     protected ICurrentUser CurrentUser => _currentUser ??= new CurrentUserWrapper(AuthenticationStateProvider);
 
     private bool _disposed;
 
     protected cimaComponentBase()
     {
+    }
+
+    /// <summary>
+    /// Inicializa el componente y el CurrentUser de manera asíncrona
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        // Inicializar el CurrentUser para prevenir errores de runtime en WASM
+        if (_currentUser == null)
+        {
+            _currentUser = new CurrentUserWrapper(AuthenticationStateProvider);
+            await _currentUser.InitializeAsync();
+        }
+        
+        await base.OnInitializedAsync();
     }
 
     /// <summary>
@@ -92,77 +107,95 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
 
 /// <summary>
 /// Wrapper simple para ICurrentUser en Blazor WASM
+/// IMPORTANTE: No puede usar operaciones bloqueantes como .GetAwaiter().GetResult() 
+/// porque el runtime de WebAssembly es single-threaded
 /// </summary>
 public class CurrentUserWrapper : ICurrentUser
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider;
     private ClaimsPrincipal? _principal;
+    private bool _initialized;
 
     public CurrentUserWrapper(AuthenticationStateProvider authenticationStateProvider)
     {
         _authenticationStateProvider = authenticationStateProvider;
     }
 
-    private async Task<ClaimsPrincipal> GetPrincipalAsync()
+    /// <summary>
+    /// Inicializa el principal de manera asíncrona
+    /// DEBE ser llamado antes de usar cualquier propiedad
+    /// </summary>
+    public async Task InitializeAsync()
     {
-        if (_principal == null)
+        if (!_initialized)
         {
             var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
             _principal = state.User;
+            _initialized = true;
+        }
+    }
+
+    private ClaimsPrincipal GetPrincipal()
+    {
+        if (_principal == null)
+        {
+            // Retornar un ClaimsPrincipal vacío si no se ha inicializado
+            // Esto previene el error en runtime de WASM
+            return new ClaimsPrincipal(new ClaimsIdentity());
         }
         return _principal;
     }
 
-    public bool IsAuthenticated => GetPrincipalAsync().GetAwaiter().GetResult().Identity?.IsAuthenticated ?? false;
+    public bool IsAuthenticated => GetPrincipal().Identity?.IsAuthenticated ?? false;
 
     public Guid? Id
     {
         get
         {
-            var idClaim = GetPrincipalAsync().GetAwaiter().GetResult().FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var idClaim = GetPrincipal().FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(idClaim, out var id) ? id : null;
         }
     }
 
-    public string? UserName => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst(ClaimTypes.Name)?.Value;
+    public string? UserName => GetPrincipal().FindFirst(ClaimTypes.Name)?.Value;
 
-    public string? Name => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst("name")?.Value;
+    public string? Name => GetPrincipal().FindFirst("name")?.Value;
 
-    public string? SurName => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst("family_name")?.Value;
+    public string? SurName => GetPrincipal().FindFirst("family_name")?.Value;
 
-    public string? PhoneNumber => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst(ClaimTypes.MobilePhone)?.Value;
+    public string? PhoneNumber => GetPrincipal().FindFirst(ClaimTypes.MobilePhone)?.Value;
 
     public bool PhoneNumberVerified => bool.TryParse(
-        GetPrincipalAsync().GetAwaiter().GetResult().FindFirst("phone_number_verified")?.Value, 
+        GetPrincipal().FindFirst("phone_number_verified")?.Value, 
         out var verified) && verified;
 
-    public string? Email => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst(ClaimTypes.Email)?.Value;
+    public string? Email => GetPrincipal().FindFirst(ClaimTypes.Email)?.Value;
 
     public bool EmailVerified => bool.TryParse(
-        GetPrincipalAsync().GetAwaiter().GetResult().FindFirst("email_verified")?.Value, 
+        GetPrincipal().FindFirst("email_verified")?.Value, 
         out var verified) && verified;
 
     public Guid? TenantId
     {
         get
         {
-            var tenantIdClaim = GetPrincipalAsync().GetAwaiter().GetResult().FindFirst("tenant_id")?.Value;
+            var tenantIdClaim = GetPrincipal().FindFirst("tenant_id")?.Value;
             return Guid.TryParse(tenantIdClaim, out var id) ? id : null;
         }
     }
 
-    public string[] Roles => GetPrincipalAsync().GetAwaiter().GetResult()
+    public string[] Roles => GetPrincipal()
         .FindAll(ClaimTypes.Role)
         .Select(c => c.Value)
         .ToArray();
 
-    public Claim? FindClaim(string claimType) => GetPrincipalAsync().GetAwaiter().GetResult().FindFirst(claimType);
+    public Claim? FindClaim(string claimType) => GetPrincipal().FindFirst(claimType);
 
-    public Claim[] FindClaims(string claimType) => GetPrincipalAsync().GetAwaiter().GetResult()
+    public Claim[] FindClaims(string claimType) => GetPrincipal()
         .FindAll(claimType)
         .ToArray();
 
-    public Claim[] GetAllClaims() => GetPrincipalAsync().GetAwaiter().GetResult().Claims.ToArray();
+    public Claim[] GetAllClaims() => GetPrincipal().Claims.ToArray();
 
-    public bool IsInRole(string roleName) => GetPrincipalAsync().GetAwaiter().GetResult().IsInRole(roleName);
+    public bool IsInRole(string roleName) => GetPrincipal().IsInRole(roleName);
 }

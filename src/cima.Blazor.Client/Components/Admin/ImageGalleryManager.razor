@@ -9,10 +9,11 @@
 @inherits cimaComponentBase
 
 <div class="space-y-4">
+    @* InputFile solo funciona en WebAssembly, no en Server *@
     <InputFile id="@FileInputId"
                OnChange="HandleFileSelection"
                multiple
-               accept=".jpg,.jpeg,.png,.webp"
+               accept="image/jpeg,image/jpg,image/png,image/webp"
                class="hidden"
                disabled="@IsUploading" />
 
@@ -63,6 +64,7 @@
                      @ondragstart="() => HandleDragStart(index)"
                      @ondragover:preventDefault
                      @ondragover="() => HandleDragOver(index)"
+                     @ondrop:preventDefault
                      @ondrop="() => HandleDrop(index)"
                      @ondragend="HandleDragEnd">
                     
@@ -143,14 +145,16 @@
     private int? DragOverIndex { get; set; }
     private Dictionary<string, int> UploadProgress { get; set; } = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync(); // Importante: inicializar CurrentUser
         Images = InitialImages?.ToList() ?? new List<ListingImageDto>();
         Images = GetOrderedImages();
     }
 
     protected override void OnParametersSet()
     {
+        base.OnParametersSet();
         if (InitialImages != null && !ReferenceEquals(InitialImages, Images))
         {
             Images = InitialImages.ToList();
@@ -179,44 +183,102 @@
 
     private async Task HandleFileSelection(InputFileChangeEventArgs e)
     {
+        // Debug: Log que el evento se disparó
+        await JSRuntime.InvokeVoidAsync("console.log", "HandleFileSelection disparado");
+        
         var files = e.GetMultipleFiles(10);
-        if (!files.Any()) return;
+        await JSRuntime.InvokeVoidAsync("console.log", $"Archivos seleccionados: {files.Count()}");
+        
+        if (!files.Any())
+        {
+            await JSRuntime.InvokeVoidAsync("console.warn", "No se seleccionaron archivos");
+            Snackbar.Add("No se seleccionaron archivos", Severity.Warning);
+            return;
+        }
 
         IsUploading = true;
         UploadProgress.Clear();
         StateHasChanged();
 
-        try
+        var successCount = 0;
+        var errorCount = 0;
+
+        foreach (var file in files)
         {
-            foreach (var file in files)
+            try
             {
+                // Validar tamaño
                 if (file.Size > 5 * 1024 * 1024)
                 {
                     Snackbar.Add(L["GalleryManager:FileTooLarge", file.Name], Severity.Warning);
+                    errorCount++;
+                    continue;
+                }
+
+                // Validar que el archivo no esté vacío
+                if (file.Size == 0)
+                {
+                    Snackbar.Add($"El archivo {file.Name} está vacío", Severity.Warning);
+                    errorCount++;
                     continue;
                 }
 
                 UploadProgress[file.Name] = 0;
                 StateHasChanged();
 
-                using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-                using var ms = new MemoryStream();
-                
-                var buffer = new byte[81920];
-                int bytesRead;
-                long totalRead = 0;
-                
-                while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+                await JSRuntime.InvokeVoidAsync("console.log", $"Iniciando lectura de {file.Name}, tamaño: {file.Size} bytes");
+
+                // Leer archivo con método simplificado de Blazor
+                byte[] imageData;
+                try
                 {
-                    await ms.WriteAsync(buffer, 0, bytesRead);
-                    totalRead += bytesRead;
-                    UploadProgress[file.Name] = (int)((totalRead * 100) / file.Size);
+                    using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                    var ms = new MemoryStream();
+                    
+                    UploadProgress[file.Name] = 10;
                     StateHasChanged();
+                    
+                    // Copiar stream completo
+                    await stream.CopyToAsync(ms);
+                    
+                    UploadProgress[file.Name] = 50;
+                    StateHasChanged();
+                    
+                    imageData = ms.ToArray();
+                    
+                    await JSRuntime.InvokeVoidAsync("console.log", $"Archivo leído: {imageData.Length} bytes");
+                }
+                catch (Exception readEx)
+                {
+                    await JSRuntime.InvokeVoidAsync("console.error", $"Error leyendo archivo {file.Name}", readEx.ToString());
+                    Snackbar.Add($"Error leyendo {file.Name}: {readEx.Message}", Severity.Error);
+                    UploadProgress.Remove(file.Name);
+                    errorCount++;
+                    continue;
                 }
 
-                var base64 = Convert.ToBase64String(ms.ToArray());
-                var url = $"data:{file.ContentType};base64,{base64}";
+                // Verificar que se leyó el archivo
+                if (imageData.Length == 0)
+                {
+                    Snackbar.Add($"El archivo {file.Name} está vacío después de leerlo", Severity.Error);
+                    UploadProgress.Remove(file.Name);
+                    errorCount++;
+                    continue;
+                }
 
+                UploadProgress[file.Name] = 60;
+                StateHasChanged();
+
+                // Convertir a base64
+                var base64 = Convert.ToBase64String(imageData);
+                var url = $"data:{file.ContentType};base64,{base64}";
+                
+                UploadProgress[file.Name] = 70;
+                StateHasChanged();
+                
+                await JSRuntime.InvokeVoidAsync("console.log", $"Base64 generado para {file.Name}, longitud: {base64.Length}");
+
+                // Crear DTO
                 var createDto = new CreateListingImageDto
                 {
                     Url = url,
@@ -225,26 +287,48 @@
                     ContentType = file.ContentType
                 };
 
+                // Subir al servidor
+                UploadProgress[file.Name] = 80;
+                StateHasChanged();
+                
+                await JSRuntime.InvokeVoidAsync("console.log", $"Enviando imagen al servidor: {file.Name}");
+                
                 var newImage = await ListingService.AddImageAsync(ListingId, createDto);
+                
+                await JSRuntime.InvokeVoidAsync("console.log", $"Imagen guardada exitosamente: {file.Name}");
+                
                 Images.Add(newImage);
+                UploadProgress[file.Name] = 100;
+                StateHasChanged();
                 
                 UploadProgress.Remove(file.Name);
+                successCount++;
                 StateHasChanged();
             }
+            catch (Exception ex)
+            {
+                UploadProgress.Remove(file.Name);
+                Snackbar.Add($"Error subiendo {file.Name}: {ex.Message}", Severity.Error);
+                await JSRuntime.InvokeVoidAsync("console.error", $"Error uploading {file.Name}", ex.ToString());
+                errorCount++;
+            }
+        }
 
+        // Notificar cambios y mostrar resultado
+        if (successCount > 0)
+        {
             await NotifyImagesChanged();
             Snackbar.Add(L["GalleryManager:UploadSuccess"], Severity.Success);
         }
-        catch (Exception ex)
+        
+        if (errorCount > 0)
         {
-            Snackbar.Add(L["GalleryManager:UploadError", ex.Message], Severity.Error);
+            Snackbar.Add($"Se encontraron {errorCount} errores durante la carga", Severity.Warning);
         }
-        finally
-        {
-            IsUploading = false;
-            UploadProgress.Clear();
-            StateHasChanged();
-        }
+
+        IsUploading = false;
+        UploadProgress.Clear();
+        StateHasChanged();
     }
 
     private string GetFileNameWithoutExtension(string fileName)

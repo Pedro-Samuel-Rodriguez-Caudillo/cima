@@ -12,7 +12,7 @@
 <div class="min-h-screen bg-neutral-50">
     @* Header Section - Clean Design (dise�ado para ir detr�s del navbar transparente) *@
     <section class="bg-navy-900 pt-20 md:pt-24">
-        <div class="cima-container py-16 md:py-22">
+        <div class="cima-container py-10 md:py-14">
             <div class="max-w-4xl">
                 <span class="inline-block px-4 py-1.5 bg-navy-700 text-navy-100 text-sm font-medium rounded-full mb-6">
                     Proyectos Completados
@@ -201,6 +201,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         try
         {
             await Task.WhenAll(

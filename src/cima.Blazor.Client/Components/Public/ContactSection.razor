@@ -1,5 +1,7 @@
 @using cima.Blazor.Client.Components.Common
+@using cima.Settings
 @inherits cimaComponentBase
+@inject ISiteSettingsAppService SettingsService
 
 <section id="contact" class="bg-white py-20 md:py-28">
     <div class="cima-container max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,11 +14,17 @@
                 @L["Contact:HomeSubtitle"]
             </p>
             
-            @* Opción rápida de WhatsApp *@
+            @* OpciÃ³n rï¿½pida de WhatsApp *@
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <span class="text-neutral-500 text-sm">¿Prefieres contacto directo?</span>
+                <div class="flex flex-wrap items-center gap-2 justify-center text-neutral-500 text-sm">
+                    <span>Â¿Prefieres contacto directo?</span>
+                    @if (ShowWhatsAppConnector)
+                    {
+                        <span>@L["Contact:DirectContactConnector"]</span>
+                    }
+                </div>
                 <WhatsAppButton 
-                    ButtonText="Escríbenos por WhatsApp"
+                    ButtonText="EscrÃ­benos por WhatsApp"
                     ButtonClass="bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-full font-medium shadow-lg hover:shadow-xl transition-all duration-300"
                     ConfirmButtonClass="bg-green-600 text-white px-5 py-2.5 rounded-full font-medium shadow-lg animate-pulse" />
             </div>
@@ -26,3 +34,26 @@
         <GeneralContactForm />
     </div>
 </section>
+
+@code {
+    private bool ShowWhatsAppConnector;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadWhatsAppAvailabilityAsync();
+    }
+
+    private async Task LoadWhatsAppAvailabilityAsync()
+    {
+        try
+        {
+            var settings = await SettingsService.GetPublicAsync();
+            ShowWhatsAppConnector = settings.WhatsAppEnabled && !string.IsNullOrEmpty(settings.WhatsAppUrl);
+        }
+        catch
+        {
+            ShowWhatsAppConnector = false;
+        }
+    }
+}

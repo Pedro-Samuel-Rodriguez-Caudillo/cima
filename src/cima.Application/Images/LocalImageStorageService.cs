@@ -74,6 +74,10 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
             throw new UserFriendlyException($"El archivo excede el tamaño máximo de {MaxFileSize / (1024 * 1024)}MB");
         }
 
+        // Validar formato de imagen mediante magic bytes
+        buffer.Position = 0;
+        ValidateImageMagicBytes(buffer, extension);
+
         // Guardar archivo original
         try
         {
@@ -183,5 +187,44 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Valida que el archivo sea realmente una imagen verificando los magic bytes
+    /// </summary>
+    private void ValidateImageMagicBytes(Stream stream, string expectedExtension)
+    {
+        if (stream.Length < 12)
+        {
+            throw new UserFriendlyException("El archivo es demasiado pequeño para ser una imagen válida");
+        }
+
+        var buffer = new byte[12];
+        stream.Position = 0;
+        var bytesRead = stream.Read(buffer, 0, 12);
+        stream.Position = 0; // Resetear posición para uso posterior
+
+        if (bytesRead < 4)
+        {
+            throw new UserFriendlyException("No se pudo leer el archivo correctamente");
+        }
+
+        // Validar magic bytes según el formato esperado
+        var isValid = expectedExtension switch
+        {
+            ".jpg" or ".jpeg" => buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF,
+            ".png" => buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47,
+            ".gif" => buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x38,
+            ".webp" => bytesRead >= 12 && 
+                      buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46 && // RIFF
+                      buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50, // WEBP
+            _ => false
+        };
+
+        if (!isValid)
+        {
+            throw new UserFriendlyException(
+                $"El archivo no es una imagen {expectedExtension} válida. Por favor, suba un archivo de imagen real.");
+        }
     }
 }

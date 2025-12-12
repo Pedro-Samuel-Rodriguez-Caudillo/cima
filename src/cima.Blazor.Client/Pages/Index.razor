@@ -1,18 +1,42 @@
 @page "/"
+@using System.Collections.Generic
 @using cima.Blazor.Client.Components.Public
 @inherits cimaComponentBase
+@inject SeoJsonLdService SeoJsonLdService
+@inject NavigationManager Navigation
 
 <PageTitle>@L["Home"] - @L["CompanyName"]</PageTitle>
+<SeoMetaTags Title="@L["Home"]"
+             Description="@HomeDescription"
+             Keywords="@HomeKeywords"
+             ImageUrl="@HeroImageUrl"
+             JsonLd="@JsonLd" />
 
-<!-- Hero Section with Booking Bar -->
 <HeroSection />
 
 <!-- Featured Properties -->
-<FeaturedProperties />
+<FeaturedProperties OnListingsLoaded="OnFeaturedLoaded" />
 
 <!-- Contact Section -->
 <ContactSection />
 
 @code {
-    // Page logic if needed
+    private const string HomeDescription = "Desarrollos y propiedades de alto valor diseñadas por arquitectos.";
+    private const string HomeKeywords = "inmobiliaria, propiedades, arquitectura, México, casas, departamentos, lujo";
+    private string JsonLd { get; set; } = string.Empty;
+
+    private string BaseUrl => Navigation.BaseUri.TrimEnd('/');
+    private string HeroImageUrl => $"{BaseUrl}/images/logo/4cima.png";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        JsonLd = SeoJsonLdService.GenerateHomeJsonLd(BaseUrl);
+    }
+
+    private async Task OnFeaturedLoaded(IReadOnlyList<ListingDto> listings)
+    {
+        JsonLd = SeoJsonLdService.GenerateFeaturedListJsonLd(listings, BaseUrl);
+        await InvokeAsync(StateHasChanged);
+    }
 }

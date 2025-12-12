@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -11,6 +11,7 @@ using Volo.Abp.AutoMapper;
 using Volo.Abp.Localization;
 using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.Modularity;
+using Volo.Abp.Identity.Blazor;
 using MudBlazor.Services;
 
 
@@ -19,7 +20,8 @@ namespace cima.Blazor.Client;
 [DependsOn(
     typeof(AbpAutofacWebAssemblyModule),
     typeof(cimaHttpApiClientModule),
-    typeof(AbpAspNetCoreComponentsWebModule)
+    typeof(AbpAspNetCoreComponentsWebModule),
+    typeof(AbpIdentityBlazorModule)
 )]
 public class cimaBlazorClientModule : AbpModule
 {
@@ -50,6 +52,7 @@ public class cimaBlazorClientModule : AbpModule
     {
         context.Services.AddTransient<EnumLocalizationService>();
         context.Services.AddSingleton<SeoJsonLdService>();
+        context.Services.AddScoped<ICimaThemeService, CimaThemeService>();
         
         // Toast service con accesibilidad
         context.Services.AddCimaToastService();
@@ -83,7 +86,9 @@ public class cimaBlazorClientModule : AbpModule
     {
         context.Services.AddTransient(sp => new HttpClient
         {
-            BaseAddress = new Uri(environment.BaseAddress)
+            BaseAddress = new Uri(environment.BaseAddress),
+            // Aumentar timeout para subida de imágenes (10 minutos)
+            Timeout = TimeSpan.FromMinutes(10)
         });
     }
 

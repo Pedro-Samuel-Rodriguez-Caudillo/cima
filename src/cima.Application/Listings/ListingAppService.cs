@@ -17,6 +17,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Uow;
 
 
 namespace cima.Listings;
@@ -32,6 +33,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly IDistributedCache _distributedCache;
     private readonly IListingManager _listingManager;
     private readonly Images.IImageStorageService _imageStorageService;
+    private readonly IUnitOfWorkManager _unitOfWorkManager;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
@@ -39,13 +41,15 @@ public class ListingAppService : cimaAppService, IListingAppService
         IRepository<Architect, Guid> architectRepository,
         IDistributedCache distributedCache,
         IListingManager listingManager,
-        Images.IImageStorageService imageStorageService)
+        Images.IImageStorageService imageStorageService,
+        IUnitOfWorkManager unitOfWorkManager)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _distributedCache = distributedCache;
         _listingManager = listingManager;
         _imageStorageService = imageStorageService;
+        _unitOfWorkManager = unitOfWorkManager;
     }
 
     /// <summary>
@@ -57,18 +61,49 @@ public class ListingAppService : cimaAppService, IListingAppService
             listing => listing.Architect!,  // ? null-forgiving (WithDetailsAsync garantiza carga)
             listing => listing.Images!);    // ? null-forgiving
 
-        // Aplicar filtros
+        // Aplicar filtro de status
+        if (input.Status.HasValue)
+        {
+            queryable = queryable.Where(p => (int)p.Status == input.Status.Value);
+        }
+
+        // Aplicar filtro de arquitecto
+        if (input.ArchitectId.HasValue)
+        {
+            queryable = queryable.Where(p => p.ArchitectId == input.ArchitectId.Value);
+        }
+
+        // Aplicar filtros comunes
+        queryable = ApplyListingFilters(queryable, input);
+
+        // Aplicar ordenamiento
+        queryable = ApplySorting(queryable, input.Sorting);
+
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
+
+        var listings = await AsyncExecuter.ToListAsync(
+            queryable
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+        );
+
+        return new PagedResultDto<ListingDto>(
+            totalCount,
+            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+        );
+    }
+
+    /// <summary>
+    /// Aplica filtros comunes a las consultas de listings
+    /// </summary>
+    private IQueryable<Listing> ApplyListingFilters(IQueryable<Listing> queryable, GetListingsInput input)
+    {
         if (!string.IsNullOrWhiteSpace(input.SearchTerm))
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||  // ? null check
+                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||
                 p.Description.Contains(input.SearchTerm));
-        }
-
-        if (input.Status.HasValue)
-        {
-        queryable = queryable.Where(p => (int)p.Status == input.Status.Value);
         }
 
         if (input.MinPrice.HasValue)
@@ -91,11 +126,6 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Bathrooms >= input.MinBathrooms.Value);
         }
 
-        if (input.ArchitectId.HasValue)
-        {
-            queryable = queryable.Where(p => p.ArchitectId == input.ArchitectId.Value);
-        }
-
         if (input.PropertyType.HasValue)
         {
             queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
@@ -106,21 +136,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => (int)p.TransactionType == input.TransactionType.Value);
         }
 
-        // Aplicar ordenamiento
-        queryable = ApplySorting(queryable, input.Sorting);
-
-        var totalCount = await AsyncExecuter.CountAsync(queryable);
-
-        var listings = await AsyncExecuter.ToListAsync(
-            queryable
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
-        );
-
-        return new PagedResultDto<ListingDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
-        );
+        return queryable;
     }
 
     /// <summary>
@@ -204,7 +220,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             type: input.Type,
             transactionType: input.TransactionType,
             architectId: input.ArchitectId,
-            createdBy: CurrentUser.Id);
+            createdBy: GetCurrentUserIdOrThrow());
 
         await _listingRepository.InsertAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -219,18 +235,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion: Solo el dueno o admin puede editar
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes editar tus propias propiedades");
-        }
+        var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "editar");
 
         // Validar que el arquitecto está activo
-        if (!architect.IsActive)
-        {
-            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
-                .WithData("ArchitectId", architect.Id);
-        }
+        ValidateArchitectIsActive(architect);
 
         // Normalizar y validar datos usando ListingManager
         var normalizedTitle = input.Title?.Trim() ?? string.Empty;
@@ -258,7 +266,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         listing.TransactionType = input.TransactionType;
         
         listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        listing.LastModifiedBy = GetCurrentUserIdOrThrow();
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -273,11 +281,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion: Solo el dueno o admin puede eliminar
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes eliminar tus propias propiedades");
-        }
+        await ValidateListingOwnershipAsync(listing.ArchitectId, "eliminar");
 
         await _listingRepository.DeleteAsync(id);
     }
@@ -292,18 +296,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion de propiedad del listing
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes publicar tus propias propiedades");
-        }
+        var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "publicar");
 
         // Validar que el arquitecto está activo
-        if (!architect.IsActive)
-        {
-            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
-                .WithData("ArchitectId", architect.Id);
-        }
+        ValidateArchitectIsActive(architect);
 
         // Warning si no tiene imagenes (pero permite publicar)
         if (listing.Images == null || !listing.Images.Any())
@@ -312,7 +308,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         }
 
         // Usar ListingManager - dispara eventos de dominio
-        await _listingManager.PublishAsync(listing, CurrentUser.Id);
+        await _listingManager.PublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -327,14 +323,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes archivar tus propias propiedades");
-        }
+        await ValidateListingOwnershipAsync(listing.ArchitectId, "archivar");
 
         // Usar ListingManager - dispara eventos de dominio
-        await _listingManager.ArchiveAsync(listing, CurrentUser.Id);
+        await _listingManager.ArchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -349,21 +341,13 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes desarchivar tus propias propiedades");
-        }
+        var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "desarchivar");
 
         // Validar que el arquitecto está activo
-        if (!architect.IsActive)
-        {
-            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
-                .WithData("ArchitectId", architect.Id);
-        }
+        ValidateArchitectIsActive(architect);
 
         // Usar ListingManager - dispara eventos de dominio
-        await _listingManager.UnarchiveAsync(listing, CurrentUser.Id);
+        await _listingManager.UnarchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -378,14 +362,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes despublicar tus propias propiedades");
-        }
+        await ValidateListingOwnershipAsync(listing.ArchitectId, "despublicar");
 
         // Usar ListingManager - dispara eventos de dominio
-        await _listingManager.UnpublishAsync(listing, CurrentUser.Id);
+        await _listingManager.UnpublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -400,14 +380,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes mover a portafolio tus propias propiedades");
-        }
+        await ValidateListingOwnershipAsync(listing.ArchitectId, "mover a portafolio");
 
         // Usar ListingManager - dispara eventos de dominio
-        await _listingManager.MoveToPortfolioAsync(listing, CurrentUser.Id);
+        await _listingManager.MoveToPortfolioAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
         return ObjectMapper.Map<Listing, ListingDto>(listing);
@@ -423,11 +399,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         var original = await _listingRepository.GetAsync(id);
 
         // Validacion: Solo el dueño o admin puede duplicar
-        var architect = await _architectRepository.GetAsync(original.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes duplicar tus propias propiedades");
-        }
+        await ValidateListingOwnershipAsync(original.ArchitectId, "duplicar");
 
         // Crear nueva propiedad usando ListingManager
         var duplicatedListing = await _listingManager.CreateAsync(
@@ -443,13 +415,13 @@ public class ListingAppService : cimaAppService, IListingAppService
             type: original.Type,
             transactionType: original.TransactionType,
             architectId: original.ArchitectId,
-            createdBy: CurrentUser.Id);
+            createdBy: GetCurrentUserIdOrThrow());
 
         await _listingRepository.InsertAsync(duplicatedListing);
         
         Logger.LogInformation(
             "Propiedad {OriginalId} duplicada a {NewId} por usuario {UserId}",
-            id, duplicatedListing.Id, CurrentUser.Id);
+            id, duplicatedListing.Id, GetCurrentUserIdOrThrow());
 
         return ObjectMapper.Map<Listing, ListingDto>(duplicatedListing);
     }
@@ -467,44 +439,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Solo propiedades publicadas
         queryable = queryable.Where(p => p.Status == ListingStatus.Published);
 
-        // Aplicar filtros
-        if (!string.IsNullOrWhiteSpace(input.SearchTerm))
-        {
-            queryable = queryable.Where(p =>
-                p.Title.Contains(input.SearchTerm) ||
-                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||  // ? null check
-                p.Description.Contains(input.SearchTerm));
-        }
-
-        if (input.MinPrice.HasValue)
-        {
-            queryable = queryable.Where(p => p.Price >= input.MinPrice.Value);
-        }
-
-        if (input.MaxPrice.HasValue)
-        {
-            queryable = queryable.Where(p => p.Price <= input.MaxPrice.Value);
-        }
-
-        if (input.MinBedrooms.HasValue)
-        {
-            queryable = queryable.Where(p => p.Bedrooms >= input.MinBedrooms.Value);
-        }
-
-        if (input.MinBathrooms.HasValue)
-        {
-            queryable = queryable.Where(p => p.Bathrooms >= input.MinBathrooms.Value);
-        }
-
-        if (input.PropertyType.HasValue)
-        {
-            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
-        }
-
-        if (input.TransactionType.HasValue)
-        {
-            queryable = queryable.Where(p => (int)p.TransactionType == input.TransactionType.Value);
-        }
+        // Aplicar filtros comunes
+        queryable = ApplyListingFilters(queryable, input);
 
         // Aplicar ordenamiento
         queryable = ApplySorting(queryable, input.Sorting);
@@ -557,84 +493,236 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
+    /// Valida que el usuario actual sea el propietario del listing o un administrador
+    /// </summary>
+    private async Task<Architect> ValidateListingOwnershipAsync(Guid architectId, string operationName)
+    {
+        var architect = await _architectRepository.GetAsync(architectId);
+        var currentUserId = GetCurrentUserIdOrThrow();
+        if (architect.UserId != currentUserId && !IsAdmin())
+        {
+            throw new AbpAuthorizationException($"Solo puedes {operationName} tus propias propiedades");
+        }
+        return architect;
+    }
+
+    /// <summary>
+    /// Valida que el arquitecto esté activo
+    /// </summary>
+    private void ValidateArchitectIsActive(Architect architect)
+    {
+        if (!architect.IsActive)
+        {
+            throw new BusinessException(cimaDomainErrorCodes.ArchitectInactive)
+                .WithData("ArchitectId", architect.Id);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene el ID del usuario actual o lanza excepción si no está autenticado
+    /// </summary>
+    private Guid GetCurrentUserIdOrThrow()
+    {
+        if (!CurrentUser.Id.HasValue)
+        {
+            throw new AbpAuthorizationException("Usuario no autenticado");
+        }
+        return CurrentUser.Id.Value;
+    }
+
+    /// <summary>
     /// Agrega una imagen a una propiedad usando lista enlazada.
     /// La nueva imagen se agrega al final de la galería.
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
+        /// <summary>
+    /// Agrega una imagen a una propiedad usando lista enlazada.
+    /// La nueva imagen se agrega al final de la galer¡a.
+    /// </summary>
+    [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
-        var listing = await GetListingWithImagesAsync(listingId);
-
-        // Validación de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
-        }
-
-        // Guardar imagen en almacenamiento si viene como data URL
+        // #region agent log
+        var _debugLogPath = @"c:\Users\rodri\Documents\Inmobiliaria\cima\.cursor\debug.log";
+        void DebugLog(string hypothesisId, string message, object? data = null) { try { System.IO.File.AppendAllText(_debugLogPath, System.Text.Json.JsonSerializer.Serialize(new { timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId, location = "ListingAppService.AddImageAsync", message, data }) + "\n"); } catch { } }
+        // #endregion
+        
         var storedImage = await StoreImageIfNeededAsync(input);
 
-        // Crear nuevo ID para la imagen
-        var newImageId = Guid.NewGuid();
+        const int maxRetries = 3;
+        var retryCount = 0;
         
-        // Encontrar la última imagen (NextImageId == null)
-        ListingImage? lastImage = null;
-        if (listing.Images.Any())
+        while (retryCount < maxRetries)
         {
-            lastImage = listing.Images.FirstOrDefault(img => img.NextImageId == null);
-        }
-
-        // Crear la nueva imagen
-        var newImage = new ListingImage(
-            imageId: newImageId,
-            url: storedImage.Url,
-            thumbnailUrl: storedImage.ThumbnailUrl,
-            altText: input.AltText ?? string.Empty,
-            fileSize: input.FileSize,
-            contentType: input.ContentType,
-            previousImageId: lastImage?.ImageId,
-            nextImageId: null
-        );
-
-        // Si hay una última imagen, actualizarla para que apunte a la nueva
-        if (lastImage != null)
-        {
-            var updatedLastImage = lastImage.WithNextImage(newImageId);
+            var newImageId = Guid.NewGuid();
             
-            // Reemplazar la imagen en la colección (ValueObject es inmutable)
-            var imagesList = listing.Images.ToList();
-            var lastImageIndex = imagesList.FindIndex(img => img.ImageId == lastImage.ImageId);
-            if (lastImageIndex >= 0)
+            DebugLog("FIX", $"Inicio iteraci¢n {retryCount} con NUEVO newImageId", new { retryCount, listingId, newImageId });
+            
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: true);
+            try
             {
-                imagesList[lastImageIndex] = updatedLastImage;
+                var listing = await GetListingWithImagesAsync(listingId);
+                
+                DebugLog("FIX", "Listing cargado", new { 
+                    listingId, 
+                    imagesCount = listing.Images?.Count, 
+                    existingImageIds = listing.Images?.Select(i => i.ImageId).ToList(),
+                    concurrencyStamp = listing.ConcurrencyStamp
+                });
+                
+                if (retryCount == 0)
+                {
+                    await ValidateListingOwnershipAsync(listing.ArchitectId, "editar im genes de");
+                }
+                
+                var existingImageWithSameUrl = listing.Images.FirstOrDefault(img => img.Url == storedImage.Url);
+                if (existingImageWithSameUrl != null)
+                {
+                    DebugLog("FIX", "Imagen ya existe con misma URL - retornando existente", new { existingImageId = existingImageWithSameUrl.ImageId, url = storedImage.Url });
+                    await uow.CompleteAsync();
+                    
+                    return new ListingImageDto
+                    {
+                        ImageId = existingImageWithSameUrl.ImageId,
+                        Url = existingImageWithSameUrl.Url,
+                        ThumbnailUrl = existingImageWithSameUrl.ThumbnailUrl,
+                        AltText = existingImageWithSameUrl.AltText,
+                        PreviousImageId = existingImageWithSameUrl.PreviousImageId,
+                        NextImageId = existingImageWithSameUrl.NextImageId
+                    };
+                }
+                
+                var lastImage = listing.Images.FirstOrDefault(img => img.NextImageId == null);
+
+                var newImage = new ListingImage(
+                    imageId: newImageId,
+                    url: storedImage.Url,
+                    thumbnailUrl: storedImage.ThumbnailUrl,
+                    altText: input.AltText ?? string.Empty,
+                    fileSize: input.FileSize,
+                    contentType: input.ContentType,
+                    previousImageId: lastImage?.ImageId,
+                    nextImageId: null
+                );
+
+                DebugLog("C", "Antes de modificar colecci¢n", new { 
+                    currentImagesCount = listing.Images?.Count,
+                    lastImageId = lastImage?.ImageId,
+                    newImageId
+                });
+                
+                if (lastImage != null)
+                {
+                    var updatedLastImage = lastImage.WithNextImage(newImageId);
+                    
+                    var imagesList = listing.Images.ToList();
+                    var lastIdx = imagesList.FindIndex(i => i.ImageId == lastImage.ImageId);
+                    if (lastIdx >= 0)
+                    {
+                        imagesList[lastIdx] = updatedLastImage;
+                    }
+                    
+                    listing.Images.Clear();
+                    foreach (var img in imagesList)
+                    {
+                        listing.Images.Add(img);
+                    }
+                }
+                
+                listing.Images.Add(newImage);
+
+                listing.LastModifiedAt = Clock.Now;
+                listing.LastModifiedBy = GetCurrentUserIdOrThrow();
+                
+                DebugLog("A,C", "Antes de UpdateAsync", new { 
+                    listingId, 
+                    retryCount,
+                    newImageId,
+                    finalImagesCount = listing.Images?.Count,
+                    concurrencyStampBeforeUpdate = listing.ConcurrencyStamp
+                });
+                
+                await _listingRepository.UpdateAsync(listing, autoSave: false);
+                
+                await uow.CompleteAsync();
+                
+                DebugLog("FIX", "Despu‚s de UpdateAsync", new { 
+                    listingId, 
+                    concurrencyStampAfterUpdate = listing.ConcurrencyStamp
+                });
+                
+                DebugLog("A", "UpdateAsync exitoso", new { listingId, retryCount, newImageId });
+
+                return new ListingImageDto
+                {
+                    ImageId = newImage.ImageId,
+                    Url = newImage.Url,
+                    ThumbnailUrl = storedImage.ThumbnailUrl,
+                    AltText = newImage.AltText,
+                    PreviousImageId = newImage.PreviousImageId,
+                    NextImageId = newImage.NextImageId
+                };
             }
-            imagesList.Add(newImage);
+            catch (Exception ex) when (IsConcurrencyException(ex))
+            {
+                DebugLog("A,B", $"EXCEPCION de concurrencia capturada", new { 
+                    retryCount,
+                    listingId,
+                    newImageId,
+                    exceptionType = ex.GetType().Name,
+                    exceptionMessage = ex.Message.Substring(0, Math.Min(200, ex.Message.Length))
+                });
+            }
+
+            using (var verificationUow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: false))
+            {
+                var freshListing = await GetListingWithImagesAsync(listingId);
+                var savedImage = freshListing.Images.FirstOrDefault(img => img.Url == storedImage.Url);
+                
+                if (savedImage != null)
+                {
+                    DebugLog("FIX", "Imagen guardada exitosamente a pesar de excepci¢n de concurrencia", new { 
+                        savedImageId = savedImage.ImageId, 
+                        url = savedImage.Url 
+                    });
+                    
+                    Logger.LogInformation("Imagen {ImageId} guardada exitosamente para listing {ListingId} (excepci¢n de concurrencia ignorada)", 
+                        savedImage.ImageId, listingId);
+                    
+                    await verificationUow.CompleteAsync();
+                    return new ListingImageDto
+                    {
+                        ImageId = savedImage.ImageId,
+                        Url = savedImage.Url,
+                        ThumbnailUrl = savedImage.ThumbnailUrl,
+                        AltText = savedImage.AltText,
+                        PreviousImageId = savedImage.PreviousImageId,
+                        NextImageId = savedImage.NextImageId
+                    };
+                }
+                
+                await verificationUow.CompleteAsync();
+            }
+
+            retryCount++;
+            Logger.LogWarning("Conflicto de concurrencia al agregar imagen al listing {ListingId}. Intento {RetryCount}/{MaxRetries}", 
+                listingId, retryCount, maxRetries);
             
-            listing.Images = imagesList;
+            if (retryCount >= maxRetries)
+            {
+                Logger.LogError("Fall¢ agregar imagen despu‚s de {MaxRetries} intentos debido a conflictos de concurrencia", maxRetries);
+                throw new BusinessException("Listing:ConcurrencyConflict")
+                    .WithData("ListingId", listingId)
+                    .WithData("Message", "No se pudo agregar la imagen debido a actualizaciones concurrentes. Por favor, recargue la p gina e intente nuevamente.");
+            }
+            
+            await Task.Delay(200 * retryCount);
         }
-        else
-        {
-            // Es la primera imagen
-            listing.Images = new List<ListingImage> { newImage };
-        }
-
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        await _listingRepository.UpdateAsync(listing);
-
-        return new ListingImageDto
-        {
-            ImageId = newImage.ImageId,
-            Url = newImage.Url,
-            ThumbnailUrl = storedImage.ThumbnailUrl,
-            AltText = newImage.AltText,
-            PreviousImageId = newImage.PreviousImageId,
-            NextImageId = newImage.NextImageId
-        };
+        
+        throw new BusinessException("Listing:ConcurrencyConflict")
+            .WithData("ListingId", listingId);
     }
-
+    
     /// <summary>
     /// Elimina una imagen de una propiedad.
     /// Actualiza los punteros de la lista enlazada para mantener consistencia.
@@ -642,57 +730,88 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveImageAsync(Guid listingId, Guid imageId)
     {
-        var listing = await GetListingWithImagesAsync(listingId);
-
-        // Validación de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
-        }
-
-        var imageToRemove = listing.Images.FirstOrDefault(img => img.ImageId == imageId);
-        if (imageToRemove == null)
-        {
-            throw new BusinessException("Listing:ImageNotFound")
-                .WithData("ImageId", imageId)
-                .WithData("ListingId", listingId);
-        }
-
-        var imageUrl = imageToRemove.Url;
-        var imagesList = listing.Images.ToList();
-
-        // Actualizar la imagen anterior para que apunte a la siguiente
-        if (imageToRemove.PreviousImageId.HasValue)
-        {
-            var previousIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.PreviousImageId.Value);
-            if (previousIndex >= 0)
-            {
-                imagesList[previousIndex] = imagesList[previousIndex].WithNextImage(imageToRemove.NextImageId);
-            }
-        }
-
-        // Actualizar la imagen siguiente para que apunte a la anterior
-        if (imageToRemove.NextImageId.HasValue)
-        {
-            var nextIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.NextImageId.Value);
-            if (nextIndex >= 0)
-            {
-                imagesList[nextIndex] = imagesList[nextIndex].WithPreviousImage(imageToRemove.PreviousImageId);
-            }
-        }
-
-        // Eliminar la imagen
-        imagesList.RemoveAll(img => img.ImageId == imageId);
+        var maxRetries = 3;
+        var retryCount = 0;
+        string? imageUrl = null;
         
-        listing.Images = imagesList;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
+        while (retryCount < maxRetries)
+        {
+            try
+            {
+                var listing = await GetListingWithImagesAsync(listingId);
 
-        await _listingRepository.UpdateAsync(listing);
+                // Validación de propiedad (solo en el primer intento)
+                if (retryCount == 0)
+                {
+                    await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imágenes de");
+                }
 
-        // Intentar eliminar el archivo f?sico (ignorar errores)
-        await _imageStorageService.DeleteImageAsync(imageUrl);
+                var imageToRemove = listing.Images.FirstOrDefault(img => img.ImageId == imageId);
+                if (imageToRemove == null)
+                {
+                    throw new BusinessException("Listing:ImageNotFound")
+                        .WithData("ImageId", imageId)
+                        .WithData("ListingId", listingId);
+                }
+
+                imageUrl = imageToRemove.Url;
+                var imagesList = listing.Images.ToList();
+
+                // Actualizar la imagen anterior para que apunte a la siguiente
+                if (imageToRemove.PreviousImageId.HasValue)
+                {
+                    var previousIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.PreviousImageId.Value);
+                    if (previousIndex >= 0)
+                    {
+                        imagesList[previousIndex] = imagesList[previousIndex].WithNextImage(imageToRemove.NextImageId);
+                    }
+                }
+
+                // Actualizar la imagen siguiente para que apunte a la anterior
+                if (imageToRemove.NextImageId.HasValue)
+                {
+                    var nextIndex = imagesList.FindIndex(img => img.ImageId == imageToRemove.NextImageId.Value);
+                    if (nextIndex >= 0)
+                    {
+                        imagesList[nextIndex] = imagesList[nextIndex].WithPreviousImage(imageToRemove.PreviousImageId);
+                    }
+                }
+
+                // Eliminar la imagen
+                imagesList.RemoveAll(img => img.ImageId == imageId);
+                
+                listing.Images = imagesList;
+                listing.LastModifiedAt = Clock.Now;
+                listing.LastModifiedBy = GetCurrentUserIdOrThrow();
+
+                await _listingRepository.UpdateAsync(listing, autoSave: true);
+                
+                // Éxito - salir del loop
+                break;
+            }
+            catch (Exception ex) when (IsConcurrencyException(ex))
+            {
+                retryCount++;
+                Logger.LogWarning(ex, "Conflicto de concurrencia al eliminar imagen del listing {ListingId}. Intento {RetryCount}/{MaxRetries}", 
+                    listingId, retryCount, maxRetries);
+                
+                if (retryCount >= maxRetries)
+                {
+                    Logger.LogError(ex, "Falló eliminar imagen después de {MaxRetries} intentos debido a conflictos de concurrencia", maxRetries);
+                    throw new BusinessException("Listing:ConcurrencyConflict")
+                        .WithData("ListingId", listingId)
+                        .WithData("Message", "No se pudo eliminar la imagen debido a actualizaciones concurrentes. Por favor, recargue la página e intente nuevamente.");
+                }
+                
+                await Task.Delay(200 * retryCount);
+            }
+        }
+
+        // Intentar eliminar el archivo físico (ignorar errores)
+        if (!string.IsNullOrEmpty(imageUrl))
+        {
+            await _imageStorageService.DeleteImageAsync(imageUrl);
+        }
     }
 
     /// <summary>
@@ -706,62 +825,89 @@ public class ListingAppService : cimaAppService, IListingAppService
             return;
         }
 
-        var listing = await GetListingWithImagesAsync(listingId);
-
-        // Validación de propiedad
-        var architect = await _architectRepository.GetAsync(listing.ArchitectId);
-        if (architect.UserId != CurrentUser.Id && !IsAdmin())
-        {
-            throw new AbpAuthorizationException("Solo puedes editar imágenes de tus propias propiedades");
-        }
-
-        // Ordenar por DisplayOrder del input
-        var orderedInput = input.OrderBy(x => x.DisplayOrder).ToList();
+        var maxRetries = 3;
+        var retryCount = 0;
         
-        // Crear diccionario de imágenes existentes
-        var existingImages = listing.Images.ToDictionary(img => img.ImageId);
-        
-        // Verificar que todas las imágenes del input existen
-        foreach (var item in orderedInput)
+        while (retryCount < maxRetries)
         {
-            if (!existingImages.ContainsKey(item.ImageId))
+            try
             {
-                throw new BusinessException("Listing:ImageNotFound")
-                    .WithData("ImageId", item.ImageId)
-                    .WithData("ListingId", listingId);
+                var listing = await GetListingWithImagesAsync(listingId);
+
+                // Validación de propiedad (solo en el primer intento)
+                if (retryCount == 0)
+                {
+                    await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imágenes de");
+                }
+
+                // Ordenar por DisplayOrder del input
+                var orderedInput = input.OrderBy(x => x.DisplayOrder).ToList();
+                
+                // Crear diccionario de imágenes existentes
+                var existingImages = listing.Images.ToDictionary(img => img.ImageId);
+                
+                // Verificar que todas las imágenes del input existen
+                foreach (var item in orderedInput)
+                {
+                    if (!existingImages.ContainsKey(item.ImageId))
+                    {
+                        throw new BusinessException("Listing:ImageNotFound")
+                            .WithData("ImageId", item.ImageId)
+                            .WithData("ListingId", listingId);
+                    }
+                }
+
+                // Reconstruir la lista enlazada según el nuevo orden
+                var newImagesList = new List<ListingImage>();
+                
+                for (int i = 0; i < orderedInput.Count; i++)
+                {
+                    var currentImageId = orderedInput[i].ImageId;
+                    var originalImage = existingImages[currentImageId];
+                    
+                    Guid? previousId = i > 0 ? orderedInput[i - 1].ImageId : null;
+                    Guid? nextId = i < orderedInput.Count - 1 ? orderedInput[i + 1].ImageId : null;
+                    
+                    var reorderedImage = new ListingImage(
+                        imageId: originalImage.ImageId,
+                        url: originalImage.Url,
+                        thumbnailUrl: originalImage.ThumbnailUrl,
+                        altText: originalImage.AltText,
+                        fileSize: originalImage.FileSize,
+                        contentType: originalImage.ContentType,
+                        previousImageId: previousId,
+                        nextImageId: nextId
+                    );
+                    
+                    newImagesList.Add(reorderedImage);
+                }
+
+                listing.Images = newImagesList;
+                listing.LastModifiedAt = Clock.Now;
+                listing.LastModifiedBy = GetCurrentUserIdOrThrow();
+
+                await _listingRepository.UpdateAsync(listing, autoSave: true);
+                
+                // Éxito - salir del loop
+                return;
+            }
+            catch (Exception ex) when (IsConcurrencyException(ex))
+            {
+                retryCount++;
+                Logger.LogWarning(ex, "Conflicto de concurrencia al reordenar imágenes del listing {ListingId}. Intento {RetryCount}/{MaxRetries}", 
+                    listingId, retryCount, maxRetries);
+                
+                if (retryCount >= maxRetries)
+                {
+                    Logger.LogError(ex, "Falló reordenar imágenes después de {MaxRetries} intentos debido a conflictos de concurrencia", maxRetries);
+                    throw new BusinessException("Listing:ConcurrencyConflict")
+                        .WithData("ListingId", listingId)
+                        .WithData("Message", "No se pudo reordenar las imágenes debido a actualizaciones concurrentes. Por favor, recargue la página e intente nuevamente.");
+                }
+                
+                await Task.Delay(200 * retryCount);
             }
         }
-
-        // Reconstruir la lista enlazada según el nuevo orden
-        var newImagesList = new List<ListingImage>();
-        
-        for (int i = 0; i < orderedInput.Count; i++)
-        {
-            var currentImageId = orderedInput[i].ImageId;
-            var originalImage = existingImages[currentImageId];
-            
-            Guid? previousId = i > 0 ? orderedInput[i - 1].ImageId : null;
-            Guid? nextId = i < orderedInput.Count - 1 ? orderedInput[i + 1].ImageId : null;
-            
-            var reorderedImage = new ListingImage(
-                imageId: originalImage.ImageId,
-                url: originalImage.Url,
-                thumbnailUrl: originalImage.ThumbnailUrl,
-                altText: originalImage.AltText,
-                fileSize: originalImage.FileSize,
-                contentType: originalImage.ContentType,
-                previousImageId: previousId,
-                nextImageId: nextId
-            );
-            
-            newImagesList.Add(reorderedImage);
-        }
-
-        listing.Images = newImagesList;
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = CurrentUser.Id;
-
-        await _listingRepository.UpdateAsync(listing);
     }
 
     /// <summary>
@@ -948,10 +1094,29 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     private async Task<Listing> GetListingWithImagesAsync(Guid listingId)
     {
-        var queryable = await _listingRepository.WithDetailsAsync(listing => listing.Images!);
-
+        // #region agent log
+        var _debugLogPath = @"c:\Users\rodri\Documents\Inmobiliaria\cima\.cursor\debug.log";
+        void DebugLogLocal(string msg, object? data = null) { try { System.IO.File.AppendAllText(_debugLogPath, System.Text.Json.JsonSerializer.Serialize(new { timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "LOAD", location = "GetListingWithImagesAsync", message = msg, data }) + "\n"); } catch { } }
+        // #endregion
+        
+        // Usar WithDetailsAsync para incluir explícitamente las Images (owned entities)
+        var queryable = await _listingRepository.WithDetailsAsync(l => l.Images);
+        
+        // #region agent log
+        DebugLogLocal("Después de WithDetailsAsync", new { listingId });
+        // #endregion
+        
         var listing = await AsyncExecuter.FirstOrDefaultAsync(
             queryable.Where(l => l.Id == listingId));
+        
+        // #region agent log
+        DebugLogLocal("Después de FirstOrDefaultAsync", new { 
+            listingId, 
+            found = listing != null,
+            imagesCount = listing?.Images?.Count,
+            imagesLoaded = listing?.Images != null
+        });
+        // #endregion
 
         if (listing == null)
         {
@@ -959,6 +1124,44 @@ public class ListingAppService : cimaAppService, IListingAppService
         }
 
         return listing;
+    }
+    
+
+    /// <summary>
+    /// Verifica si una excepción es un error de concurrencia optimista o tracking de Entity Framework
+    /// </summary>
+    private static bool IsConcurrencyException(Exception ex)
+    {
+        // Verificar el tipo por nombre (para evitar dependencia directa de EF Core)
+        var typeName = ex.GetType().Name;
+        if (typeName == "DbUpdateConcurrencyException" || typeName == "InvalidOperationException")
+        {
+            // Verificar que sea realmente un error de tracking/concurrencia por el mensaje
+            if (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains("already being tracked", StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains("expected to affect 1 row(s), but actually affected 0 row(s)", StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains("concurrency", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        
+        // Verificar mensaje de excepción directamente (fallback)
+        if (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("already being tracked", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("expected to affect 1 row(s), but actually affected 0 row(s)", StringComparison.OrdinalIgnoreCase) ||
+            ex.Message.Contains("concurrency", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        
+        // Verificar inner exception recursivamente
+        if (ex.InnerException != null)
+        {
+            return IsConcurrencyException(ex.InnerException);
+        }
+        
+        return false;
     }
 
     private static string? GetExtensionFromContentType(string contentType)
@@ -1048,4 +1251,5 @@ public class ListingAppService : cimaAppService, IListingAppService
         };
     }
 }
+
 

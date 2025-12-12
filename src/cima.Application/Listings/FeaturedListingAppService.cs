@@ -207,7 +207,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         var featuredListing = new FeaturedListing(
             input.ListingId,
-            CurrentUser.Id);
+            GetCurrentUserIdOrThrow());
 
         await _featuredListingRepository.InsertAsync(featuredListing);
 
@@ -270,5 +270,17 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     public async Task<int> GetCountAsync()
     {
         return await _featuredListingRepository.CountAsync();
+    }
+
+    /// <summary>
+    /// Obtiene el ID del usuario actual o lanza excepción si no está autenticado
+    /// </summary>
+    private Guid GetCurrentUserIdOrThrow()
+    {
+        if (!CurrentUser.Id.HasValue)
+        {
+            throw new Volo.Abp.Authorization.AbpAuthorizationException("Usuario no autenticado");
+        }
+        return CurrentUser.Id.Value;
     }
 }

@@ -92,6 +92,23 @@
                   }
                 },
                 {
+                  "name": "GetCurrentAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "cancellationToken",
+                      "typeAsString": "System.Threading.CancellationToken, System.Private.CoreLib",
+                      "type": "System.Threading.CancellationToken",
+                      "typeSimple": "System.Threading.CancellationToken",
+                      "isOptional": true,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Architects.ArchitectDto",
+                    "typeSimple": "cima.Architects.ArchitectDto"
+                  }
+                },
+                {
                   "name": "CreateWithUserAsync",
                   "parametersOnMethod": [
                     {
@@ -435,6 +452,30 @@
                 "typeSimple": "cima.Architects.ArchitectDto"
               },
               "allowAnonymous": true,
+              "implementFrom": "cima.Architects.IArchitectAppService"
+            },
+            "GetCurrentAsyncByCancellationToken": {
+              "uniqueName": "GetCurrentAsyncByCancellationToken",
+              "name": "GetCurrentAsync",
+              "httpMethod": "GET",
+              "url": "api/app/architect/current",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "cancellationToken",
+                  "typeAsString": "System.Threading.CancellationToken, System.Private.CoreLib",
+                  "type": "System.Threading.CancellationToken",
+                  "typeSimple": "System.Threading.CancellationToken",
+                  "isOptional": true,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Architects.ArchitectDto",
+                "typeSimple": "cima.Architects.ArchitectDto"
+              },
+              "allowAnonymous": false,
               "implementFrom": "cima.Architects.IArchitectAppService"
             },
             "CreateWithUserAsyncByInputAndCancellationToken": {
@@ -1316,6 +1357,32 @@
             }
           }
         },
+        "cima.Controllers.SitemapController": {
+          "controllerName": "Sitemap",
+          "controllerGroupName": null,
+          "isRemoteService": false,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Controllers.SitemapController",
+          "interfaces": [],
+          "actions": {
+            "Get": {
+              "uniqueName": "Get",
+              "name": "Get",
+              "httpMethod": "GET",
+              "url": "sitemap.xml",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "Microsoft.AspNetCore.Mvc.IActionResult",
+                "typeSimple": "Microsoft.AspNetCore.Mvc.IActionResult"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "cima.Controllers.SitemapController"
+            }
+          }
+        },
         "cima.Listings.FeaturedListingAppService": {
           "controllerName": "FeaturedListing",
           "controllerGroupName": "FeaturedListing",
@@ -1497,6 +1564,42 @@
                 {
                   "nameOnMethod": "input",
                   "name": "PageSize",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
                   "jsonName": null,
                   "type": "System.Int32",
                   "typeSimple": "number",
@@ -1891,6 +1994,23 @@
                 },
                 {
                   "name": "MoveToPortfolioAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.Listings.ListingDto",
+                    "typeSimple": "cima.Listings.ListingDto"
+                  }
+                },
+                {
+                  "name": "DuplicateAsync",
                   "parametersOnMethod": [
                     {
                       "name": "id",
@@ -2588,6 +2708,43 @@
               "name": "MoveToPortfolioAsync",
               "httpMethod": "POST",
               "url": "api/app/listing/{id}/move-to-portfolio",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.Listings.ListingDto",
+                "typeSimple": "cima.Listings.ListingDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Listings.IListingAppService"
+            },
+            "DuplicateAsyncById": {
+              "uniqueName": "DuplicateAsyncById",
+              "name": "DuplicateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/listing/{id}/duplicate",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -3531,6 +3688,286 @@
               },
               "allowAnonymous": true,
               "implementFrom": "cima.Listings.ListingCursorPaginationService"
+            }
+          }
+        },
+        "cima.Settings.SiteSettingsAppService": {
+          "controllerName": "SiteSettings",
+          "controllerGroupName": "SiteSettings",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Settings.SiteSettingsAppService",
+          "interfaces": [
+            {
+              "type": "cima.Settings.ISiteSettingsAppService",
+              "name": "ISiteSettingsAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "cima.Settings.SiteSettingsDto",
+                    "typeSimple": "cima.Settings.SiteSettingsDto"
+                  }
+                },
+                {
+                  "name": "GetPublicAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "cima.Settings.PublicSiteSettingsDto",
+                    "typeSimple": "cima.Settings.PublicSiteSettingsDto"
+                  }
+                },
+                {
+                  "name": "UpdateEmailSettingsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Settings.UpdateEmailSettingsDto, cima.Application.Contracts",
+                      "type": "cima.Settings.UpdateEmailSettingsDto",
+                      "typeSimple": "cima.Settings.UpdateEmailSettingsDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "UpdateWhatsAppSettingsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Settings.UpdateWhatsAppSettingsDto, cima.Application.Contracts",
+                      "type": "cima.Settings.UpdateWhatsAppSettingsDto",
+                      "typeSimple": "cima.Settings.UpdateWhatsAppSettingsDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "UpdateBusinessInfoAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.Settings.UpdateBusinessInfoDto, cima.Application.Contracts",
+                      "type": "cima.Settings.UpdateBusinessInfoDto",
+                      "typeSimple": "cima.Settings.UpdateBusinessInfoDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "TestEmailAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "testRecipient",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Boolean",
+                    "typeSimple": "boolean"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsync": {
+              "uniqueName": "GetAsync",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/site-settings",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Settings.SiteSettingsDto",
+                "typeSimple": "cima.Settings.SiteSettingsDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
+            },
+            "GetPublicAsync": {
+              "uniqueName": "GetPublicAsync",
+              "name": "GetPublicAsync",
+              "httpMethod": "GET",
+              "url": "api/app/site-settings/public",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "cima.Settings.PublicSiteSettingsDto",
+                "typeSimple": "cima.Settings.PublicSiteSettingsDto"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
+            },
+            "UpdateEmailSettingsAsyncByInput": {
+              "uniqueName": "UpdateEmailSettingsAsyncByInput",
+              "name": "UpdateEmailSettingsAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/site-settings/email-settings",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Settings.UpdateEmailSettingsDto, cima.Application.Contracts",
+                  "type": "cima.Settings.UpdateEmailSettingsDto",
+                  "typeSimple": "cima.Settings.UpdateEmailSettingsDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Settings.UpdateEmailSettingsDto",
+                  "typeSimple": "cima.Settings.UpdateEmailSettingsDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
+            },
+            "UpdateWhatsAppSettingsAsyncByInput": {
+              "uniqueName": "UpdateWhatsAppSettingsAsyncByInput",
+              "name": "UpdateWhatsAppSettingsAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/site-settings/whats-app-settings",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Settings.UpdateWhatsAppSettingsDto, cima.Application.Contracts",
+                  "type": "cima.Settings.UpdateWhatsAppSettingsDto",
+                  "typeSimple": "cima.Settings.UpdateWhatsAppSettingsDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Settings.UpdateWhatsAppSettingsDto",
+                  "typeSimple": "cima.Settings.UpdateWhatsAppSettingsDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
+            },
+            "UpdateBusinessInfoAsyncByInput": {
+              "uniqueName": "UpdateBusinessInfoAsyncByInput",
+              "name": "UpdateBusinessInfoAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/site-settings/business-info",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.Settings.UpdateBusinessInfoDto, cima.Application.Contracts",
+                  "type": "cima.Settings.UpdateBusinessInfoDto",
+                  "typeSimple": "cima.Settings.UpdateBusinessInfoDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.Settings.UpdateBusinessInfoDto",
+                  "typeSimple": "cima.Settings.UpdateBusinessInfoDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
+            },
+            "TestEmailAsyncByTestRecipient": {
+              "uniqueName": "TestEmailAsyncByTestRecipient",
+              "name": "TestEmailAsync",
+              "httpMethod": "POST",
+              "url": "api/app/site-settings/test-email",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "testRecipient",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "testRecipient",
+                  "name": "testRecipient",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Boolean",
+                "typeSimple": "boolean"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "cima.Settings.ISiteSettingsAppService"
             }
           }
         },
@@ -4537,18 +4974,6 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "DisplayOrder",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -4561,7 +4986,7 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -4585,7 +5010,7 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -4607,8 +5032,8 @@
           "type": "System.String",
           "typeSimple": "string",
           "isRequired": true,
-          "minLength": 5,
-          "maxLength": 200,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -4619,8 +5044,8 @@
           "type": "System.String",
           "typeSimple": "string",
           "isRequired": true,
-          "minLength": 20,
-          "maxLength": 5000,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -4630,9 +5055,9 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
-          "minLength": 5,
-          "maxLength": 500,
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -4642,11 +5067,11 @@
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0.01",
-          "maximum": "1.7976931348623157E+308",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -4654,11 +5079,11 @@
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "1",
-          "maximum": "100000",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -4666,11 +5091,11 @@
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "1",
-          "maximum": "100000",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -4678,11 +5103,11 @@
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "50",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -4690,11 +5115,23 @@
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "50",
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.ListingStatus",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -4702,7 +5139,7 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.PropertyCategory",
           "typeSimple": "enum",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -4714,7 +5151,7 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.PropertyType",
           "typeSimple": "enum",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -4726,7 +5163,7 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.TransactionType",
           "typeSimple": "enum",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -4738,18 +5175,6 @@
           "jsonName": null,
           "type": "System.Guid",
           "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Area",
-          "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -4760,53 +5185,17 @@
       ]
     },
     "cima.Listings.FeaturedListingDto": {
-      "baseType": null,
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
       "enumNames": null,
       "enumValues": null,
       "genericArguments": null,
       "properties": [
         {
-          "name": "Id",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
           "name": "ListingId",
           "jsonName": null,
           "type": "System.Guid",
           "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "FeaturedSince",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "CreatedBy",
-          "jsonName": null,
-          "type": "System.Guid?",
-          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -4825,11 +5214,35 @@
           "minimum": null,
           "maximum": null,
           "regex": null
+        },
+        {
+          "name": "CreatedBy",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreationTime",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
         }
       ]
     },
     "cima.Listings.GetFeaturedListingsDto": {
-      "baseType": null,
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
       "isEnum": false,
       "enumNames": null,
       "enumValues": null,
@@ -4843,8 +5256,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "2147483647",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5321,30 +5734,18 @@
       ]
     },
     "cima.Listings.ListingDto": {
-      "baseType": null,
+      "baseType": "Volo.Abp.Application.Dtos.AuditedEntityDto<System.Guid>",
       "isEnum": false,
       "enumNames": null,
       "enumValues": null,
       "genericArguments": null,
       "properties": [
         {
-          "name": "Id",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
           "name": "Title",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5356,7 +5757,7 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5366,8 +5767,8 @@
         {
           "name": "Location",
           "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
+          "type": "cima.Listings.LocationDto",
+          "typeSimple": "cima.Listings.LocationDto",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5401,6 +5802,18 @@
         },
         {
           "name": "ConstructionArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Area",
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
@@ -5520,10 +5933,10 @@
           "regex": null
         },
         {
-          "name": "CreatedAt",
+          "name": "CoverImage",
           "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
+          "type": "cima.Listings.ListingImageDto",
+          "typeSimple": "cima.Listings.ListingImageDto",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5532,46 +5945,10 @@
           "regex": null
         },
         {
-          "name": "Address",
+          "name": "FirstPublishedAt",
           "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "CreationTime",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Area",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "PrimaryImageUrl",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5582,7 +5959,7 @@
       ]
     },
     "cima.Listings.ListingImageDto": {
-      "baseType": null,
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
       "enumNames": null,
       "enumValues": null,
@@ -5602,6 +5979,30 @@
         },
         {
           "name": "Url",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ThumbnailUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AltText",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -5637,7 +6038,52 @@
           "regex": null
         },
         {
-          "name": "AltText",
+          "name": "IsCover",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.LocationDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "State",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "City",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -5662,7 +6108,7 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": true,
+          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5684,7 +6130,7 @@
       ]
     },
     "cima.Listings.PropertySearchDto": {
-      "baseType": null,
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
       "isEnum": false,
       "enumNames": null,
       "enumValues": null,
@@ -5733,10 +6179,10 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 200,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
-          "regex": "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ\\s,.\\-#°]*$"
+          "regex": null
         },
         {
           "name": "MinPrice",
@@ -5746,8 +6192,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5758,8 +6204,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5770,8 +6216,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "100",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5782,8 +6228,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "100",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5794,8 +6240,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5806,8 +6252,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5817,7 +6263,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 50,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -5830,8 +6276,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "0",
-          "maximum": "2147483647",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         },
         {
@@ -5842,8 +6288,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": "1",
-          "maximum": "100",
+          "minimum": null,
+          "maximum": null,
           "regex": null
         }
       ]
@@ -5875,6 +6321,603 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.PublicSiteSettingsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "BusinessName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactPhone",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppEnabled",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FacebookUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "InstagramUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LinkedInUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursWeekday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSaturday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSunday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.SiteSettingsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "AdminNotificationEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppNumber",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": "^\\d{10,15}$"
+        },
+        {
+          "name": "WhatsAppDefaultMessage",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppEnabled",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailConnectionString",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailSenderAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IsEmailConfigured",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "IsWhatsAppConfigured",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactPhone",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 300,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FacebookUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "InstagramUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LinkedInUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursWeekday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSaturday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSunday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.UpdateBusinessInfoDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "BusinessName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactPhone",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 20,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 300,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FacebookUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "InstagramUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LinkedInUrl",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursWeekday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSaturday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BusinessHoursSunday",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.UpdateEmailSettingsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "AdminNotificationEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailConnectionString",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailSenderAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.UpdateWhatsAppSettingsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Enabled",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PhoneNumber",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": "^\\d{10,15}$"
+        },
+        {
+          "name": "DefaultMessage",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -5983,6 +7026,18 @@
         },
         {
           "name": "ArchivedListings",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "PortfolioListings",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -6835,6 +7890,107 @@
           "jsonName": null,
           "type": "System.Boolean",
           "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "Volo.Abp.Application.Dtos.AuditedEntityDto<T0>": {
+      "baseType": "Volo.Abp.Application.Dtos.CreationAuditedEntityDto<TPrimaryKey>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": [
+        "TPrimaryKey"
+      ],
+      "properties": [
+        {
+          "name": "LastModificationTime",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LastModifierId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "Volo.Abp.Application.Dtos.CreationAuditedEntityDto<T0>": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<TPrimaryKey>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": [
+        "TPrimaryKey"
+      ],
+      "properties": [
+        {
+          "name": "CreationTime",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreatorId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "Volo.Abp.Application.Dtos.EntityDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": []
+    },
+    "Volo.Abp.Application.Dtos.EntityDto<T0>": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": [
+        "TKey"
+      ],
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "TKey",
+          "typeSimple": "TKey",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,

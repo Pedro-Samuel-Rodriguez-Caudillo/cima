@@ -1,5 +1,7 @@
+@using System
 @using cima.Listings
 @inject IFeaturedListingAppService FeaturedListingService
+@inject IClientCacheService ClientCache
 @inherits cimaComponentBase
 
 <section id="featured" class="bg-neutral-50 py-20 md:py-28">
@@ -71,11 +73,15 @@
 </section>
 
 @code {
+    [Parameter] public EventCallback<IReadOnlyList<ListingDto>> OnListingsLoaded { get; set; }
+
     private bool IsLoading { get; set; } = true;
     private List<ListingDto>? FeaturedListings { get; set; }
+    private const string CacheKey = "featured_home_v1";
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         await LoadFeaturedListings();
     }
 
@@ -85,18 +91,32 @@
         {
             IsLoading = true;
             
-            var listings = await FeaturedListingService.GetForHomepageAsync(8);
+            var listings = await ClientCache.GetOrCreateAsync(
+                CacheKey,
+                () => FeaturedListingService.GetForHomepageAsync(8),
+                TimeSpan.FromMinutes(5));
             
             FeaturedListings = listings;
+            await NotifyParentAsync();
         }
         catch (Exception ex)
         {
             await HandleErrorAsync(ex);
             FeaturedListings = new List<ListingDto>();
+            await NotifyParentAsync();
         }
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    private async Task NotifyParentAsync()
+    {
+        var payload = (IReadOnlyList<ListingDto>?)FeaturedListings ?? Array.Empty<ListingDto>();
+        if (OnListingsLoaded.HasDelegate)
+        {
+            await OnListingsLoaded.InvokeAsync(payload);
         }
     }
 }

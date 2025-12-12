@@ -55,6 +55,7 @@ using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
 using Volo.Abp.AspNetCore.Components.Messages;
+using cima.Blazor.Client.Services;
 
 namespace cima.Blazor;
 
@@ -195,8 +196,26 @@ public class cimaBlazorModule : AbpModule
             options.KeepAliveInterval = TimeSpan.FromSeconds(15);
         });
 
+        // Configurar límites de request body para API calls (uploads de imágenes)
+        context.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+        {
+            // Permitir archivos de hasta 10MB (para múltiples imágenes de 5MB cada una)
+            options.MultipartBodyLengthLimit = 10 * 1024 * 1024;
+            options.ValueLengthLimit = 10 * 1024 * 1024;
+            options.MultipartHeadersLengthLimit = 10 * 1024 * 1024;
+        });
+
+        // Configurar Kestrel para aceptar requests grandes
+        context.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+        {
+            options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+            options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(2);
+        });
+
         // Added MudBlazor
         context.Services.AddMudServices();
+        context.Services.AddScoped<ICimaThemeService, CimaThemeService>();
+        context.Services.AddCimaClientCache();
 
         // Configurar CascadingAuthenticationState para Blazor Web App
         context.Services.AddCascadingAuthenticationState();

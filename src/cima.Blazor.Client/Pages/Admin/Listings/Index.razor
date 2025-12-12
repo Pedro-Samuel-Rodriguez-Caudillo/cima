@@ -1,16 +1,6 @@
 @page "/admin/listings"
-@using cima.Listings
-@using cima.Domain.Shared
-@using cima.Blazor.Client.Services
 @using cima.Permissions
-@using MudBlazor
-@using System.Globalization
 @attribute [Authorize(cimaPermissions.Listings.Default)]
-@inject IListingAppService ListingService
-@inject EnumLocalizationService EnumLocalizer
-@inject NavigationManager NavManager
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 @inherits cimaComponentBase
 
 <PageTitle>@L["Admin:Listings:Title"] - @L["CompanyName"]</PageTitle>
@@ -98,6 +88,7 @@
                                @bind="SearchTerm" 
                                @onkeyup="HandleSearchKeyUp"
                                placeholder="Buscar por título, ubicación o código..." 
+                               aria-label="Buscar propiedades"
                                class="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
                         <svg class="w-5 h-5 text-neutral-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -105,7 +96,7 @@
                     </div>
                 </div>
                 <div>
-                     <select @bind="StatusFilter" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                     <select @bind="StatusFilter" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">Todos los Estados</option>
                         @foreach (ListingStatus status in Enum.GetValues(typeof(ListingStatus)))
                         {
@@ -114,7 +105,7 @@
                     </select>
                 </div>
                 <div>
-                    <select @bind="CategoryFilter" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                    <select @bind="CategoryFilter" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">Todas las Categorías</option>
                         @foreach (PropertyCategory category in Enum.GetValues(typeof(PropertyCategory)))
                         {
@@ -153,6 +144,7 @@
                                 <input type="checkbox" 
                                        checked="@IsAllSelected" 
                                        @onchange="ToggleSelectAll"
+                                       aria-label="Seleccionar todas las propiedades"
                                        class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 h-4 w-4" />
                             </div>
                         </div>
@@ -167,12 +159,13 @@
                     <div class="divide-y divide-neutral-200">
                         @foreach (var listing in Listings)
                         {
-                            <div class="p-4 lg:px-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center hover:bg-neutral-50 transition-colors group">
+                            <div @key="listing.Id" class="p-4 lg:px-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center hover:bg-neutral-50 transition-colors group">
                                 @* Checkbox *@
                                 <div class="col-span-1 flex items-center">
                                     <input type="checkbox" 
                                            checked="@SelectedIds.Contains(listing.Id)" 
                                            @onchange="() => ToggleSelection(listing.Id)"
+                                           aria-label="@($"Seleccionar propiedad {listing.Title}")"
                                            class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 h-4 w-4" />
                                 </div>
 
@@ -296,289 +289,3 @@
         </div>
     </div>
 </div>
-
-@code {
-    private List<ListingDto> Listings = new();
-    private HashSet<Guid> SelectedIds = new();
-    private int TotalCount;
-    private int CurrentPage = 1;
-    private int PageSize = 10;
-    private bool IsLoading = true;
-    private string SearchTerm = "";
-    private string? StatusFilter;
-    private string? CategoryFilter;
-    private string? TransactionFilter { get; set; }
-    private System.Timers.Timer? _searchTimer;
-    
-    private bool IsAllSelected => Listings.Any() && Listings.All(l => SelectedIds.Contains(l.Id));
-    
-    private static readonly CultureInfo MexicoCulture = new CultureInfo("es-MX");
-
-    protected override async Task OnInitializedAsync()
-    {
-        _searchTimer = new System.Timers.Timer(500);
-        _searchTimer.AutoReset = false;
-        _searchTimer.Elapsed += async (sender, e) => 
-        {
-            CurrentPage = 1;
-            await InvokeAsync(LoadListings);
-        };
-
-        await LoadListings();
-    }
-
-    private void HandleSearchKeyUp()
-    {
-        _searchTimer?.Stop();
-        _searchTimer?.Start();
-    }
-
-    private async Task LoadListings()
-    {
-        try
-        {
-            IsLoading = true;
-            var input = new GetListingsInput
-            {
-                SkipCount = (CurrentPage - 1) * PageSize,
-                MaxResultCount = PageSize,
-                Sorting = "CreatedAt DESC",
-                SearchTerm = SearchTerm,
-                Status = !string.IsNullOrEmpty(StatusFilter) ? int.Parse(StatusFilter) : null,
-                PropertyCategory = !string.IsNullOrEmpty(CategoryFilter) ? int.Parse(CategoryFilter) : null,
-                TransactionType = !string.IsNullOrEmpty(TransactionFilter) ? int.Parse(TransactionFilter) : null
-            };
-            var result = await ListingService.GetListAsync(input);
-            Listings = result.Items.ToList();
-            TotalCount = (int)result.TotalCount;
-            
-            // Limpiar selección de items que ya no están en la lista
-            SelectedIds.RemoveWhere(id => !Listings.Any(l => l.Id == id));
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error al cargar: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    // Selection methods
-    private void ToggleSelection(Guid id)
-    {
-        if (SelectedIds.Contains(id))
-            SelectedIds.Remove(id);
-        else
-            SelectedIds.Add(id);
-    }
-
-    private void ToggleSelectAll()
-    {
-        if (Listings == null) return;
-        
-        if (IsAllSelected)
-            SelectedIds.Clear();
-        else
-            foreach (var listing in Listings)
-                SelectedIds.Add(listing.Id);
-    }
-
-    private void ClearSelection() => SelectedIds.Clear();
-
-    // Bulk Actions
-    private async Task BulkPublish()
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Publicar propiedades",
-            $"¿Publicar {SelectedIds.Count} propiedades seleccionadas?",
-            yesText: "Publicar", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            var success = 0;
-            foreach (var id in SelectedIds.ToList())
-            {
-                try
-                {
-                    await ListingService.PublishAsync(id);
-                    success++;
-                }
-                catch { /* Ignorar errores individuales */ }
-            }
-            Snackbar.Add($"{success} propiedades publicadas", Severity.Success);
-            ClearSelection();
-            await LoadListings();
-        }
-    }
-
-    private async Task BulkArchive()
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Archivar propiedades",
-            $"¿Archivar {SelectedIds.Count} propiedades seleccionadas?",
-            yesText: "Archivar", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            var success = 0;
-            foreach (var id in SelectedIds.ToList())
-            {
-                try
-                {
-                    await ListingService.ArchiveAsync(id);
-                    success++;
-                }
-                catch { /* Ignorar errores individuales */ }
-            }
-            Snackbar.Add($"{success} propiedades archivadas", Severity.Success);
-            ClearSelection();
-            await LoadListings();
-        }
-    }
-
-    private async Task BulkMoveToPortfolio()
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Mover a Portafolio",
-            $"¿Mover {SelectedIds.Count} propiedades al portafolio?",
-            yesText: "Mover", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            var success = 0;
-            foreach (var id in SelectedIds.ToList())
-            {
-                try
-                {
-                    await ListingService.MoveToPortfolioAsync(id);
-                    success++;
-                }
-                catch { /* Ignorar errores individuales */ }
-            }
-            Snackbar.Add($"{success} propiedades movidas al portafolio", Severity.Success);
-            ClearSelection();
-            await LoadListings();
-        }
-    }
-
-    private async Task BulkDelete()
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Eliminar propiedades",
-            $"¿Eliminar {SelectedIds.Count} propiedades? Esta acción no se puede deshacer.",
-            yesText: "Eliminar", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            var success = 0;
-            foreach (var id in SelectedIds.ToList())
-            {
-                try
-                {
-                    await ListingService.DeleteAsync(id);
-                    success++;
-                }
-                catch { /* Ignorar errores individuales */ }
-            }
-            Snackbar.Add($"{success} propiedades eliminadas", Severity.Success);
-            ClearSelection();
-            await LoadListings();
-        }
-    }
-
-    // Single Actions
-    private async Task PublishListing(Guid id)
-    {
-        try
-        {
-            await ListingService.PublishAsync(id);
-            Snackbar.Add("Propiedad publicada", Severity.Success);
-            await LoadListings();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task ArchiveListing(Guid id)
-    {
-        try
-        {
-            await ListingService.ArchiveAsync(id);
-            Snackbar.Add("Propiedad archivada", Severity.Success);
-            await LoadListings();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task DeleteListing(Guid id)
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Eliminar Propiedad",
-            "¿Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.",
-            yesText: "Eliminar", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            try
-            {
-                await ListingService.DeleteAsync(id);
-                Snackbar.Add("Propiedad eliminada", Severity.Success);
-                await LoadListings();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    private async Task DuplicateListing(Guid id)
-    {
-        var result = await DialogService.ShowMessageBox(
-            "Duplicar Propiedad",
-            "¿Estás seguro de duplicar esta propiedad? Se creará una copia idéntica.",
-            yesText: "Duplicar", cancelText: "Cancelar");
-
-        if (result == true)
-        {
-            try
-            {
-                await ListingService.DuplicateAsync(id);
-                Snackbar.Add("Propiedad duplicada exitosamente", Severity.Success);
-                await LoadListings();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    private async Task GoToPage(int page)
-    {
-        CurrentPage = page;
-        await LoadListings();
-    }
-
-    private Color GetStatusColor(ListingStatus status) => status switch
-    {
-        ListingStatus.Published => Color.Success,
-        ListingStatus.Draft => Color.Warning,
-        ListingStatus.Archived => Color.Default,
-        ListingStatus.Portfolio => Color.Info,
-        _ => Color.Default
-    };
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-        _searchTimer?.Dispose();
-    }
-}

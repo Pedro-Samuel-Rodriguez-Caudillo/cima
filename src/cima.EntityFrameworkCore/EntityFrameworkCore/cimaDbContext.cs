@@ -95,14 +95,14 @@ public class cimaDbContext :
             b.Property(x => x.LandArea).HasPrecision(10, 2).IsRequired();
             b.Property(x => x.ConstructionArea).HasPrecision(10, 2).IsRequired();
             
-            // Índices para búsqueda optimizada
+            // ï¿½ndices para bï¿½squeda optimizada
             b.HasIndex(x => x.Status).HasDatabaseName("IX_Listings_Status");
             b.HasIndex(x => x.Location).HasDatabaseName("IX_Listings_Location");
             b.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_Listings_CreatedAt");
             b.HasIndex(x => x.Price).HasDatabaseName("IX_Listings_Price");
             b.HasIndex(x => x.ArchitectId).HasDatabaseName("IX_Listings_ArchitectId");
             
-            // Índices compuestos para consultas frecuentes
+            // ï¿½ndices compuestos para consultas frecuentes
             b.HasIndex(x => new { x.Status, x.ArchitectId }).HasDatabaseName("IX_Listings_Status_ArchitectId");
             b.HasIndex(x => new { x.Status, x.Location }).HasDatabaseName("IX_Listings_Status_Location");
             b.HasIndex(x => new { x.Status, x.Type, x.TransactionType }).HasDatabaseName("IX_Listings_Status_Type_Transaction");
@@ -116,6 +116,16 @@ public class cimaDbContext :
                 ib.ToTable("ListingImages");
                 ib.WithOwner().HasForeignKey("ListingId");
                 ib.HasKey("ListingId", "ImageId");
+                
+                // Configuraciï¿½n explï¿½cita de las propiedades del ValueObject
+                ib.Property(i => i.ImageId).IsRequired();
+                ib.Property(i => i.Url).IsRequired().HasMaxLength(2048);
+                ib.Property(i => i.ThumbnailUrl).HasMaxLength(2048).HasDefaultValue("");
+                ib.Property(i => i.AltText).HasMaxLength(500);
+                ib.Property(i => i.FileSize).IsRequired();
+                ib.Property(i => i.ContentType).IsRequired().HasMaxLength(100);
+                ib.Property(i => i.PreviousImageId);
+                ib.Property(i => i.NextImageId);
             });
         });
 

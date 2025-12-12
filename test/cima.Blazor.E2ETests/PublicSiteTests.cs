@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using Xunit;
 
@@ -41,7 +42,23 @@ public class PublicSiteTests : IAsyncLifetime
         await _page.GotoAsync(BaseUrl);
         
         // Assert
-        await Assertions.Expect(_page).ToHaveTitleAsync(new System.Text.RegularExpressions.Regex("CIMA"));
+        await Assertions.Expect(_page).ToHaveTitleAsync(new Regex("CIMA"));
+    }
+
+    [Fact]
+    public async Task HomePage_Should_ExposeSeoMetaTags()
+    {
+        await _page.GotoAsync(BaseUrl);
+
+        var metaTitle = _page.Locator("meta[name='title']");
+        var metaDescription = _page.Locator("meta[name='description']");
+        var ogType = _page.Locator("meta[property='og:type']");
+        var canonical = _page.Locator("link[rel='canonical']");
+
+        await Assertions.Expect(metaTitle).ToHaveAttributeAsync("content", new Regex(".+"));
+        await Assertions.Expect(metaDescription).ToHaveAttributeAsync("content", new Regex(".+"));
+        await Assertions.Expect(ogType).ToHaveAttributeAsync("content", "website");
+        await Assertions.Expect(canonical).ToHaveAttributeAsync("href", new Regex(BaseUrl));
     }
 
     [Fact]

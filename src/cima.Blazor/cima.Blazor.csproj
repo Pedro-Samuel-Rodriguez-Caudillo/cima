@@ -121,10 +121,7 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="BuildTailwindCss"
-          BeforeTargets="Build;Publish"
-          Inputs="$(ClientProjectDir)wwwroot\css\app.css;$(ClientProjectDir)tailwind.config.js"
-          Outputs="$(MSBuildProjectDirectory)\wwwroot\css\app.min.css">
+  <Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Inputs="$(ClientProjectDir)wwwroot\css\app.css;$(ClientProjectDir)tailwind.config.js" Outputs="$(MSBuildProjectDirectory)\wwwroot\css\app.min.css">
     <Message Importance="high" Text="Compilando estilos Tailwind para la p gina de login..." />
     <Exec Command="npm install" WorkingDirectory="$(ClientProjectDir)" Condition="!Exists('$(ClientProjectDir)node_modules')" />
     <Exec Command="npm run build:css" WorkingDirectory="$(ClientProjectDir)" />

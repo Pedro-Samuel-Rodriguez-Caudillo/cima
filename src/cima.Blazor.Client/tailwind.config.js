@@ -97,10 +97,10 @@ module.exports = {
                     400: '#818cf8',
                     500: '#5f70e0',
                     600: '#3f51c5',
-                    700: '#1e3a8a', // Principal
-                    800: '#192f70',
-                    900: '#15255a',
-                    950: '#0f1a40',
+                    700: '#172e6b', // Principal - Más oscuro
+                    800: '#122452',
+                    900: '#0d1a3d',
+                    950: '#081129',
                 },
                 // Alias explícito para usar como color primario
                 primary: {
@@ -111,10 +111,10 @@ module.exports = {
                     400: '#818cf8',
                     500: '#5f70e0',
                     600: '#3f51c5',
-                    700: '#1e3a8a',
-                    800: '#192f70',
-                    900: '#15255a',
-                    950: '#0f1a40',
+                    700: '#172e6b',
+                    800: '#122452',
+                    900: '#0d1a3d',
+                    950: '#081129',
                 },
 
                 // Grises corporativos suaves
