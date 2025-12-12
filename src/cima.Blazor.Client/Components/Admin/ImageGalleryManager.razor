@@ -183,6 +183,13 @@
 
     private async Task HandleFileSelection(InputFileChangeEventArgs e)
     {
+        // Prevenir doble ejecución si ya hay una subida en progreso
+        if (IsUploading)
+        {
+            await JSRuntime.InvokeVoidAsync("console.warn", "Ya hay una subida en progreso, ignorando nuevo evento");
+            return;
+        }
+
         // Debug: Log que el evento se disparó
         await JSRuntime.InvokeVoidAsync("console.log", "HandleFileSelection disparado");
         

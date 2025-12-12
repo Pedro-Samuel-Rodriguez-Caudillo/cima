@@ -95,6 +95,22 @@ namespace cima.Domain.Entities
             return WithLinks(PreviousImageId, nextImageId);
         }
 
+        public void UpdateLinks(Guid? previousImageId, Guid? nextImageId)
+        {
+            PreviousImageId = previousImageId;
+            NextImageId = nextImageId;
+        }
+
+        public void UpdateNextImage(Guid? nextImageId)
+        {
+            UpdateLinks(PreviousImageId, nextImageId);
+        }
+
+        public void UpdatePreviousImage(Guid? previousImageId)
+        {
+            UpdateLinks(previousImageId, NextImageId);
+        }
+
         protected override IEnumerable<object> GetAtomicValues()
         {
             yield return ImageId;

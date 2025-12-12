@@ -182,6 +182,10 @@ public class cimaBlazorModule : AbpModule
             options.SendStackTraceToClients = false;
         });
 
+        // Registrar finder personalizado para mapear códigos de error de negocio a HTTP status codes
+        // Ej: Listing:ConcurrencyConflict -> 409 Conflict
+        context.Services.AddTransient<IHttpExceptionStatusCodeFinder, CimaHttpExceptionStatusCodeFinder>();
+
         // Add services to the container.
         context.Services.AddRazorComponents()
             .AddInteractiveServerComponents()
