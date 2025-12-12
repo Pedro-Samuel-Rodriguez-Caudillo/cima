@@ -10,9 +10,9 @@
 <PageTitle>@L["Portfolio:Title"] - @L["CompanyName"]</PageTitle>
 
 <div class="min-h-screen bg-neutral-50">
-    @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
-    <section class="bg-navy-900 pt-24 md:pt-28">
-        <div class="cima-container py-20 md:py-28">
+    @* Header Section - Clean Design (diseï¿½ado para ir detrï¿½s del navbar transparente) *@
+    <section class="bg-navy-900 pt-20 md:pt-24">
+        <div class="cima-container py-16 md:py-22">
             <div class="max-w-4xl">
                 <span class="inline-block px-4 py-1.5 bg-navy-700 text-navy-100 text-sm font-medium rounded-full mb-6">
                     Proyectos Completados
@@ -28,7 +28,7 @@
     </section>
 
     @* Filters Section *@
-    <section class="relative -mt-8 z-10 pb-8">
+    <section class="relative -mt-4 z-10 pb-8">
         <div class="cima-container">
             <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-neutral-100">
                 <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -97,7 +97,7 @@
                     }
                 </div>
 
-                @* Paginación Premium *@
+                @* Paginaciï¿½n Premium *@
                 @if (TotalPages > 1)
                 {
                     <div class="mt-16 flex justify-center">
@@ -210,7 +210,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegación/cambio de idioma
+            // Ignorar - ocurre durante navegaciï¿½n/cambio de idioma
         }
     }
 
@@ -227,7 +227,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegación/cambio de idioma
+            // Ignorar - ocurre durante navegaciï¿½n/cambio de idioma
         }
         catch (Exception ex)
         {
@@ -248,7 +248,7 @@
                 Sorting = "CreatedAt DESC"
             };
 
-            // Filtrar por arquitecto si está seleccionado
+            // Filtrar por arquitecto si estï¿½ seleccionado
             if (!string.IsNullOrEmpty(SelectedArchitectId) && Guid.TryParse(SelectedArchitectId, out var architectId))
             {
                 input.ArchitectId = architectId;
@@ -262,7 +262,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - ocurre durante navegación/cambio de idioma
+            // Ignorar - ocurre durante navegaciï¿½n/cambio de idioma
         }
         catch (Exception ex)
         {
@@ -297,7 +297,7 @@
         }
         catch (OperationCanceledException)
         {
-            // Ignorar - navegación en progreso
+            // Ignorar - navegaciï¿½n en progreso
         }
     }
 
