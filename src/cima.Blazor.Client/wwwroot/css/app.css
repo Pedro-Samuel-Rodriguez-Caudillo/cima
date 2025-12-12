@@ -56,23 +56,23 @@
     }
 
     .cima-btn-primary {
-        @apply bg-navy-800 text-white shadow-md
-               hover:bg-navy-900 hover:shadow-lg
-               focus-visible:ring-navy-700
-               active:bg-navy-950;
+        @apply bg-[#0c1224] text-white shadow-md
+               hover:bg-[#0a0f1d] hover:shadow-lg
+               focus-visible:ring-navy-900
+               active:bg-[#080c17];
     }
 
     .cima-btn-secondary {
-        @apply bg-white text-navy-800 border-2 border-navy-800
+        @apply bg-white text-[#0c1224] border-2 border-[#0c1224]
                hover:bg-navy-50 hover:shadow-md
-               focus-visible:ring-navy-700
+               focus-visible:ring-navy-900
                active:bg-navy-100;
     }
 
     .cima-btn-ghost {
-        @apply bg-transparent text-navy-800
+        @apply bg-transparent text-[#0c1224]
                hover:bg-navy-50
-               focus-visible:ring-navy-700
+               focus-visible:ring-navy-900
                active:bg-navy-100;
     }
 
