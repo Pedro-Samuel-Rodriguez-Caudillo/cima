@@ -37,7 +37,6 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly Images.IImageStorageService _imageStorageService;
     private readonly IUnitOfWorkManager _unitOfWorkManager;
     private readonly IListingImageLockService _listingImageLockService;
-    private readonly IListingPersistenceLock _listingPersistenceLock;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
@@ -47,8 +46,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         IListingManager listingManager,
         Images.IImageStorageService imageStorageService,
         IUnitOfWorkManager unitOfWorkManager,
-        IListingImageLockService listingImageLockService,
-        IListingPersistenceLock listingPersistenceLock)
+        IListingImageLockService listingImageLockService)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
@@ -57,7 +55,6 @@ public class ListingAppService : cimaAppService, IListingAppService
         _imageStorageService = imageStorageService;
         _unitOfWorkManager = unitOfWorkManager;
         _listingImageLockService = listingImageLockService;
-        _listingPersistenceLock = listingPersistenceLock;
     }
 
     /// <summary>
@@ -296,7 +293,7 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     /// <summary>
     /// Cambia estado de Draft a Published usando ListingManager
-    /// Los eventos de dominio actualizan las estadásticas del arquitecto
+    /// Los eventos de dominio actualizan las estadística del arquitecto
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
     public async Task<ListingDto> PublishAsync(Guid id)
@@ -493,7 +490,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Verifica si el usuario actual es administrador (método sincrónico)
+    /// Verifica si el usuario currente es administrador (método sincrónico)
     /// </summary>
     private bool IsAdmin()
     {
@@ -1028,80 +1025,34 @@ public class ListingAppService : cimaAppService, IListingAppService
     }
 
     /// <summary>
-    /// Ejecuta una operacion de imagen con reintentos en caso de conflictos de concurrencia.
-    /// IMPORTANTE: El lock ya debe haber sido adquirido antes de llamar a este metodo.
-    /// Los reintentos solo sirven como fallback para casos edge (ej: otras operaciones no de imagen).
+    /// Ejecuta una operacion de imagen dentro del contexto del lock de aplicación existente.
+    /// El lock ya debe haber sido adquirido antes de llamar a este metodo.
+    /// Se ejecuta directamente en el UnitOfWork ambient sin crear contextos adicionales.
     /// </summary>
     private async Task<T> ExecuteImageOperationAsync<T>(Guid listingId, string operationName, Func<Listing, Task<T>> operation)
     {
-        const int maxRetries = 5;
-        Exception? lastException = null;
-
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        try
         {
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
+            // Cargar la entidad directamente en el UnitOfWork ambient
+            var listing = await GetListingWithImagesAsync(listingId);
 
-            try
-            {
-                await using var crossProcessLock = await _listingPersistenceLock.AcquireAsync(listingId);
+            // Ejecutar la operación
+            var result = await operation(listing);
 
-                var listing = await GetListingWithImagesAsync(listingId);
-                var result = await operation(listing);
-
-                await uow.CompleteAsync();
-                return result;
-            }
-            catch (Exception ex) when (IsConcurrencyException(ex))
-            {
-                lastException = ex;
-                var listingState = await BuildListingImagesDebugSnapshotAsync(listingId);
-                Logger.LogWarning(
-                    ex,
-                    "Conflicto de concurrencia al {Operation} del listing {ListingId}. Intento {Attempt}/{MaxRetries}. Cadena de errores: {ExceptionChain}. Detalles de concurrencia: {ConcurrencyDetails}. Estado listado: {ListingState}",
-                    operationName,
-                    listingId,
-                    attempt,
-                    maxRetries,
-                    BuildExceptionChain(ex),
-                    BuildConcurrencyDetails(ex),
-                    listingState);
-
-                if (attempt == maxRetries)
-                {
-                    break;
-                }
-
-                await Task.Delay(TimeSpan.FromMilliseconds(200 * attempt));
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(
-                    ex,
-                    "Error inesperado al {Operation} del listing {ListingId} en el intento {Attempt}/{MaxRetries}. Cadena de errores: {ExceptionChain}",
-                    operationName,
-                    listingId,
-                    attempt,
-                    maxRetries,
-                    BuildExceptionChain(ex));
-
-                throw;
-            }
+            // El cambio se guarda automáticamente al salir del UnitOfWork ambient
+            return result;
         }
+        catch (Exception ex)
+        {
+            Logger.LogError(
+                ex,
+                "Error al {Operation} del listing {ListingId}. Cadena de errores: {ExceptionChain}",
+                operationName,
+                listingId,
+                BuildExceptionChain(ex));
 
-        Logger.LogError(
-            lastException,
-            "Fallo {Operation} despues de {MaxRetries} intentos por conflictos de concurrencia en el listing {ListingId}. Ultima cadena de errores: {ExceptionChain}. Detalles de concurrencia: {ConcurrencyDetails}. Estado final listado: {ListingState}",
-            operationName,
-            maxRetries,
-            listingId,
-            lastException == null ? "(sin excepcion registrada)" : BuildExceptionChain(lastException),
-            lastException == null ? "(sin excepcion registrada)" : BuildConcurrencyDetails(lastException),
-            lastException == null ? "(sin excepcion registrada)" : await BuildListingImagesDebugSnapshotAsync(listingId));
-        
-        throw new BusinessException("Listing:ConcurrencyConflict")
-            .WithData("ListingId", listingId)
-            .WithData("Message", $"No se pudo {operationName} debido a actualizaciones concurrentes. Por favor, recargue la pagina e intente nuevamente.");
-    
+            throw;
+        }
     }
 
     private Task ExecuteImageOperationAsync(Guid listingId, string operationName, Func<Listing, Task> operation)
@@ -1502,9 +1453,13 @@ public class ListingAppService : cimaAppService, IListingAppService
             input.FileSize = bytes.Length;
             input.ContentType = contentType;
 
-            if (!_imageStorageService.ValidateImage(fileName, bytes.Length))
+            var validationResult = _imageStorageService.ValidateImage(fileName, bytes.Length);
+            if (!validationResult.IsValid)
             {
-                throw new BusinessException("Listing:InvalidImageTypeOrSize");
+                throw new BusinessException("Listing:InvalidImageTypeOrSize")
+                    .WithData("Reason", validationResult.Message ?? "Validación de imagen fallida")
+                    .WithData("Severity", validationResult.Severity.ToString())
+                    .WithData("ErrorCode", validationResult.ErrorCode ?? "UnknownValidationError");
             }
 
             return await _imageStorageService.UploadImageAsync(stream, fileName, "listings");

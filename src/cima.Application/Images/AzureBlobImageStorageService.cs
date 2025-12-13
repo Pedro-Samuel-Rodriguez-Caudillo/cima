@@ -99,15 +99,26 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
         }
     }
 
-    public bool ValidateImage(string fileName, long fileSize)
+    public ImageValidationResult ValidateImage(string fileName, long fileSize)
     {
         if (fileSize > MaxFileSize)
         {
-            return false;
+            return ImageValidationResult.Invalid(
+                "ImageTooLarge",
+                $"El archivo excede el tamaño máximo permitido ({MaxFileSize / (1024 * 1024)}MB)",
+                ImageValidationSeverity.Error);
         }
 
         var ext = Path.GetExtension(fileName)?.ToLowerInvariant();
-        return !string.IsNullOrWhiteSpace(ext) && AllowedExtensions.Contains(ext);
+        if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
+        {
+            return ImageValidationResult.Invalid(
+                "UnsupportedExtension",
+                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}",
+                ImageValidationSeverity.Warning);
+        }
+
+        return ImageValidationResult.Valid();
     }
 
     private async Task<BlobContainerClient> GetContainerClientAsync(string folder)

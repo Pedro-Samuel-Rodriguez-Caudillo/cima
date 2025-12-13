@@ -171,22 +171,28 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         return Task.CompletedTask;
     }
 
-    public bool ValidateImage(string fileName, long fileSize)
+    public ImageValidationResult ValidateImage(string fileName, long fileSize)
     {
         // Validar tamaño
         if (fileSize > MaxFileSize)
         {
-            return false;
+            return ImageValidationResult.Invalid(
+                "ImageTooLarge",
+                $"El archivo excede el tamaño máximo permitido ({MaxFileSize / (1024 * 1024)}MB)",
+                ImageValidationSeverity.Error);
         }
 
         // Validar extensión
         var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(extension) || !AllowedExtensions.Contains(extension))
         {
-            return false;
+            return ImageValidationResult.Invalid(
+                "UnsupportedExtension",
+                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}",
+                ImageValidationSeverity.Warning);
         }
 
-        return true;
+        return ImageValidationResult.Valid();
     }
 
     /// <summary>
