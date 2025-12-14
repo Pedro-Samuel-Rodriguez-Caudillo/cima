@@ -13,8 +13,8 @@ using cima.EntityFrameworkCore;
 namespace cima.Migrations
 {
     [DbContext(typeof(cimaDbContext))]
-    [Migration("20251212201158_aniadiendoImagenesCamposTraqueo")]
-    partial class aniadiendoImagenesCamposTraqueo
+    [Migration("20251214022059_recreacion de migraciones")]
+    partial class recreaciondemigraciones
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2310,7 +2310,6 @@ namespace cima.Migrations
                                 .HasColumnType("uuid");
 
                             b1.Property<Guid>("ImageId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("AltText")

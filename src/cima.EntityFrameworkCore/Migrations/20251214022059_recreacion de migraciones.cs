@@ -5,7 +5,7 @@
 namespace cima.Migrations
 {
     /// <inheritdoc />
-    public partial class AddThumbnailUrlToImages : Migration
+    public partial class recreaciondemigraciones : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

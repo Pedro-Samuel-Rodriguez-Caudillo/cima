@@ -2307,7 +2307,6 @@ namespace cima.Migrations
                                 .HasColumnType("uuid");
 
                             b1.Property<Guid>("ImageId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("AltText")
