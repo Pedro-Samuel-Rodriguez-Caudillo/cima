@@ -112,8 +112,7 @@ public class StagingDataSeeder : IDataSeedContributor, ITransientDependency
             user = new IdentityUser(_guidGenerator.Create(), email, email)
             {
                 Name = name,
-                Surname = surname,
-                EmailConfirmed = true
+                Surname = surname
             };
 
             var createResult = await _userManager.CreateAsync(user, DefaultPassword);
