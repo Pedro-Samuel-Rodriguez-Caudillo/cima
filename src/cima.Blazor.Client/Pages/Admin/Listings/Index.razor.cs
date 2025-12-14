@@ -193,6 +193,15 @@ public partial class Index : cimaComponentBase
     private async Task ArchiveListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.ArchiveAsync(id), "Propiedad archivada");
 
+    private async Task UnpublishListing(Guid id) =>
+        await ExecuteWithReload(() => ListingService.UnpublishAsync(id), "Propiedad enviada a borrador");
+
+    private async Task UnarchiveListing(Guid id) =>
+        await ExecuteWithReload(() => ListingService.UnarchiveAsync(id), "Propiedad desarchivada");
+
+    private async Task MoveListingToPortfolio(Guid id) =>
+        await ExecuteWithReload(() => ListingService.MoveToPortfolioAsync(id), "Propiedad movida al portafolio");
+
     private async Task DuplicateListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.DuplicateAsync(id), "Propiedad duplicada exitosamente");
 

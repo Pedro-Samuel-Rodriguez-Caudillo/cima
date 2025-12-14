@@ -223,7 +223,7 @@
                                 </div>
 
                                 @* Actions *@
-                                <div class="col-span-1 lg:col-span-2 flex items-center justify-start lg:justify-end gap-1">
+                                <div class="col-span-1 lg:col-span-1 flex items-center justify-start lg:justify-end flex-wrap gap-1.5">
                                     @* Preview *@
                                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" 
                                         Href="@($"/properties/{listing.Id}")" Target="_blank" title="Vista previa" aria-label="Vista previa" />
@@ -236,12 +236,24 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" 
                                         Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" title="Duplicar" aria-label="Duplicar" />
 
-                                    @if (listing.Status == ListingStatus.Draft)
+                                    @if (listing.Status == ListingStatus.Draft || listing.Status == ListingStatus.Portfolio)
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Publish" Size="Size.Small" 
                                             Color="Color.Success" OnClick="@(() => PublishListing(listing.Id))" title="Publicar" aria-label="Publicar" />
                                     }
                                     @if (listing.Status == ListingStatus.Published)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Unpublished" Size="Size.Small"
+                                            Color="Color.Default" OnClick="@(() => UnpublishListing(listing.Id))" title="Mover a borrador" aria-label="Mover a borrador" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Style" Size="Size.Small"
+                                            Color="Color.Info" OnClick="@(() => MoveListingToPortfolio(listing.Id))" title="Mover a portafolio" aria-label="Mover a portafolio" />
+                                    }
+                                    @if (listing.Status == ListingStatus.Archived)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Unarchive" Size="Size.Small"
+                                            Color="Color.Primary" OnClick="@(() => UnarchiveListing(listing.Id))" title="Desarchivar" aria-label="Desarchivar" />
+                                    }
+                                    @if (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio)
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Archive" Size="Size.Small" 
                                             Color="Color.Warning" OnClick="@(() => ArchiveListing(listing.Id))" title="Archivar" aria-label="Archivar" />

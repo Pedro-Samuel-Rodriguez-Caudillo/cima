@@ -277,7 +277,20 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
         if (!string.IsNullOrWhiteSpace(_options.Azure.PublicBaseUrl))
         {
             var baseUri = new Uri(_options.Azure.PublicBaseUrl.TrimEnd('/') + "/");
-            return new Uri(baseUri, $"{container}/{blobName}").ToString();
+            var directUrl = new Uri(baseUri, $"{container}/{blobName}").ToString();
+            
+            // Si la URL es HTTP (Azurite local), usar el proxy HTTPS
+            if (directUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                var proxyBaseUrl = _options.Azure.ProxyBaseUrl;
+                if (!string.IsNullOrWhiteSpace(proxyBaseUrl))
+                {
+                    var encodedUrl = Uri.EscapeDataString(directUrl);
+                    return $"{proxyBaseUrl.TrimEnd('/')}/api/image-proxy?url={encodedUrl}";
+                }
+            }
+            
+            return directUrl;
         }
 
         return blobUri.ToString();

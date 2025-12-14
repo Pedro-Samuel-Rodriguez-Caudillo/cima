@@ -169,6 +169,9 @@ public class cimaBlazorModule : AbpModule
 
         // Add Razor Pages for ABP Account MVC pages (Login, Register, etc.)
         context.Services.AddRazorPages();
+        
+        // Add HttpClient for ImageProxyController
+        context.Services.AddHttpClient();
 
         context.Services.AddCimaImprovements(configuration, hostingEnvironment);
 

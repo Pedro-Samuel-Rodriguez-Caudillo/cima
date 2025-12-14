@@ -59,7 +59,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             @foreach (var (image, index) in Images.Select((img, i) => (img, i)))
             {
-                <div class="group relative aspect-square rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200 @(DraggedIndex == index ? "opacity-50" : "") @(index == 0 ? "ring-2 ring-navy-500" : "")"
+                <div class="group relative aspect-square rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200 shadow-sm @(DraggedIndex == index ? "opacity-30 scale-95" : "") @(DragOverIndex == index && DraggedIndex != index ? "ring-2 ring-navy-400 ring-offset-2 shadow-lg" : "") @(index == 0 ? "ring-2 ring-navy-500" : "") transform-gpu transition-all duration-300 ease-out cursor-move hover:-translate-y-1 hover:shadow-2xl hover:border-navy-200/80"
                      draggable="true"
                      @ondragstart="() => HandleDragStart(index)"
                      @ondragover:preventDefault
@@ -68,7 +68,7 @@
                      @ondrop="() => HandleDrop(index)"
                      @ondragend="HandleDragEnd">
                     
-                    <img src="@image.Url" alt="@(image.AltText ?? $"Imagen {index + 1}")" class="w-full h-full object-cover" />
+                    <img src="@image.Url" alt="@(image.AltText ?? $"Imagen {index + 1}")" class="w-full h-full object-cover pointer-events-none" />
                     
                     @if (index == 0)
                     {
@@ -400,9 +400,10 @@
 
         var draggedImage = Images[DraggedIndex.Value];
         Images.RemoveAt(DraggedIndex.Value);
-        
-        if (targetIndex > DraggedIndex.Value) targetIndex--;
-        
+
+        // Insertar usando el índice del elemento sobre el que se soltó.
+        // Cuando se mueve hacia abajo, esto asegura que caiga justo en la posición seleccionada
+        // (después del elemento sobre el que se suelta) sin tener que ajustar manualmente.
         Images.Insert(targetIndex, draggedImage);
         DraggedIndex = null;
         DragOverIndex = null;
@@ -421,6 +422,14 @@
             }).ToList();
 
             await ListingService.UpdateImagesOrderAsync(ListingId, orderDtos);
+            
+            // Actualizar los links locales para que coincidan con el nuevo orden guardado
+            for (int i = 0; i < Images.Count; i++)
+            {
+                Images[i].PreviousImageId = i > 0 ? Images[i - 1].ImageId : null;
+                Images[i].NextImageId = i < Images.Count - 1 ? Images[i + 1].ImageId : null;
+            }
+            
             await NotifyImagesChanged();
         }
         catch (Exception ex)

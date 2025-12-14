@@ -117,8 +117,9 @@ public class cimaDbContext :
                 ib.WithOwner().HasForeignKey("ListingId");
                 ib.HasKey("ListingId", "ImageId");
                 
-                // Configuraci�n expl�cita de las propiedades del ValueObject
-                ib.Property(i => i.ImageId).IsRequired();
+                // Configuracion explicita de las propiedades del ValueObject
+                // ValueGeneratedNever() indica que ImageId se genera en el cliente, no en la BD
+                ib.Property(i => i.ImageId).IsRequired().ValueGeneratedNever();
                 ib.Property(i => i.Url).IsRequired().HasMaxLength(2048);
                 ib.Property(i => i.ThumbnailUrl).HasMaxLength(2048).HasDefaultValue("");
                 ib.Property(i => i.AltText).HasMaxLength(500);

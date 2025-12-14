@@ -14,6 +14,7 @@ using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
@@ -37,6 +38,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly Images.IImageStorageService _imageStorageService;
     private readonly IUnitOfWorkManager _unitOfWorkManager;
     private readonly IListingImageLockService _listingImageLockService;
+    private readonly IHostEnvironment _hostEnvironment;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
@@ -46,7 +48,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         IListingManager listingManager,
         Images.IImageStorageService imageStorageService,
         IUnitOfWorkManager unitOfWorkManager,
-        IListingImageLockService listingImageLockService)
+        IListingImageLockService listingImageLockService,
+        IHostEnvironment hostEnvironment)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
@@ -55,6 +58,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         _imageStorageService = imageStorageService;
         _unitOfWorkManager = unitOfWorkManager;
         _listingImageLockService = listingImageLockService;
+        _hostEnvironment = hostEnvironment;
     }
 
     /// <summary>
@@ -552,8 +556,17 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
+        // #region agent log
+        var _debugReqId = Guid.NewGuid().ToString("N").Substring(0, 8);
+        var _lockAcquireStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:558", message = "AddImageAsync ENTRY", data = new { listingId, reqId = _debugReqId, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+        // #endregion
+        
         // Adquirir lock exclusivo para este listing - serializa todas las operaciones de imagen
         await using var lockHandle = await _listingImageLockService.AcquireAsync(listingId);
+        // #region agent log
+        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:565", message = "Lock ACQUIRED", data = new { listingId, reqId = _debugReqId, waitMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _lockAcquireStart, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+        // #endregion
 
         UploadImageResult? storedImage = null;
         var uploadedNewImage = false;
@@ -666,21 +679,41 @@ public class ListingAppService : cimaAppService, IListingAppService
         }
         catch
         {
-            // Limpiar blob huerfano si ya se subio pero fallo despues
-            if (storedImage != null &&
-                !string.IsNullOrWhiteSpace(storedImage.Url) &&
-                uploadedNewImage)
-            {
-                try
-                {
-                    await _imageStorageService.DeleteImageAsync(storedImage.Url);
-                }
-                catch (Exception cleanupEx)
-                {
-                    Logger.LogWarning(cleanupEx, "No se pudo limpiar imagen huerfana {Url}", storedImage.Url);
-                }
-            }
+            await SafeDeleteUploadedImageAsync(uploadedNewImage, storedImage);
             throw;
+        }
+    }
+
+    private async Task SafeDeleteUploadedImageAsync(bool uploadedNewImage, UploadImageResult? storedImage)
+    {
+        if (!uploadedNewImage || storedImage == null)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(storedImage.Url))
+        {
+            try
+            {
+                await _imageStorageService.DeleteImageAsync(storedImage.Url);
+            }
+            catch (Exception cleanupEx)
+            {
+                Logger.LogWarning(cleanupEx, "No se pudo limpiar imagen huerfana {Url}", storedImage.Url);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(storedImage.ThumbnailUrl) &&
+            !string.Equals(storedImage.ThumbnailUrl, storedImage.Url, StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                await _imageStorageService.DeleteImageAsync(storedImage.ThumbnailUrl);
+            }
+            catch (Exception cleanupEx)
+            {
+                Logger.LogWarning(cleanupEx, "No se pudo limpiar thumbnail huerfano {Url}", storedImage.ThumbnailUrl);
+            }
         }
     }
 
@@ -792,20 +825,38 @@ public class ListingAppService : cimaAppService, IListingAppService
                     }
                 }
 
+                // Limpiar la colección original y repoblarla con el nuevo orden
+                // Esto es necesario porque OwnsMany requiere trabajar con la misma instancia de colección
+                var reorderedImages = new List<ListingImage>();
+                
                 for (int i = 0; i < orderedInput.Count; i++)
                 {
                     var currentImageId = orderedInput[i].ImageId;
-                    var imageToUpdate = existingImages[currentImageId];
+                    var originalImage = existingImages[currentImageId];
 
                     Guid? previousId = i > 0 ? orderedInput[i - 1].ImageId : null;
                     Guid? nextId = i < orderedInput.Count - 1 ? orderedInput[i + 1].ImageId : null;
 
-                    imageToUpdate.UpdateLinks(previousId, nextId);
+                    // Crear una nueva instancia con los links actualizados (Value Objects deben ser inmutables)
+                    var updatedImage = new ListingImage(
+                        imageId: originalImage.ImageId,
+                        url: originalImage.Url,
+                        thumbnailUrl: originalImage.ThumbnailUrl,
+                        altText: originalImage.AltText,
+                        fileSize: originalImage.FileSize,
+                        contentType: originalImage.ContentType,
+                        previousImageId: previousId,
+                        nextImageId: nextId
+                    );
+                    reorderedImages.Add(updatedImage);
                 }
 
-                listing.Images = orderedInput
-                    .Select(item => existingImages[item.ImageId])
-                    .ToList();
+                // Limpiar y repoblar la colección original (no reasignar)
+                listingImages.Clear();
+                foreach (var img in reorderedImages)
+                {
+                    listingImages.Add(img);
+                }
                 // listing.LastModifiedAt = Clock.Now;
                 // listing.LastModifiedBy = GetCurrentUserIdOrThrow();
 
@@ -1027,32 +1078,119 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// <summary>
     /// Ejecuta una operacion de imagen dentro del contexto del lock de aplicación existente.
     /// El lock ya debe haber sido adquirido antes de llamar a este metodo.
-    /// Se ejecuta directamente en el UnitOfWork ambient sin crear contextos adicionales.
+    ///
+    /// Implementa reintentos ante errores de concurrencia optimista usando unidades de trabajo
+    /// independientes para evitar que un DbContext en estado inconsistente vuelva a fallar.
     /// </summary>
     private async Task<T> ExecuteImageOperationAsync<T>(Guid listingId, string operationName, Func<Listing, Task<T>> operation)
     {
-        try
+        const int maxRetries = 3;
+        var attempt = 0;
+        Exception? lastException = null;
+        // #region agent log
+        var _execReqId = Guid.NewGuid().ToString("N").Substring(0, 8);
+        // #endregion
+
+        while (attempt < maxRetries)
         {
-            // Cargar la entidad directamente en el UnitOfWork ambient
-            var listing = await GetListingWithImagesAsync(listingId);
+            // #region agent log
+            _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1070", message = "ExecuteImageOp attempt START", data = new { listingId, operationName, attempt, _execReqId, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "B,D" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+            // #endregion
+            using var uow = _unitOfWorkManager.Begin(new AbpUnitOfWorkOptions { IsTransactional = true }, requiresNew: true);
 
-            // Ejecutar la operación
-            var result = await operation(listing);
+            try
+            {
+                // Cargar la entidad en una unidad de trabajo dedicada para aislar el DbContext
+                var listing = await GetListingWithImagesAsync(listingId);
+                // #region agent log
+                _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1078", message = "Listing loaded in UoW", data = new { listingId, _execReqId, concurrencyStamp = listing.ConcurrencyStamp, imageCount = listing.Images?.Count ?? 0 }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "B,D" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                // #endregion
 
-            // El cambio se guarda automáticamente al salir del UnitOfWork ambient
-            return result;
+                // Ejecutar la operación solicitada
+                var result = await operation(listing);
+
+                // #region agent log - Capturar estado de la colección de imágenes antes de guardar
+                var _imagesInfo = listing.Images?.Select(img => new { Id = img.ImageId, UrlStart = img.Url?.Substring(0, Math.Min(50, img.Url?.Length ?? 0)), Prev = img.PreviousImageId, Next = img.NextImageId }).ToList();
+                _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1095", message = "Before UoW.CompleteAsync", data = new { listingId, _execReqId, concurrencyStamp = listing.ConcurrencyStamp, imageCount = listing.Images?.Count ?? 0, imagesInfo = _imagesInfo, imagesCollectionType = listing.Images?.GetType().FullName }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "J,K" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                // #endregion
+                await uow.CompleteAsync();
+                // #region agent log
+                _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1090", message = "UoW.CompleteAsync SUCCESS", data = new { listingId, _execReqId, attempt }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "B,D" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                // #endregion
+                return result;
+            }
+            catch (Exception ex) when (IsConcurrencyException(ex))
+            {
+                lastException = ex;
+                var snapshot = await BuildListingImagesDebugSnapshotAsync(listingId);
+                var concurrencyDetails = BuildConcurrencyDetails(ex);
+                
+                // #region agent log
+                _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1108", message = "CONCURRENCY EXCEPTION CAUGHT", data = new { listingId, _execReqId, attempt, exType = ex.GetType().Name, exMsg = ex.Message, snapshot, concurrencyDetails }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "B,D,E" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                // #endregion
+
+                Logger.LogWarning(
+                    ex,
+                    "Concurrencia al {Operation} del listing {ListingId} (intento {Attempt}/{Max}). Snapshot: {Snapshot}. Detalles: {Details}",
+                    operationName,
+                    listingId,
+                    attempt + 1,
+                    maxRetries,
+                    snapshot,
+                    concurrencyDetails);
+
+                attempt++;
+
+                if (attempt >= maxRetries)
+                {
+                    // #region agent log
+                    _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1125", message = "MAX RETRIES EXHAUSTED", data = new { listingId, _execReqId, maxRetries }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "B,D,E" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                    // #endregion
+                    break;
+                }
+
+                // Pequeña espera exponencial para evitar contención inmediata
+                await Task.Delay(TimeSpan.FromMilliseconds(150 * attempt));
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(
+                    ex,
+                    "Error al {Operation} del listing {ListingId}. Cadena de errores: {ExceptionChain}",
+                    operationName,
+                    listingId,
+                    BuildExceptionChain(ex));
+
+                throw;
+            }
         }
-        catch (Exception ex)
+
+        // Re-lanzar la última excepción de concurrencia si se agotaron los reintentos
+        var finalException = lastException ?? new AbpException("Fallo desconocido al operar imagenes del listing.");
+
+        var finalSnapshot = await BuildListingImagesDebugSnapshotAsync(listingId);
+        var finalDetails = BuildConcurrencyDetails(finalException);
+
+        Logger.LogError(
+            finalException,
+            "Se agotaron los reintentos al {Operation} del listing {ListingId}. Snapshot final: {Snapshot}. Detalles: {Details}",
+            operationName,
+            listingId,
+            finalSnapshot,
+            finalDetails);
+        /*
+        if (_hostEnvironment.IsDevelopment())
         {
-            Logger.LogError(
-                ex,
-                "Error al {Operation} del listing {ListingId}. Cadena de errores: {ExceptionChain}",
-                operationName,
-                listingId,
-                BuildExceptionChain(ex));
-
-            throw;
+            throw new BusinessException("Listing:ImageConcurrencyFailure")
+                .WithData("ListingId", listingId)
+                .WithData("Operation", operationName)
+                .WithData("Snapshot", finalSnapshot)
+                .WithData("Details", finalDetails)
+                .WithData("ExceptionChain", BuildExceptionChain(finalException))
+                .WithData("StackTrace", finalException.StackTrace ?? "(sin stack)");
         }
+        */
+        throw finalException;
     }
 
     private Task ExecuteImageOperationAsync(Guid listingId, string operationName, Func<Listing, Task> operation)
@@ -1072,24 +1210,22 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// </summary>
     private static bool IsConcurrencyException(Exception ex)
     {
-        // Verificar el tipo por nombre (para evitar dependencia directa de EF Core)
         var typeName = ex.GetType().Name;
-        if (typeName == "DbUpdateConcurrencyException" || typeName == "InvalidOperationException")
+        if (string.Equals(typeName, "DbUpdateConcurrencyException", StringComparison.Ordinal))
         {
-            // Verificar que sea realmente un error de tracking/concurrencia por el mensaje
-            if (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase) ||
-                ex.Message.Contains("already being tracked", StringComparison.OrdinalIgnoreCase) ||
-                ex.Message.Contains("expected to affect 1 row(s), but actually affected 0 row(s)", StringComparison.OrdinalIgnoreCase) ||
-                ex.Message.Contains("concurrency", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            return true;
         }
-        
-        // Verificar mensaje de excepcion directamente (fallback)
-        if (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("already being tracked", StringComparison.OrdinalIgnoreCase) ||
-            ex.Message.Contains("expected to affect 1 row(s), but actually affected 0 row(s)", StringComparison.OrdinalIgnoreCase) ||
+
+        // Verificar el tipo por nombre (para evitar dependencia directa de EF Core en InnerExceptions)
+        if (typeName == "InvalidOperationException" &&
+            (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase) ||
+             ex.Message.Contains("already being tracked", StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        // Verificar mensaje de excepcion directamente (fallback) buscando pattern clásico de filas afectadas
+        if (ex.Message.Contains("expected to affect 1 row(s), but actually affected 0 row(s)", StringComparison.OrdinalIgnoreCase) ||
             ex.Message.Contains("concurrency", StringComparison.OrdinalIgnoreCase))
         {
             return true;

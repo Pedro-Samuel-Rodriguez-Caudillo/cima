@@ -24,6 +24,12 @@ public class ImageStorageOptions
         /// Example for azurite: http://127.0.0.1:10000/devstoreaccount1
         /// </summary>
         public string? PublicBaseUrl { get; set; }
+        
+        /// <summary>
+        /// Optional proxy base URL for serving images via HTTPS when PublicBaseUrl uses HTTP.
+        /// Example: https://localhost:44350
+        /// </summary>
+        public string? ProxyBaseUrl { get; set; }
     }
 }
 

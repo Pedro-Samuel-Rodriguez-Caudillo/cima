@@ -83,6 +83,10 @@ public class ListingImageLockService : IListingImageLockService, ISingletonDepen
             _disposed = true;
 
             _entry.Semaphore.Release();
+            
+            // #region agent log
+            _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingImageLockService.cs:90", message = "Lock RELEASED", data = new { listingId = _listingId, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+            // #endregion
 
             // Decrementar contador y limpiar si nadie mas lo usa
             if (Interlocked.Decrement(ref _entry.ReferenceCount) == 0)
@@ -96,9 +100,18 @@ public class ListingImageLockService : IListingImageLockService, ISingletonDepen
 
     public async Task<IListingImageLockHandle> AcquireAsync(Guid listingId, CancellationToken cancellationToken = default)
     {
+        // #region agent log
+        var _lockReqId = Guid.NewGuid().ToString("N").Substring(0, 8);
+        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingImageLockService.cs:99", message = "Lock ACQUIRE requested", data = new { listingId, _lockReqId, threadId = Environment.CurrentManagedThreadId, activeLocks = _locks.Count }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+        // #endregion
+        
         // Obtener o crear entry, incrementando el contador atomicamente
         var entry = _locks.GetOrAdd(listingId, _ => new LockEntry());
-        Interlocked.Increment(ref entry.ReferenceCount);
+        var refCount = Interlocked.Increment(ref entry.ReferenceCount);
+        
+        // #region agent log
+        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingImageLockService.cs:108", message = "Lock entry obtained", data = new { listingId, _lockReqId, refCount, semaphoreCurrentCount = entry.Semaphore.CurrentCount }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+        // #endregion
 
         try
         {
@@ -109,6 +122,9 @@ public class ListingImageLockService : IListingImageLockService, ISingletonDepen
 
             if (!acquired)
             {
+                // #region agent log
+                _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingImageLockService.cs:120", message = "Lock TIMEOUT", data = new { listingId, _lockReqId, timeoutSeconds = LockTimeoutSeconds }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+                // #endregion
                 // Decrementar y limpiar si fallamos
                 if (Interlocked.Decrement(ref entry.ReferenceCount) == 0)
                 {
@@ -118,6 +134,9 @@ public class ListingImageLockService : IListingImageLockService, ISingletonDepen
                     $"No se pudo obtener el lock para el listing {listingId} despues de {LockTimeoutSeconds} segundos");
             }
 
+            // #region agent log
+            _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingImageLockService.cs:133", message = "Lock ACQUIRED successfully", data = new { listingId, _lockReqId, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
+            // #endregion
             return new LockHandle(this, listingId, entry);
         }
         catch (OperationCanceledException)
