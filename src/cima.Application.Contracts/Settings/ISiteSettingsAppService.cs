@@ -6,6 +6,8 @@ namespace cima.Settings;
 public interface ISiteSettingsAppService : IApplicationService
 {
     Task<SiteSettingsDto> GetAsync();
+
+    Task<PublicSiteSettingsDto> GetPublicAsync();
     
     Task UpdateEmailSettingsAsync(UpdateEmailSettingsDto input);
     

@@ -3,13 +3,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace cima.Settings;
 
-public static class EmailProviderNames
-{
-    public const string AzureCommunicationServices = "AzureCommunicationServices";
-    public const string Smtp = "Smtp";
-    public const string Brevo = "Brevo";
-}
-
 public class SiteSettingsDto
 {
     // Email Settings
@@ -47,6 +40,25 @@ public class SiteSettingsDto
     public string? FacebookUrl { get; set; }
     public string? InstagramUrl { get; set; }
     public string? LinkedInUrl { get; set; }
+    public string? BusinessHoursWeekday { get; set; }
+    public string? BusinessHoursSaturday { get; set; }
+    public string? BusinessHoursSunday { get; set; }
+}
+
+public class PublicSiteSettingsDto
+{
+    public string? BusinessName { get; set; }
+    public string? ContactPhone { get; set; }
+    public string? ContactEmail { get; set; }
+    public string? Address { get; set; }
+
+    public bool WhatsAppEnabled { get; set; }
+    public string? WhatsAppUrl { get; set; }
+
+    public string? FacebookUrl { get; set; }
+    public string? InstagramUrl { get; set; }
+    public string? LinkedInUrl { get; set; }
+
     public string? BusinessHoursWeekday { get; set; }
     public string? BusinessHoursSaturday { get; set; }
     public string? BusinessHoursSunday { get; set; }

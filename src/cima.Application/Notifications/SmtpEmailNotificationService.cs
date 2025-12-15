@@ -11,18 +11,24 @@ using Volo.Abp.Settings;
 namespace cima.Notifications;
 
 /// <summary>
-/// Implementación del servicio de notificaciones por email usando SMTP
+/// Implementación del servicio de notificaciones por email usando SMTP.
+/// Se utiliza como proveedor dentro de <see cref="SwitchingEmailNotificationService"/>.
 /// </summary>
-public class SmtpEmailNotificationService : IEmailNotificationService, ITransientDependency
+public class SmtpEmailNotificationService : IEmailDeliveryProvider, ITransientDependency
 {
+    public string Name => EmailProviderNames.Smtp;
+
     private readonly IConfiguration _configuration;
+    private readonly ISettingProvider _settingProvider;
     private readonly ILogger<SmtpEmailNotificationService> _logger;
 
     public SmtpEmailNotificationService(
         IConfiguration configuration,
+        ISettingProvider settingProvider,
         ILogger<SmtpEmailNotificationService> logger)
     {
         _configuration = configuration;
+        _settingProvider = settingProvider;
         _logger = logger;
     }
 
@@ -161,15 +167,15 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
 
     private async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
-        var smtpSettings = _configuration.GetSection("Email:Smtp");
-        
-        var host = smtpSettings["Host"];
-        var port = int.Parse(smtpSettings["Port"] ?? "587");
-        var userName = smtpSettings["UserName"];
-        var password = smtpSettings["Password"];
-        var fromAddress = smtpSettings["FromAddress"] ?? userName;
-        var fromName = smtpSettings["FromName"] ?? "4cima";
-        var enableSsl = bool.Parse(smtpSettings["EnableSsl"] ?? "true");
+        var host = await GetSettingOrConfigAsync(SiteSettingNames.SmtpHost, "Email:Smtp:Host");
+        var portValue = await GetSettingOrConfigAsync(SiteSettingNames.SmtpPort, "Email:Smtp:Port");
+        var userName = await GetSettingOrConfigAsync(SiteSettingNames.SmtpUserName, "Email:Smtp:UserName");
+        var password = await GetSettingOrConfigAsync(SiteSettingNames.SmtpPassword, "Email:Smtp:Password");
+        var fromAddress = await GetSettingOrConfigAsync(SiteSettingNames.SmtpFromAddress, "Email:Smtp:FromAddress") ?? userName;
+        var fromName = await GetSettingOrConfigAsync(SiteSettingNames.SmtpFromName, "Email:Smtp:FromName") ?? "4cima";
+        var enableSslValue = await GetSettingOrConfigAsync(SiteSettingNames.SmtpEnableSsl, "Email:Smtp:EnableSsl");
+        var enableSsl = bool.TryParse(enableSslValue, out var parsedSsl) ? parsedSsl : true;
+        var port = int.TryParse(portValue, out var parsedPort) ? parsedPort : 587;
 
         if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(userName) || string.IsNullOrWhiteSpace(fromAddress))
         {
@@ -203,5 +209,16 @@ public class SmtpEmailNotificationService : IEmailNotificationService, ITransien
             _logger.LogError(ex, "Error al enviar email a {To}: {Subject}", to, subject);
             // No lanzar excepción para no interrumpir el flujo principal
         }
+    }
+
+    private async Task<string?> GetSettingOrConfigAsync(string settingName, string configurationPath)
+    {
+        var settingValue = await _settingProvider.GetOrNullAsync(settingName);
+        if (!string.IsNullOrWhiteSpace(settingValue))
+        {
+            return settingValue;
+        }
+
+        return _configuration[configurationPath];
     }
 }

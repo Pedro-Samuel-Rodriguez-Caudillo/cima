@@ -3,35 +3,99 @@ using Volo.Abp.Settings;
 namespace cima.Settings;
 
 /// <summary>
-/// Definición de settings del sitio para ABP
+/// Definicion de settings del sitio para ABP.
 /// </summary>
 public class SiteSettingDefinitionProvider : SettingDefinitionProvider
 {
     public override void Define(ISettingDefinitionContext context)
     {
-        // Email Settings
         context.Add(
             new SettingDefinition(
+                SiteSettingNames.EmailProvider,
+                defaultValue: EmailProviderNames.AzureCommunicationServices,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
                 SiteSettingNames.AdminNotificationEmail,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: false,
                 isEncrypted: false
             ),
             new SettingDefinition(
                 SiteSettingNames.AzureEmailConnectionString,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: false,
-                isEncrypted: true // Encriptar datos sensibles
+                isEncrypted: true
             ),
             new SettingDefinition(
                 SiteSettingNames.AzureEmailSenderAddress,
-                defaultValue: "",
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpHost,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpPort,
+                defaultValue: "587",
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpUserName,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpPassword,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: true
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpFromAddress,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpFromName,
+                defaultValue: "4cima",
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.SmtpEnableSsl,
+                defaultValue: "true",
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.BrevoApiKey,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: true
+            ),
+            new SettingDefinition(
+                SiteSettingNames.BrevoSenderEmail,
+                defaultValue: string.Empty,
+                isVisibleToClients: false,
+                isEncrypted: false
+            ),
+            new SettingDefinition(
+                SiteSettingNames.BrevoSenderName,
+                defaultValue: "4cima",
                 isVisibleToClients: false,
                 isEncrypted: false
             )
         );
 
-        // WhatsApp Settings
         context.Add(
             new SettingDefinition(
                 SiteSettingNames.WhatsAppEnabled,
@@ -40,17 +104,16 @@ public class SiteSettingDefinitionProvider : SettingDefinitionProvider
             ),
             new SettingDefinition(
                 SiteSettingNames.WhatsAppNumber,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             ),
             new SettingDefinition(
                 SiteSettingNames.WhatsAppDefaultMessage,
-                defaultValue: "Hola, me interesa obtener más información sobre sus propiedades.",
+                defaultValue: "Hola, me interesa obtener mas informacion sobre sus propiedades.",
                 isVisibleToClients: true
             )
         );
 
-        // Business Info (visible to clients)
         context.Add(
             new SettingDefinition(
                 SiteSettingNames.BusinessName,
@@ -59,41 +122,39 @@ public class SiteSettingDefinitionProvider : SettingDefinitionProvider
             ),
             new SettingDefinition(
                 SiteSettingNames.ContactPhone,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             ),
             new SettingDefinition(
                 SiteSettingNames.ContactEmail,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             ),
             new SettingDefinition(
                 SiteSettingNames.Address,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             )
         );
 
-        // Social Media (visible to clients)
         context.Add(
             new SettingDefinition(
                 SiteSettingNames.FacebookUrl,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             ),
             new SettingDefinition(
                 SiteSettingNames.InstagramUrl,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             ),
             new SettingDefinition(
                 SiteSettingNames.LinkedInUrl,
-                defaultValue: "",
+                defaultValue: string.Empty,
                 isVisibleToClients: true
             )
         );
 
-        // Business Hours (visible to clients)
         context.Add(
             new SettingDefinition(
                 SiteSettingNames.BusinessHoursWeekday,
@@ -102,7 +163,7 @@ public class SiteSettingDefinitionProvider : SettingDefinitionProvider
             ),
             new SettingDefinition(
                 SiteSettingNames.BusinessHoursSaturday,
-                defaultValue: "Sábado: 10:00 AM - 2:00 PM",
+                defaultValue: "Sabado: 10:00 AM - 2:00 PM",
                 isVisibleToClients: true
             ),
             new SettingDefinition(

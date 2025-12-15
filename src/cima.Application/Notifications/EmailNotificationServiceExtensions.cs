@@ -5,38 +5,27 @@ using Volo.Abp.Modularity;
 namespace cima.Notifications;
 
 /// <summary>
-/// Configuración del servicio de notificaciones por email.
-/// Soporta múltiples proveedores: AzureCommunicationServices, SMTP
+/// Configuracion del servicio de notificaciones por email.
+/// Soporta multiples proveedores y delega la seleccion a settings/configuracion.
 /// </summary>
 public static class EmailNotificationServiceExtensions
 {
     /// <summary>
-    /// Registra el servicio de notificaciones por email según configuración.
-    /// Usa Email:Provider para determinar qué implementación usar.
+    /// Registra el servicio de notificaciones por email.
     /// </summary>
     public static IServiceCollection AddEmailNotificationService(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Registrar servicio de plantillas
+        _ = configuration; // Mantener simetria con otros modulos
+
         services.AddTransient<IEmailTemplateService, EmailTemplateService>();
-        
-        var provider = configuration["Email:Provider"]?.ToLowerInvariant() ?? "smtp";
+        services.AddHttpClient<BrevoEmailNotificationService>();
+        services.AddTransient<IEmailDeliveryProvider, AzureEmailNotificationService>();
+        services.AddTransient<IEmailDeliveryProvider, SmtpEmailNotificationService>();
+        services.AddTransient<IEmailDeliveryProvider, BrevoEmailNotificationService>();
 
-        switch (provider)
-        {
-            case "azurecommunicationservices":
-            case "azure":
-            case "acs":
-                services.AddTransient<IEmailNotificationService, AzureEmailNotificationService>();
-                break;
-            
-            case "smtp":
-            default:
-                services.AddTransient<IEmailNotificationService, SmtpEmailNotificationService>();
-                break;
-        }
-
+        services.AddTransient<IEmailNotificationService, SwitchingEmailNotificationService>();
         return services;
     }
 }

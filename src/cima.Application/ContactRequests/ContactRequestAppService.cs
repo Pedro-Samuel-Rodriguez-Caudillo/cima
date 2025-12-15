@@ -6,6 +6,7 @@ using cima.Domain.Entities;
 using cima.Domain.Shared;
 using cima.Notifications;
 using cima.Permissions;
+using cima.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Settings;
 
 namespace cima.ContactRequests;
 
@@ -23,6 +25,7 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     private readonly IRepository<Listing, Guid> _propertyRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IEmailNotificationService _emailService;
+    private readonly ISettingProvider _settingProvider;
     private readonly IConfiguration _configuration;
 
     public ContactRequestAppService(
@@ -30,12 +33,14 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
         IRepository<Listing, Guid> propertyRepository,
         IRepository<Architect, Guid> architectRepository,
         IEmailNotificationService emailService,
+        ISettingProvider settingProvider,
         IConfiguration configuration)
     {
         _contactRequestRepository = contactRequestRepository;
         _propertyRepository = propertyRepository;
         _architectRepository = architectRepository;
         _emailService = emailService;
+        _settingProvider = settingProvider;
         _configuration = configuration;
     }
 
@@ -121,7 +126,9 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
         try
         {
             var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
-            var adminEmail = _configuration["Email:AdminNotification"] ?? _configuration["Email:Smtp:FromAddress"];
+            var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
+                ?? _configuration["Email:AdminNotification"]
+                ?? _configuration["Email:Smtp:FromAddress"];
 
             // Notificar al admin
             if (!string.IsNullOrEmpty(adminEmail))

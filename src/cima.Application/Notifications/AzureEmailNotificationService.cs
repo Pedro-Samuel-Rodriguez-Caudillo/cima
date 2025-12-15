@@ -11,15 +11,13 @@ using Volo.Abp.Settings;
 namespace cima.Notifications;
 
 /// <summary>
-/// Implementación del servicio de notificaciones usando Azure Communication Services Email
-/// Tier gratuito: 100 emails/día
-/// 
-/// La configuración se obtiene de:
-/// 1. Settings de la BD (configurados por admin)
-/// 2. Fallback a appsettings.json
+/// Implementacion del proveedor de notificaciones usando Azure Communication Services Email.
+/// Se registra como estrategia concreta y es seleccionado por <see cref="SwitchingEmailNotificationService"/>.
 /// </summary>
-public class AzureEmailNotificationService : IEmailNotificationService, ITransientDependency
+public class AzureEmailNotificationService : IEmailDeliveryProvider, ITransientDependency
 {
+    public string Name => EmailProviderNames.AzureCommunicationServices;
+
     private readonly IConfiguration _configuration;
     private readonly ISettingProvider _settingProvider;
     private readonly ILogger<AzureEmailNotificationService> _logger;
@@ -38,10 +36,10 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
     {
         // Obtener email de admin desde settings (prioridad) o usar el del DTO
         var adminEmail = await GetAdminEmailAsync() ?? notification.AdminEmail;
-        
+
         if (string.IsNullOrEmpty(adminEmail))
         {
-            _logger.LogWarning("No hay email de admin configurado. Notificación no enviada.");
+            _logger.LogWarning("No hay email de admin configurado. Notificacion no enviada.");
             return;
         }
 
@@ -82,12 +80,12 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
             return settingEmail;
         }
 
-        // Fallback a configuración
+        // Fallback a configuracion
         return _configuration["Email:AdminNotification"];
     }
 
     /// <summary>
-    /// Obtiene configuración de Azure CS desde settings o config
+    /// Obtiene configuracion de Azure CS desde settings o config
     /// </summary>
     private async Task<(string? connectionString, string? senderAddress)> GetAzureConfigAsync()
     {
@@ -95,7 +93,7 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
         var connectionString = await _settingProvider.GetOrNullAsync(SiteSettingNames.AzureEmailConnectionString);
         var senderAddress = await _settingProvider.GetOrNullAsync(SiteSettingNames.AzureEmailSenderAddress);
 
-        // Fallback a configuración si no hay en settings
+        // Fallback a configuracion si no hay en settings
         if (string.IsNullOrEmpty(connectionString))
         {
             connectionString = _configuration["Email:AzureCommunicationServices:ConnectionString"];
@@ -135,12 +133,12 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
                 emailMessage);
 
             _logger.LogInformation(
-                "Email enviado exitosamente via Azure CS a {To}: {Subject}. OperationId: {OperationId}", 
+                "Email enviado exitosamente via Azure CS a {To}: {Subject}. OperationId: {OperationId}",
                 to, subject, emailSendOperation.Id);
         }
         catch (RequestFailedException ex)
         {
-            _logger.LogError(ex, "Error de Azure Communication Services al enviar email a {To}: {Subject}. Code: {Code}", 
+            _logger.LogError(ex, "Error de Azure Communication Services al enviar email a {To}: {Subject}. Code: {Code}",
                 to, subject, ex.ErrorCode);
         }
         catch (Exception ex)
@@ -149,7 +147,7 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
         }
     }
 
-    private static string BuildContactRequestNotificationHtml(ContactRequestNotificationDto notification)
+    internal static string BuildContactRequestNotificationHtml(ContactRequestNotificationDto notification)
     {
         return $@"
 <!DOCTYPE html>
@@ -175,14 +173,14 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
             </tr>
             {(string.IsNullOrEmpty(notification.CustomerPhone) ? "" : $@"
             <tr>
-                <td style='padding: 12px; font-weight: 600; color: #64748b;'>Teléfono:</td>
+                <td style='padding: 12px; font-weight: 600; color: #64748b;'>Telefono:</td>
                 <td style='padding: 12px;'><a href='tel:{notification.CustomerPhone}' style='color: #1a365d;'>{notification.CustomerPhone}</a></td>
             </tr>")}
         </table>
         
         {(string.IsNullOrEmpty(notification.PropertyTitle) ? "" : $@"
         <div style='background: white; padding: 15px; border-radius: 6px; margin-bottom: 20px;'>
-            <h3 style='color: #1a365d; margin: 0 0 10px 0; font-size: 16px;'>Propiedad de interés</h3>
+            <h3 style='color: #1a365d; margin: 0 0 10px 0; font-size: 16px;'>Propiedad de interes</h3>
             <a href='{notification.PropertyUrl}' style='color: #1a365d; font-weight: 500;'>{System.Net.WebUtility.HtmlEncode(notification.PropertyTitle)}</a>
         </div>")}
         
@@ -193,13 +191,13 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
     </div>
     
     <p style='text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px;'>
-        Este email fue enviado automáticamente desde 4cima
+        Este email fue enviado automaticamente desde 4cima
     </p>
 </body>
 </html>";
     }
 
-    private static string BuildContactRequestConfirmationHtml(ContactRequestConfirmationDto confirmation)
+    internal static string BuildContactRequestConfirmationHtml(ContactRequestConfirmationDto confirmation)
     {
         return $@"
 <!DOCTYPE html>
@@ -211,33 +209,33 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
     </div>
     
     <div style='padding: 30px; background: #f8fafc; border-radius: 0 0 8px 8px;'>
-        <h2 style='color: #1a365d; margin-top: 0;'>¡Gracias por contactarnos, {System.Net.WebUtility.HtmlEncode(confirmation.CustomerName)}!</h2>
+        <h2 style='color: #1a365d; margin-top: 0;'>Gracias por contactarnos, {System.Net.WebUtility.HtmlEncode(confirmation.CustomerName)}!</h2>
         
         <p style='color: #475569; line-height: 1.6;'>
             Hemos recibido tu mensaje{(string.IsNullOrEmpty(confirmation.PropertyTitle) ? "" : $" sobre la propiedad <strong>{System.Net.WebUtility.HtmlEncode(confirmation.PropertyTitle)}</strong>")}.
         </p>
         
         <p style='color: #475569; line-height: 1.6;'>
-            Nuestro equipo revisará tu solicitud y te contactaremos a la brevedad posible.
+            Nuestro equipo revisara tu solicitud y te contactaremos a la brevedad posible.
         </p>
         
         <div style='background: white; padding: 20px; border-radius: 6px; margin-top: 25px;'>
             <p style='margin: 0; color: #64748b; font-size: 14px;'>
-                <strong>Horario de atención:</strong><br>
+                <strong>Horario de atencion:</strong><br>
                 Lunes a Viernes: 9:00 AM - 6:00 PM<br>
-                Sábado: 10:00 AM - 2:00 PM
+                Sabado: 10:00 AM - 2:00 PM
             </p>
         </div>
     </div>
     
     <p style='text-align: center; color: #94a3b8; font-size: 12px; margin-top: 20px;'>
-        4cima · Arquitectura · Diseño · Exclusividad
+        4cima - Arquitectura - Diseno - Exclusividad
     </p>
 </body>
 </html>";
     }
 
-    private static string BuildArchitectWelcomeHtml(ArchitectWelcomeEmailDto welcome)
+    internal static string BuildArchitectWelcomeHtml(ArchitectWelcomeEmailDto welcome)
     {
         return $@"
 <!DOCTYPE html>
@@ -250,7 +248,7 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
     </div>
     
     <div style='padding: 30px; background: #f8fafc; border-radius: 0 0 8px 8px;'>
-        <h2 style='color: #1a365d; margin-top: 0;'>¡Bienvenido, {System.Net.WebUtility.HtmlEncode(welcome.ArchitectName)}!</h2>
+        <h2 style='color: #1a365d; margin-top: 0;'>Bienvenido, {System.Net.WebUtility.HtmlEncode(welcome.ArchitectName)}!</h2>
         
         <p style='color: #475569; line-height: 1.6;'>
             Tu cuenta de arquitecto en 4cima ha sido creada exitosamente.
@@ -258,19 +256,19 @@ public class AzureEmailNotificationService : IEmailNotificationService, ITransie
         
         <div style='background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0;'>
             <p style='margin: 0; color: #92400e; font-size: 14px;'>
-                <strong>?? Importante:</strong> Por seguridad, deberás cambiar tu contraseña temporal en tu primer inicio de sesión.
+                <strong>Importante:</strong> Por seguridad, deberas cambiar tu contrasena temporal en tu primer inicio de sesion.
             </p>
         </div>
         
         <div style='background: white; padding: 20px; border-radius: 6px;'>
             <h3 style='margin-top: 0; color: #1a365d; font-size: 16px;'>Credenciales de acceso</h3>
             <p style='margin: 8px 0; color: #475569;'><strong>Email:</strong> {welcome.ArchitectEmail}</p>
-            <p style='margin: 8px 0; color: #475569;'><strong>Contraseña temporal:</strong> <code style='background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace;'>{welcome.TemporaryPassword}</code></p>
+            <p style='margin: 8px 0; color: #475569;'><strong>Contrasena temporal:</strong> <code style='background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-family: monospace;'>{welcome.TemporaryPassword}</code></p>
         </div>
         
         <div style='text-align: center; margin-top: 25px;'>
             <a href='{welcome.LoginUrl}' style='display: inline-block; background: linear-gradient(135deg, #1a365d 0%, #2d4a7c 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600;'>
-                Iniciar Sesión
+                Iniciar Sesion
             </a>
         </div>
     </div>

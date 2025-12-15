@@ -17,6 +17,7 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
     <PackageReference Include="Bogus" Version="35.6.5" />
     <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="9.3.6" />
     <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="9.3.6" />
