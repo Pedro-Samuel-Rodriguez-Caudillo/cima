@@ -556,17 +556,11 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
     {
-        // #region agent log
-        var _debugReqId = Guid.NewGuid().ToString("N").Substring(0, 8);
-        var _lockAcquireStart = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:558", message = "AddImageAsync ENTRY", data = new { listingId, reqId = _debugReqId, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A,C" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
-        // #endregion
+
         
         // Adquirir lock exclusivo para este listing - serializa todas las operaciones de imagen
         await using var lockHandle = await _listingImageLockService.AcquireAsync(listingId);
-        // #region agent log
-        _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:565", message = "Lock ACQUIRED", data = new { listingId, reqId = _debugReqId, waitMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - _lockAcquireStart, threadId = Environment.CurrentManagedThreadId }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "A" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
-        // #endregion
+
 
         UploadImageResult? storedImage = null;
         var uploadedNewImage = false;
