@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using cima.Images;
+using cima.Notifications;
 
 namespace cima;
 
@@ -39,6 +40,8 @@ public class cimaApplicationModule : AbpModule
         {
             configuration.GetSection("ImageStorage").Bind(options);
         });
+
+        context.Services.AddEmailNotificationService(configuration);
 
         context.Services.AddTransient<LocalImageStorageService>();
         context.Services.AddTransient<AzureBlobImageStorageService>();

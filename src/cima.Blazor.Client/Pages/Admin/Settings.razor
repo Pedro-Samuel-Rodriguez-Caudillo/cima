@@ -1,4 +1,5 @@
 @page "/admin/settings"
+@using System
 @using cima.Settings
 @using cima.Permissions
 @attribute [Authorize(cimaPermissions.Settings.Manage)]
@@ -61,23 +62,87 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    @L["Admin:Settings:Email:Connection"]
-                                </label>
-                                <InputText @bind-Value="EmailSettings.AzureEmailConnectionString" 
-                                           class="cima-input font-mono text-sm" 
-                                           placeholder="endpoint=https://xxx.communication.azure.com/;accesskey=..." />
-                                <p class="text-xs text-gray-500 mt-1">@L["Admin:Settings:Email:ConnectionHint"]</p>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                                <select class="cima-input" @bind="EmailSettings.EmailProvider">
+                                    <option value="@EmailProviderNames.AzureCommunicationServices">Azure Communication Services</option>
+                                    <option value="@EmailProviderNames.Smtp">SMTP / Relay</option>
+                                    <option value="@EmailProviderNames.Brevo">Brevo (Sendinblue)</option>
+                                </select>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    @L["Admin:Settings:Email:Sender"]
-                                </label>
-                                <InputText @bind-Value="EmailSettings.AzureEmailSenderAddress" 
-                                           class="cima-input" 
-                                           placeholder="DoNotReply@xxx.azurecomm.net" />
-                            </div>
+                            @if (IsAzureProvider)
+                            {
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        @L["Admin:Settings:Email:Connection"]
+                                    </label>
+                                    <InputText @bind-Value="EmailSettings.AzureEmailConnectionString" 
+                                               class="cima-input font-mono text-sm" 
+                                               placeholder="endpoint=https://xxx.communication.azure.com/;accesskey=..." />
+                                    <p class="text-xs text-gray-500 mt-1">@L["Admin:Settings:Email:ConnectionHint"]</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        @L["Admin:Settings:Email:Sender"]
+                                    </label>
+                                    <InputText @bind-Value="EmailSettings.AzureEmailSenderAddress" 
+                                               class="cima-input" 
+                                               placeholder="DoNotReply@xxx.azurecomm.net" />
+                                </div>
+                            }
+
+                            @if (IsSmtpProvider)
+                            {
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                                        <InputText @bind-Value="EmailSettings.SmtpHost" class="cima-input" placeholder="smtp.mi-dominio.com" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label>
+                                        <InputNumber @bind-Value="EmailSettings.SmtpPort" class="cima-input" placeholder="587" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                                        <InputText @bind-Value="EmailSettings.SmtpUserName" class="cima-input" placeholder="apikey/usuario" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña / API key</label>
+                                        <InputText @bind-Value="EmailSettings.SmtpPassword" type="password" class="cima-input" placeholder="****************" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Remitente (email)</label>
+                                        <InputText @bind-Value="EmailSettings.SmtpFromAddress" class="cima-input" placeholder="notificaciones@4cima.com" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre remitente</label>
+                                        <InputText @bind-Value="EmailSettings.SmtpFromName" class="cima-input" placeholder="4cima" />
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <InputCheckbox @bind-Value="EmailSettings.SmtpEnableSsl" class="w-5 h-5" />
+                                        <span class="text-sm text-gray-700">Usar SSL/TLS</span>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (IsBrevoProvider)
+                            {
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                        <InputText @bind-Value="EmailSettings.BrevoApiKey" class="cima-input font-mono text-xs" placeholder="xkeysib-..." />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Remitente (email)</label>
+                                        <InputText @bind-Value="EmailSettings.BrevoSenderEmail" class="cima-input" placeholder="notificaciones@4cima.com" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre remitente</label>
+                                        <InputText @bind-Value="EmailSettings.BrevoSenderName" class="cima-input" placeholder="4cima" />
+                                    </div>
+                                </div>
+                            }
 
                             <div class="flex gap-3 pt-4">
                                 <button type="submit" class="cima-btn cima-btn-primary" disabled="@IsSavingEmail">
@@ -148,7 +213,7 @@
                                 <InputTextArea @bind-Value="WhatsAppSettings.DefaultMessage" 
                                                class="cima-input" 
                                                rows="3"
-                                               placeholder="Hola, me interesa obtener más información..."
+                                               placeholder="Hola, me interesa obtener mas informacion..."
                                                disabled="@(!WhatsAppSettings.Enabled)" />
                             </div>
 
@@ -277,6 +342,9 @@
     private UpdateEmailSettingsDto EmailSettings { get; set; } = new();
     private UpdateWhatsAppSettingsDto WhatsAppSettings { get; set; } = new();
     private UpdateBusinessInfoDto BusinessInfo { get; set; } = new();
+    private bool IsAzureProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.AzureCommunicationServices, StringComparison.OrdinalIgnoreCase);
+    private bool IsSmtpProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.Smtp, StringComparison.OrdinalIgnoreCase);
+    private bool IsBrevoProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.Brevo, StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
@@ -295,8 +363,19 @@
             EmailSettings = new UpdateEmailSettingsDto
             {
                 AdminNotificationEmail = CurrentSettings.AdminNotificationEmail ?? "",
+                EmailProvider = CurrentSettings.EmailProvider ?? EmailProviderNames.AzureCommunicationServices,
                 AzureEmailConnectionString = CurrentSettings.AzureEmailConnectionString,
-                AzureEmailSenderAddress = CurrentSettings.AzureEmailSenderAddress
+                AzureEmailSenderAddress = CurrentSettings.AzureEmailSenderAddress,
+                SmtpHost = CurrentSettings.SmtpHost,
+                SmtpPort = CurrentSettings.SmtpPort,
+                SmtpUserName = CurrentSettings.SmtpUserName,
+                SmtpPassword = CurrentSettings.SmtpPassword,
+                SmtpFromAddress = CurrentSettings.SmtpFromAddress,
+                SmtpFromName = CurrentSettings.SmtpFromName,
+                SmtpEnableSsl = CurrentSettings.SmtpEnableSsl,
+                BrevoApiKey = CurrentSettings.BrevoApiKey,
+                BrevoSenderEmail = CurrentSettings.BrevoSenderEmail,
+                BrevoSenderName = CurrentSettings.BrevoSenderName
             };
 
             WhatsAppSettings = new UpdateWhatsAppSettingsDto

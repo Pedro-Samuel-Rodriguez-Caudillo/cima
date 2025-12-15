@@ -8,9 +8,20 @@ public static class SiteSettingNames
     private const string Prefix = "cima.Site";
     
     // Email
+    public const string EmailProvider = Prefix + ".EmailProvider";
     public const string AdminNotificationEmail = Prefix + ".AdminNotificationEmail";
     public const string AzureEmailConnectionString = Prefix + ".AzureEmailConnectionString";
     public const string AzureEmailSenderAddress = Prefix + ".AzureEmailSenderAddress";
+    public const string SmtpHost = Prefix + ".SmtpHost";
+    public const string SmtpPort = Prefix + ".SmtpPort";
+    public const string SmtpUserName = Prefix + ".SmtpUserName";
+    public const string SmtpPassword = Prefix + ".SmtpPassword";
+    public const string SmtpFromAddress = Prefix + ".SmtpFromAddress";
+    public const string SmtpFromName = Prefix + ".SmtpFromName";
+    public const string SmtpEnableSsl = Prefix + ".SmtpEnableSsl";
+    public const string BrevoApiKey = Prefix + ".BrevoApiKey";
+    public const string BrevoSenderEmail = Prefix + ".BrevoSenderEmail";
+    public const string BrevoSenderName = Prefix + ".BrevoSenderName";
     
     // WhatsApp
     public const string WhatsAppEnabled = Prefix + ".WhatsAppEnabled";

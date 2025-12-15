@@ -3,166 +3,118 @@ using System.ComponentModel.DataAnnotations;
 
 namespace cima.Settings;
 
-/// <summary>
-/// DTO para configuración del sitio (admin)
-/// </summary>
+public static class EmailProviderNames
+{
+    public const string AzureCommunicationServices = "AzureCommunicationServices";
+    public const string Smtp = "Smtp";
+    public const string Brevo = "Brevo";
+}
+
 public class SiteSettingsDto
 {
-    // === Configuración de Contacto ===
-    
-    /// <summary>
-    /// Email principal para recibir notificaciones de contacto
-    /// </summary>
-    [EmailAddress]
+    // Email Settings
     public string? AdminNotificationEmail { get; set; }
+    public string? EmailProvider { get; set; }
     
-    /// <summary>
-    /// Número de WhatsApp para contacto directo (formato internacional sin +)
-    /// Ejemplo: 5215512345678
-    /// </summary>
-    [RegularExpression(@"^\d{10,15}$", ErrorMessage = "Formato inválido. Use solo números, 10-15 dígitos")]
-    public string? WhatsAppNumber { get; set; }
-    
-    /// <summary>
-    /// Mensaje predeterminado para WhatsApp
-    /// </summary>
-    [MaxLength(500)]
-    public string? WhatsAppDefaultMessage { get; set; }
-    
-    /// <summary>
-    /// Habilitar botón de WhatsApp en el sitio
-    /// </summary>
-    public bool WhatsAppEnabled { get; set; }
-    
-    // === Configuración de Email (Azure Communication Services) ===
-    
-    /// <summary>
-    /// Connection string de Azure Communication Services
-    /// </summary>
     public string? AzureEmailConnectionString { get; set; }
-    
-    /// <summary>
-    /// Dirección del remitente de Azure CS
-    /// </summary>
-    [EmailAddress]
     public string? AzureEmailSenderAddress { get; set; }
     
-    /// <summary>
-    /// Indica si el email está configurado correctamente
-    /// </summary>
-    public bool IsEmailConfigured => 
-        !string.IsNullOrEmpty(AzureEmailConnectionString) && 
-        !string.IsNullOrEmpty(AzureEmailSenderAddress);
+    public string? SmtpHost { get; set; }
+    public int? SmtpPort { get; set; }
+    public string? SmtpUserName { get; set; }
+    public string? SmtpPassword { get; set; }
+    public string? SmtpFromAddress { get; set; }
+    public string? SmtpFromName { get; set; }
+    public bool SmtpEnableSsl { get; set; }
     
-    /// <summary>
-    /// Indica si WhatsApp está configurado correctamente
-    /// </summary>
-    public bool IsWhatsAppConfigured => 
-        WhatsAppEnabled && 
-        !string.IsNullOrEmpty(WhatsAppNumber);
+    public string? BrevoApiKey { get; set; }
+    public string? BrevoSenderEmail { get; set; }
+    public string? BrevoSenderName { get; set; }
     
-    // === Información del Negocio ===
-    
-    /// <summary>
-    /// Nombre del negocio
-    /// </summary>
-    [MaxLength(100)]
-    public string BusinessName { get; set; } = "4cima";
-    
-    /// <summary>
-    /// Teléfono de contacto (visible en el sitio)
-    /// </summary>
-    [MaxLength(20)]
+    public bool IsEmailConfigured { get; set; }
+
+    // WhatsApp Settings
+    public bool WhatsAppEnabled { get; set; }
+    public string? WhatsAppNumber { get; set; }
+    public string? WhatsAppDefaultMessage { get; set; }
+    public bool IsWhatsAppConfigured { get; set; }
+
+    // Business Info
+    public string? BusinessName { get; set; } = "4cima";
     public string? ContactPhone { get; set; }
-    
-    /// <summary>
-    /// Email de contacto público (visible en el sitio)
-    /// </summary>
-    [EmailAddress]
     public string? ContactEmail { get; set; }
-    
-    /// <summary>
-    /// Dirección física
-    /// </summary>
-    [MaxLength(300)]
     public string? Address { get; set; }
-    
-    // === Redes Sociales ===
-    
-    [MaxLength(200)]
     public string? FacebookUrl { get; set; }
-    
-    [MaxLength(200)]
     public string? InstagramUrl { get; set; }
-    
-    [MaxLength(200)]
     public string? LinkedInUrl { get; set; }
-    
-    // === Horarios ===
-    
-    [MaxLength(100)]
-    public string? BusinessHoursWeekday { get; set; } = "Lunes a Viernes: 9:00 AM - 6:00 PM";
-    
-    [MaxLength(100)]
-    public string? BusinessHoursSaturday { get; set; } = "Sábado: 10:00 AM - 2:00 PM";
-    
-    [MaxLength(100)]
-    public string? BusinessHoursSunday { get; set; } = "Domingo: Cerrado";
+    public string? BusinessHoursWeekday { get; set; }
+    public string? BusinessHoursSaturday { get; set; }
+    public string? BusinessHoursSunday { get; set; }
 }
 
-/// <summary>
-/// DTO para actualizar solo la configuración de email
-/// </summary>
 public class UpdateEmailSettingsDto
 {
+    [Required(ErrorMessage = "El email de notificaciones es requerido")]
+    [EmailAddress(ErrorMessage = "Formato de email invÃ¡lido")]
+    public string AdminNotificationEmail { get; set; } = string.Empty;
+    
     [Required]
-    [EmailAddress]
-    public string AdminNotificationEmail { get; set; } = "";
+    public string EmailProvider { get; set; } = EmailProviderNames.AzureCommunicationServices;
     
     public string? AzureEmailConnectionString { get; set; }
     
     [EmailAddress]
     public string? AzureEmailSenderAddress { get; set; }
+    
+    public string? SmtpHost { get; set; }
+    public int? SmtpPort { get; set; }
+    public string? SmtpUserName { get; set; }
+    public string? SmtpPassword { get; set; }
+    public string? SmtpFromAddress { get; set; }
+    public string? SmtpFromName { get; set; }
+    public bool SmtpEnableSsl { get; set; }
+    
+    public string? BrevoApiKey { get; set; }
+    public string? BrevoSenderEmail { get; set; }
+    public string? BrevoSenderName { get; set; }
 }
 
-/// <summary>
-/// DTO para actualizar solo la configuración de WhatsApp
-/// </summary>
 public class UpdateWhatsAppSettingsDto
 {
     public bool Enabled { get; set; }
     
-    [RegularExpression(@"^\d{10,15}$", ErrorMessage = "Formato inválido. Use solo números, 10-15 dígitos")]
     public string? PhoneNumber { get; set; }
     
     [MaxLength(500)]
-    public string? DefaultMessage { get; set; } = "Hola, me interesa obtener más información sobre sus propiedades.";
+    public string? DefaultMessage { get; set; }
 }
 
-/// <summary>
-/// DTO para actualizar información del negocio
-/// </summary>
 public class UpdateBusinessInfoDto
 {
+    [Required(ErrorMessage = "El nombre del negocio es requerido")]
     [MaxLength(100)]
     public string BusinessName { get; set; } = "4cima";
+    
+    [EmailAddress]
+    [MaxLength(100)]
+    public string? ContactEmail { get; set; }
     
     [MaxLength(20)]
     public string? ContactPhone { get; set; }
     
-    [EmailAddress]
-    public string? ContactEmail { get; set; }
-    
-    [MaxLength(300)]
+    [MaxLength(200)]
     public string? Address { get; set; }
     
     [MaxLength(200)]
+    [Url]
     public string? FacebookUrl { get; set; }
     
     [MaxLength(200)]
+    [Url]
     public string? InstagramUrl { get; set; }
     
     [MaxLength(200)]
+    [Url]
     public string? LinkedInUrl { get; set; }
     
     [MaxLength(100)]
