@@ -24,6 +24,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.DataProtection;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using System;
@@ -227,6 +228,22 @@ public class cimaBlazorModule : AbpModule
 
         // Configurar CascadingAuthenticationState para Blazor Web App
         context.Services.AddCascadingAuthenticationState();
+
+        // ========================================
+        // CONFIGURACIÓN DE DATA PROTECTION (PERSISTENCIA DE LLAVES)
+        // ========================================
+        if (!hostingEnvironment.IsDevelopment())
+        {
+            var dataProtectionBuilder = context.Services.AddDataProtection()
+                .SetApplicationName("cima");
+
+            var azureConnectionString = configuration["ImageStorage:Azure:ConnectionString"];
+            if (!string.IsNullOrWhiteSpace(azureConnectionString))
+            {
+                // Persistir llaves en Azure Blob Storage para evitar errores de Antiforgery al reiniciar
+                dataProtectionBuilder.PersistKeysToAzureBlobStorage(azureConnectionString, "data-protection-keys", "keys.xml");
+            }
+        }
 
         // ========================================
         // CONFIGURACIÓN DE SEGURIDAD DE IDENTITY
