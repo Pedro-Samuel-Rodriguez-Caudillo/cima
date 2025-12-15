@@ -631,6 +631,13 @@ public class cimaBlazorModule : AbpModule
                 logger.LogInformation("Ejecutando MigrateAsync()...");
                 await migrator.MigrateAsync();
                 logger.LogInformation("MigrateAsync() completado");
+
+                logger.LogInformation("Ejecutando SeedDataAsync()...");
+                var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+                await dataSeeder.SeedAsync(new DataSeedContext()
+                    .WithProperty(IdentityDataSeedContributor.AdminEmailPropertyName, cimaConsts.AdminEmailDefaultValue)
+                    .WithProperty(IdentityDataSeedContributor.AdminPasswordPropertyName, cimaConsts.AdminPasswordDefaultValue));
+                logger.LogInformation("SeedDataAsync() completado");
             }
             
             logger.LogInformation("=== MIGRACIONES COMPLETADAS EXITOSAMENTE ===");
