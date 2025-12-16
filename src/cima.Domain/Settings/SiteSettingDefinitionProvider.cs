@@ -12,7 +12,7 @@ public class SiteSettingDefinitionProvider : SettingDefinitionProvider
         context.Add(
             new SettingDefinition(
                 SiteSettingNames.EmailProvider,
-                defaultValue: EmailProviderNames.AzureCommunicationServices,
+                defaultValue: null,
                 isVisibleToClients: false,
                 isEncrypted: false
             ),
