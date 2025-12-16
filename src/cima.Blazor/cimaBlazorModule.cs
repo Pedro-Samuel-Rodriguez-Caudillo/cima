@@ -26,6 +26,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
+using Volo.Abp.AspNetCore.Mvc.AntiForgery;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using System;
@@ -229,6 +230,13 @@ public class cimaBlazorModule : AbpModule
 
         // Configurar CascadingAuthenticationState para Blazor Web App
         context.Services.AddCascadingAuthenticationState();
+
+        Configure<AbpAntiForgeryOptions>(options =>
+        {
+            options.AutoValidate = false;
+            options.TokenCookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.TokenCookie.SameSite = SameSiteMode.None;
+        });
 
         // ========================================
         // CONFIGURACIÓN DE DATA PROTECTION (PERSISTENCIA DE LLAVES)
