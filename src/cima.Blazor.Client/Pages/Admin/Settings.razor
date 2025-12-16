@@ -414,6 +414,9 @@
     {
         try
         {
+            // Debug: Check if method is entered
+            // Snackbar.Add("Debug: Submitting...", Severity.Info); 
+            
             IsSavingEmail = true;
             await SettingsService.UpdateEmailSettingsAsync(EmailSettings);
             Snackbar.Add(L["Admin:Settings:Email:Saved"], Severity.Success);
