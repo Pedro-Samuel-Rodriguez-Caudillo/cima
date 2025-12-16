@@ -6,12 +6,12 @@ namespace cima.ContactRequests;
 public class ContactRequestDto
 {
     public Guid Id { get; set; }
-    public Guid ListingId { get; set; }
+    public Guid? ListingId { get; set; }
     public required string Name { get; set; }
     public required string Email { get; set; }
     public string? Phone { get; set; }
     public required string Message { get; set; }
-    public Guid ArchitectId { get; set; }
+    public Guid? ArchitectId { get; set; }
     public ContactRequestStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ReplyNotes { get; set; }

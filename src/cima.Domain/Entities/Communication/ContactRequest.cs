@@ -15,14 +15,14 @@ namespace cima.Domain.Entities
     {
         #region Identificación de la Solicitud
         /// <summary>
-        /// ID de la propiedad por la que pregunta
+        /// ID de la propiedad por la que pregunta (null para contacto general)
         /// </summary>
-        public Guid ListingId { get; set; }
+        public Guid? ListingId { get; set; }
         
         /// <summary>
-        /// ID del arquitecto que publicó (solo para tracking interno)
+        /// ID del arquitecto que publicó (solo para tracking interno, null para contacto general)
         /// </summary>
-        public Guid ArchitectId { get; set; }
+        public Guid? ArchitectId { get; set; }
         #endregion
 
         #region Datos del Solicitante

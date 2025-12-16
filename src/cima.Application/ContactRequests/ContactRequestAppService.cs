@@ -142,15 +142,15 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
                 .WithData("Field", "Message");
         }
 
-        // Para contacto general, usamos Guid.Empty como ListingId y ArchitectId
+        // Para contacto general, usamos null como ListingId y ArchitectId
         var contactRequest = new ContactRequest
         {
-            ListingId = Guid.Empty,
+            ListingId = null,
             Name = normalizedName,
             Email = normalizedEmail,
             Phone = normalizedPhone ?? string.Empty,
             Message = normalizedMessage,
-            ArchitectId = Guid.Empty,
+            ArchitectId = null,
             CreatedAt = Clock.Now,
             Status = ContactRequestStatus.New,
             ReplyNotes = string.Empty
@@ -299,7 +299,7 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     {
         var contactRequest = await _contactRequestRepository.GetAsync(id);
 
-        // VALIDACION: Solo el arquitecto dueno puede responder
+        // VALIDACION: Solo el arquitecto dueno puede responder (o admin para contacto general)
         await ValidateArchitectOwnershipAsync(contactRequest.ArchitectId, "responder");
 
         contactRequest.Status = ContactRequestStatus.Replied;
@@ -331,15 +331,25 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     }
 
     /// <summary>
-    /// Valida que el usuario actual sea el propietario del arquitecto o un administrador
+    /// Valida que el usuario actual sea el propietario del arquitecto o un administrador.
+    /// Para contacto general (architectId == null), solo admins pueden gestionar.
     /// </summary>
-    private async Task<Architect> ValidateArchitectOwnershipAsync(Guid architectId, string operationName)
+    private async Task ValidateArchitectOwnershipAsync(Guid? architectId, string operationName)
     {
-        var architect = await _architectRepository.GetAsync(architectId);
+        // Si es contacto general (sin arquitecto), solo admins pueden gestionar
+        if (architectId == null)
+        {
+            if (!CurrentUser.IsInRole("admin"))
+            {
+                throw new AbpAuthorizationException($"Solo administradores pueden {operationName} solicitudes generales");
+            }
+            return;
+        }
+
+        var architect = await _architectRepository.GetAsync(architectId.Value);
         if (architect.UserId != CurrentUser.Id && !CurrentUser.IsInRole("admin"))
         {
             throw new AbpAuthorizationException($"Solo puedes {operationName} solicitudes de tus propiedades");
         }
-        return architect;
     }
 }

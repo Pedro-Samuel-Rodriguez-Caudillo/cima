@@ -75,7 +75,7 @@ public class UpdateEmailSettingsDto
     
     public string? AzureEmailConnectionString { get; set; }
     
-    [EmailAddress]
+    // Note: No [EmailAddress] validation here - it would fail for empty values when using other providers
     public string? AzureEmailSenderAddress { get; set; }
     
     public string? SmtpHost { get; set; }
