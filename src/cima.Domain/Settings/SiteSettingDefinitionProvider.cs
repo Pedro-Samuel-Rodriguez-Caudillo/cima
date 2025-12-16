@@ -78,19 +78,19 @@ public class SiteSettingDefinitionProvider : SettingDefinitionProvider
             ),
             new SettingDefinition(
                 SiteSettingNames.BrevoApiKey,
-                defaultValue: string.Empty,
+                defaultValue: null,
                 isVisibleToClients: false,
                 isEncrypted: true
             ),
             new SettingDefinition(
                 SiteSettingNames.BrevoSenderEmail,
-                defaultValue: string.Empty,
+                defaultValue: null,
                 isVisibleToClients: false,
                 isEncrypted: false
             ),
             new SettingDefinition(
                 SiteSettingNames.BrevoSenderName,
-                defaultValue: "4cima",
+                defaultValue: null,
                 isVisibleToClients: false,
                 isEncrypted: false
             )
