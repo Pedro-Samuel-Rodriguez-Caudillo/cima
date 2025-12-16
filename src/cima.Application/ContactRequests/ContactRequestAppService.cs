@@ -114,6 +114,102 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     }
 
     /// <summary>
+    /// PUBLICO: Crea solicitud de contacto general (sin propiedad específica)
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<ContactRequestDto> CreateGeneralAsync(CreateGeneralContactRequestDto input)
+    {
+        var normalizedName = input.Name?.Trim();
+        var normalizedEmail = input.Email?.Trim().ToLowerInvariant();
+        var normalizedPhone = input.Phone?.Trim();
+        var normalizedMessage = input.Message?.Trim();
+
+        if (string.IsNullOrWhiteSpace(normalizedName))
+        {
+            throw new BusinessException("ContactRequest:NameRequired")
+                .WithData("Field", "Name");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+        {
+            throw new BusinessException("ContactRequest:EmailRequired")
+                .WithData("Field", "Email");
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedMessage))
+        {
+            throw new BusinessException("ContactRequest:MessageRequired")
+                .WithData("Field", "Message");
+        }
+
+        // Para contacto general, usamos Guid.Empty como ListingId y ArchitectId
+        var contactRequest = new ContactRequest
+        {
+            ListingId = Guid.Empty,
+            Name = normalizedName,
+            Email = normalizedEmail,
+            Phone = normalizedPhone ?? string.Empty,
+            Message = normalizedMessage,
+            ArchitectId = Guid.Empty,
+            CreatedAt = Clock.Now,
+            Status = ContactRequestStatus.New,
+            ReplyNotes = string.Empty
+        };
+
+        await _contactRequestRepository.InsertAsync(contactRequest);
+
+        // Enviar notificaciones por email (fire and forget)
+        _ = SendGeneralNotificationsAsync(contactRequest, normalizedName!, normalizedEmail!, normalizedMessage!);
+
+        return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);
+    }
+
+    /// <summary>
+    /// Envía notificaciones para contacto general
+    /// </summary>
+    private async Task SendGeneralNotificationsAsync(
+        ContactRequest contactRequest,
+        string customerName,
+        string customerEmail,
+        string message)
+    {
+        try
+        {
+            var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
+            var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
+                ?? _configuration["Email:AdminNotification"]
+                ?? _configuration["Email:Smtp:FromAddress"];
+
+            // Notificar al admin
+            if (!string.IsNullOrEmpty(adminEmail))
+            {
+                await _emailService.SendContactRequestNotificationAsync(new ContactRequestNotificationDto
+                {
+                    AdminEmail = adminEmail,
+                    CustomerName = customerName,
+                    CustomerEmail = customerEmail,
+                    CustomerPhone = contactRequest.Phone,
+                    Message = message,
+                    PropertyTitle = "Consulta General",
+                    PropertyUrl = $"{baseUrl}/contact"
+                });
+            }
+
+            // Confirmar al cliente
+            await _emailService.SendContactRequestConfirmationAsync(new ContactRequestConfirmationDto
+            {
+                CustomerEmail = customerEmail,
+                CustomerName = customerName,
+                PropertyTitle = "Consulta General"
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Error al enviar notificaciones de contacto general {ContactRequestId}", contactRequest.Id);
+        }
+    }
+
+    /// <summary>
     /// Envía notificaciones por email de forma asíncrona
     /// </summary>
     private async Task SendNotificationsAsync(

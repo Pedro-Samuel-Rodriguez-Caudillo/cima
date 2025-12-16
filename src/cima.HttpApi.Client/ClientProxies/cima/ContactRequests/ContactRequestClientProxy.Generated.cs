@@ -25,6 +25,14 @@ public partial class ContactRequestClientProxy : ClientProxyBase<IContactRequest
         });
     }
 
+    public virtual async Task<ContactRequestDto> CreateGeneralAsync(CreateGeneralContactRequestDto input)
+    {
+        return await RequestAsync<ContactRequestDto>(nameof(CreateGeneralAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(CreateGeneralContactRequestDto), input }
+        });
+    }
+
     public virtual async Task<PagedResultDto<ContactRequestDto>> GetListAsync(int skipCount, int maxResultCount)
     {
         return await RequestAsync<PagedResultDto<ContactRequestDto>>(nameof(GetListAsync), new ClientProxyRequestTypeValue

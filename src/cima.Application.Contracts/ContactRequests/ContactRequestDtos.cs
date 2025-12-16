@@ -27,6 +27,17 @@ public class CreateContactRequestDto
     public Guid ListingId { get; set; }
 }
 
+/// <summary>
+/// DTO para crear solicitud de contacto general (sin propiedad específica)
+/// </summary>
+public class CreateGeneralContactRequestDto
+{
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public string? Phone { get; set; }
+    public required string Message { get; set; }
+}
+
 public class MarkAsRepliedDto
 {
     public required string ReplyNotes { get; set; }

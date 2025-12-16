@@ -1,4 +1,5 @@
 @page "/contact"
+@rendermode InteractiveAuto
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @inject IStringLocalizer<cimaResource> L
@@ -58,26 +59,10 @@
                     </div>
                 </div>
 
-                <!-- Contact Form Placeholder -->
+                <!-- Contact Form -->
                 <div class="bg-white/5 p-8 rounded-2xl border border-white/10">
                     <h3 class="text-xl font-display font-medium text-white mb-6">@L["Contact:FormTitle"]</h3>
-                    <form class="space-y-4" onsubmit="return false;">
-                        <div>
-                            <label class="block text-sm font-medium text-white/70 mb-1">@L["Contact:FormNameLabel"]</label>
-                            <input type="text" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors" placeholder="@L["ContactForm:NamePlaceholder"]" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-white/70 mb-1">@L["Contact:FormEmailLabel"]</label>
-                            <input type="email" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors" placeholder="@L["ContactForm:EmailPlaceholder"]" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-white/70 mb-1">@L["Contact:FormMessageLabel"]</label>
-                            <textarea rows="4" class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/30 transition-colors" placeholder="@L["ContactForm:GeneralMessagePlaceholder"]"></textarea>
-                        </div>
-                        <button class="w-full bg-white text-navy-950 font-medium py-3 rounded-lg hover:bg-gray-100 transition-colors">
-                            @L["Contact:Send"]
-                        </button>
-                    </form>
+                    <GeneralContactForm />
                 </div>
             </div>
         </div>

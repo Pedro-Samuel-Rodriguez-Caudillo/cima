@@ -48,8 +48,9 @@
                         }
                     </div>
 
-                    <EditForm Model="@EmailSettings" OnValidSubmit="SaveEmailSettings">
+                    <EditForm Model="@EmailSettings" OnValidSubmit="SaveEmailSettings" OnInvalidSubmit="OnEmailFormInvalid">
                         <DataAnnotationsValidator />
+                        <ValidationSummary class="text-red-500 text-sm mb-4" />
                         
                         <div class="space-y-4">
                             <div>
@@ -414,22 +415,32 @@
     {
         try
         {
-            // Debug: Check if method is entered
-            // Snackbar.Add("Debug: Submitting...", Severity.Info); 
+            Console.WriteLine("SaveEmailSettings: Method entered");
+            Snackbar.Add("Guardando configuración...", Severity.Info);
             
             IsSavingEmail = true;
+            StateHasChanged();
+            
             await SettingsService.UpdateEmailSettingsAsync(EmailSettings);
             Snackbar.Add(L["Admin:Settings:Email:Saved"], Severity.Success);
             await LoadSettings();
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"SaveEmailSettings: Error - {ex.Message}");
             await HandleErrorAsync(ex);
         }
         finally
         {
             IsSavingEmail = false;
+            StateHasChanged();
         }
+    }
+
+    private void OnEmailFormInvalid()
+    {
+        Console.WriteLine("OnEmailFormInvalid: Form validation FAILED");
+        Snackbar.Add("Error de validación. Revisa los campos requeridos.", Severity.Warning);
     }
 
     private async Task SaveWhatsAppSettings()

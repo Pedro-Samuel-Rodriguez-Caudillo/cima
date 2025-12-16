@@ -1,56 +1,119 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.Extensions.Localization
 @using cima.Localization
+@using cima.ContactRequests
 @inject IStringLocalizer<cimaResource> L
+@inject IContactRequestAppService ContactRequestService
+@inject ISnackbar Snackbar
 
-<EditForm Model="@_model" OnValidSubmit="HandleSubmit" class="space-y-6">
+<EditForm Model="@_model" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="space-y-6">
     <DataAnnotationsValidator />
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Name -->
-        <div class="space-y-2">
-            <label for="name" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Name"]</label>
-            <InputText id="name" @bind-Value="_model.Name" class="cima-input" placeholder="@L["ContactForm:NamePlaceholder"]" />
-            <ValidationMessage For="@(() => _model.Name)" class="text-red-500 text-xs mt-1" />
+    @if (_isSubmitted)
+    {
+        <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">@L["ContactForm:SuccessMessage"]</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name -->
+            <div class="space-y-2">
+                <label for="name" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Name"]</label>
+                <InputText id="name" @bind-Value="_model.Name" class="cima-input" placeholder="@L["ContactForm:NamePlaceholder"]" />
+                <ValidationMessage For="@(() => _model.Name)" class="text-red-500 text-xs mt-1" />
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+                <label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Email"]</label>
+                <InputText id="email" @bind-Value="_model.Email" class="cima-input" placeholder="@L["ContactForm:EmailPlaceholder"]" />
+                <ValidationMessage For="@(() => _model.Email)" class="text-red-500 text-xs mt-1" />
+            </div>
         </div>
 
-        <!-- Email -->
+        <!-- Phone -->
         <div class="space-y-2">
-            <label for="email" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Email"]</label>
-            <InputText id="email" @bind-Value="_model.Email" class="cima-input" placeholder="@L["ContactForm:EmailPlaceholder"]" />
-            <ValidationMessage For="@(() => _model.Email)" class="text-red-500 text-xs mt-1" />
+            <label for="phone" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Phone"]</label>
+            <InputText id="phone" @bind-Value="_model.Phone" class="cima-input" placeholder="@L["ContactForm:PhonePlaceholder"]" />
+            <ValidationMessage For="@(() => _model.Phone)" class="text-red-500 text-xs mt-1" />
         </div>
-    </div>
 
-    <!-- Phone -->
-    <div class="space-y-2">
-        <label for="phone" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Phone"]</label>
-        <InputText id="phone" @bind-Value="_model.Phone" class="cima-input" placeholder="@L["ContactForm:PhonePlaceholder"]" />
-        <ValidationMessage For="@(() => _model.Phone)" class="text-red-500 text-xs mt-1" />
-    </div>
+        <!-- Message -->
+        <div class="space-y-2">
+            <label for="message" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Message"]</label>
+            <InputTextArea id="message" @bind-Value="_model.Message" class="cima-input min-h-[120px] resize-y" placeholder="@L["ContactForm:GeneralMessagePlaceholder"]" />
+            <ValidationMessage For="@(() => _model.Message)" class="text-red-500 text-xs mt-1" />
+        </div>
 
-    <!-- Message -->
-    <div class="space-y-2">
-        <label for="message" class="text-xs font-bold uppercase tracking-widest text-neutral-500">@L["ContactForm:Message"]</label>
-        <InputTextArea id="message" @bind-Value="_model.Message" class="cima-input min-h-[120px] resize-y" placeholder="@L["ContactForm:GeneralMessagePlaceholder"]" />
-        <ValidationMessage For="@(() => _model.Message)" class="text-red-500 text-xs mt-1" />
-    </div>
-
-    <!-- Submit -->
-    <div class="pt-4">
-        <button type="submit" class="cima-btn cima-btn-primary w-full sm:w-auto px-8 py-3 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
-            @L["ContactForm:Submit"]
-        </button>
-    </div>
+        <!-- Submit -->
+        <div class="pt-4">
+            <button type="submit" 
+                    class="cima-btn cima-btn-primary w-full sm:w-auto px-8 py-3 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                    disabled="@_isSubmitting">
+                @if (_isSubmitting)
+                {
+                    <span class="cima-spinner-sm mr-2"></span>
+                }
+                @L["ContactForm:Submit"]
+            </button>
+        </div>
+    }
 </EditForm>
 
 @code {
     private ContactModel _model = new();
+    private bool _isSubmitting;
+    private bool _isSubmitted;
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        // Handle form submission
-        Console.WriteLine("Form submitted");
+        try
+        {
+            _isSubmitting = true;
+            StateHasChanged();
+
+            Console.WriteLine("GeneralContactForm: Submitting form...");
+
+            var dto = new CreateGeneralContactRequestDto
+            {
+                Name = _model.Name,
+                Email = _model.Email,
+                Phone = _model.Phone,
+                Message = _model.Message
+            };
+
+            await ContactRequestService.CreateGeneralAsync(dto);
+
+            Console.WriteLine("GeneralContactForm: Success!");
+            _isSubmitted = true;
+            Snackbar.Add(L["ContactForm:SuccessMessage"], Severity.Success);
+            
+            // Reset form for potential new submission
+            _model = new ContactModel();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"GeneralContactForm: Error - {ex.Message}");
+            Snackbar.Add(L["ContactForm:ErrorMessage"], Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        Console.WriteLine("GeneralContactForm: Validation FAILED");
+        Snackbar.Add("Por favor, completa todos los campos requeridos.", Severity.Warning);
     }
 
     public class ContactModel
@@ -68,3 +131,4 @@
         public string Message { get; set; } = "";
     }
 }
+

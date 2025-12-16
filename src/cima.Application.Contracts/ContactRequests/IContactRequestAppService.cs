@@ -16,6 +16,11 @@ public interface IContactRequestAppService : IApplicationService
     Task<ContactRequestDto> CreateAsync(CreateContactRequestDto input);
     
     /// <summary>
+    /// Crea solicitud de contacto general (sin propiedad específica, publico)
+    /// </summary>
+    Task<ContactRequestDto> CreateGeneralAsync(CreateGeneralContactRequestDto input);
+    
+    /// <summary>
     /// Obtiene lista paginada de todas las solicitudes (admin)
     /// </summary>
     Task<PagedResultDto<ContactRequestDto>> GetListAsync(
