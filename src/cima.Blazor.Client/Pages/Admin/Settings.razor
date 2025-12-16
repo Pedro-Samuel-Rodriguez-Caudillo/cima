@@ -478,7 +478,32 @@
         try
         {
             IsTestingEmail = true;
-            var success = await SettingsService.TestEmailAsync(EmailSettings.AdminNotificationEmail);
+
+            var testInput = new TestEmailSettingsDto
+            {
+                TargetEmail = EmailSettings.AdminNotificationEmail,
+                EmailProvider = EmailSettings.EmailProvider,
+                
+                // Azure
+                AzureEmailConnectionString = EmailSettings.AzureEmailConnectionString,
+                AzureEmailSenderAddress = EmailSettings.AzureEmailSenderAddress,
+                
+                // SMTP
+                SmtpHost = EmailSettings.SmtpHost,
+                SmtpPort = EmailSettings.SmtpPort,
+                SmtpUserName = EmailSettings.SmtpUserName,
+                SmtpPassword = EmailSettings.SmtpPassword,
+                SmtpFromAddress = EmailSettings.SmtpFromAddress,
+                SmtpFromName = EmailSettings.SmtpFromName,
+                SmtpEnableSsl = EmailSettings.SmtpEnableSsl,
+                
+                // Brevo
+                BrevoApiKey = EmailSettings.BrevoApiKey,
+                BrevoSenderEmail = EmailSettings.BrevoSenderEmail,
+                BrevoSenderName = EmailSettings.BrevoSenderName
+            };
+
+            var success = await SettingsService.TestEmailAsync(testInput);
             
             if (success)
             {

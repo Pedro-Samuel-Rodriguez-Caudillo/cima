@@ -1,11 +1,17 @@
 using System;
 using System.Net;
+using System.Net.Http;
+using System.Net.Mail;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Communication.Email;
 using cima.Notifications;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Volo.Abp;
 using Volo.Abp.Application.Services;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.Settings;
@@ -224,22 +230,95 @@ public class SiteSettingsAppService : ApplicationService, ISiteSettingsAppServic
     /// <summary>
     /// Prueba el envio de email.
     /// </summary>
+    /// <summary>
+    /// Prueba el envio de email usando los valores proporcionados (sin guardar).
+    /// </summary>
     [Authorize(cimaPermissions.Settings.Manage)]
-    public async Task<bool> TestEmailAsync(string testRecipient)
+    public async Task<bool> TestEmailAsync(TestEmailSettingsDto input)
     {
+        var subject = "Prueba de configuración - 4cima";
+        var body = $"<p>Este es un correo de prueba para verificar la configuración de {input.EmailProvider}.</p><p>Si estás viendo esto, la configuración es correcta.</p>";
+
         try
         {
-            await _emailService.SendContactRequestConfirmationAsync(new ContactRequestConfirmationDto
+            if (string.Equals(input.EmailProvider, EmailProviderNames.AzureCommunicationServices, StringComparison.OrdinalIgnoreCase))
             {
-                CustomerEmail = testRecipient,
-                CustomerName = "Test",
-                PropertyTitle = "Email de prueba - Configuracion 4cima"
-            });
-            return true;
+                if (string.IsNullOrWhiteSpace(input.AzureEmailConnectionString) || string.IsNullOrWhiteSpace(input.AzureEmailSenderAddress))
+                {
+                    throw new UserFriendlyException("Faltan datos de configuración de Azure");
+                }
+
+                var client = new EmailClient(input.AzureEmailConnectionString);
+                var content = new EmailContent(subject) { Html = body };
+                var message = new EmailMessage(input.AzureEmailSenderAddress, input.TargetEmail, content);
+                
+                await client.SendAsync(Azure.WaitUntil.Completed, message);
+                return true;
+            }
+            else if (string.Equals(input.EmailProvider, EmailProviderNames.Smtp, StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(input.SmtpHost) || input.SmtpPort == null || string.IsNullOrWhiteSpace(input.SmtpUserName))
+                {
+                    throw new UserFriendlyException("Faltan datos de configuración SMTP");
+                }
+
+                using var client = new SmtpClient(input.SmtpHost, input.SmtpPort.Value)
+                {
+                    Credentials = new NetworkCredential(input.SmtpUserName, input.SmtpPassword),
+                    EnableSsl = input.SmtpEnableSsl
+                };
+
+                var from = new MailAddress(input.SmtpFromAddress ?? input.SmtpUserName, input.SmtpFromName ?? "4cima Test");
+                var message = new MailMessage(from, new MailAddress(input.TargetEmail))
+                {
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                await client.SendMailAsync(message);
+                return true;
+            }
+            else if (string.Equals(input.EmailProvider, EmailProviderNames.Brevo, StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(input.BrevoApiKey) || string.IsNullOrWhiteSpace(input.BrevoSenderEmail))
+                {
+                    throw new UserFriendlyException("Faltan datos de configuración de Brevo");
+                }
+
+                using var client = new HttpClient();
+                // Usar endpoint por defecto si no está en config (hardcoded for test safety as fallback)
+                var endpoint = "https://api.brevo.com/v3/smtp/email"; 
+                
+                var payload = new
+                {
+                    sender = new { email = input.BrevoSenderEmail, name = input.BrevoSenderName ?? "4cima Test" },
+                    to = new[] { new { email = input.TargetEmail, name = "Test User" } },
+                    subject,
+                    htmlContent = body
+                };
+
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                {
+                    Content = new StringContent(JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web)), Encoding.UTF8, "application/json")
+                };
+                request.Headers.Add("api-key", input.BrevoApiKey);
+
+                var response = await client.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Logger.LogError("Error probando Brevo: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return false;
+                }
+                return true;
+            }
+
+            return false;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error al enviar email de prueba a {Recipient}", testRecipient);
+            Logger.LogError(ex, "Error al probar configuración de email para {Provider}", input.EmailProvider);
             return false;
         }
     }

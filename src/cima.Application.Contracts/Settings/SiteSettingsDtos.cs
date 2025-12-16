@@ -91,6 +91,30 @@ public class UpdateEmailSettingsDto
     public string? BrevoSenderName { get; set; }
 }
 
+public class TestEmailSettingsDto
+{
+    [Required]
+    [EmailAddress]
+    public string TargetEmail { get; set; } = string.Empty;
+
+    public string EmailProvider { get; set; } = EmailProviderNames.AzureCommunicationServices;
+    
+    public string? AzureEmailConnectionString { get; set; }
+    public string? AzureEmailSenderAddress { get; set; }
+    
+    public string? SmtpHost { get; set; }
+    public int? SmtpPort { get; set; }
+    public string? SmtpUserName { get; set; }
+    public string? SmtpPassword { get; set; }
+    public string? SmtpFromAddress { get; set; }
+    public string? SmtpFromName { get; set; }
+    public bool SmtpEnableSsl { get; set; }
+    
+    public string? BrevoApiKey { get; set; }
+    public string? BrevoSenderEmail { get; set; }
+    public string? BrevoSenderName { get; set; }
+}
+
 public class UpdateWhatsAppSettingsDto
 {
     public bool Enabled { get; set; }
