@@ -46,7 +46,12 @@ public class SiteSettingsAppService : ApplicationService, ISiteSettingsAppServic
     [Authorize(cimaPermissions.Settings.Manage)]
     public async Task<SiteSettingsDto> GetAsync()
     {
+        // Debug config resolution
+        var configProvider = _configuration["Email:Provider"];
+        Logger.LogInformation("GetAsync - Config Email:Provider: '{ConfigProvider}'", configProvider);
+        
         var emailProvider = await GetEmailProviderAsync();
+        Logger.LogInformation("GetAsync - Resolved EmailProvider: '{ResolvedProvider}'", emailProvider);
 
         var azureConnection = await GetSettingOrConfigAsync(
             SiteSettingNames.AzureEmailConnectionString,
