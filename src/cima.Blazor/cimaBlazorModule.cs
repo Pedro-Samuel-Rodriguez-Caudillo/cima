@@ -25,6 +25,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using System;
@@ -491,6 +492,12 @@ public class cimaBlazorModule : AbpModule
             // En staging/production: ejecutar migraciones y seeding (BLOQUEA HASTA COMPLETAR)
             ExecutarMigracionesAsync(context.ServiceProvider, env).GetAwaiter().GetResult();
         }
+
+        // Respetar encabezados enviados por el proxy (X-Forwarded-Proto/Host)
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+        });
         
         app.Use(async (ctx, next) =>
         {
@@ -667,4 +674,3 @@ public class cimaBlazorModule : AbpModule
         }
     }
 }
-
