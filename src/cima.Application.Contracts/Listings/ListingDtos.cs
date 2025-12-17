@@ -87,8 +87,7 @@ public class ListingImageDto : EntityDto<Guid>
     public string Url { get; set; } = string.Empty;
     public string ThumbnailUrl { get; set; } = string.Empty;
     public string? AltText { get; set; }
-    public Guid? PreviousImageId { get; set; }
-    public Guid? NextImageId { get; set; }
+    public int SortOrder { get; set; }
     public bool IsCover { get; set; }
 }
 

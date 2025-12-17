@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
 
 namespace cima.Listings;
 
@@ -14,22 +16,25 @@ public interface IListingAppService : IApplicationService
     /// <summary>
     /// Obtiene lista paginada de propiedades con filtros
     /// </summary>
-    Task<PagedResultDto<ListingDto>> GetListAsync(GetListingsInput input);
+    /// <summary>
+    /// Obtiene lista paginada de propiedades con filtros
+    /// </summary>
+    Task<PagedResultDto<ListingSummaryDto>> GetListAsync(GetListingsInput input);
     
     /// <summary>
     /// Obtiene detalle de una propiedad por Id
     /// </summary>
-    Task<ListingDto> GetAsync(Guid id);
+    Task<ListingDetailDto> GetAsync(Guid id);
     
     /// <summary>
     /// Crea nueva propiedad en estado Draft
     /// </summary>
-    Task<ListingDto> CreateAsync(CreateUpdateListingDto input);
+    Task<ListingDetailDto> CreateAsync(CreateListingDto input);
     
     /// <summary>
     /// Actualiza propiedad existente
     /// </summary>
-    Task<ListingDto> UpdateAsync(Guid id, CreateUpdateListingDto input);
+    Task<ListingDetailDto> UpdateAsync(Guid id, UpdateListingDto input);
     
     /// <summary>
     /// Elimina propiedad (soft delete)
@@ -40,37 +45,37 @@ public interface IListingAppService : IApplicationService
     /// Cambia estado de Draft a Published
     /// Requiere al menos 1 imagen
     /// </summary>
-    Task<ListingDto> PublishAsync(Guid id);
+    Task<ListingDetailDto> PublishAsync(PublishListingDto input);
     
     /// <summary>
     /// Cambia estado a Archived
     /// </summary>
-    Task<ListingDto> ArchiveAsync(Guid id);
+    Task<ListingDetailDto> ArchiveAsync(Guid id);
     
     /// <summary>
     /// Reactiva una propiedad archivada a estado Published
     /// </summary>
-    Task<ListingDto> UnarchiveAsync(Guid id);
+    Task<ListingDetailDto> UnarchiveAsync(Guid id);
     
     /// <summary>
     /// Cambia una propiedad publicada de vuelta a Draft
     /// </summary>
-    Task<ListingDto> UnpublishAsync(Guid id);
+    Task<ListingDetailDto> UnpublishAsync(Guid id);
     
     /// <summary>
     /// Cambia una propiedad a estado Portfolio (showcase)
     /// </summary>
-    Task<ListingDto> MoveToPortfolioAsync(Guid id);
+    Task<ListingDetailDto> MoveToPortfolioAsync(Guid id);
     
     /// <summary>
     /// Duplica una propiedad existente (sin imágenes, estado Draft)
     /// </summary>
-    Task<ListingDto> DuplicateAsync(Guid id);
+    Task<ListingDetailDto> DuplicateAsync(Guid id);
     
     /// <summary>
     /// Obtiene propiedades de un arquitecto especifico
     /// </summary>
-    Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
+    Task<PagedResultDto<ListingSummaryDto>> GetByArchitectAsync(
         Guid architectId, 
         int skipCount, 
         int maxResultCount);
@@ -78,18 +83,18 @@ public interface IListingAppService : IApplicationService
     /// <summary>
     /// Obtiene solo propiedades publicadas (público)
     /// </summary>
-    Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input);
+    Task<PagedResultDto<ListingSummaryDto>> GetPublishedAsync(GetListingsInput input);
     
     /// <summary>
     /// Búsqueda avanzada de propiedades con filtros
     /// Incluye validación contra inyecciones SQL/XSS
     /// </summary>
-    Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto);
+    Task<PagedResultDto<ListingSummaryDto>> SearchAsync(PropertySearchDto searchDto);
     
     /// <summary>
     /// Obtiene propiedades en portafolio (proyectos completados)
     /// </summary>
-    Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input);
+    Task<PagedResultDto<ListingSummaryDto>> GetPortfolioAsync(GetListingsInput input);
     
     /// <summary>
     /// Obtiene sugerencias de ubicaciones para autocompletado
@@ -98,9 +103,11 @@ public interface IListingAppService : IApplicationService
     Task<List<LocationSuggestionDto>> GetLocationSuggestionsAsync(string searchTerm);
     
     /// <summary>
-    /// Agrega una imagen a una propiedad
+    /// Agrega una imagen a una propiedad.
+    /// Retorna un Dto simple de imagen, podria ser ListingImageOutput si quisieramos ser estrictos.
+    /// ListingImageDto se considera de salida en este contexto.
     /// </summary>
-    Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input);
+    Task<ListingImageDto> AddImageAsync(AddListingImageDto input);
     
     /// <summary>
     /// Elimina una imagen de una propiedad

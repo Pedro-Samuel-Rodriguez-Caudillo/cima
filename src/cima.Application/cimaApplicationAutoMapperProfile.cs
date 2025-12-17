@@ -6,37 +6,49 @@ using cima.Listings;
 using System.Linq;
 using System.Text.Json;
 
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
+
 namespace cima;
 
 public class cimaApplicationAutoMapperProfile : Profile
 {
+    private static string SerializeLocation(AddressDto input)
+    {
+        // Simple serialization to JSON string for now, matching how it's stored
+        var locDto = new LocationDto { Address = input.Value };
+        return JsonSerializer.Serialize(locDto);
+    }
     public cimaApplicationAutoMapperProfile()
     {
         // Listings con relaciones completas
-        CreateMap<Listing, ListingDto>()
+        // Listings - Output Maps
+        CreateMap<Listing, ListingDetailDto>()
             .ForMember(dest => dest.Architect, opt => opt.MapFrom(src => src.Architect))
-            .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images))
+            .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.OrderBy(i => i.SortOrder)))
             .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src.LandArea)) // Map Area
-            .ForMember(dest => dest.CoverImage, opt => opt.MapFrom(src => 
-                 src.Images != null && src.Images.Any() 
-                    ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)
-                    : null)) // Map CoverImage
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location)));
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)));
             
-        CreateMap<Listing, ListingListDto>()
+        CreateMap<Listing, ListingSummaryDto>()
             .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src => 
                 src.Images != null && src.Images.Any() 
-                    ? src.Images.FirstOrDefault(i => i.PreviousImageId == null)
+                    ? src.Images.OrderBy(i => i.SortOrder).FirstOrDefault()
                     : null))
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location)));
-                    
-        CreateMap<CreateUpdateListingDto, Listing>()
-            .ForMember(dest => dest.Images, opt => opt.Ignore());
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)))
+            .ForMember(dest => dest.ImageCount, opt => opt.MapFrom(src => src.Images != null ? src.Images.Count : 0));
+
+        // Listings - Input Maps
+        CreateMap<CreateListingDto, Listing>()
+            .ForMember(dest => dest.Images, opt => opt.Ignore())
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null));
             
-        // ListingImage - mapeo con lista enlazada
+        CreateMap<UpdateListingDto, Listing>()
+            .ForMember(dest => dest.Images, opt => opt.Ignore())
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null));
+            
+        // ListingImage
         CreateMap<ListingImage, ListingImageDto>()
-            .ForMember(dest => dest.PreviousImageId, opt => opt.MapFrom(src => src.PreviousImageId))
-            .ForMember(dest => dest.NextImageId, opt => opt.MapFrom(src => src.NextImageId))
+            .ForMember(dest => dest.SortOrder, opt => opt.MapFrom(src => src.SortOrder))
             .ForMember(dest => dest.ImageId, opt => opt.MapFrom(src => src.ImageId))
             .ForMember(dest => dest.ThumbnailUrl, opt => opt.MapFrom(src => src.ThumbnailUrl));
 

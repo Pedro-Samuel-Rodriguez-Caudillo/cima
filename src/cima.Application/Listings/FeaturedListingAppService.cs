@@ -13,6 +13,7 @@ using Volo.Abp.Caching;
 using Volo.Abp.Domain.Repositories;
 
 namespace cima.Listings;
+using cima.Listings.Outputs;
 
 /// <summary>
 /// Implementación del servicio de propiedades destacadas.
@@ -22,7 +23,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 {
     private readonly IRepository<FeaturedListing, Guid> _featuredListingRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
-    private readonly IDistributedCache<List<ListingDto>> _cache;
+    private readonly IDistributedCache<List<ListingSummaryDto>> _cache;
     private const int MAX_FEATURED_LISTINGS = 12;
     private const string CACHE_KEY = "FeaturedListingsForHomepage";
     /// <summary>
@@ -34,7 +35,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     public FeaturedListingAppService(
         IRepository<FeaturedListing, Guid> featuredListingRepository,
         IRepository<Listing, Guid> listingRepository,
-        IDistributedCache<List<ListingDto>> cache)
+        IDistributedCache<List<ListingSummaryDto>> cache)
     {
         _featuredListingRepository = featuredListingRepository;
         _listingRepository = listingRepository;
@@ -100,7 +101,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     /// </summary>
     [AllowAnonymous]
 #pragma warning disable CS8603
-    public async Task<List<ListingDto>> GetForHomepageAsync(int count = 6)
+    public async Task<List<ListingSummaryDto>> GetForHomepageAsync(int count = 6)
     {
         if (count > 12)
         {
@@ -119,7 +120,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
                 .Take(count)
                 .ToList();
 
-            return randomized ?? new List<ListingDto>();
+            return randomized ?? new List<ListingSummaryDto>();
         }
 
         // Si no hay caché, obtener de BD
@@ -142,8 +143,8 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             .Select(fl => fl.Listing!)
             .ToList();
 
-        var listings = ObjectMapper.Map<List<Listing>, List<ListingDto>>(allListings)
-                        ?? new List<ListingDto>();
+        var listings = ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(allListings)
+                        ?? new List<ListingSummaryDto>();
 
         // Guardar TODOS en caché (sin orden específico)
         // El orden se aleatoriza al recuperar
@@ -166,7 +167,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             .Take(count)
             .ToList();
 
-        return randomizedList ?? new List<ListingDto>();
+        return randomizedList ?? new List<ListingSummaryDto>();
     }
 #pragma warning restore CS8603
 

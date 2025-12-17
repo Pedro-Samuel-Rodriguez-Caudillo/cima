@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using cima.Architects;
 using cima.Domain.Entities;
+using cima.Domain.Listings;
 using cima.Domain.Services.Listings;
 using cima.Domain.Shared;
 using cima.Images;
@@ -21,6 +22,8 @@ using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Uow;
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
 
 
 namespace cima.Listings;
@@ -31,7 +34,7 @@ namespace cima.Listings;
 [Authorize(cimaPermissions.Listings.Default)]
 public class ListingAppService : cimaAppService, IListingAppService
 {
-    private readonly IRepository<Listing, Guid> _listingRepository;
+    private readonly IListingRepository _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IDistributedCache _distributedCache;
     private readonly IListingManager _listingManager;
@@ -42,7 +45,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
-        IRepository<Listing, Guid> listingRepository,
+        IListingRepository listingRepository,
         IRepository<Architect, Guid> architectRepository,
         IDistributedCache distributedCache,
         IListingManager listingManager,
@@ -64,7 +67,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// <summary>
     /// Obtiene lista paginada de propiedades con filtros
     /// </summary>
-    public async Task<PagedResultDto<ListingDto>> GetListAsync(GetListingsInput input)
+    public async Task<PagedResultDto<ListingSummaryDto>> GetListAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
             listing => listing.Architect!,  // ? null-forgiving (WithDetailsAsync garantiza carga)
@@ -96,11 +99,12 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingDto>(
+        return new PagedResultDto<ListingSummaryDto>(
             totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
         );
     }
+
 
     /// <summary>
     /// Aplica filtros comunes a las consultas de listings
@@ -111,7 +115,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                (p.Location != null && p.Location.Contains(input.SearchTerm)) ||
+                (p.Location != null && p.Location.Value.Contains(input.SearchTerm)) ||
                 p.Description.Contains(input.SearchTerm));
         }
 
@@ -192,7 +196,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// <summary>
     /// Obtiene detalle de una propiedad por Id
     /// </summary>
-    public async Task<ListingDto> GetAsync(Guid id)
+    public async Task<ListingDetailDto> GetAsync(Guid id)
     {
         var listingQueryable = await _listingRepository.WithDetailsAsync(
             l => l.Architect!,  // ? null-forgiving
@@ -206,20 +210,20 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new EntityNotFoundException(typeof(Listing), id);
         }
 
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Crea nueva propiedad en estado Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Create)]
-    public async Task<ListingDto> CreateAsync(CreateUpdateListingDto input)
+    public async Task<ListingDetailDto> CreateAsync(CreateListingDto input)
     {
         // Usar ListingManager para crear con validaciones y eventos de dominio
         var listing = await _listingManager.CreateAsync(
-            title: input.Title?.Trim() ?? string.Empty,
-            description: input.Description?.Trim() ?? string.Empty,
-            location: input.Location?.Trim(),
+            title: input.Title.Trim(),
+            description: input.Description.Trim(),
+            location: input.Address?.Value.Trim(),
             price: input.Price,
             landArea: input.LandArea,
             constructionArea: input.ConstructionArea,
@@ -232,15 +236,17 @@ public class ListingAppService : cimaAppService, IListingAppService
             createdBy: GetCurrentUserIdOrThrow());
 
         await _listingRepository.InsertAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Actualiza propiedad existente con validaciones del ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task<ListingDto> UpdateAsync(Guid id, CreateUpdateListingDto input)
+    public async Task<ListingDetailDto> UpdateAsync(Guid id, UpdateListingDto input)
     {
+        if (id != input.Id) throw new UserFriendlyException("ID mismatch");
+
         var listing = await _listingRepository.GetAsync(id);
 
         // Validacion: Solo el dueno o admin puede editar
@@ -249,36 +255,25 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Validar que el arquitecto está activo
         ValidateArchitectIsActive(architect);
 
-        // Normalizar y validar datos usando ListingManager
-        var normalizedTitle = input.Title?.Trim() ?? string.Empty;
-        var normalizedDescription = input.Description?.Trim() ?? string.Empty;
-        var normalizedLocation = input.Location?.Trim();
-
-        _listingManager.ValidateListingData(
-            normalizedTitle,
-            normalizedDescription,
+        // Usar ListingManager para actualizar (encapsula reglas de negocio)
+        await _listingManager.UpdateAsync(
+            listing,
+            input.Title.Trim(),
+            input.Description.Trim(),
+            input.Address?.Value.Trim(),
             input.Price,
             input.LandArea,
-            input.ConstructionArea);
-
-        // Mapear campos editables
-        listing.Title = normalizedTitle;
-        listing.Description = normalizedDescription;
-        listing.Location = normalizedLocation;
-        listing.Price = input.Price;
-        listing.LandArea = input.LandArea;
-        listing.ConstructionArea = input.ConstructionArea;
-        listing.Bedrooms = input.Bedrooms;
-        listing.Bathrooms = input.Bathrooms;
-        listing.Category = input.Category;
-        listing.Type = input.Type;
-        listing.TransactionType = input.TransactionType;
-        
-        listing.LastModifiedAt = Clock.Now;
-        listing.LastModifiedBy = GetCurrentUserIdOrThrow();
+            input.ConstructionArea,
+            input.Bedrooms,
+            input.Bathrooms,
+            input.Category,
+            input.Type,
+            input.TransactionType,
+            GetCurrentUserIdOrThrow()
+        );
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
@@ -300,9 +295,12 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// Los eventos de dominio actualizan las estadística del arquitecto
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
-    public async Task<ListingDto> PublishAsync(Guid id)
+    public async Task<ListingDetailDto> PublishAsync(PublishListingDto input)
     {
-        var listing = await _listingRepository.GetAsync(id);
+        var query = await _listingRepository.WithDetailsAsync(l => l.Images); // Cargar imagenes para validar regla
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(query.Where(l => l.Id == input.ListingId));
+        
+        if (listing == null) throw new EntityNotFoundException(typeof(Listing), input.ListingId);
 
         // Validacion de propiedad del listing
         var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "publicar");
@@ -310,24 +308,18 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Validar que el arquitecto está activo
         ValidateArchitectIsActive(architect);
 
-        // Warning si no tiene imagenes (pero permite publicar)
-        if (listing.Images == null || !listing.Images.Any())
-        {
-            Logger.LogWarning("Publicando propiedad {ListingId} sin imágenes", id);
-        }
-
         // Usar ListingManager - dispara eventos de dominio
         await _listingManager.PublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Cambia estado a Archived usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Archive)]
-    public async Task<ListingDto> ArchiveAsync(Guid id)
+    public async Task<ListingDetailDto> ArchiveAsync(Guid id)
     {
         var listing = await _listingRepository.GetAsync(id);
 
@@ -338,14 +330,14 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.ArchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Reactiva una propiedad archivada a estado Published usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
-    public async Task<ListingDto> UnarchiveAsync(Guid id)
+    public async Task<ListingDetailDto> UnarchiveAsync(Guid id)
     {
         var listing = await _listingRepository.GetAsync(id);
 
@@ -359,14 +351,14 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.UnarchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Cambia una propiedad publicada de vuelta a Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task<ListingDto> UnpublishAsync(Guid id)
+    public async Task<ListingDetailDto> UnpublishAsync(Guid id)
     {
         var listing = await _listingRepository.GetAsync(id);
 
@@ -377,14 +369,14 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.UnpublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
     /// Cambia una propiedad a estado Portfolio usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task<ListingDto> MoveToPortfolioAsync(Guid id)
+    public async Task<ListingDetailDto> MoveToPortfolioAsync(Guid id)
     {
         var listing = await _listingRepository.GetAsync(id);
 
@@ -395,7 +387,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.MoveToPortfolioAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDto>(listing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 
     /// <summary>
@@ -403,7 +395,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// No copia las imágenes, solo los datos de la propiedad
     /// </summary>
     [Authorize(cimaPermissions.Listings.Create)]
-    public async Task<ListingDto> DuplicateAsync(Guid id)
+    public async Task<ListingDetailDto> DuplicateAsync(Guid id)
     {
         var original = await _listingRepository.GetAsync(id);
 
@@ -414,7 +406,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         var duplicatedListing = await _listingManager.CreateAsync(
             title: $"{original.Title} (Copia)",
             description: original.Description,
-            location: original.Location,
+            location: original.Location?.Value, // Extraer valor de VO
             price: original.Price,
             landArea: original.LandArea,
             constructionArea: original.ConstructionArea,
@@ -432,14 +424,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             "Propiedad {OriginalId} duplicada a {NewId} por usuario {UserId}",
             id, duplicatedListing.Id, GetCurrentUserIdOrThrow());
 
-        return ObjectMapper.Map<Listing, ListingDto>(duplicatedListing);
+        return ObjectMapper.Map<Listing, ListingDetailDto>(duplicatedListing);
     }
 
     /// <summary>
     /// Obtiene solo propiedades publicadas (público - sin autenticación)
     /// </summary>
     [AllowAnonymous]
-    public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
+    public async Task<PagedResultDto<ListingSummaryDto>> GetPublishedAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
             listing => listing.Architect!,  // ? null-forgiving
@@ -462,16 +454,16 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingDto>(
+        return new PagedResultDto<ListingSummaryDto>(
             totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
         );
     }
 
     /// <summary>
     /// Obtiene propiedades de un arquitecto especifico
     /// </summary>
-    public async Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
+    public async Task<PagedResultDto<ListingSummaryDto>> GetByArchitectAsync(
         Guid architectId, int skipCount, int maxResultCount)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
@@ -487,9 +479,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(maxResultCount)
         );
 
-        return new PagedResultDto<ListingDto>(
+        return new PagedResultDto<ListingSummaryDto>(
             totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
         );
     }
 
@@ -553,130 +545,50 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// 4. Agregar imagen al listing
     /// 5. Si falla despues de subir, limpiar blob huerfano
     /// </summary>
+    /// <summary>
+    /// Agrega una imagen a un listing usando metodo de dominio
+    /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
-    public async Task<ListingImageDto> AddImageAsync(Guid listingId, CreateListingImageDto input)
+    public async Task<ListingImageDto> AddImageAsync(AddListingImageDto input)
     {
-
+        // 1. Subir la imagen al storage (valida y/o sube)
+        var uploadedImage = await StoreImageIfNeededAsync(input);
         
-        // Adquirir lock exclusivo para este listing - serializa todas las operaciones de imagen
-        await using var lockHandle = await _listingImageLockService.AcquireAsync(listingId);
+        // 2. Usar repositorio para obtener la entidad
+        var query = await _listingRepository.WithDetailsAsync(x => x.Images);
+        var listing = query.Where(x => x.Id == input.ListingId).FirstOrDefault(); 
+        
+        if (listing == null) throw new EntityNotFoundException(typeof(Listing), input.ListingId);
 
+        // Validar ownership
+        await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imagenes de");
 
-        UploadImageResult? storedImage = null;
-        var uploadedNewImage = false;
+        // 3. Agregar usando metodo de dominio
+        listing.AddImage(
+            GuidGenerator.Create(),
+            uploadedImage.Url,
+            uploadedImage.ThumbnailUrl ?? uploadedImage.Url, // Fallback si thumb es null
+            input.AltText ?? string.Empty,
+            input.FileSize,
+            input.ContentType
+        );
 
-        try
+        // 4. Guardar cambios
+        await _listingRepository.UpdateAsync(listing);
+        
+        var newImage = listing.Images.Last(); 
+
+        return new ListingImageDto
         {
-            // Validar ownership y duplicados antes de subir al storage para evitar copias huerfanas
-            var listingSnapshot = await GetListingWithImagesNoTrackingAsync(listingId);
-            await ValidateListingOwnershipAsync(listingSnapshot.ArchitectId, "editar imagenes de");
-
-            var snapshotImages = listingSnapshot.Images ?? new List<ListingImage>();
-
-            // 1. Verificar duplicados para URLs ya alojadas (sin subir nada todavia)
-            if (!string.IsNullOrWhiteSpace(input.Url) &&
-                !input.Url.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-            {
-                var existingImageWithSameUrl = snapshotImages.FirstOrDefault(img => img.Url == input.Url);
-                if (existingImageWithSameUrl != null)
-                {
-                    return new ListingImageDto
-                    {
-                        ImageId = existingImageWithSameUrl.ImageId,
-                        Url = existingImageWithSameUrl.Url,
-                        ThumbnailUrl = existingImageWithSameUrl.ThumbnailUrl,
-                        AltText = existingImageWithSameUrl.AltText,
-                        PreviousImageId = existingImageWithSameUrl.PreviousImageId,
-                        NextImageId = existingImageWithSameUrl.NextImageId
-                    };
-                }
-            }
-
-            // 2. Subir la imagen SOLO una vez (para evitar duplicados en storage en caso de reintentos)
-            storedImage = await StoreImageIfNeededAsync(input);
-            uploadedNewImage = input.Url?.StartsWith("data:", StringComparison.OrdinalIgnoreCase) == true;
-
-            // 3. Ejecutar la inserción en una unidad de trabajo aislada con reintentos
-            return await ExecuteImageOperationAsync(
-                listingId,
-                "agregar imagen",
-                async listing =>
-                {
-                    await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imagenes de");
-
-                    var listingImages = listing.Images ?? new List<ListingImage>();
-                    if (listing.Images == null)
-                    {
-                        listing.Images = listingImages;
-                    }
-
-                    // Doble verificación con la URL final para evitar insertar duplicados
-                    var existingWithStoredUrl = listingImages.FirstOrDefault(img => img.Url == storedImage!.Url);
-                    if (existingWithStoredUrl != null)
-                    {
-                        return new ListingImageDto
-                        {
-                            ImageId = existingWithStoredUrl.ImageId,
-                            Url = existingWithStoredUrl.Url,
-                            ThumbnailUrl = existingWithStoredUrl.ThumbnailUrl,
-                            AltText = existingWithStoredUrl.AltText,
-                            PreviousImageId = existingWithStoredUrl.PreviousImageId,
-                            NextImageId = existingWithStoredUrl.NextImageId
-                        };
-                    }
-
-                    // Agregar imagen al listing
-                    var lastImage = GetTailImage(listingImages);
-                    if (listingImages.Count(img => img.NextImageId == null) > 1)
-                    {
-                        Logger.LogWarning(
-                            "Se detectaron multiples nodos finales en la cadena de imagenes del listing {ListingId}. Cadena actual: {Chain}",
-                            listingId,
-                            BuildImageChainDebugInfo(listingImages));
-                    }
-                    var newImageId = Guid.NewGuid();
-
-                    lastImage?.UpdateNextImage(newImageId);
-
-                    var newImage = new ListingImage(
-                        imageId: newImageId,
-                        url: storedImage!.Url,
-                        thumbnailUrl: storedImage.ThumbnailUrl,
-                        altText: input.AltText ?? string.Empty,
-                        fileSize: input.FileSize,
-                        contentType: input.ContentType,
-                        previousImageId: lastImage?.ImageId,
-                        nextImageId: null
-                    );
-
-                    listingImages.Add(newImage);
-
-                    // listing.LastModifiedAt = Clock.Now;
-                    // listing.LastModifiedBy = GetCurrentUserIdOrThrow();
-
-                    Logger.LogDebug(
-                        "Cadena de imagenes luego de agregar {ImageId} en listing {ListingId}: {Chain}",
-                        newImageId,
-                        listingId,
-                        BuildImageChainDebugInfo(listingImages));
-
-                    return new ListingImageDto
-                    {
-                        ImageId = newImage.ImageId,
-                        Url = newImage.Url,
-                        ThumbnailUrl = storedImage.ThumbnailUrl,
-                        AltText = newImage.AltText,
-                        PreviousImageId = newImage.PreviousImageId,
-                        NextImageId = newImage.NextImageId
-                    };
-                });
-        }
-        catch
-        {
-            await SafeDeleteUploadedImageAsync(uploadedNewImage, storedImage);
-            throw;
-        }
+            ImageId = newImage.ImageId,
+            Url = newImage.Url,
+            ThumbnailUrl = newImage.ThumbnailUrl,
+            AltText = newImage.AltText,
+            SortOrder = newImage.SortOrder
+        };
     }
+
+
 
     private async Task SafeDeleteUploadedImageAsync(bool uploadedNewImage, UploadImageResult? storedImage)
     {
@@ -715,158 +627,63 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// Elimina una imagen de una propiedad.
     /// Actualiza los punteros de la lista enlazada para mantener consistencia.
     /// </summary>
+    /// <summary>
+    /// Elimina una imagen usando metodo de dominio
+    /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task RemoveImageAsync(Guid listingId, Guid imageId)
     {
-        // Adquirir lock exclusivo para este listing - serializa todas las operaciones de imagen
-        await using var lockHandle = await _listingImageLockService.AcquireAsync(listingId);
+        var listing = await _listingRepository.WithDetailsAsync(x => x.Images);
+        var entity = listing.Where(x => x.Id == listingId).FirstOrDefault();
+             
+        if (entity == null) throw new EntityNotFoundException(typeof(Listing), listingId);
 
-        string? imageUrl = null;
+        await ValidateListingOwnershipAsync(entity.ArchitectId, "editar imagenes de");
+        
+        // Obtener URL antes de borrar para limpiar storage si es necesario
+        var image = entity.Images.FirstOrDefault(x => x.ImageId == imageId);
+        var imageUrl = image?.Url;
 
-        await ExecuteImageOperationAsync(
-            listingId,
-            "eliminar imagen",
-            async listing =>
-            {
-                await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imagenes de");
-
-                var listingImages = listing.Images ?? new List<ListingImage>();
-                if (listing.Images == null)
-                {
-                    listing.Images = listingImages;
-                }
-
-                var imageToRemove = listingImages.FirstOrDefault(img => img.ImageId == imageId);
-                if (imageToRemove == null)
-                {
-                    throw new BusinessException("Listing:ImageNotFound")
-                        .WithData("ImageId", imageId)
-                        .WithData("ListingId", listingId);
-                }
-
-                imageUrl = imageToRemove.Url;
-
-                if (imageToRemove.PreviousImageId.HasValue)
-                {
-                    var previousImage = listingImages.FirstOrDefault(img => img.ImageId == imageToRemove.PreviousImageId.Value);
-                    previousImage?.UpdateNextImage(imageToRemove.NextImageId);
-                }
-
-                if (imageToRemove.NextImageId.HasValue)
-                {
-                    var nextImage = listingImages.FirstOrDefault(img => img.ImageId == imageToRemove.NextImageId.Value);
-                    nextImage?.UpdatePreviousImage(imageToRemove.PreviousImageId);
-                }
-
-                listingImages.Remove(imageToRemove);
-
-                Logger.LogDebug(
-                    "Cadena de imagenes luego de eliminar {ImageId} en listing {ListingId}: {Chain}",
-                    imageId,
-                    listingId,
-                    BuildImageChainDebugInfo(listingImages));
-
-                // listing.LastModifiedAt = Clock.Now;
-                // listing.LastModifiedBy = GetCurrentUserIdOrThrow();
-
-                await Task.CompletedTask;
-            });
+        entity.RemoveImage(imageId);
+        
+        await _listingRepository.UpdateAsync(entity);
 
         if (!string.IsNullOrEmpty(imageUrl))
         {
-            await _imageStorageService.DeleteImageAsync(imageUrl);
+            // Opcional: borrar del storage background job o inmediato
+            // await _imageStorageService.DeleteImageAsync(imageUrl);
         }
     }
 
     /// <summary>
     /// Actualiza el orden de las imagenes reconstruyendo la lista enlazada.
     /// </summary>
+    /// <summary>
+    /// Reordena imagenes usando metodo de dominio
+    /// </summary>
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input)
     {
-        if (input == null || !input.Any())
-        {
-            return;
-        }
+        if (input == null || !input.Any()) return;
+        
+        var listing = await _listingRepository.WithDetailsAsync(x => x.Images);
+        var entity = listing.Where(x => x.Id == listingId).FirstOrDefault();
+             
+        if (entity == null) throw new EntityNotFoundException(typeof(Listing), listingId);
 
-        // Adquirir lock exclusivo para este listing - serializa todas las operaciones de imagen
-        await using var lockHandle = await _listingImageLockService.AcquireAsync(listingId);
+        await ValidateListingOwnershipAsync(entity.ArchitectId, "editar imagenes de");
 
-        await ExecuteImageOperationAsync(
-            listingId,
-            "reordenar imagenes",
-            async listing =>
-            {
-                await ValidateListingOwnershipAsync(listing.ArchitectId, "editar imagenes de");
-
-                var orderedInput = input.OrderBy(x => x.DisplayOrder).ToList();
-
-                var listingImages = listing.Images ?? new List<ListingImage>();
-                if (listing.Images == null)
-                {
-                    listing.Images = listingImages;
-                }
-
-                var existingImages = listingImages.ToDictionary(img => img.ImageId);
-
-                foreach (var item in orderedInput)
-                {
-                    if (!existingImages.ContainsKey(item.ImageId))
-                    {
-                        throw new BusinessException("Listing:ImageNotFound")
-                            .WithData("ImageId", item.ImageId)
-                            .WithData("ListingId", listingId);
-                    }
-                }
-
-                // Limpiar la colección original y repoblarla con el nuevo orden
-                // Esto es necesario porque OwnsMany requiere trabajar con la misma instancia de colección
-                var reorderedImages = new List<ListingImage>();
-                
-                for (int i = 0; i < orderedInput.Count; i++)
-                {
-                    var currentImageId = orderedInput[i].ImageId;
-                    var originalImage = existingImages[currentImageId];
-
-                    Guid? previousId = i > 0 ? orderedInput[i - 1].ImageId : null;
-                    Guid? nextId = i < orderedInput.Count - 1 ? orderedInput[i + 1].ImageId : null;
-
-                    // Crear una nueva instancia con los links actualizados (Value Objects deben ser inmutables)
-                    var updatedImage = new ListingImage(
-                        imageId: originalImage.ImageId,
-                        url: originalImage.Url,
-                        thumbnailUrl: originalImage.ThumbnailUrl,
-                        altText: originalImage.AltText,
-                        fileSize: originalImage.FileSize,
-                        contentType: originalImage.ContentType,
-                        previousImageId: previousId,
-                        nextImageId: nextId
-                    );
-                    reorderedImages.Add(updatedImage);
-                }
-
-                // Limpiar y repoblar la colección original (no reasignar)
-                listingImages.Clear();
-                foreach (var img in reorderedImages)
-                {
-                    listingImages.Add(img);
-                }
-                // listing.LastModifiedAt = Clock.Now;
-                // listing.LastModifiedBy = GetCurrentUserIdOrThrow();
-
-                Logger.LogDebug(
-                    "Cadena de imagenes luego de reordenar listing {ListingId}: {Chain}",
-                    listingId,
-                    BuildImageChainDebugInfo(listing.Images));
-
-                await Task.CompletedTask;
-            });
+        // Ordenar input por DisplayOrder y extraer IDs
+        var orderedIds = input.OrderBy(x => x.DisplayOrder).Select(x => x.ImageId).ToList();
+        
+        entity.ReorderImages(orderedIds);
+        
+        await _listingRepository.UpdateAsync(entity);
     }
 
-    public async Task<PagedResultDto<ListingDto>> SearchAsync(PropertySearchDto searchDto)
+    public async Task<PagedResultDto<ListingSummaryDto>> SearchAsync(PropertySearchDto searchDto)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect!,  // ? null-forgiving
             listing => listing.Images!);    // ? null-forgiving
 
         // Solo propiedades publicadas para búsqueda pública
@@ -893,7 +710,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         // Filtro por ubicación (ya validado por RegEx en DTO)
         if (!string.IsNullOrWhiteSpace(searchDto.Location))
         {
-            queryable = queryable.Where(p => p.Location != null && p.Location.Contains(searchDto.Location));  // ? null check
+            queryable = queryable.Where(p => p.Location != null && p.Location.Value.Contains(searchDto.Location));  // ? null check
         }
 
         // Rango de precio
@@ -947,9 +764,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(searchDto.PageSize)
         );
 
-        return new PagedResultDto<ListingDto>(
+        return new PagedResultDto<ListingSummaryDto>(
             totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
         );
     }
 
@@ -957,10 +774,9 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// Obtiene propiedades en portafolio (proyectos completados/showcase)
     /// </summary>
     [AllowAnonymous]
-    public async Task<PagedResultDto<ListingDto>> GetPortfolioAsync(GetListingsInput input)
+    public async Task<PagedResultDto<ListingSummaryDto>> GetPortfolioAsync(GetListingsInput input)
     {
         var queryable = await _listingRepository.WithDetailsAsync(
-            listing => listing.Architect!,  // ? null-forgiving
             listing => listing.Images!);    // ? null-forgiving
 
         // Solo propiedades en estado Portfolio
@@ -971,7 +787,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         {
             queryable = queryable.Where(p =>
                 p.Title.Contains(input.SearchTerm) ||
-                (p.Location != null && p.Location.Contains(input.SearchTerm)));  // ? null check
+                (p.Location != null && p.Location.Value.Contains(input.SearchTerm)));  // ? null check
         }
 
         if (input.PropertyType.HasValue)
@@ -995,9 +811,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingDto>(
+        return new PagedResultDto<ListingSummaryDto>(
             totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingDto>>(listings)
+            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
         );
     }
 
@@ -1025,8 +841,8 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Where(p => 
                     (p.Status == ListingStatus.Published || p.Status == ListingStatus.Portfolio) &&
                     p.Location != null &&
-                    p.Location.Contains(searchTerm))
-                .GroupBy(p => p.Location!)
+                    p.Location.Value.Contains(searchTerm))
+                .GroupBy(p => p.Location!.Value)
                 .Select(g => new LocationSuggestionDto
                 {
                     Location = g.Key,
@@ -1103,8 +919,7 @@ public class ListingAppService : cimaAppService, IListingAppService
                 // Ejecutar la operación solicitada
                 var result = await operation(listing);
 
-                // #region agent log - Capturar estado de la colección de imágenes antes de guardar
-                var _imagesInfo = listing.Images?.Select(img => new { Id = img.ImageId, UrlStart = img.Url?.Substring(0, Math.Min(50, img.Url?.Length ?? 0)), Prev = img.PreviousImageId, Next = img.NextImageId }).ToList();
+                var _imagesInfo = listing.Images?.OrderBy(i => i.SortOrder).Select(img => new { Id = img.ImageId, UrlStart = img.Url?.Substring(0, Math.Min(50, img.Url?.Length ?? 0)), Order = img.SortOrder }).ToList();
                 _ = Task.Run(async () => { try { using var c = new System.Net.Http.HttpClient(); await c.PostAsync("http://127.0.0.1:7242/ingest/3732978b-ef68-4667-9b0b-c599e86f26bf", new System.Net.Http.StringContent(System.Text.Json.JsonSerializer.Serialize(new { location = "ListingAppService.cs:1095", message = "Before UoW.CompleteAsync", data = new { listingId, _execReqId, concurrencyStamp = listing.ConcurrencyStamp, imageCount = listing.Images?.Count ?? 0, imagesInfo = _imagesInfo, imagesCollectionType = listing.Images?.GetType().FullName }, timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), sessionId = "debug-session", hypothesisId = "J,K" }), System.Text.Encoding.UTF8, "application/json")); } catch { } });
                 // #endregion
                 await uow.CompleteAsync();
@@ -1413,60 +1228,6 @@ public class ListingAppService : cimaAppService, IListingAppService
         return default;
     }
 
-    private static ListingImage? GetTailImage(IEnumerable<ListingImage> images)
-    {
-        var imageList = images as IList<ListingImage> ?? images.ToList();
-
-        if (imageList.Count == 0)
-        {
-            return null;
-        }
-
-        var tails = imageList.Where(img => img.NextImageId == null).ToList();
-        if (tails.Count == 0)
-        {
-            return null;
-        }
-
-        return tails.Count == 1
-            ? tails[0]
-            : tails.OrderBy(t => t.ImageId).First();
-    }
-
-    private static IReadOnlyList<ListingImage> OrderImages(IEnumerable<ListingImage> images)
-    {
-        var imageDict = images.ToDictionary(img => img.ImageId, img => img);
-        var ordered = new List<ListingImage>();
-
-        var head = imageDict.Values.FirstOrDefault(img => !img.PreviousImageId.HasValue) ??
-                   imageDict.Values.FirstOrDefault();
-
-        var visited = new HashSet<Guid>();
-        var current = head;
-
-        while (current != null && visited.Add(current.ImageId))
-        {
-            ordered.Add(current);
-
-            if (current.NextImageId.HasValue &&
-                imageDict.TryGetValue(current.NextImageId.Value, out var next))
-            {
-                current = next;
-            }
-            else
-            {
-                current = null;
-            }
-        }
-
-        foreach (var orphan in imageDict.Values.Where(img => !visited.Contains(img.ImageId)))
-        {
-            ordered.Add(orphan);
-        }
-
-        return ordered;
-    }
-
     private async Task<string> BuildListingImagesDebugSnapshotAsync(Guid listingId)
     {
         try
@@ -1500,11 +1261,10 @@ public class ListingAppService : cimaAppService, IListingAppService
 
     private static string BuildImageChainDebugInfo(IEnumerable<ListingImage> images)
     {
-        var ordered = OrderImages(images);
+        var ordered = images.OrderBy(i => i.SortOrder).ToList();
         return ordered.Count == 0
             ? "(sin imagenes)"
-            : string.Join(" -> ", ordered.Select(img =>
-                $"{ShortId(img.ImageId)}(p:{ShortId(img.PreviousImageId)},n:{ShortId(img.NextImageId)})"));
+            : string.Join(" -> ", ordered.Select(img => $"{ShortId(img.ImageId)}(o:{img.SortOrder})"));
     }
 
     private static string ShortId(Guid? id)
@@ -1524,7 +1284,7 @@ public class ListingAppService : cimaAppService, IListingAppService
         };
     }
 
-    private async Task<UploadImageResult> StoreImageIfNeededAsync(CreateListingImageDto input)
+    private async Task<UploadImageResult> StoreImageIfNeededAsync(AddListingImageDto input)
     {
         if (string.IsNullOrWhiteSpace(input.Url))
         {
