@@ -3,6 +3,8 @@
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @using System.Security.Claims
+@using System
+@using System.Threading.Tasks
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -317,7 +319,7 @@
     private const string NavbarStatePersistenceKey = "NavbarAuthState";
     
     private bool _isScrolled = false;
-    private bool _useTransparentNavbar = true;
+    private bool _useTransparentNavbar = false; // Default to solid
     private bool _mobileMenuOpen = false;
     private bool _adminMenuOpen = false;
     private bool _userMenuOpen = false;
@@ -353,7 +355,7 @@
             await LoadAuthenticationState();
         }
 
-        UpdateNavbarMode();
+        // Removed UpdateNavbarMode() from here
         
         // Solo suscribirse a cambios en WASM (no en servidor)
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
@@ -457,6 +459,10 @@
                 _scrollListener = await JS.InvokeAsync<IJSObjectReference>(
                     "cima.addScrollListener", _dotNetHelper);
                 
+                // Calcular estado del navbar después del renderizado (solo cliente)
+                UpdateNavbarMode();
+                StateHasChanged();
+
                 // Resetear estado al navegar
                 Navigation.LocationChanged += OnLocationChanged;
             }
