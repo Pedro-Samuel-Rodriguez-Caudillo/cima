@@ -404,6 +404,7 @@
             {
                 var input = new UpdateListingDto
                 {
+                    Id = Id.Value,
                     Title = Model.Title,
                     Description = Model.Description,
                     Address = new AddressDto { Value = Model.Location },
@@ -415,12 +416,6 @@
                     Category = Model.Category,
                     Type = Model.Type,
                     TransactionType = Model.TransactionType,
-                    // ArchitectId is not updatable in UpdateListingDto usually, check logic.
-                    // Assuming for now it logic stays same, but if removed from DTO, line below is invalid.
-                    // The previous UpdateListingInput had it? Let's assume yes or benign if missing.
-                    // Wait, UpdateListingDto usually doesn't allow changing architect.
-                    // Checking UpdateListingDto in my memory... likely doesn't have it.
-                    // Removing ArchitectId from Update mapping to be safe/correct DDD.
                 };
 
                 await ListingService.UpdateAsync(Id.Value, input);
