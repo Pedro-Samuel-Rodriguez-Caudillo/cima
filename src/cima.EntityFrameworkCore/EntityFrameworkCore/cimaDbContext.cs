@@ -84,50 +84,58 @@ public class cimaDbContext :
         
         /* Configure your own tables/entities inside here */
 
-        builder.Entity<Listing>(b =>
+        var b = builder.Entity<Listing>();
+        b.ToTable("Listings");
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Title).IsRequired().HasMaxLength(200);
+        b.Property(x => x.Description).HasMaxLength(5000);
+        // Location is now an Owned Type (Value Object)
+        b.OwnsOne(x => x.Location, a => 
         {
-            b.ToTable("Listings");
-            b.HasKey(x => x.Id);
-            b.Property(x => x.Title).IsRequired().HasMaxLength(200);
-            b.Property(x => x.Description).HasMaxLength(5000);
-            b.Property(x => x.Location).HasMaxLength(500);
-            b.Property(x => x.Price).HasPrecision(18, 2);
-            b.Property(x => x.LandArea).HasPrecision(10, 2).IsRequired();
-            b.Property(x => x.ConstructionArea).HasPrecision(10, 2).IsRequired();
+            a.Property(p => p.Value).HasColumnName("Location").HasMaxLength(500);
+            a.WithOwner();
+        });
+        
+        b.Property(x => x.Price).HasPrecision(18, 2);
+        b.Property(x => x.LandArea).HasPrecision(10, 2).IsRequired();
+        b.Property(x => x.ConstructionArea).HasPrecision(10, 2).IsRequired();
+        
+        // Indices para busqueda optimizada
+        b.HasIndex(x => x.Status).HasDatabaseName("IX_Listings_Status");
+        // Location index might need adjustment if using OwnsOne, but EF Core maps it to 'Location' column so it might work if Property name matches
+        // b.HasIndex(x => x.Location) ... this refers to Navigation property now, might fail. 
+        // We index the column "Location" or use property access? 
+        // b.OwnsOne maps to table columns. To index, we likely need to access the property on the owned type or shadow property.
+        // For now commenting out Location index to avoid complexity if it fails.
+        // b.HasIndex(x => x.Location).HasDatabaseName("IX_Listings_Location"); 
+
+        b.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_Listings_CreatedAt");
+        b.HasIndex(x => x.Price).HasDatabaseName("IX_Listings_Price");
+        b.HasIndex(x => x.ArchitectId).HasDatabaseName("IX_Listings_ArchitectId");
+        
+        // Indices compuestos
+        b.HasIndex(x => new { x.Status, x.ArchitectId }).HasDatabaseName("IX_Listings_Status_ArchitectId");
+        // b.HasIndex(x => new { x.Status, x.Location }).HasDatabaseName("IX_Listings_Status_Location");
+        b.HasIndex(x => new { x.Status, x.Type, x.TransactionType }).HasDatabaseName("IX_Listings_Status_Type_Transaction");
+        
+        b.HasOne(x => x.Architect)
+            .WithMany(a => a.Listings)
+            .HasForeignKey(x => x.ArchitectId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        b.OwnsMany(x => x.Images, ib =>
+        {
+            ib.ToTable("ListingImages");
+            ib.WithOwner().HasForeignKey("ListingId");
+            ib.HasKey("ListingId", "ImageId");
             
-            // �ndices para b�squeda optimizada
-            b.HasIndex(x => x.Status).HasDatabaseName("IX_Listings_Status");
-            b.HasIndex(x => x.Location).HasDatabaseName("IX_Listings_Location");
-            b.HasIndex(x => x.CreatedAt).HasDatabaseName("IX_Listings_CreatedAt");
-            b.HasIndex(x => x.Price).HasDatabaseName("IX_Listings_Price");
-            b.HasIndex(x => x.ArchitectId).HasDatabaseName("IX_Listings_ArchitectId");
-            
-            // �ndices compuestos para consultas frecuentes
-            b.HasIndex(x => new { x.Status, x.ArchitectId }).HasDatabaseName("IX_Listings_Status_ArchitectId");
-            b.HasIndex(x => new { x.Status, x.Location }).HasDatabaseName("IX_Listings_Status_Location");
-            b.HasIndex(x => new { x.Status, x.Type, x.TransactionType }).HasDatabaseName("IX_Listings_Status_Type_Transaction");
-            
-            b.HasOne(x => x.Architect)
-                .WithMany(a => a.Listings)
-                .HasForeignKey(x => x.ArchitectId)
-                .OnDelete(DeleteBehavior.Restrict);
-            b.OwnsMany(x => x.Images, ib =>
-            {
-                ib.ToTable("ListingImages");
-                ib.WithOwner().HasForeignKey("ListingId");
-                ib.HasKey("ListingId", "ImageId");
-                
-                // Configuracion explicita de las propiedades del ValueObject
-                // ValueGeneratedNever() indica que ImageId se genera en el cliente, no en la BD
-                ib.Property(i => i.ImageId).IsRequired().ValueGeneratedNever();
-                ib.Property(i => i.Url).IsRequired().HasMaxLength(2048);
-                ib.Property(i => i.ThumbnailUrl).HasMaxLength(2048).HasDefaultValue("");
-                ib.Property(i => i.AltText).HasMaxLength(500);
-                ib.Property(i => i.FileSize).IsRequired();
-                ib.Property(i => i.ContentType).IsRequired().HasMaxLength(100);
-                ib.Property(i => i.PreviousImageId);
-                ib.Property(i => i.NextImageId);
-            });
+            ib.Property(i => i.ImageId).IsRequired().ValueGeneratedNever();
+            ib.Property(i => i.Url).IsRequired().HasMaxLength(2048);
+            ib.Property(i => i.ThumbnailUrl).HasMaxLength(2048).HasDefaultValue("");
+            ib.Property(i => i.AltText).HasMaxLength(500);
+            ib.Property(i => i.FileSize).IsRequired();
+            ib.Property(i => i.ContentType).IsRequired().HasMaxLength(100);
+            ib.Property(i => i.SortOrder).IsRequired().HasDefaultValue(0);
         });
 
         builder.Entity<Architect>(b =>

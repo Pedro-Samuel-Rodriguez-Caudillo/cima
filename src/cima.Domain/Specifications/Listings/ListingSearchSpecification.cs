@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
@@ -6,72 +7,61 @@ using Volo.Abp.Specifications;
 
 namespace cima.Domain.Specifications.Listings;
 
-/// <summary>
-/// Specification compuesta para búsqueda avanzada de Listings.
-/// Soporta múltiples filtros opcionales.
-/// </summary>
 public class ListingSearchSpecification : Specification<Listing>
 {
-    private readonly ListingSearchCriteria _criteria;
+    private readonly string? _searchTerm;
+    private readonly decimal? _minPrice;
+    private readonly decimal? _maxPrice;
+    private readonly decimal? _minArea;
+    private readonly decimal? _maxArea;
+    private readonly int? _minBedrooms;
+    private readonly int? _minBathrooms;
+    private readonly PropertyType? _propertyType;
+    private readonly PropertyCategory? _propertyCategory;
+    private readonly TransactionType? _transactionType;
+    private readonly string? _location;
 
-    public ListingSearchSpecification(ListingSearchCriteria criteria)
+    public ListingSearchSpecification(
+        string? searchTerm = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        decimal? minArea = null,
+        decimal? maxArea = null,
+        int? minBedrooms = null,
+        int? minBathrooms = null,
+        PropertyType? propertyType = null,
+        PropertyCategory? propertyCategory = null,
+        TransactionType? transactionType = null,
+        string? location = null)
     {
-        _criteria = criteria ?? throw new ArgumentNullException(nameof(criteria));
+        _searchTerm = searchTerm;
+        _minPrice = minPrice;
+        _maxPrice = maxPrice;
+        _minArea = minArea;
+        _maxArea = maxArea;
+        _minBedrooms = minBedrooms;
+        _minBathrooms = minBathrooms;
+        _propertyType = propertyType;
+        _propertyCategory = propertyCategory;
+        _transactionType = transactionType;
+        _location = location;
     }
 
     public override Expression<Func<Listing, bool>> ToExpression()
     {
         return listing =>
-            // Solo publicadas (siempre aplicado para búsqueda pública)
-            listing.Status == ListingStatus.Published &&
-
-            // Tipo de transacción
-            (!_criteria.TransactionType.HasValue ||
-             listing.TransactionType == _criteria.TransactionType.Value) &&
-
-            // Categoría
-            (!_criteria.Category.HasValue ||
-             listing.Category == _criteria.Category.Value) &&
-
-            // Tipo de propiedad
-            (!_criteria.PropertyType.HasValue ||
-             listing.Type == _criteria.PropertyType.Value) &&
-
-            // Ubicación (contiene texto)
-            (string.IsNullOrEmpty(_criteria.Location) ||
-             (listing.Location != null && listing.Location.Contains(_criteria.Location))) &&
-
-            // Rango de precio
-            (!_criteria.MinPrice.HasValue || listing.Price >= _criteria.MinPrice.Value) &&
-            (!_criteria.MaxPrice.HasValue || listing.Price <= _criteria.MaxPrice.Value) &&
-
-            // Habitaciones y baños mínimos
-            (!_criteria.MinBedrooms.HasValue || listing.Bedrooms >= _criteria.MinBedrooms.Value) &&
-            (!_criteria.MinBathrooms.HasValue || listing.Bathrooms >= _criteria.MinBathrooms.Value) &&
-
-            // Rango de área
-            (!_criteria.MinArea.HasValue || listing.LandArea >= _criteria.MinArea.Value) &&
-            (!_criteria.MaxArea.HasValue || listing.LandArea <= _criteria.MaxArea.Value) &&
-
-            // Por arquitecto
-            (!_criteria.ArchitectId.HasValue || listing.ArchitectId == _criteria.ArchitectId.Value);
+            (string.IsNullOrWhiteSpace(_searchTerm) || 
+             listing.Title.Contains(_searchTerm) || 
+             (listing.Location != null && listing.Location.Value.Contains(_searchTerm))) &&
+            (!_minPrice.HasValue || listing.Price >= _minPrice.Value) &&
+            (!_maxPrice.HasValue || listing.Price <= _maxPrice.Value) &&
+            (!_minArea.HasValue || listing.LandArea >= _minArea.Value) &&
+            (!_maxArea.HasValue || listing.LandArea <= _maxArea.Value) &&
+            (!_minBedrooms.HasValue || listing.Bedrooms >= _minBedrooms.Value) &&
+            (!_minBathrooms.HasValue || listing.Bathrooms >= _minBathrooms.Value) &&
+            (!_propertyType.HasValue || listing.Type == _propertyType.Value) &&
+            (!_propertyCategory.HasValue || listing.Category == _propertyCategory.Value) &&
+            (!_transactionType.HasValue || listing.TransactionType == _transactionType.Value) &&
+            (string.IsNullOrWhiteSpace(_location) || (listing.Location != null && listing.Location.Value.Contains(_location)));
     }
-}
-
-/// <summary>
-/// Criterios de búsqueda para ListingSearchSpecification.
-/// </summary>
-public class ListingSearchCriteria
-{
-    public TransactionType? TransactionType { get; set; }
-    public PropertyCategory? Category { get; set; }
-    public PropertyType? PropertyType { get; set; }
-    public string? Location { get; set; }
-    public decimal? MinPrice { get; set; }
-    public decimal? MaxPrice { get; set; }
-    public int? MinBedrooms { get; set; }
-    public int? MinBathrooms { get; set; }
-    public decimal? MinArea { get; set; }
-    public decimal? MaxArea { get; set; }
-    public Guid? ArchitectId { get; set; }
 }
