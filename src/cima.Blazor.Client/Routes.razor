@@ -38,11 +38,7 @@
         <NotFound>
             <PageTitle>@L["NotFound:Title"]</PageTitle>
             <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
-                <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                    <h1 class="text-6xl font-display font-bold text-navy-900 mb-4">@L["NotFound:Code"]</h1>
-                    <p class="text-xl text-neutral-600 mb-8">@L["NotFound:Message"]</p>
-                    <a href="/" class="cima-btn cima-btn-primary">@L["NotFound:BackHome"]</a>
-                </div>
+                <cima.Blazor.Client.Pages.Public.Error404 />
             </LayoutView>
         </NotFound>
     </Router>
