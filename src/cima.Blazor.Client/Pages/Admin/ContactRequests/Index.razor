@@ -1,0 +1,64 @@
+@page "/admin/contact-requests"
+@using cima.ContactRequests
+@using cima.Permissions
+@using MudBlazor
+@attribute [Authorize(cimaPermissions.ContactRequests.Default)]
+@inherits cimaComponentBase
+
+<PageTitle>@L["Menu:ContactRequests"] - @L["CompanyName"]</PageTitle>
+
+<div class="cima-container py-8 pt-20">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">@L["Menu:ContactRequests"]</h1>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData" Disabled="@IsLoading">
+            @L["Common:Refresh"]
+        </MudButton>
+    </div>
+
+    @if (IsLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <MudDataGrid T="ContactRequestDto" Items="@Requests" Elevation="0" Outlined="true" Class="bg-white rounded-lg border border-gray-200"
+                 Loading="@IsLoading">
+        <Columns>
+            <MudBlazor.PropertyColumn Property="x => x.CreatedAt" Title="@L["Common:Date"]">
+                <CellTemplate>
+                    @context.Item.CreatedAt.ToLocalTime().ToString("g")
+                </CellTemplate>
+            </MudBlazor.PropertyColumn>
+            
+            <MudBlazor.PropertyColumn Property="x => x.Name" Title="@L["Common:Name"]" />
+            <MudBlazor.PropertyColumn Property="x => x.Email" Title="@L["Common:Email"]" />
+            
+            <MudBlazor.TemplateColumn Title="@L["Common:Status"]">
+                <CellTemplate>
+                    <MudChip T="string" Color="@GetStatusColor(context.Item.Status)" Size="Size.Small">
+                        @context.Item.Status.ToString()
+                    </MudChip>
+                </CellTemplate>
+            </MudBlazor.TemplateColumn>
+            
+            <MudBlazor.TemplateColumn Title="@L["Common:Actions"]">
+                <CellTemplate>
+                    <div class="flex gap-2">
+                        @if (context.Item.ListingId.HasValue)
+                        {
+                             <MudTooltip Text="Ver Propiedad">
+                                <MudIconButton Icon="@Icons.Material.Filled.Home" Size="Size.Small" Href="@($"/propiedades/{context.Item.ListingId}")" Target="_blank" />
+                             </MudTooltip>
+                        }
+                        
+                        <!-- Actions can be expanded here -->
+                    </div>
+                </CellTemplate>
+            </MudBlazor.TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <div class="p-4 flex justify-center">
+                 <MudPagination SelectedChanged="OnPageChanged" Count="@((TotalCount + PageSize - 1) / PageSize)" Selected="@CurrentPage" Class="mt-4" />
+            </div>
+        </PagerContent>
+    </MudDataGrid>
+</div>

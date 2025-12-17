@@ -16,6 +16,7 @@ public class PersistentAuthenticationStateProvider : AuthenticationStateProvider
 
     private readonly PersistentComponentState _state;
     private readonly HttpClient _httpClient;
+    private AuthenticationState? _cachedAuthenticationState;
 
     public PersistentAuthenticationStateProvider(PersistentComponentState state, HttpClient httpClient)
     {
@@ -25,6 +26,11 @@ public class PersistentAuthenticationStateProvider : AuthenticationStateProvider
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        if (_cachedAuthenticationState != null)
+        {
+            return _cachedAuthenticationState;
+        }
+
         if (!_state.TryTakeFromJson<UserInfo>(nameof(UserInfo), out var userInfo) || userInfo is null)
         {
             userInfo = await FetchUserInfoFromConfigurationAsync();
@@ -35,7 +41,8 @@ public class PersistentAuthenticationStateProvider : AuthenticationStateProvider
             }
         }
 
-        return new AuthenticationState(new ClaimsPrincipal(CreateIdentity(userInfo)));
+        _cachedAuthenticationState = new AuthenticationState(new ClaimsPrincipal(CreateIdentity(userInfo)));
+        return _cachedAuthenticationState;
     }
 
     private async Task<UserInfo?> FetchUserInfoFromConfigurationAsync()

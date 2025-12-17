@@ -8,6 +8,7 @@ using cima.Blazor.Client.Navigation;
 using Volo.Abp.Account.Localization;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.Authorization.Permissions;
+using Volo.Abp.Identity;
 
 namespace cima.Blazor.Navigation;
 
@@ -88,6 +89,43 @@ public class cimaMenuContributor : IMenuContributor
         // se configuran automáticamente en el servidor (cimaBlazorModule)
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
+        
+        // Manualmente agregar Identity si no aparece
+        var identityMenu = administration.GetMenuItem("AbpIdentity");
+        if (identityMenu == null)
+        {
+            identityMenu = new ApplicationMenuItem(
+                "AbpIdentity",
+                l["Menu:IdentityManagement"],
+                icon: "far fa-id-card",
+                order: 1
+            );
+            administration.AddItem(identityMenu);
+        }
+
+        if (identityMenu.GetMenuItem("AbpIdentity.Users") == null)
+        {
+            identityMenu.AddItem(new ApplicationMenuItem(
+                "AbpIdentity.Users",
+                l["Menu:IdentityManagement:Users"],
+                "/identity/users",
+                icon: "fa fa-users",
+                order: 1,
+                requiredPermissionName: IdentityPermissions.Users.Default
+            ));
+        }
+
+        if (identityMenu.GetMenuItem("AbpIdentity.Roles") == null)
+        {
+            identityMenu.AddItem(new ApplicationMenuItem(
+                "AbpIdentity.Roles",
+                l["Menu:IdentityManagement:Roles"],
+                "/identity/roles",
+                icon: "fa fa-id-badge",
+                order: 2,
+                requiredPermissionName: IdentityPermissions.Roles.Default
+            ));
+        }
 
         return Task.CompletedTask;
     }
