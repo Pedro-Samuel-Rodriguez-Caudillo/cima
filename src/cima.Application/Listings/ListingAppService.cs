@@ -196,6 +196,10 @@ public class ListingAppService : cimaAppService, IListingAppService
     /// <summary>
     /// Obtiene detalle de una propiedad por Id
     /// </summary>
+    /// <summary>
+    /// Obtiene detalle de una propiedad por Id
+    /// </summary>
+    [AllowAnonymous]
     public async Task<ListingDetailDto> GetAsync(Guid id)
     {
         var listingQueryable = await _listingRepository.WithDetailsAsync(
@@ -208,6 +212,23 @@ public class ListingAppService : cimaAppService, IListingAppService
         if (listing == null)
         {
             throw new EntityNotFoundException(typeof(Listing), id);
+        }
+
+        // Si no está publicada, validar permisos (solo dueño o admin)
+        if (listing.Status != ListingStatus.Published)
+        {
+            if (!CurrentUser.IsAuthenticated)
+            {
+                throw new EntityNotFoundException(typeof(Listing), id);
+            }
+
+            var currentUserId = CurrentUser.Id!.Value;
+            var architect = await _architectRepository.GetAsync(listing.ArchitectId);
+            
+            if (architect.UserId != currentUserId && !IsAdmin())
+            {
+                throw new EntityNotFoundException(typeof(Listing), id);
+            }
         }
 
         return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
