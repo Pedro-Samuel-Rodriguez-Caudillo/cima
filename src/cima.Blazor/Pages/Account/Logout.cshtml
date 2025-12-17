@@ -13,13 +13,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cerrar Sesi¢n - 4cima</title>
+    <title>Cerrar sesión - 4cima</title>
     <link rel="icon" type="image/svg+xml" href="/images/logo/4cima.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/app.min.css" />
 </head>
+
 <body class="auth-page">
     <div class="auth-container">
         <div class="auth-logo">
@@ -29,24 +30,28 @@
         <div class="auth-card auth-card-centered">
             @if (Model.LoggedOut)
             {
-                <div class="auth-icon-circle auth-icon-success">
+                <div class="auth-icon-circle auth-icon-success" aria-hidden="true">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                 </div>
-                <h1 class="auth-title">­Sesi¢n cerrada!</h1>
-                <p class="auth-subtitle">Has cerrado sesi¢n exitosamente.</p>
-                
+
+                <h1 class="auth-title">Sesión cerrada</h1>
+                <p class="auth-subtitle">Has cerrado sesión correctamente.</p>
+
                 <div class="auth-buttons">
                     <a href="/Account/Login" class="auth-btn auth-btn-primary">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                         </svg>
-                        Iniciar sesi¢n
+                        Iniciar sesión
                     </a>
+
                     <a href="/" class="auth-btn auth-btn-secondary">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
                         Ir al inicio
                     </a>
@@ -54,13 +59,15 @@
             }
             else
             {
-                <div class="auth-icon-circle auth-icon-warning">
+                <div class="auth-icon-circle auth-icon-warning" aria-hidden="true">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                     </svg>
                 </div>
-                <h1 class="auth-title">¨Cerrar sesi¢n?</h1>
-                <p class="auth-subtitle">¨Est s seguro?</p>
+
+                <h1 class="auth-title">¿Cerrar sesión?</h1>
+                <p class="auth-subtitle">Confirma para cerrar tu sesión.</p>
 
                 @if (!string.IsNullOrEmpty(Model.UserName))
                 {
@@ -78,16 +85,18 @@
 
                 <form method="post">
                     <input name="__RequestVerificationToken" type="hidden" value="@tokens.RequestToken" />
-                    
+
                     <div class="auth-buttons">
                         <button type="submit" class="auth-btn auth-btn-danger">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                             </svg>
-                            S¡, cerrar sesi¢n
+                            Sí, cerrar sesión
                         </button>
+
                         <a href="javascript:history.back()" class="auth-btn auth-btn-secondary">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                             </svg>
                             Cancelar
@@ -95,7 +104,7 @@
                     </div>
                 </form>
 
-                <p class="auth-note">Tu sesi¢n se cerrar  en todos los dispositivos.</p>
+                <p class="auth-note">Tu sesión se cerrará en todos los dispositivos.</p>
             }
         </div>
     </div>
