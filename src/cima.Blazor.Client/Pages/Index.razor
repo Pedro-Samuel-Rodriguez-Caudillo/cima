@@ -1,6 +1,7 @@
 @page "/"
 @using System.Collections.Generic
 @using cima.Blazor.Client.Components.Public
+@using cima.Listings.Outputs
 @inherits cimaComponentBase
 @inject SeoJsonLdService SeoJsonLdService
 @inject NavigationManager Navigation
@@ -34,7 +35,7 @@
         JsonLd = SeoJsonLdService.GenerateHomeJsonLd(BaseUrl);
     }
 
-    private async Task OnFeaturedLoaded(IReadOnlyList<ListingDto> listings)
+    private async Task OnFeaturedLoaded(IReadOnlyList<ListingSummaryDto> listings)
     {
         JsonLd = SeoJsonLdService.GenerateFeaturedListJsonLd(listings, BaseUrl);
         await InvokeAsync(StateHasChanged);

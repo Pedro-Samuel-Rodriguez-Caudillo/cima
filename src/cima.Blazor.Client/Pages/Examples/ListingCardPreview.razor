@@ -1,5 +1,6 @@
 @page "/examples/listing-card"
 @using cima.Listings
+@using cima.Listings.Outputs
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Components.Public
 @using Microsoft.Extensions.Localization
@@ -28,51 +29,44 @@
 </div>
 
 @code {
-    private ListingDto Listing1 = new()
+    private ListingSummaryDto Listing1 = new()
     {
         Id = Guid.NewGuid(),
         Title = "Casa Moderna en Santa Fe",
         Location = new LocationDto { City = "Santa Fe", State = "CDMX" },
         Price = 12500000,
-        LandArea = 450,
         ConstructionArea = 380,
         Bedrooms = 4,
         Bathrooms = 3,
         Category = PropertyCategory.Residential,
         TransactionType = TransactionType.Sale,
         Status = ListingStatus.Published,
-        Images = new List<ListingImageDto> 
-        { 
-            new ListingImageDto { Url = "/images/listing-1.jpg", IsCover = true }
-        },
-        CoverImage = new ListingImageDto { Url = "/images/listing-1.jpg", IsCover = true }
+        MainImage = new ListingImageDto { Url = "/images/listing-1.jpg", IsCover = true },
+        ImageCount = 1
     };
 
-    private ListingDto Listing2 = new()
+    private ListingSummaryDto Listing2 = new()
     {
         Id = Guid.NewGuid(),
         Title = "Terreno Comercial",
         Location = new LocationDto { City = "Juriquilla", State = "Querétaro" },
         Price = 4500000,
-        LandArea = 1000,
         Category = PropertyCategory.Commercial,
         TransactionType = TransactionType.Sale,
-        Status = ListingStatus.Published
+        Status = ListingStatus.Published,
+        MainImage = null,
+        ImageCount = 0
     };
 
-    private ListingDto Listing3 = new()
+    private ListingSummaryDto Listing3 = new()
     {
         Id = Guid.NewGuid(),
         Title = "Departamento de Lujo",
         Location = new LocationDto { City = "Polanco", State = "CDMX" },
-        Description = "Exclusivo departamento con acabados de lujo.",
         Price = 0, 
         Category = PropertyCategory.Residential,
         Status = ListingStatus.Portfolio,
-        Images = new List<ListingImageDto> 
-        { 
-            new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true } 
-        },
-        CoverImage = new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true }
+        MainImage = new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true },
+        ImageCount = 1
     };
 }

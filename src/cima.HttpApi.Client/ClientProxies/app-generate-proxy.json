@@ -855,6 +855,54 @@
             }
           }
         },
+        "cima.Blazor.Controllers.ImageProxyController": {
+          "controllerName": "ImageProxy",
+          "controllerGroupName": null,
+          "isRemoteService": false,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "cima.Blazor.Controllers.ImageProxyController",
+          "interfaces": [],
+          "actions": {
+            "GetByUrl": {
+              "uniqueName": "GetByUrl",
+              "name": "Get",
+              "httpMethod": "GET",
+              "url": "api/image-proxy",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "url",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "url",
+                  "name": "url",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Query",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "Microsoft.AspNetCore.Mvc.IActionResult",
+                "typeSimple": "Microsoft.AspNetCore.Mvc.IActionResult"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "cima.Blazor.Controllers.ImageProxyController"
+            }
+          }
+        },
         "cima.Blazor.Controllers.SeedController": {
           "controllerName": "Seed",
           "controllerGroupName": null,
@@ -923,6 +971,23 @@
                       "typeAsString": "cima.ContactRequests.CreateContactRequestDto, cima.Application.Contracts",
                       "type": "cima.ContactRequests.CreateContactRequestDto",
                       "typeSimple": "cima.ContactRequests.CreateContactRequestDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "cima.ContactRequests.ContactRequestDto",
+                    "typeSimple": "cima.ContactRequests.ContactRequestDto"
+                  }
+                },
+                {
+                  "name": "CreateGeneralAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "cima.ContactRequests.CreateGeneralContactRequestDto, cima.Application.Contracts",
+                      "type": "cima.ContactRequests.CreateGeneralContactRequestDto",
+                      "typeSimple": "cima.ContactRequests.CreateGeneralContactRequestDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
@@ -1076,6 +1141,43 @@
                   "jsonName": null,
                   "type": "cima.ContactRequests.CreateContactRequestDto",
                   "typeSimple": "cima.ContactRequests.CreateContactRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "cima.ContactRequests.ContactRequestDto",
+                "typeSimple": "cima.ContactRequests.ContactRequestDto"
+              },
+              "allowAnonymous": true,
+              "implementFrom": "cima.ContactRequests.IContactRequestAppService"
+            },
+            "CreateGeneralAsyncByInput": {
+              "uniqueName": "CreateGeneralAsyncByInput",
+              "name": "CreateGeneralAsync",
+              "httpMethod": "POST",
+              "url": "api/app/contact-request/general",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "cima.ContactRequests.CreateGeneralContactRequestDto, cima.Application.Contracts",
+                  "type": "cima.ContactRequests.CreateGeneralContactRequestDto",
+                  "typeSimple": "cima.ContactRequests.CreateGeneralContactRequestDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "cima.ContactRequests.CreateGeneralContactRequestDto",
+                  "typeSimple": "cima.ContactRequests.CreateGeneralContactRequestDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -1433,8 +1535,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Collections.Generic.List<cima.Listings.ListingDto>",
-                    "typeSimple": "[cima.Listings.ListingDto]"
+                    "type": "System.Collections.Generic.List<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "[cima.Listings.Outputs.ListingSummaryDto]"
                   }
                 },
                 {
@@ -1648,8 +1750,8 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Collections.Generic.List<cima.Listings.ListingDto>",
-                "typeSimple": "[cima.Listings.ListingDto]"
+                "type": "System.Collections.Generic.List<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "[cima.Listings.Outputs.ListingSummaryDto]"
               },
               "allowAnonymous": true,
               "implementFrom": "cima.Listings.IFeaturedListingAppService"
@@ -1844,8 +1946,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
                   }
                 },
                 {
@@ -1861,8 +1963,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1870,16 +1972,16 @@
                   "parametersOnMethod": [
                     {
                       "name": "input",
-                      "typeAsString": "cima.Listings.CreateUpdateListingDto, cima.Application.Contracts",
-                      "type": "cima.Listings.CreateUpdateListingDto",
-                      "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                      "typeAsString": "cima.Listings.Inputs.CreateListingDto, cima.Application.Contracts",
+                      "type": "cima.Listings.Inputs.CreateListingDto",
+                      "typeSimple": "cima.Listings.Inputs.CreateListingDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1895,16 +1997,16 @@
                     },
                     {
                       "name": "input",
-                      "typeAsString": "cima.Listings.CreateUpdateListingDto, cima.Application.Contracts",
-                      "type": "cima.Listings.CreateUpdateListingDto",
-                      "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                      "typeAsString": "cima.Listings.Inputs.UpdateListingDto, cima.Application.Contracts",
+                      "type": "cima.Listings.Inputs.UpdateListingDto",
+                      "typeSimple": "cima.Listings.Inputs.UpdateListingDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1928,17 +2030,17 @@
                   "name": "PublishAsync",
                   "parametersOnMethod": [
                     {
-                      "name": "id",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
+                      "name": "input",
+                      "typeAsString": "cima.Listings.Inputs.PublishListingDto, cima.Application.Contracts",
+                      "type": "cima.Listings.Inputs.PublishListingDto",
+                      "typeSimple": "cima.Listings.Inputs.PublishListingDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1954,8 +2056,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1971,8 +2073,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -1988,8 +2090,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -2005,8 +2107,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -2022,8 +2124,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "cima.Listings.ListingDto",
-                    "typeSimple": "cima.Listings.ListingDto"
+                    "type": "cima.Listings.Outputs.ListingDetailDto",
+                    "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
                   }
                 },
                 {
@@ -2055,8 +2157,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
                   }
                 },
                 {
@@ -2072,8 +2174,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
                   }
                 },
                 {
@@ -2089,8 +2191,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
                   }
                 },
                 {
@@ -2106,8 +2208,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
                   }
                 },
                 {
@@ -2131,18 +2233,10 @@
                   "name": "AddImageAsync",
                   "parametersOnMethod": [
                     {
-                      "name": "listingId",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    },
-                    {
                       "name": "input",
-                      "typeAsString": "cima.Listings.CreateListingImageDto, cima.Application.Contracts",
-                      "type": "cima.Listings.CreateListingImageDto",
-                      "typeSimple": "cima.Listings.CreateListingImageDto",
+                      "typeAsString": "cima.Listings.Inputs.AddListingImageDto, cima.Application.Contracts",
+                      "type": "cima.Listings.Inputs.AddListingImageDto",
+                      "typeSimple": "cima.Listings.Inputs.AddListingImageDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
@@ -2381,8 +2475,8 @@
                 }
               ],
               "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2418,8 +2512,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2433,9 +2527,9 @@
               "parametersOnMethod": [
                 {
                   "name": "input",
-                  "typeAsString": "cima.Listings.CreateUpdateListingDto, cima.Application.Contracts",
-                  "type": "cima.Listings.CreateUpdateListingDto",
-                  "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                  "typeAsString": "cima.Listings.Inputs.CreateListingDto, cima.Application.Contracts",
+                  "type": "cima.Listings.Inputs.CreateListingDto",
+                  "typeSimple": "cima.Listings.Inputs.CreateListingDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -2445,8 +2539,8 @@
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "cima.Listings.CreateUpdateListingDto",
-                  "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                  "type": "cima.Listings.Inputs.CreateListingDto",
+                  "typeSimple": "cima.Listings.Inputs.CreateListingDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -2455,8 +2549,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2478,9 +2572,9 @@
                 },
                 {
                   "name": "input",
-                  "typeAsString": "cima.Listings.CreateUpdateListingDto, cima.Application.Contracts",
-                  "type": "cima.Listings.CreateUpdateListingDto",
-                  "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                  "typeAsString": "cima.Listings.Inputs.UpdateListingDto, cima.Application.Contracts",
+                  "type": "cima.Listings.Inputs.UpdateListingDto",
+                  "typeSimple": "cima.Listings.Inputs.UpdateListingDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -2502,8 +2596,8 @@
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "cima.Listings.CreateUpdateListingDto",
-                  "typeSimple": "cima.Listings.CreateUpdateListingDto",
+                  "type": "cima.Listings.Inputs.UpdateListingDto",
+                  "typeSimple": "cima.Listings.Inputs.UpdateListingDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -2512,8 +2606,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2555,39 +2649,39 @@
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
             },
-            "PublishAsyncById": {
-              "uniqueName": "PublishAsyncById",
+            "PublishAsyncByInput": {
+              "uniqueName": "PublishAsyncByInput",
               "name": "PublishAsync",
               "httpMethod": "POST",
-              "url": "api/app/listing/{id}/publish",
+              "url": "api/app/listing/publish",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
-                  "name": "id",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
+                  "name": "input",
+                  "typeAsString": "cima.Listings.Inputs.PublishListingDto, cima.Application.Contracts",
+                  "type": "cima.Listings.Inputs.PublishListingDto",
+                  "typeSimple": "cima.Listings.Inputs.PublishListingDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
               ],
               "parameters": [
                 {
-                  "nameOnMethod": "id",
-                  "name": "id",
+                  "nameOnMethod": "input",
+                  "name": "input",
                   "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
+                  "type": "cima.Listings.Inputs.PublishListingDto",
+                  "typeSimple": "cima.Listings.Inputs.PublishListingDto",
                   "isOptional": false,
                   "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
                   "descriptorName": ""
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2623,8 +2717,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2660,8 +2754,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2697,8 +2791,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2734,8 +2828,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2771,8 +2865,8 @@
                 }
               ],
               "returnValue": {
-                "type": "cima.Listings.ListingDto",
-                "typeSimple": "cima.Listings.ListingDto"
+                "type": "cima.Listings.Outputs.ListingDetailDto",
+                "typeSimple": "cima.Listings.Outputs.ListingDetailDto"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -2952,8 +3046,8 @@
                 }
               ],
               "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
               },
               "allowAnonymous": true,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -3029,55 +3123,35 @@
                 }
               ],
               "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
               },
               "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
             },
-            "AddImageAsyncByListingIdAndInput": {
-              "uniqueName": "AddImageAsyncByListingIdAndInput",
+            "AddImageAsyncByInput": {
+              "uniqueName": "AddImageAsyncByInput",
               "name": "AddImageAsync",
               "httpMethod": "POST",
-              "url": "api/app/listing/image/{listingId}",
+              "url": "api/app/listing/image",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
-                  "name": "listingId",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                },
-                {
                   "name": "input",
-                  "typeAsString": "cima.Listings.CreateListingImageDto, cima.Application.Contracts",
-                  "type": "cima.Listings.CreateListingImageDto",
-                  "typeSimple": "cima.Listings.CreateListingImageDto",
+                  "typeAsString": "cima.Listings.Inputs.AddListingImageDto, cima.Application.Contracts",
+                  "type": "cima.Listings.Inputs.AddListingImageDto",
+                  "typeSimple": "cima.Listings.Inputs.AddListingImageDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
               ],
               "parameters": [
                 {
-                  "nameOnMethod": "listingId",
-                  "name": "listingId",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                },
-                {
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "cima.Listings.CreateListingImageDto",
-                  "typeSimple": "cima.Listings.CreateListingImageDto",
+                  "type": "cima.Listings.Inputs.AddListingImageDto",
+                  "typeSimple": "cima.Listings.Inputs.AddListingImageDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -3237,10 +3311,10 @@
                 }
               ],
               "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
               },
-              "allowAnonymous": true,
+              "allowAnonymous": false,
               "implementFrom": "cima.Listings.IListingAppService"
             },
             "GetPortfolioAsyncByInput": {
@@ -3418,8 +3492,8 @@
                 }
               ],
               "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.ListingDto>"
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<cima.Listings.Outputs.ListingSummaryDto>"
               },
               "allowAnonymous": true,
               "implementFrom": "cima.Listings.IListingAppService"
@@ -3460,234 +3534,6 @@
               },
               "allowAnonymous": true,
               "implementFrom": "cima.Listings.IListingAppService"
-            }
-          }
-        },
-        "cima.Listings.ListingCursorPaginationService": {
-          "controllerName": "ListingCursorPagination",
-          "controllerGroupName": "ListingCursorPagination",
-          "isRemoteService": true,
-          "isIntegrationService": false,
-          "apiVersion": null,
-          "type": "cima.Listings.ListingCursorPaginationService",
-          "interfaces": [],
-          "actions": {
-            "GetListingsWithCursorAsyncByInput": {
-              "uniqueName": "GetListingsWithCursorAsyncByInput",
-              "name": "GetListingsWithCursorAsync",
-              "httpMethod": "GET",
-              "url": "api/app/listing-cursor-pagination/ings-with-cursor",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "cima.Listings.GetListingsCursorInput, cima.Application.Contracts",
-                  "type": "cima.Listings.GetListingsCursorInput",
-                  "typeSimple": "cima.Listings.GetListingsCursorInput",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "SearchTerm",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Status",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MinPrice",
-                  "jsonName": null,
-                  "type": "System.Decimal?",
-                  "typeSimple": "number?",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MaxPrice",
-                  "jsonName": null,
-                  "type": "System.Decimal?",
-                  "typeSimple": "number?",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MinBedrooms",
-                  "jsonName": null,
-                  "type": "System.Int32?",
-                  "typeSimple": "number?",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MinBathrooms",
-                  "jsonName": null,
-                  "type": "System.Int32?",
-                  "typeSimple": "number?",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "ArchitectId",
-                  "jsonName": null,
-                  "type": "System.Guid?",
-                  "typeSimple": "string?",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "PropertyType",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Category",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "TransactionType",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "SortBy",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "SortDescending",
-                  "jsonName": null,
-                  "type": "System.Boolean",
-                  "typeSimple": "boolean",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Cursor",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Direction",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "PageSize",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "IncludeTotalCount",
-                  "jsonName": null,
-                  "type": "System.Boolean",
-                  "typeSimple": "boolean",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                }
-              ],
-              "returnValue": {
-                "type": "cima.Common.CursorPagedResultDto<cima.Listings.ListingCursorDto>",
-                "typeSimple": "cima.Common.CursorPagedResultDto<cima.Listings.ListingCursorDto>"
-              },
-              "allowAnonymous": true,
-              "implementFrom": "cima.Listings.ListingCursorPaginationService"
             }
           }
         },
@@ -3774,10 +3620,10 @@
                   "name": "TestEmailAsync",
                   "parametersOnMethod": [
                     {
-                      "name": "testRecipient",
-                      "typeAsString": "System.String, System.Private.CoreLib",
-                      "type": "System.String",
-                      "typeSimple": "string",
+                      "name": "input",
+                      "typeAsString": "cima.Settings.TestEmailSettingsDto, cima.Application.Contracts",
+                      "type": "cima.Settings.TestEmailSettingsDto",
+                      "typeSimple": "cima.Settings.TestEmailSettingsDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
@@ -3932,33 +3778,33 @@
               "allowAnonymous": false,
               "implementFrom": "cima.Settings.ISiteSettingsAppService"
             },
-            "TestEmailAsyncByTestRecipient": {
-              "uniqueName": "TestEmailAsyncByTestRecipient",
+            "TestEmailAsyncByInput": {
+              "uniqueName": "TestEmailAsyncByInput",
               "name": "TestEmailAsync",
               "httpMethod": "POST",
               "url": "api/app/site-settings/test-email",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
-                  "name": "testRecipient",
-                  "typeAsString": "System.String, System.Private.CoreLib",
-                  "type": "System.String",
-                  "typeSimple": "string",
+                  "name": "input",
+                  "typeAsString": "cima.Settings.TestEmailSettingsDto, cima.Application.Contracts",
+                  "type": "cima.Settings.TestEmailSettingsDto",
+                  "typeSimple": "cima.Settings.TestEmailSettingsDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
               ],
               "parameters": [
                 {
-                  "nameOnMethod": "testRecipient",
-                  "name": "testRecipient",
+                  "nameOnMethod": "input",
+                  "name": "input",
                   "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
+                  "type": "cima.Settings.TestEmailSettingsDto",
+                  "typeSimple": "cima.Settings.TestEmailSettingsDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
+                  "bindingSourceId": "Body",
                   "descriptorName": ""
                 }
               ],
@@ -4424,184 +4270,6 @@
         }
       ]
     },
-    "cima.Common.CursorDirection": {
-      "baseType": "System.Enum",
-      "isEnum": true,
-      "enumNames": [
-        "Forward",
-        "Backward"
-      ],
-      "enumValues": [
-        0,
-        1
-      ],
-      "genericArguments": null,
-      "properties": null
-    },
-    "cima.Common.CursorPagedRequestDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Cursor",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Direction",
-          "jsonName": null,
-          "type": "cima.Common.CursorDirection",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "PageSize",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "IncludeTotalCount",
-          "jsonName": null,
-          "type": "System.Boolean",
-          "typeSimple": "boolean",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        }
-      ]
-    },
-    "cima.Common.CursorPagedResultDto<T0>": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": [
-        "T"
-      ],
-      "properties": [
-        {
-          "name": "Items",
-          "jsonName": null,
-          "type": "[T]",
-          "typeSimple": "[T]",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "NextCursor",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "PreviousCursor",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "HasNextPage",
-          "jsonName": null,
-          "type": "System.Boolean",
-          "typeSimple": "boolean",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "HasPreviousPage",
-          "jsonName": null,
-          "type": "System.Boolean",
-          "typeSimple": "boolean",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Count",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "PageSize",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "TotalCount",
-          "jsonName": null,
-          "type": "System.Int64?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        }
-      ]
-    },
     "cima.ContactRequests.ContactRequestDto": {
       "baseType": null,
       "isEnum": false,
@@ -4624,8 +4292,8 @@
         {
           "name": "ListingId",
           "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
+          "type": "System.Guid?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -4684,8 +4352,8 @@
         {
           "name": "ArchitectId",
           "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
+          "type": "System.Guid?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -4812,6 +4480,63 @@
         }
       ]
     },
+    "cima.ContactRequests.CreateGeneralContactRequestDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Name",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Email",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Phone",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Message",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
     "cima.ContactRequests.MarkAsRepliedDto": {
       "baseType": null,
       "isEnum": false,
@@ -4838,13 +4563,15 @@
       "isEnum": true,
       "enumNames": [
         "New",
+        "Read",
         "Replied",
         "Closed"
       ],
       "enumValues": [
         0,
         1,
-        2
+        2,
+        3
       ],
       "genericArguments": null,
       "properties": null
@@ -4873,14 +4600,16 @@
       "enumNames": [
         "Residential",
         "Commercial",
-        "Mixed",
-        "Land"
+        "Industrial",
+        "Land",
+        "Mixed"
       ],
       "enumValues": [
         0,
         1,
         2,
-        3
+        3,
+        4
       ],
       "genericArguments": null,
       "properties": null
@@ -4954,228 +4683,6 @@
           "type": "System.Guid",
           "typeSimple": "string",
           "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        }
-      ]
-    },
-    "cima.Listings.CreateListingImageDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Url",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "AltText",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "FileSize",
-          "jsonName": null,
-          "type": "System.Int64",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "ContentType",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        }
-      ]
-    },
-    "cima.Listings.CreateUpdateListingDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Title",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Description",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Location",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Price",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "LandArea",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "ConstructionArea",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Bedrooms",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Bathrooms",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Status",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.ListingStatus",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Category",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.PropertyCategory",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Type",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.PropertyType",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "TransactionType",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.TransactionType",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "ArchitectId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5270,159 +4777,6 @@
           "maxLength": null,
           "minimum": "1",
           "maximum": "12",
-          "regex": null
-        }
-      ]
-    },
-    "cima.Listings.GetListingsCursorInput": {
-      "baseType": "cima.Common.CursorPagedRequestDto",
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "SearchTerm",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 200,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Status",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.ListingStatus?",
-          "typeSimple": "enum?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "MinPrice",
-          "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
-          "regex": null
-        },
-        {
-          "name": "MaxPrice",
-          "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
-          "regex": null
-        },
-        {
-          "name": "MinBedrooms",
-          "jsonName": null,
-          "type": "System.Int32?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "50",
-          "regex": null
-        },
-        {
-          "name": "MinBathrooms",
-          "jsonName": null,
-          "type": "System.Int32?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "50",
-          "regex": null
-        },
-        {
-          "name": "ArchitectId",
-          "jsonName": null,
-          "type": "System.Guid?",
-          "typeSimple": "string?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "PropertyType",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.PropertyType?",
-          "typeSimple": "enum?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Category",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.PropertyCategory?",
-          "typeSimple": "enum?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "TransactionType",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.TransactionType?",
-          "typeSimple": "enum?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "SortBy",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 50,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "SortDescending",
-          "jsonName": null,
-          "type": "System.Boolean",
-          "typeSimple": "boolean",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
           "regex": null
         }
       ]
@@ -5556,7 +4910,7 @@
         }
       ]
     },
-    "cima.Listings.ListingCursorDto": {
+    "cima.Listings.Inputs.AddListingImageDto": {
       "baseType": null,
       "isEnum": false,
       "enumNames": null,
@@ -5564,21 +4918,9 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "Id",
+          "name": "ListingId",
           "jsonName": null,
           "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Title",
-          "jsonName": null,
-          "type": "System.String",
           "typeSimple": "string",
           "isRequired": true,
           "minLength": null,
@@ -5588,10 +4930,112 @@
           "regex": null
         },
         {
-          "name": "Location",
+          "name": "Url",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 2048,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AltText",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FileSize",
+          "jsonName": null,
+          "type": "System.Int64",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "9.223372036854776E+18",
+          "regex": null
+        },
+        {
+          "name": "ContentType",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Inputs.AddressDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Value",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Inputs.CreateListingDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Title",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 5000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
+          "jsonName": null,
+          "type": "cima.Listings.Inputs.AddressDto",
+          "typeSimple": "cima.Listings.Inputs.AddressDto",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5607,8 +5051,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": null,
-          "maximum": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
           "regex": null
         },
         {
@@ -5619,8 +5063,20 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": null,
-          "maximum": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "ConstructionArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
           "regex": null
         },
         {
@@ -5631,8 +5087,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": null,
-          "maximum": null,
+          "minimum": "0",
+          "maximum": "100",
           "regex": null
         },
         {
@@ -5643,8 +5099,8 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
-          "minimum": null,
-          "maximum": null,
+          "minimum": "0",
+          "maximum": "100",
           "regex": null
         },
         {
@@ -5652,19 +5108,7 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.ListingStatus",
           "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "Type",
-          "jsonName": null,
-          "type": "cima.Domain.Shared.PropertyType",
-          "typeSimple": "enum",
-          "isRequired": false,
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5676,7 +5120,19 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.PropertyCategory",
           "typeSimple": "enum",
-          "isRequired": false,
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Type",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyType",
+          "typeSimple": "enum",
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5688,7 +5144,7 @@
           "jsonName": null,
           "type": "cima.Domain.Shared.TransactionType",
           "typeSimple": "enum",
-          "isRequired": false,
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5696,11 +5152,53 @@
           "regex": null
         },
         {
-          "name": "CreatedAt",
+          "name": "ArchitectId",
           "jsonName": null,
-          "type": "System.DateTime",
+          "type": "System.Guid",
           "typeSimple": "string",
-          "isRequired": false,
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Inputs.PublishListingDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "ListingId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Inputs.UpdateListingDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -5708,10 +5206,34 @@
           "regex": null
         },
         {
-          "name": "MainImageUrl",
+          "name": "Title",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 5000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Address",
+          "jsonName": null,
+          "type": "cima.Listings.Inputs.AddressDto",
+          "typeSimple": "cima.Listings.Inputs.AddressDto",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -5720,11 +5242,95 @@
           "regex": null
         },
         {
-          "name": "ArchitectName",
+          "name": "Price",
           "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
+          "type": "System.Decimal",
+          "typeSimple": "number",
           "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "LandArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "ConstructionArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "1.7976931348623157E+308",
+          "regex": null
+        },
+        {
+          "name": "Bedrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "100",
+          "regex": null
+        },
+        {
+          "name": "Bathrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "100",
+          "regex": null
+        },
+        {
+          "name": "Category",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyCategory",
+          "typeSimple": "enum",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Type",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyType",
+          "typeSimple": "enum",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "TransactionType",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.TransactionType",
+          "typeSimple": "enum",
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -6014,22 +5620,10 @@
           "regex": null
         },
         {
-          "name": "PreviousImageId",
+          "name": "SortOrder",
           "jsonName": null,
-          "type": "System.Guid?",
-          "typeSimple": "string?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "NextImageId",
-          "jsonName": null,
-          "type": "System.Guid?",
-          "typeSimple": "string?",
+          "type": "System.Int32",
+          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -6120,6 +5714,420 @@
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Outputs.ListingDetailDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Title",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Description",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Location",
+          "jsonName": null,
+          "type": "cima.Listings.LocationDto",
+          "typeSimple": "cima.Listings.LocationDto",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Price",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "LandArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ConstructionArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Area",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Bedrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Bathrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.ListingStatus",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Category",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyCategory",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Type",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "TransactionType",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.TransactionType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ArchitectId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Architect",
+          "jsonName": null,
+          "type": "cima.Architects.ArchitectDto",
+          "typeSimple": "cima.Architects.ArchitectDto",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Images",
+          "jsonName": null,
+          "type": "[cima.Listings.ListingImageDto]",
+          "typeSimple": "[cima.Listings.ListingImageDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "FirstPublishedAt",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreatedAt",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Listings.Outputs.ListingSummaryDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Title",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Location",
+          "jsonName": null,
+          "type": "cima.Listings.LocationDto",
+          "typeSimple": "cima.Listings.LocationDto",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Price",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.ListingStatus",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Category",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyCategory",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Type",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.PropertyType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "TransactionType",
+          "jsonName": null,
+          "type": "cima.Domain.Shared.TransactionType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Bedrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "Bathrooms",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ConstructionArea",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ImageCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "MainImage",
+          "jsonName": null,
+          "type": "cima.Listings.ListingImageDto",
+          "typeSimple": "cima.Listings.ListingImageDto",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "CreatedAt",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -6500,34 +6508,10 @@
           "regex": null
         },
         {
-          "name": "WhatsAppNumber",
+          "name": "EmailProvider",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": "^\\d{10,15}$"
-        },
-        {
-          "name": "WhatsAppDefaultMessage",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 500,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
-          "name": "WhatsAppEnabled",
-          "jsonName": null,
-          "type": "System.Boolean",
-          "typeSimple": "boolean",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -6560,10 +6544,166 @@
           "regex": null
         },
         {
+          "name": "SmtpHost",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPort",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPassword",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpEnableSsl",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoApiKey",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
           "name": "IsEmailConfigured",
           "jsonName": null,
           "type": "System.Boolean",
           "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppEnabled",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppNumber",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "WhatsAppDefaultMessage",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -6590,7 +6730,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 100,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6602,7 +6742,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 20,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6626,7 +6766,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 300,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6638,7 +6778,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 200,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6650,7 +6790,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 200,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6662,7 +6802,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 200,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6674,7 +6814,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 100,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6686,7 +6826,7 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 100,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6698,7 +6838,184 @@
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 100,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        }
+      ]
+    },
+    "cima.Settings.TestEmailSettingsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TargetEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "EmailProvider",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailConnectionString",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "AzureEmailSenderAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpHost",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPort",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPassword",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpEnableSsl",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoApiKey",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6717,6 +7034,18 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "ContactEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": 100,
@@ -6737,25 +7066,13 @@
           "regex": null
         },
         {
-          "name": "ContactEmail",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null
-        },
-        {
           "name": "Address",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
-          "maxLength": 300,
+          "maxLength": 200,
           "minimum": null,
           "maximum": null,
           "regex": null
@@ -6854,6 +7171,18 @@
           "regex": null
         },
         {
+          "name": "EmailProvider",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
           "name": "AzureEmailConnectionString",
           "jsonName": null,
           "type": "System.String",
@@ -6867,6 +7196,126 @@
         },
         {
           "name": "AzureEmailSenderAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpHost",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPort",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpUserName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpPassword",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromAddress",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpFromName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "SmtpEnableSsl",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoApiKey",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderEmail",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null
+        },
+        {
+          "name": "BrevoSenderName",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -6908,7 +7357,7 @@
           "maxLength": null,
           "minimum": null,
           "maximum": null,
-          "regex": "^\\d{10,15}$"
+          "regex": null
         },
         {
           "name": "DefaultMessage",

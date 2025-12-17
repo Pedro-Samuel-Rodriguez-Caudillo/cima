@@ -1,6 +1,7 @@
 @page "/properties"
 @page "/propiedades"
 @using cima.Listings
+@using cima.Listings.Outputs
 @inject IListingAppService ListingService
 @inject NavigationManager NavManager
 @inherits cimaComponentBase
@@ -191,7 +192,7 @@
 
 @code {
     private bool IsLoading { get; set; } = true;
-    private List<ListingDto>? Listings { get; set; }
+    private List<ListingSummaryDto>? Listings { get; set; }
     private int TotalCount { get; set; }
     private int CurrentPage { get; set; } = 1;
     private const int PageSize = 12;

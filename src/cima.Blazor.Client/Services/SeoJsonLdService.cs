@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using cima.Listings;
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
 
 namespace cima.Blazor.Client.Services;
 
@@ -45,7 +47,7 @@ public class SeoJsonLdService
         return JsonSerializer.Serialize(new object[] { organization, website }, SerializerOptions);
     }
 
-    public string GenerateFeaturedListJsonLd(IReadOnlyList<ListingDto> listings, string baseUrl)
+    public string GenerateFeaturedListJsonLd(IReadOnlyList<ListingSummaryDto> listings, string baseUrl)
     {
         if (listings is not { Count: > 0 })
         {
@@ -66,8 +68,8 @@ public class SeoJsonLdService
                     position = index + 1,
                     url = $"{cleanBaseUrl}/properties/{listing.Id}",
                     name = listing.Title,
-                    description = listing.Description,
-                    image = listing.Images?.Select(i => i.Url).Where(url => !string.IsNullOrWhiteSpace(url)).ToArray(),
+                    description = listing.Title, // Summary doesn't have description
+                    image = listing.MainImage != null ? new[] { listing.MainImage.Url } : Array.Empty<string>(),
                     offers = new
                     {
                         @type = "Offer",
@@ -81,7 +83,7 @@ public class SeoJsonLdService
         return JsonSerializer.Serialize(schema, SerializerOptions);
     }
 
-    public string GenerateListingJson(ListingDto listing, string baseUrl)
+    public string GenerateListingJson(ListingDetailDto listing, string baseUrl)
     {
         var cleanBaseUrl = TrimTrailingSlash(baseUrl);
 
@@ -121,7 +123,7 @@ public class SeoJsonLdService
         return JsonSerializer.Serialize(schema, SerializerOptions);
     }
 
-    public string GeneratePropertyJsonLd(ListingDto listing, string baseUrl)
+    public string GeneratePropertyJsonLd(ListingDetailDto listing, string baseUrl)
     {
         return GenerateListingJson(listing, baseUrl);
     }

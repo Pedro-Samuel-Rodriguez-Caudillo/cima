@@ -7,7 +7,10 @@ using System.Timers;
 using cima.Blazor.Client;
 using cima.Blazor.Client.Services;
 using cima.Domain.Shared;
+using cima.Domain.Shared;
 using cima.Listings;
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -17,7 +20,7 @@ public partial class Index : cimaComponentBase
 {
     private readonly Timer _searchTimer = new(500) { AutoReset = false };
 
-    private List<ListingDto> Listings { get; set; } = new();
+    private List<ListingSummaryDto> Listings { get; set; } = new();
     private HashSet<Guid> SelectedIds { get; set; } = new();
     private int TotalCount { get; set; }
     private int CurrentPage { get; set; } = 1;
@@ -127,7 +130,7 @@ public partial class Index : cimaComponentBase
         await ConfirmAndExecuteBulk(
             "Publicar propiedades",
             $"�Publicar {SelectedIds.Count} propiedades seleccionadas?",
-            id => ListingService.PublishAsync(id),
+            id => ListingService.PublishAsync(new PublishListingDto { ListingId = id }),
             count => $"{count} propiedades publicadas");
 
     private async Task BulkArchive() =>
@@ -188,7 +191,7 @@ public partial class Index : cimaComponentBase
     }
 
     private async Task PublishListing(Guid id) =>
-        await ExecuteWithReload(() => ListingService.PublishAsync(id), "Propiedad publicada");
+        await ExecuteWithReload(() => ListingService.PublishAsync(new PublishListingDto { ListingId = id }), "Propiedad publicada");
 
     private async Task ArchiveListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.ArchiveAsync(id), "Propiedad archivada");

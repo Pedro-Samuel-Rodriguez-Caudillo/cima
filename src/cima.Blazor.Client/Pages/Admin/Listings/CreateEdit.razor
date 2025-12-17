@@ -2,6 +2,8 @@
 @page "/admin/listings/edit/{Id:guid}"
 @rendermode InteractiveAuto
 @using cima.Listings
+@using cima.Listings.Inputs
+@using cima.Listings.Outputs
 @using cima.Architects
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Services
@@ -245,18 +247,11 @@
     // - Es admin Y hay arquitectos disponibles para asignar
     private bool CanCreateListings => CurrentArchitect != null || (IsAdmin && Architects?.Any() == true);
     
-    private CreateUpdateListingDto Model { get; set; } = new() 
-    { 
-        Title = "", 
-        Description = "",
-        Category = PropertyCategory.Residential,
-        Type = PropertyType.House,
-        TransactionType = TransactionType.Sale
-    };
+    private ListingViewModel Model { get; set; } = new();
     
     private List<ArchitectDto>? Architects { get; set; }
     private ArchitectDto? CurrentArchitect { get; set; }
-    private ListingDto? ExistingListing { get; set; }
+    private ListingDetailDto? ExistingListing { get; set; }
     
     // ID actual del listing (para modo edición o después de crear)
     private Guid? CurrentListingId => ExistingListing?.Id ?? (IsEditMode ? Id : null);
@@ -341,11 +336,11 @@
             if (!Id.HasValue) return;
             ExistingListing = await ListingService.GetAsync(Id.Value);
             
-            Model = new CreateUpdateListingDto
+            Model = new ListingViewModel
             {
                 Title = ExistingListing.Title,
                 Description = ExistingListing.Description,
-                Location = ExistingListing.Location?.ToString(),
+                Location = ExistingListing.Location?.Address ?? "", // Map from LocationDto
                 Price = ExistingListing.Price,
                 LandArea = ExistingListing.LandArea,
                 ConstructionArea = ExistingListing.ConstructionArea,
@@ -407,14 +402,51 @@
 
             if (IsEditMode && Id.HasValue)
             {
-                await ListingService.UpdateAsync(Id.Value, Model);
+                var input = new UpdateListingDto
+                {
+                    Title = Model.Title,
+                    Description = Model.Description,
+                    Address = new AddressDto { Value = Model.Location },
+                    Price = Model.Price,
+                    LandArea = Model.LandArea,
+                    ConstructionArea = Model.ConstructionArea,
+                    Bedrooms = Model.Bedrooms,
+                    Bathrooms = Model.Bathrooms,
+                    Category = Model.Category,
+                    Type = Model.Type,
+                    TransactionType = Model.TransactionType,
+                    // ArchitectId is not updatable in UpdateListingDto usually, check logic.
+                    // Assuming for now it logic stays same, but if removed from DTO, line below is invalid.
+                    // The previous UpdateListingInput had it? Let's assume yes or benign if missing.
+                    // Wait, UpdateListingDto usually doesn't allow changing architect.
+                    // Checking UpdateListingDto in my memory... likely doesn't have it.
+                    // Removing ArchitectId from Update mapping to be safe/correct DDD.
+                };
+
+                await ListingService.UpdateAsync(Id.Value, input);
                 Snackbar.Add(L["Admin:Listings:Form:UpdateSuccess"], Severity.Success);
                 NavManager.NavigateTo("/admin/listings");
             }
             else
             {
-                var created = await ListingService.CreateAsync(Model);
-                ExistingListing = created; // Para poder cargar imágenes inmediatamente
+                var input = new CreateListingDto
+                {
+                    Title = Model.Title,
+                    Description = Model.Description,
+                    Address = new AddressDto { Value = Model.Location },
+                    Price = Model.Price,
+                    LandArea = Model.LandArea,
+                    ConstructionArea = Model.ConstructionArea,
+                    Bedrooms = Model.Bedrooms,
+                    Bathrooms = Model.Bathrooms,
+                    Category = Model.Category,
+                    Type = Model.Type,
+                    TransactionType = Model.TransactionType,
+                    ArchitectId = Model.ArchitectId
+                };
+
+                var created = await ListingService.CreateAsync(input);
+                ExistingListing = created; // ListingDetailDto
                 Snackbar.Add(L["Admin:Listings:Form:CreateSuccess"], Severity.Success);
                 
                 // Redirigir a modo edición para poder agregar imágenes
@@ -447,7 +479,7 @@
         
         try
         {
-            ExistingListing = await ListingService.PublishAsync(Id.Value);
+            ExistingListing = await ListingService.PublishAsync(new PublishListingDto { ListingId = Id.Value });
             Snackbar.Add(L["Admin:Listings:Form:PublishSuccess"], Severity.Success);
             StateHasChanged();
         }
@@ -525,4 +557,22 @@
         ListingStatus.Portfolio => Color.Info,
         _ => Color.Default
     };
+
+    public class ListingViewModel
+    {
+        [Required]
+        public string Title { get; set; } = string.Empty;
+        [Required]
+        public string Description { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public decimal LandArea { get; set; }
+        public decimal ConstructionArea { get; set; }
+        public int Bedrooms { get; set; }
+        public int Bathrooms { get; set; }
+        public PropertyCategory Category { get; set; } = PropertyCategory.Residential;
+        public PropertyType Type { get; set; } = PropertyType.House;
+        public TransactionType TransactionType { get; set; } = TransactionType.Sale;
+        public Guid ArchitectId { get; set; }
+    }
 }

@@ -1,5 +1,6 @@
 @using cima.Listings
 @using cima.Permissions
+@using cima.Listings.Inputs
 @using Microsoft.AspNetCore.Components.Forms
 @using System.IO
 @using MudBlazor
@@ -164,21 +165,8 @@
 
     private List<ListingImageDto> GetOrderedImages()
     {
-        if (!Images.Any()) return new List<ListingImageDto>();
-        
-        var ordered = new List<ListingImageDto>();
-        var current = Images.FirstOrDefault(i => i.PreviousImageId == null);
-        
-        while (current != null && ordered.Count < Images.Count)
-        {
-            ordered.Add(current);
-            current = Images.FirstOrDefault(i => i.PreviousImageId == current.ImageId);
-        }
-        
-        var orphans = Images.Where(i => !ordered.Any(o => o.ImageId == i.ImageId));
-        ordered.AddRange(orphans);
-        
-        return ordered;
+        if (Images == null || !Images.Any()) return new List<ListingImageDto>();
+        return Images.OrderBy(i => i.SortOrder).ToList();
     }
 
     private async Task HandleFileSelection(InputFileChangeEventArgs e)
@@ -286,8 +274,9 @@
                 await JSRuntime.InvokeVoidAsync("console.log", $"Base64 generado para {file.Name}, longitud: {base64.Length}");
 
                 // Crear DTO
-                var createDto = new CreateListingImageDto
+                var createDto = new AddListingImageDto
                 {
+                    ListingId = ListingId,
                     Url = url,
                     AltText = GetFileNameWithoutExtension(file.Name),
                     FileSize = file.Size,
@@ -300,7 +289,7 @@
                 
                 await JSRuntime.InvokeVoidAsync("console.log", $"Enviando imagen al servidor: {file.Name}");
                 
-                var newImage = await ListingService.AddImageAsync(ListingId, createDto);
+                var newImage = await ListingService.AddImageAsync(createDto);
                 
                 await JSRuntime.InvokeVoidAsync("console.log", $"Imagen guardada exitosamente: {file.Name}");
                 
@@ -423,11 +412,10 @@
 
             await ListingService.UpdateImagesOrderAsync(ListingId, orderDtos);
             
-            // Actualizar los links locales para que coincidan con el nuevo orden guardado
+            // Actualizar el orden localmente
             for (int i = 0; i < Images.Count; i++)
             {
-                Images[i].PreviousImageId = i > 0 ? Images[i - 1].ImageId : null;
-                Images[i].NextImageId = i < Images.Count - 1 ? Images[i + 1].ImageId : null;
+                Images[i].SortOrder = i;
             }
             
             await NotifyImagesChanged();

@@ -1,5 +1,6 @@
 @page "/portfolio"
 @using cima.Listings
+@using cima.Listings.Outputs
 @using cima.Architects
 @using Microsoft.JSInterop
 @inject IListingAppService ListingService
@@ -190,7 +191,7 @@
 
 @code {
     private bool IsLoading { get; set; } = true;
-    private List<ListingDto>? PortfolioProjects { get; set; }
+    private List<ListingSummaryDto>? PortfolioProjects { get; set; }
     private List<ArchitectDto>? Architects { get; set; }
     private int TotalCount { get; set; }
     private int CurrentPage { get; set; } = 1;

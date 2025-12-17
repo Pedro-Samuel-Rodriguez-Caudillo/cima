@@ -1,6 +1,7 @@
 @page "/properties/{Id:guid}"
 @page "/propiedades/{Id:guid}"
 @using cima.Listings
+@using cima.Listings.Outputs
 @using cima.ContactRequests
 @using cima.Blazor.Client.Services
 @using cima.Blazor.Client.Components.Common
@@ -246,7 +247,7 @@ else
     public Guid Id { get; set; }
 
     private bool IsLoading { get; set; } = true;
-    private ListingDto? Listing { get; set; }
+    private ListingDetailDto? Listing { get; set; }
     private const string PlaceholderImage = "/images/placeholder.jpg";
 
     protected override async Task OnInitializedAsync()
@@ -319,8 +320,7 @@ else
 
     private string? GetCoverImageUrl()
     {
-        var cover = Listing?.CoverImage?.Url
-            ?? ImageOrderingHelper.GetCoverUrl(Listing?.Images);
+        var cover = ImageOrderingHelper.GetCoverUrl(Listing?.Images);
 
         return string.IsNullOrWhiteSpace(cover) ? PlaceholderImage : cover;
     }

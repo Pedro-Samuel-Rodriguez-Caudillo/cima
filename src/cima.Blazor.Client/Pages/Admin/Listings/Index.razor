@@ -1,5 +1,6 @@
 @page "/admin/listings"
 @using cima.Permissions
+@using cima.Listings.Outputs
 @attribute [Authorize(cimaPermissions.Listings.Default)]
 @inherits cimaComponentBase
 
@@ -173,8 +174,7 @@
                                 <div class="col-span-1 lg:col-span-4 flex items-center gap-4">
                                     <div class="w-16 h-12 bg-neutral-200 rounded overflow-hidden flex-shrink-0 relative">
                                         @{
-                                            var coverUrl = listing.CoverImage?.Url 
-                                                ?? ImageOrderingHelper.GetCoverUrl(listing.Images);
+                                            var coverUrl = listing.MainImage?.Url;
                                         }
                                         @if (!string.IsNullOrWhiteSpace(coverUrl))
                                         {

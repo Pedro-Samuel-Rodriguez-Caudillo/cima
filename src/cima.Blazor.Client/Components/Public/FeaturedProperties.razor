@@ -1,5 +1,6 @@
 @using System
 @using cima.Listings
+@using cima.Listings.Outputs
 @inject IFeaturedListingAppService FeaturedListingService
 @inject IClientCacheService ClientCache
 @inherits cimaComponentBase
@@ -73,10 +74,10 @@
 </section>
 
 @code {
-    [Parameter] public EventCallback<IReadOnlyList<ListingDto>> OnListingsLoaded { get; set; }
+    [Parameter] public EventCallback<IReadOnlyList<ListingSummaryDto>> OnListingsLoaded { get; set; }
 
     private bool IsLoading { get; set; } = true;
-    private List<ListingDto>? FeaturedListings { get; set; }
+    private List<ListingSummaryDto>? FeaturedListings { get; set; }
     private const string CacheKey = "featured_home_v1";
 
     protected override async Task OnInitializedAsync()
@@ -102,7 +103,7 @@
         catch (Exception ex)
         {
             await HandleErrorAsync(ex);
-            FeaturedListings = new List<ListingDto>();
+            FeaturedListings = new List<ListingSummaryDto>();
             await NotifyParentAsync();
         }
         finally
@@ -113,7 +114,7 @@
 
     private async Task NotifyParentAsync()
     {
-        var payload = (IReadOnlyList<ListingDto>?)FeaturedListings ?? Array.Empty<ListingDto>();
+        var payload = (IReadOnlyList<ListingSummaryDto>?)FeaturedListings ?? Array.Empty<ListingSummaryDto>();
         if (OnListingsLoaded.HasDelegate)
         {
             await OnListingsLoaded.InvokeAsync(payload);

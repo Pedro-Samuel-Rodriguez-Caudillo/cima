@@ -1,5 +1,6 @@
 @page "/listings"
 @using cima.Listings
+@using cima.Listings.Outputs
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Services
 @using cima.Permissions
@@ -47,9 +48,9 @@
                     <div class="cima-card overflow-hidden group">
                         <!-- Image -->
                         <div class="relative h-48 bg-neutral-200 overflow-hidden">
-                            @if (listing.Images?.Any() == true)
+                            @if (listing.MainImage != null)
                             {
-                                <img src="@listing.Images.First().Url" 
+                                <img src="@listing.MainImage.Url" 
                                      alt="@listing.Title" 
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                             }
@@ -129,7 +130,7 @@
 
 @code {
     private bool IsLoading { get; set; } = true;
-    private List<ListingDto>? Listings { get; set; }
+    private List<ListingSummaryDto>? Listings { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
