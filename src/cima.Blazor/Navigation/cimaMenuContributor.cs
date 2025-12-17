@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using cima.Localization;
@@ -84,9 +84,7 @@ public class cimaMenuContributor : IMenuContributor
             requiredPermissionName: cimaPermissions.ContactRequests.Default
         ));
         
-        // Administration menu - configuración básica
-        // NOTA: En Blazor Web App, los menús de Identity, TenantManagement, Settings
-        // se configuran automáticamente en el servidor (cimaBlazorModule)
+        // Administration menu
         var administration = context.Menu.GetAdministration();
         administration.Order = 6;
         
