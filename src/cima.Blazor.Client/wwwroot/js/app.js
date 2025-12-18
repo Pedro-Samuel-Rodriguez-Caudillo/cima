@@ -27,28 +27,28 @@ window.cima = {
 window.cimaScrollToTop = {
     dotNetRef: null,
     threshold: 300,
-    
+
     init: function (dotNetHelper, threshold) {
         this.dotNetRef = dotNetHelper;
         this.threshold = threshold || 300;
-        
+
         window.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
     },
-    
+
     handleScroll: function () {
         const isVisible = window.scrollY > this.threshold;
         if (this.dotNetRef) {
             this.dotNetRef.invokeMethodAsync('UpdateVisibility', isVisible);
         }
     },
-    
+
     scrollToTop: function () {
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
         });
     },
-    
+
     dispose: function () {
         window.removeEventListener('scroll', this.handleScroll);
         this.dotNetRef = null;
@@ -62,7 +62,7 @@ window.cimaScrollToTop = {
 window.cimaLazyImage = {
     observer: null,
     elements: new Map(),
-    
+
     getObserver: function (rootMargin) {
         if (!this.observer) {
             this.observer = new IntersectionObserver((entries) => {
@@ -83,21 +83,21 @@ window.cimaLazyImage = {
         }
         return this.observer;
     },
-    
+
     observe: function (element, dotNetRef, rootMargin) {
         if (element) {
             this.elements.set(element, dotNetRef);
             this.getObserver(rootMargin).observe(element);
         }
     },
-    
+
     unobserve: function (element) {
         if (element && this.observer) {
             this.observer.unobserve(element);
             this.elements.delete(element);
         }
     },
-    
+
     dispose: function () {
         if (this.observer) {
             this.observer.disconnect();
@@ -113,10 +113,10 @@ window.cimaLazyImage = {
 
 window.cimaImageLoader = {
     observer: null,
-    
+
     init: function () {
         if (this.observer) return;
-        
+
         this.observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -134,13 +134,13 @@ window.cimaImageLoader = {
             threshold: 0.01
         });
     },
-    
+
     observe: function (element) {
         if (this.observer && element) {
             this.observer.observe(element);
         }
     },
-    
+
     dispose: function () {
         if (this.observer) {
             this.observer.disconnect();
@@ -155,15 +155,15 @@ window.cimaImageLoader = {
 
 window.cimaDropdown = {
     activeDropdown: null,
-    
+
     open: function (elementId, dotNetRef) {
         this.close();
         this.activeDropdown = { elementId, dotNetRef };
-        
+
         document.addEventListener('click', this.handleOutsideClick);
         document.addEventListener('keydown', this.handleEscape);
     },
-    
+
     close: function () {
         if (this.activeDropdown && this.activeDropdown.dotNetRef) {
             this.activeDropdown.dotNetRef.invokeMethodAsync('Close');
@@ -172,7 +172,7 @@ window.cimaDropdown = {
         document.removeEventListener('click', this.handleOutsideClick);
         document.removeEventListener('keydown', this.handleEscape);
     },
-    
+
     handleOutsideClick: function (event) {
         if (window.cimaDropdown.activeDropdown) {
             const element = document.getElementById(window.cimaDropdown.activeDropdown.elementId);
@@ -181,7 +181,7 @@ window.cimaDropdown = {
             }
         }
     },
-    
+
     handleEscape: function (event) {
         if (event.key === 'Escape') {
             window.cimaDropdown.close();
@@ -195,41 +195,41 @@ window.cimaDropdown = {
 
 window.cimaFocusTrap = {
     previousFocus: null,
-    
+
     activate: function (elementId) {
         this.previousFocus = document.activeElement;
-        
+
         const element = document.getElementById(elementId);
         if (!element) return;
-        
+
         const focusableElements = element.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        
+
         if (focusableElements.length > 0) {
             focusableElements[0].focus();
         }
-        
+
         element.addEventListener('keydown', this.handleTab.bind(this, element));
     },
-    
+
     deactivate: function () {
         if (this.previousFocus) {
             this.previousFocus.focus();
             this.previousFocus = null;
         }
     },
-    
+
     handleTab: function (element, event) {
         if (event.key !== 'Tab') return;
-        
+
         const focusableElements = element.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        
+
         const firstFocusable = focusableElements[0];
         const lastFocusable = focusableElements[focusableElements.length - 1];
-        
+
         if (event.shiftKey) {
             if (document.activeElement === firstFocusable) {
                 lastFocusable.focus();
@@ -259,6 +259,19 @@ window.cimaCopyToClipboard = async function (text) {
 };
 
 // ========================================
+// Download File from Base64
+// ========================================
+
+window.downloadFileFromBase64 = function (fileName, base64, mimeType) {
+    const link = document.createElement('a');
+    link.href = `data:${mimeType};base64,${base64}`;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// ========================================
 // Announce for Screen Readers (ARIA Live)
 // ========================================
 
@@ -266,7 +279,7 @@ window.cimaAnnounce = function (message, priority = 'polite') {
     const announcer = document.getElementById('cima-announcer') || createAnnouncer();
     announcer.setAttribute('aria-live', priority);
     announcer.textContent = message;
-    
+
     // Clear after announcement
     setTimeout(() => {
         announcer.textContent = '';
@@ -296,11 +309,11 @@ window.cimaPreload = {
             img.src = src;
         });
     },
-    
+
     preloadImages: function (srcs) {
         return Promise.all(srcs.map(src => this.preloadImage(src)));
     },
-    
+
     prefetchPage: function (url) {
         const link = document.createElement('link');
         link.rel = 'prefetch';
@@ -315,14 +328,14 @@ window.cimaPreload = {
 
 window.cimaPerformance = {
     marks: {},
-    
+
     mark: function (name) {
         this.marks[name] = performance.now();
         if (window.performance && window.performance.mark) {
             performance.mark(name);
         }
     },
-    
+
     measure: function (name, startMark, endMark) {
         if (window.performance && window.performance.measure) {
             try {
@@ -331,15 +344,15 @@ window.cimaPerformance = {
                 console.warn('Performance measure failed:', e);
             }
         }
-        
+
         const start = this.marks[startMark];
         const end = this.marks[endMark] || performance.now();
         return end - start;
     },
-    
+
     getMetrics: function () {
         const metrics = {};
-        
+
         // Navigation Timing
         if (window.performance && window.performance.timing) {
             const timing = window.performance.timing;
@@ -347,7 +360,7 @@ window.cimaPerformance = {
             metrics.domContentLoaded = timing.domContentLoadedEventEnd - timing.navigationStart;
             metrics.firstByte = timing.responseStart - timing.navigationStart;
         }
-        
+
         // Core Web Vitals (if available)
         if (window.performance && window.performance.getEntriesByType) {
             const paintEntries = performance.getEntriesByType('paint');
@@ -357,10 +370,10 @@ window.cimaPerformance = {
                 }
             });
         }
-        
+
         return metrics;
     },
-    
+
     reportToConsole: function () {
         const metrics = this.getMetrics();
         console.group('CIMA Performance Metrics');
@@ -391,7 +404,7 @@ window.cimaCache = {
         }
         return keys;
     },
-    
+
     getSize: function () {
         let total = 0;
         for (let i = 0; i < localStorage.length; i++) {
@@ -402,12 +415,12 @@ window.cimaCache = {
         }
         return total;
     },
-    
+
     clearExpired: function (prefix) {
         const now = Date.now();
         const keys = this.getKeys(prefix);
         let cleared = 0;
-        
+
         keys.forEach(key => {
             try {
                 const item = JSON.parse(localStorage.getItem(key));
@@ -421,7 +434,7 @@ window.cimaCache = {
                 cleared++;
             }
         });
-        
+
         return cleared;
     }
 };

@@ -28,33 +28,33 @@
         </div>
     </section>
 
-    @* Filters Section *@
-    <section class="relative -mt-4 z-10 pb-8">
-        <div class="cima-container">
-            <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-neutral-100">
-                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                    <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
-                        @L["Portfolio:FilterByArchitect"]:
-                    </label>
-                    
-                    <select 
-                        id="architect-filter"
-                        class="cima-input flex-1 md:max-w-md bg-white"
-                        value="@SelectedArchitectId"
-                        @onchange="OnArchitectFilterChanged">
-                        <option value="">@L["Portfolio:AllArchitects"]</option>
-                        @if (Architects?.Any() == true)
-                        {
-                            @foreach (var architect in Architects)
+    @* Filters Section - Only show if architects have usernames configured *@
+    @if (ArchitectsWithUsernames?.Any() == true)
+    {
+        <section class="relative -mt-4 z-10 pb-8">
+            <div class="cima-container">
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-neutral-100">
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                        <label for="architect-filter" class="font-medium text-neutral-900 whitespace-nowrap">
+                            @L["Portfolio:FilterByArchitect"]:
+                        </label>
+                        
+                        <select 
+                            id="architect-filter"
+                            class="cima-input flex-1 md:max-w-md bg-white"
+                            value="@SelectedArchitectId"
+                            @onchange="OnArchitectFilterChanged">
+                            <option value="">@L["Portfolio:AllArchitects"]</option>
+                            @foreach (var architect in ArchitectsWithUsernames)
                             {
                                 <option value="@architect.Id">@architect.UserName</option>
                             }
-                        }
-                    </select>
+                        </select>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    }
 
     @* Projects Grid *@
     <section class="py-12 md:py-16">
@@ -199,6 +199,11 @@
     private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     
     private string? SelectedArchitectId { get; set; }
+
+    // Filter to only show architects with configured usernames
+    private List<ArchitectDto>? ArchitectsWithUsernames => Architects?
+        .Where(a => !string.IsNullOrWhiteSpace(a.UserName) && a.IsActive)
+        .ToList();
 
     protected override async Task OnInitializedAsync()
     {

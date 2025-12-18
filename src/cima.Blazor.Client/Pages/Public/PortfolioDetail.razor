@@ -1,0 +1,227 @@
+@page "/portfolio/{Id:guid}"
+@using cima.Listings
+@using cima.Listings.Outputs
+@using cima.Blazor.Client.Components.Public
+@using cima.Blazor.Client.Services
+@inject IListingAppService ListingService
+@inject EnumLocalizationService EnumLocalizer
+@inject NavigationManager NavManager
+@inherits cimaComponentBase
+
+<PageTitle>@(Listing?.Title ?? L["Portfolio:Title"]) - @L["CompanyName"]</PageTitle>
+
+@if (IsLoading)
+{
+    <div class="min-h-screen bg-neutral-50 pt-24">
+        <div class="cima-container">
+            <div class="cima-skeleton-image mb-8"></div>
+            <div class="space-y-4">
+                <div class="cima-skeleton-text w-3/4"></div>
+                <div class="cima-skeleton-text w-1/2"></div>
+            </div>
+        </div>
+    </div>
+}
+else if (Listing == null)
+{
+    <div class="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div class="text-center">
+            <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h2 class="text-2xl font-semibold text-neutral-900 mb-2">@L["Portfolio:ProjectNotFound"]</h2>
+            <a href="/portfolio" class="cima-btn cima-btn-primary mt-4">@L["Portfolio:BackToList"]</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="min-h-screen bg-neutral-50">
+        @* Header *@
+        <section class="bg-navy-900 pt-20 pb-8">
+            <div class="cima-container">
+                <nav class="flex items-center text-sm text-navy-200 gap-2 mb-6">
+                    <a href="/" class="hover:text-white transition-colors">@L["Home"]</a>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <a href="/portfolio" class="hover:text-white transition-colors">@L["Portfolio:Title"]</a>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="text-white font-medium truncate max-w-xs">@Listing.Title</span>
+                </nav>
+                
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-white mb-4">
+                    @Listing.Title
+                </h1>
+                
+                <div class="flex flex-wrap gap-3">
+                    <span class="inline-flex items-center px-3 py-1 bg-navy-700 text-navy-100 rounded-full text-sm">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        </svg>
+                        @(Listing.Location?.ToString() ?? L["PropertyDetail:LocationNotAvailable"])
+                    </span>
+                    <span class="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-full text-sm font-medium">
+                        @L["Portfolio:CompletedProject"]
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        @* Gallery Section *@
+        <section class="py-12">
+            <div class="cima-container">
+                <PortfolioGallery Images="@GetGalleryImages()" />
+            </div>
+        </section>
+
+        @* Details Section *@
+        <section class="pb-16">
+            <div class="cima-container">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    @* Main Content *@
+                    <div class="lg:col-span-2 space-y-8">
+                        @* Description *@
+                        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
+                            <h2 class="text-2xl font-display font-semibold text-neutral-900 mb-4">
+                                @L["PropertyDetail:Description"]
+                            </h2>
+                            <div class="prose prose-neutral max-w-none text-neutral-700 leading-relaxed whitespace-pre-line">
+                                @Listing.Description
+                            </div>
+                        </div>
+
+                        @* Features *@
+                        <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
+                            <h2 class="text-2xl font-display font-semibold text-neutral-900 mb-4">
+                                @L["PropertyDetail:Features"]
+                            </h2>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                @if (Listing.Bedrooms > 0)
+                                {
+                                    <div class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl">
+                                        <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-lg font-semibold text-neutral-900">@Listing.Bedrooms</div>
+                                            <div class="text-xs text-neutral-500">@L["Properties:Bedrooms"]</div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (Listing.Bathrooms > 0)
+                                {
+                                    <div class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl">
+                                        <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-lg font-semibold text-neutral-900">@Listing.Bathrooms</div>
+                                            <div class="text-xs text-neutral-500">@L["Properties:Bathrooms"]</div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (Listing.Area > 0)
+                                {
+                                    <div class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl">
+                                        <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-lg font-semibold text-neutral-900">@Listing.Area.ToString("N0") m²</div>
+                                            <div class="text-xs text-neutral-500">@L["Properties:Area"]</div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Sidebar *@
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-24 space-y-4">
+                            @* Project Info Card *@
+                            <div class="bg-white rounded-2xl p-6 shadow-sm">
+                                <h3 class="font-semibold text-neutral-900 mb-4">@L["Portfolio:ProjectInfo"]</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-neutral-500">@L["Search:PropertyCategory"]</span>
+                                        <span class="font-medium text-neutral-900">@EnumLocalizer.GetPropertyCategoryName(Listing.Category)</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-neutral-500">@L["Search:PropertyType"]</span>
+                                        <span class="font-medium text-neutral-900">@EnumLocalizer.GetPropertyTypeName(Listing.Type)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @* Back Button *@
+                            <a href="/portfolio" class="flex items-center justify-center gap-2 w-full py-3 bg-navy-600 hover:bg-navy-700 text-white rounded-xl transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                @L["Portfolio:ViewMoreProjects"]
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private bool IsLoading { get; set; } = true;
+    private ListingDetailDto? Listing { get; set; }
+    private const string PlaceholderImage = "/images/placeholder.jpg";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadListing();
+    }
+
+    private async Task LoadListing()
+    {
+        try
+        {
+            IsLoading = true;
+            Listing = await ListingService.GetAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+            Listing = null;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private List<string> GetGalleryImages()
+    {
+        var orderedImages = ImageOrderingHelper.OrderImages(Listing?.Images)
+            .Where(img => !string.IsNullOrWhiteSpace(img.Url))
+            .Select(img => img.Url)
+            .ToList();
+
+        if (orderedImages.Count == 0)
+        {
+            orderedImages.Add(PlaceholderImage);
+        }
+
+        return orderedImages;
+    }
+}

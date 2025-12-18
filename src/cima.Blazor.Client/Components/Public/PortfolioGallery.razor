@@ -1,0 +1,170 @@
+@using cima.Listings.Outputs
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IJSRuntime JS
+@inject IStringLocalizer<cimaResource> L
+
+<div class="portfolio-gallery">
+    @* Main Featured Image *@
+    @if (Images.Count > 0)
+    {
+        <div class="mb-4">
+            <div class="relative overflow-hidden rounded-2xl cursor-pointer group" @onclick="() => OpenLightbox(currentIndex)">
+                <div class="aspect-[16/9]">
+                    <img src="@CurrentImage"
+                         alt="@L["ImageGallery:MainAlt"]"
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                         loading="eager" />
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-neutral-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                    </svg>
+                    @L["ImageGallery:ViewFull"]
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Instagram-style Grid *@
+    @if (Images.Count > 1)
+    {
+        <div class="grid grid-cols-3 gap-1 rounded-xl overflow-hidden">
+            @for (int i = 0; i < Images.Count && i < 9; i++)
+            {
+                var index = i;
+                var isLastWithMore = i == 8 && Images.Count > 9;
+                
+                <div class="relative aspect-square cursor-pointer group overflow-hidden @GetGridItemClass(i)" 
+                     @onclick="() => OpenLightbox(index)">
+                    <img src="@Images[index]"
+                         alt="@L["ImageGallery:ThumbAlt", index + 1]"
+                         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                         loading="lazy" />
+                    
+                    @if (isLastWithMore)
+                    {
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span class="text-white text-2xl font-bold">+@(Images.Count - 9)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@* Lightbox Modal *@
+@if (showLightbox)
+{
+    <div class="fixed inset-0 z-[80] bg-black/95 flex items-center justify-center" @onclick="CloseLightbox">
+        <button @onclick="CloseLightbox" @onclick:stopPropagation
+                class="absolute top-4 right-4 text-white/80 hover:text-white z-10 p-2 rounded-full hover:bg-white/10 transition-colors">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        
+        <div class="flex items-center justify-center w-full h-full px-4 md:px-16" @onclick:stopPropagation>
+            @if (Images.Count > 1)
+            {
+                <button @onclick="PreviousImage" @onclick:stopPropagation
+                        class="absolute left-4 md:left-8 p-3 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+            }
+            
+            <img src="@CurrentImage"
+                 alt="@L["ImageGallery:FullscreenAlt"]"
+                 class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+            
+            @if (Images.Count > 1)
+            {
+                <button @onclick="NextImage" @onclick:stopPropagation
+                        class="absolute right-4 md:right-8 p-3 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            }
+        </div>
+        
+        @* Image counter *@
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm font-medium bg-black/40 px-4 py-2 rounded-full">
+            @(currentIndex + 1) / @Images.Count
+        </div>
+        
+        @* Thumbnail strip *@
+        @if (Images.Count > 1 && Images.Count <= 12)
+        {
+            <div class="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/40 rounded-xl">
+                @for (int i = 0; i < Images.Count; i++)
+                {
+                    var thumbIndex = i;
+                    <button @onclick="() => SetCurrentImage(thumbIndex)" @onclick:stopPropagation
+                            class="w-12 h-12 rounded-lg overflow-hidden border-2 transition-all @(thumbIndex == currentIndex ? "border-white" : "border-transparent opacity-60 hover:opacity-100")">
+                        <img src="@Images[thumbIndex]" class="w-full h-full object-cover" loading="lazy" />
+                    </button>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public List<string> Images { get; set; } = new();
+
+    private int currentIndex = 0;
+    private bool showLightbox = false;
+
+    private string CurrentImage => Images.Count > 0 ? Images[currentIndex] : "";
+
+    private void OpenLightbox(int index)
+    {
+        currentIndex = index;
+        showLightbox = true;
+    }
+
+    private void CloseLightbox()
+    {
+        showLightbox = false;
+    }
+
+    private void NextImage()
+    {
+        if (Images.Count > 0)
+        {
+            currentIndex = (currentIndex + 1) % Images.Count;
+        }
+    }
+
+    private void PreviousImage()
+    {
+        if (Images.Count > 0)
+        {
+            currentIndex = currentIndex == 0 ? Images.Count - 1 : currentIndex - 1;
+        }
+    }
+
+    private void SetCurrentImage(int index)
+    {
+        currentIndex = index;
+    }
+
+    private string GetGridItemClass(int index)
+    {
+        // Instagram-style grid: first image spans 2 rows and 2 cols
+        if (index == 0 && Images.Count >= 5)
+        {
+            return "row-span-2 col-span-2";
+        }
+        return "";
+    }
+}
