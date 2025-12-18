@@ -5,6 +5,7 @@ using Volo.Abp.Localization;
 using Volo.Abp.Users;
 using Microsoft.Extensions.Localization;
 using Microsoft.JSInterop;
+using MudBlazor;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,6 +27,9 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
 
     [Inject]
     protected IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Inject]
+    protected ISnackbar? Snackbar { get; set; }
 
     private CurrentUserWrapper? _currentUser;
     protected ICurrentUser CurrentUser => _currentUser ??= new CurrentUserWrapper(AuthenticationStateProvider);
@@ -72,6 +76,13 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
         {
             // En WASM, simplemente logueamos a la consola del navegador
             await JSRuntime.InvokeVoidAsync("console.error", $"Error: {exception.Message}", exception.ToString());
+            
+            // Try to display error to user via Snackbar if available
+            if (Snackbar != null)
+            {
+                var errorMessage = GetUserFriendlyErrorMessage(exception);
+                Snackbar.Add(errorMessage, MudBlazor.Severity.Error);
+            }
         }
         catch (JSDisconnectedException)
         {
@@ -85,9 +96,38 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
         {
             // Navigation occurred, ignore
         }
+    }
+
+    /// <summary>
+    /// Extracts a user-friendly error message, including BusinessException codes
+    /// </summary>
+    protected virtual string GetUserFriendlyErrorMessage(Exception exception)
+    {
+        // Check if it's an ABP RemoteServiceErrorInfo (when exception comes from API)
+        if (exception is Volo.Abp.Http.Client.AbpRemoteProcedureCallException abpRpcException)
+        {
+            var errorInfo = abpRpcException.Error;
+            if (errorInfo != null)
+            {
+                // Include error code if present (e.g., "Listing:NoImages")
+                if (!string.IsNullOrEmpty(errorInfo.Code))
+                {
+                    return L[$"{errorInfo.Code}"] ?? $"[{errorInfo.Code}] {errorInfo.Message}";
+                }
+                return errorInfo.Message ?? exception.Message;
+            }
+        }
         
-        // Opcionalmente mostrar un mensaje al usuario
-        // Puedes integrar con MudBlazor Snackbar aquí
+        // Check for direct BusinessException (rarely happens on client)
+        if (exception is Volo.Abp.BusinessException businessException)
+        {
+            if (!string.IsNullOrEmpty(businessException.Code))
+            {
+                return L[$"{businessException.Code}"] ?? $"[{businessException.Code}] {businessException.Message}";
+            }
+        }
+
+        return exception.Message;
     }
 
     public void Dispose()
