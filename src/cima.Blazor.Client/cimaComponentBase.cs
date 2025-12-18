@@ -103,28 +103,35 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
     /// </summary>
     protected virtual string GetUserFriendlyErrorMessage(Exception exception)
     {
-        // Check if it's an ABP RemoteServiceErrorInfo (when exception comes from API)
-        if (exception is Volo.Abp.Http.Client.AbpRemoteProcedureCallException abpRpcException)
+        // Try to extract error code from exception message or data
+        // ABP exceptions typically include the code in the message or Data dictionary
+        
+        // Check for Volo.Abp.BusinessException
+        var exType = exception.GetType();
+        if (exType.FullName == "Volo.Abp.BusinessException")
         {
-            var errorInfo = abpRpcException.Error;
-            if (errorInfo != null)
+            // Use reflection to get Code property
+            var codeProp = exType.GetProperty("Code");
+            if (codeProp != null)
             {
-                // Include error code if present (e.g., "Listing:NoImages")
-                if (!string.IsNullOrEmpty(errorInfo.Code))
+                var code = codeProp.GetValue(exception) as string;
+                if (!string.IsNullOrEmpty(code))
                 {
-                    return L[$"{errorInfo.Code}"] ?? $"[{errorInfo.Code}] {errorInfo.Message}";
+                    // Try to get localized message
+                    var localizedMessage = L[code];
+                    if (localizedMessage.ResourceNotFound == false)
+                    {
+                        return localizedMessage.Value;
+                    }
+                    return $"[{code}] {exception.Message}";
                 }
-                return errorInfo.Message ?? exception.Message;
             }
         }
         
-        // Check for direct BusinessException (rarely happens on client)
-        if (exception is Volo.Abp.BusinessException businessException)
+        // Check if message contains error code pattern like "[Code] Message"
+        if (exception.Message.StartsWith("[") && exception.Message.Contains("]"))
         {
-            if (!string.IsNullOrEmpty(businessException.Code))
-            {
-                return L[$"{businessException.Code}"] ?? $"[{businessException.Code}] {businessException.Message}";
-            }
+            return exception.Message;
         }
 
         return exception.Message;
