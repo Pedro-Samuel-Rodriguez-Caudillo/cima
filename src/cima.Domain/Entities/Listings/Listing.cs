@@ -11,8 +11,9 @@ namespace cima.Domain.Entities;
 /// <summary>
 /// Agregado raíz que representa una propiedad inmobiliaria.
 /// Bounded Context: Listings (Gestión de Propiedades)
+/// Implementa ISoftDelete para eliminación lógica.
 /// </summary>
-public class Listing : AggregateRoot<Guid>
+public class Listing : AggregateRoot<Guid>, ISoftDelete
 {
     // Constantes de negocio
     public const int MaxImages = 12;
@@ -24,6 +25,9 @@ public class Listing : AggregateRoot<Guid>
     // Value Object Address
     public Address? Location { get; private set; }
     
+    /// <summary>
+    /// Precio de la propiedad. Use -1 para indicar "precio a consultar".
+    /// </summary>
     public decimal Price { get; private set; }
     
     /// <summary>
@@ -55,6 +59,12 @@ public class Listing : AggregateRoot<Guid>
     /// Fecha de la primera publicación. Null si nunca se ha publicado.
     /// </summary>
     public DateTime? FirstPublishedAt { get; private set; }
+    
+    /// <summary>
+    /// Indica si el registro está eliminado lógicamente (Soft Delete).
+    /// ABP filtra automáticamente los registros eliminados.
+    /// </summary>
+    public bool IsDeleted { get; set; }
 
     // Relaciones
     public ICollection<ListingImage> Images { get; private set; } = new List<ListingImage>();
@@ -105,7 +115,7 @@ public class Listing : AggregateRoot<Guid>
         ArchitectId = architectId;
         
         Status = ListingStatus.Draft;
-        CreatedAt = DateTime.UtcNow; // Usar ClockProvider in real app preferably
+        CreatedAt = DateTime.UtcNow;
         CreatedBy = createdBy;
     }
     #endregion
@@ -129,9 +139,6 @@ public class Listing : AggregateRoot<Guid>
         // Validar invariantes
         ValidateInvariants(price, landArea, constructionArea);
 
-        // Si está publicada, verificar reglas adicionales si fuera necesario
-        // Por ahora permitimos editar todo en caliente.
-
         Title = title;
         Description = description;
         Location = location;
@@ -152,10 +159,10 @@ public class Listing : AggregateRoot<Guid>
     {
         if (Status == ListingStatus.Published) return;
 
-        // Reglas para publicar
-        if (Price <= 0)
+        // Reglas para publicar (Price = -1 significa "precio consultable", es válido)
+        if (Price < -1)
         {
-            throw new BusinessException("Listing:ZeroPrice").WithData("Price", Price);
+            throw new BusinessException("Listing:InvalidPrice").WithData("Price", Price);
         }
         if (Images.Count == 0)
         {
@@ -262,9 +269,10 @@ public class Listing : AggregateRoot<Guid>
 
     private void ValidateInvariants(decimal price, decimal landArea, decimal constructionArea)
     {
-        if (price <= 0)
+        // -1 significa "precio a consultar", es válido
+        if (price < -1)
         {
-            throw new BusinessException("Listing:PriceMustBePositive");
+            throw new BusinessException("Listing:InvalidPrice");
         }
         if (landArea <= 0)
         {
@@ -275,7 +283,6 @@ public class Listing : AggregateRoot<Guid>
             // Construccion puede ser 0 (terreno baldío), pero no negativa
             throw new BusinessException("Listing:ConstructionAreaCannotBeNegative");
         }
-        // Regla relajada: Construction puede ser mayor a Land (Rascacielos)
     }
 
     private void UpdateAudit(Guid? userId)

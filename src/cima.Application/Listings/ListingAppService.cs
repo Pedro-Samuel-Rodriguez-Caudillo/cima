@@ -10,6 +10,7 @@ using cima.Domain.Entities;
 using cima.Domain.Listings;
 using cima.Domain.Services.Listings;
 using cima.Domain.Shared;
+using cima.Events;
 using cima.Images;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -21,6 +22,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
@@ -42,6 +44,9 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly IUnitOfWorkManager _unitOfWorkManager;
     private readonly IListingImageLockService _listingImageLockService;
     private readonly IHostEnvironment _hostEnvironment;
+    private readonly ILocalEventBus _localEventBus;
+    private readonly IListingPriceHistoryRepository _priceHistoryRepository;
+    private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
@@ -52,7 +57,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         Images.IImageStorageService imageStorageService,
         IUnitOfWorkManager unitOfWorkManager,
         IListingImageLockService listingImageLockService,
-        IHostEnvironment hostEnvironment)
+        IHostEnvironment hostEnvironment,
+        ILocalEventBus localEventBus,
+        IListingPriceHistoryRepository priceHistoryRepository,
+        Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
@@ -62,6 +70,9 @@ public class ListingAppService : cimaAppService, IListingAppService
         _unitOfWorkManager = unitOfWorkManager;
         _listingImageLockService = listingImageLockService;
         _hostEnvironment = hostEnvironment;
+        _localEventBus = localEventBus;
+        _priceHistoryRepository = priceHistoryRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <summary>
@@ -269,6 +280,9 @@ public class ListingAppService : cimaAppService, IListingAppService
         if (id != input.Id) throw new UserFriendlyException("ID mismatch");
 
         var listing = await _listingRepository.GetAsync(id);
+        
+        // Capturar precio anterior para detectar cambios
+        var oldPrice = listing.Price;
 
         // Validacion: Solo el dueno o admin puede editar
         var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "editar");
@@ -294,7 +308,55 @@ public class ListingAppService : cimaAppService, IListingAppService
         );
 
         await _listingRepository.UpdateAsync(listing);
+        
+        // Si el precio cambió, registrar en historial con hash chain anti-tampering
+        if (oldPrice != input.Price)
+        {
+            await RecordPriceChangeAsync(listing.Id, oldPrice, input.Price);
+        }
+        
         return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+    }
+    
+    /// <summary>
+    /// Registra un cambio de precio con metadatos anti-fraude y hash chain
+    /// </summary>
+    private async Task RecordPriceChangeAsync(Guid listingId, decimal oldPrice, decimal newPrice)
+    {
+        // Obtener el último registro para encadenar hashes (blockchain-lite)
+        var previousRecords = await _priceHistoryRepository.GetByListingIdAsync(listingId);
+        var lastRecord = previousRecords.FirstOrDefault();
+        var previousHash = lastRecord?.IntegrityHash;
+        
+        // Capturar metadatos anti-fraude del contexto HTTP
+        var httpContext = _httpContextAccessor.HttpContext;
+        var clientIp = httpContext?.Connection?.RemoteIpAddress?.ToString();
+        var userAgent = httpContext?.Request?.Headers["User-Agent"].ToString();
+        var correlationId = httpContext?.TraceIdentifier;
+        var sessionId = httpContext?.Session?.Id;
+        var authMethod = httpContext?.User?.Identity?.AuthenticationType;
+        
+        var priceHistory = new Domain.Entities.Listings.ListingPriceHistory(
+            GuidGenerator.Create(),
+            listingId,
+            oldPrice,
+            newPrice,
+            CurrentUser.Id,
+            CurrentUser.UserName,
+            clientIp,
+            userAgent,
+            correlationId,
+            changeReason: null, // Podría agregarse como parámetro opcional
+            sessionId,
+            authMethod,
+            previousHash // Hash del registro anterior para cadena de integridad
+        );
+        
+        await _priceHistoryRepository.InsertAsync(priceHistory);
+        
+        Logger.LogInformation(
+            "Price changed for Listing {ListingId}: {OldPrice} -> {NewPrice} by User {UserId} from IP {ClientIp}",
+            listingId, oldPrice, newPrice, CurrentUser.Id, clientIp);
     }
 
     /// <summary>
@@ -333,6 +395,16 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.PublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
+
+        // Publicar evento de aplicacion para handlers adicionales
+        await _localEventBus.PublishAsync(new ListingPublishedEto
+        {
+            ListingId = listing.Id,
+            ArchitectId = listing.ArchitectId,
+            Title = listing.Title,
+            PublishedAt = Clock.Now
+        });
+
         return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
     }
 

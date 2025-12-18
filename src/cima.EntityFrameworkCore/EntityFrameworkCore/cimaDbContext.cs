@@ -15,6 +15,7 @@ using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using cima.Domain.Entities;
+using cima.Domain.Entities.Listings;
 
 namespace cima.EntityFrameworkCore;
 
@@ -30,6 +31,9 @@ public class cimaDbContext :
     public DbSet<Architect> Architects { get; set; }
     public DbSet<ContactRequest> ContactRequests { get; set; }
     public DbSet<FeaturedListing> FeaturedListings { get; set; }
+    public DbSet<ListingPriceHistory> ListingPriceHistories { get; set; }
+    public DbSet<PropertyCategoryEntity> PropertyCategories { get; set; }
+    public DbSet<PropertyTypeEntity> PropertyTypes { get; set; }
 
     #region Entities from the modules
 
@@ -175,6 +179,55 @@ public class cimaDbContext :
                 .WithMany()
                 .HasForeignKey(x => x.ListingId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ListingPriceHistory>(b =>
+        {
+            b.ToTable("ListingPriceHistories");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.OldPrice).HasPrecision(18, 2);
+            b.Property(x => x.NewPrice).HasPrecision(18, 2);
+            b.Property(x => x.ChangedByUserName).HasMaxLength(256);
+            b.Property(x => x.ClientIpAddress).HasMaxLength(45); // IPv6 max length
+            b.Property(x => x.UserAgent).HasMaxLength(512);
+            b.Property(x => x.CorrelationId).HasMaxLength(128);
+            b.Property(x => x.ChangeReason).HasMaxLength(500);
+            b.Property(x => x.SessionId).HasMaxLength(128);
+            b.Property(x => x.AuthenticationMethod).HasMaxLength(50);
+            
+            // Anti-tampering fields
+            b.Property(x => x.IntegrityHash).IsRequired().HasMaxLength(64); // SHA256 hex
+            b.Property(x => x.PreviousRecordHash).HasMaxLength(64);
+            
+            // Índices para consultas anti-fraude
+            b.HasIndex(x => x.ListingId).HasDatabaseName("IX_PriceHistory_ListingId");
+            b.HasIndex(x => x.ChangedAt).HasDatabaseName("IX_PriceHistory_ChangedAt");
+            b.HasIndex(x => x.ChangedByUserId).HasDatabaseName("IX_PriceHistory_UserId");
+            b.HasIndex(x => x.ClientIpAddress).HasDatabaseName("IX_PriceHistory_IP");
+        });
+
+        builder.Entity<PropertyCategoryEntity>(b =>
+        {
+            b.ToTable("PropertyCategories");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.Property(x => x.Icon).HasMaxLength(50);
+            b.HasIndex(x => x.Name).IsUnique().HasDatabaseName("IX_Category_Name");
+            b.HasIndex(x => x.SortOrder).HasDatabaseName("IX_Category_SortOrder");
+        });
+
+        builder.Entity<PropertyTypeEntity>(b =>
+        {
+            b.ToTable("PropertyTypes");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.HasIndex(x => new { x.CategoryId, x.Name }).IsUnique().HasDatabaseName("IX_Type_Category_Name");
+            b.HasOne(x => x.Category)
+                .WithMany()
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
