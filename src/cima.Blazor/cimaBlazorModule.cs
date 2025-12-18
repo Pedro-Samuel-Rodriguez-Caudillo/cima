@@ -63,6 +63,9 @@ using Volo.Abp.Data;
 using Asp.Versioning;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Volo.Abp.AspNetCore.SignalR;
+using Volo.Abp.Identity.Blazor;
+using Volo.Abp.PermissionManagement.Blazor;
+using Volo.Abp.SettingManagement.Blazor;
 
 namespace cima.Blazor;
 
@@ -75,7 +78,10 @@ namespace cima.Blazor;
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpAspNetCoreMvcUiBasicThemeModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpAspNetCoreSignalRModule)
+    typeof(AbpAspNetCoreSignalRModule),
+    typeof(AbpIdentityBlazorModule),
+    typeof(AbpPermissionManagementBlazorModule),
+    typeof(AbpSettingManagementBlazorModule)
     // Note: ABP Blazor WebAssembly modules are registered in cimaBlazorClientModule
    )]
 public class cimaBlazorModule : AbpModule
@@ -477,6 +483,9 @@ public class cimaBlazorModule : AbpModule
         {
             options.AppAssembly = typeof(cimaBlazorModule).Assembly;
             options.AdditionalAssemblies.Add(typeof(cimaBlazorClientModule).Assembly);
+            options.AdditionalAssemblies.Add(typeof(AbpIdentityBlazorModule).Assembly);
+            options.AdditionalAssemblies.Add(typeof(AbpPermissionManagementBlazorModule).Assembly);
+            options.AdditionalAssemblies.Add(typeof(AbpSettingManagementBlazorModule).Assembly);
         });
     }
 
