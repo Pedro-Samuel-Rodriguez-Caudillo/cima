@@ -16,4 +16,8 @@ public interface ISiteSettingsAppService : IApplicationService
     Task UpdateBusinessInfoAsync(UpdateBusinessInfoDto input);
     
     Task<bool> TestEmailAsync(TestEmailSettingsDto input);
+    
+    // Legal content
+    Task<LegalContentDto> GetLegalContentAsync();
+    Task UpdateLegalContentAsync(UpdateLegalContentDto input);
 }

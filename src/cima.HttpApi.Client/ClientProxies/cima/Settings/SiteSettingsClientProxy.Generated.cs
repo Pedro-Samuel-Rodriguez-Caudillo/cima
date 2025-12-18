@@ -58,4 +58,17 @@ public partial class SiteSettingsClientProxy : ClientProxyBase<ISiteSettingsAppS
             { typeof(TestEmailSettingsDto), input }
         });
     }
+
+    public virtual async Task<LegalContentDto> GetLegalContentAsync()
+    {
+        return await RequestAsync<LegalContentDto>(nameof(GetLegalContentAsync));
+    }
+
+    public virtual async Task UpdateLegalContentAsync(UpdateLegalContentDto input)
+    {
+        await RequestAsync(nameof(UpdateLegalContentAsync), new ClientProxyRequestTypeValue
+        {
+            { typeof(UpdateLegalContentDto), input }
+        });
+    }
 }

@@ -328,6 +328,57 @@
                         </div>
                     </EditForm>
                 </div>
+
+                @* Contenido Legal (Privacy / Terms) *@
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-2">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">@L["Admin:Settings:Legal:Title"]</h2>
+                            <p class="text-sm text-gray-500">@L["Admin:Settings:Legal:Subtitle"]</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        @* Privacy Policy *@
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                @L["Admin:Settings:Legal:Privacy"]
+                                <span class="text-xs text-gray-500 ml-2">(Markdown)</span>
+                            </label>
+                            <textarea @bind="LegalContent.PrivacyContent" 
+                                      class="cima-input font-mono text-sm" 
+                                      rows="10"
+                                      placeholder="# Política de Privacidad&#10;&#10;Escribe aquí el contenido en formato Markdown..."></textarea>
+                        </div>
+
+                        @* Terms & Conditions *@
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                @L["Admin:Settings:Legal:Terms"]
+                                <span class="text-xs text-gray-500 ml-2">(Markdown)</span>
+                            </label>
+                            <textarea @bind="LegalContent.TermsContent" 
+                                      class="cima-input font-mono text-sm" 
+                                      rows="10"
+                                      placeholder="# Términos y Condiciones&#10;&#10;Escribe aquí el contenido en formato Markdown..."></textarea>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="button" @onclick="SaveLegalContent" class="cima-btn cima-btn-primary" disabled="@IsSavingLegal">
+                                @if (IsSavingLegal)
+                                {
+                                    <span class="cima-spinner-sm mr-2"></span>
+                                }
+                                @L["Admin:Settings:Legal:Save"]
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
     </div>
@@ -338,15 +389,23 @@
     private bool IsSavingEmail { get; set; }
     private bool IsSavingWhatsApp { get; set; }
     private bool IsSavingBusiness { get; set; }
+    private bool IsSavingLegal { get; set; }
     private bool IsTestingEmail { get; set; }
 
     private SiteSettingsDto? CurrentSettings { get; set; }
     private UpdateEmailSettingsDto EmailSettings { get; set; } = new();
     private UpdateWhatsAppSettingsDto WhatsAppSettings { get; set; } = new();
     private UpdateBusinessInfoDto BusinessInfo { get; set; } = new();
+    private LegalContentModel LegalContent { get; set; } = new();
     private bool IsAzureProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.AzureCommunicationServices, StringComparison.OrdinalIgnoreCase);
     private bool IsSmtpProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.Smtp, StringComparison.OrdinalIgnoreCase);
     private bool IsBrevoProvider => string.Equals(EmailSettings.EmailProvider, EmailProviderNames.Brevo, StringComparison.OrdinalIgnoreCase);
+
+    public class LegalContentModel
+    {
+        public string PrivacyContent { get; set; } = "";
+        public string TermsContent { get; set; } = "";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -399,6 +458,14 @@
                 BusinessHoursWeekday = CurrentSettings.BusinessHoursWeekday,
                 BusinessHoursSaturday = CurrentSettings.BusinessHoursSaturday,
                 BusinessHoursSunday = CurrentSettings.BusinessHoursSunday
+            };
+
+            // Cargar contenido legal
+            var legalData = await SettingsService.GetLegalContentAsync();
+            LegalContent = new LegalContentModel
+            {
+                PrivacyContent = legalData.PrivacyContent,
+                TermsContent = legalData.TermsContent
             };
         }
         catch (Exception ex)
@@ -547,5 +614,27 @@
             : $"?text={Uri.EscapeDataString(WhatsAppSettings.DefaultMessage)}";
         
         return $"https://wa.me/{WhatsAppSettings.PhoneNumber}{message}";
+    }
+
+    private async Task SaveLegalContent()
+    {
+        try
+        {
+            IsSavingLegal = true;
+            await SettingsService.UpdateLegalContentAsync(new UpdateLegalContentDto
+            {
+                PrivacyContent = LegalContent.PrivacyContent,
+                TermsContent = LegalContent.TermsContent
+            });
+            Snackbar.Add(L["Admin:Settings:Legal:Saved"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            await HandleErrorAsync(ex);
+        }
+        finally
+        {
+            IsSavingLegal = false;
+        }
     }
 }

@@ -372,4 +372,29 @@ public class SiteSettingsAppService : ApplicationService, ISiteSettingsAppServic
         var value = await _settingProvider.GetOrNullAsync(name);
         return bool.TryParse(value, out var result) && result;
     }
+
+    /// <summary>
+    /// Obtiene contenido legal (Privacy y Terms) - público para renderizar páginas
+    /// </summary>
+    [AllowAnonymous]
+    public async Task<LegalContentDto> GetLegalContentAsync()
+    {
+        return new LegalContentDto
+        {
+            PrivacyContent = await _settingProvider.GetOrNullAsync(cimaLegalSettings.PrivacyContent) ?? "",
+            TermsContent = await _settingProvider.GetOrNullAsync(cimaLegalSettings.TermsContent) ?? ""
+        };
+    }
+
+    /// <summary>
+    /// Actualiza contenido legal (admin only)
+    /// </summary>
+    [Authorize(cimaPermissions.Settings.Manage)]
+    public async Task UpdateLegalContentAsync(UpdateLegalContentDto input)
+    {
+        await _settingManager.SetGlobalAsync(cimaLegalSettings.PrivacyContent, input.PrivacyContent);
+        await _settingManager.SetGlobalAsync(cimaLegalSettings.TermsContent, input.TermsContent);
+        await _settingManager.SetGlobalAsync(cimaLegalSettings.PrivacyLastUpdated, DateTime.UtcNow.ToString("o"));
+        await _settingManager.SetGlobalAsync(cimaLegalSettings.TermsLastUpdated, DateTime.UtcNow.ToString("o"));
+    }
 }
