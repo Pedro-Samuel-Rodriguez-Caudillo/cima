@@ -9,7 +9,7 @@ public class AddListingImageDto
     public Guid ListingId { get; set; }
 
     [Required]
-    [MaxLength(2048)]
+    [MaxLength(10000000)] // ~10MB base64
     public string Url { get; set; } = string.Empty;
 
     [MaxLength(500)]

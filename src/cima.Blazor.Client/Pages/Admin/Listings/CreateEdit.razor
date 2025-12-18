@@ -71,12 +71,16 @@
                             <div class="space-y-4">
                                 <MudTextField @bind-Value="Model.Title" Label="@L["Admin:Listings:Form:Title"]" Required="true" 
                                     Variant="Variant.Outlined" Class="mb-4"
+                                    Counter="200" MaxLength="200"
+                                    HelperText="@L["Common:Required"]"
                                     For="@(() => Model.Title)" />
                                 <MudTextField @bind-Value="Model.Description" Label="@L["Admin:Listings:Form:Description"]" 
                                     Lines="4" Variant="Variant.Outlined" Class="mb-4"
+                                    Counter="5000" MaxLength="5000"
                                     For="@(() => Model.Description)" />
                                 <MudTextField @bind-Value="Model.Location" Label="@L["Admin:Listings:Form:Location"]" Required="true" 
                                     Variant="Variant.Outlined"
+                                    HelperText="@L["Common:Required"]"
                                     For="@(() => Model.Location)" />
                             </div>
                         </MudCard>
@@ -84,10 +88,16 @@
                         <MudCard Class="p-6">
                             <h2 class="text-xl font-semibold text-neutral-900 mb-6">@L["Admin:Listings:Form:Details"]</h2>
                             <div class="grid grid-cols-2 gap-4">
+                                <div class="col-span-2 flex items-center gap-4 mb-2">
+                                    <MudCheckBox @bind-Value="Model.IsPriceOnRequest" 
+                                        Label="@L["Admin:Listings:Form:PriceOnRequest"]"
+                                        Color="Color.Primary" />
+                                </div>
                                 <MudNumericField @bind-Value="Model.Price" Label="@L["Admin:Listings:Form:Price"]" 
                                     Variant="Variant.Outlined" 
                                     Culture="@MexicoCulture"
                                     Format="N0"
+                                    Disabled="@Model.IsPriceOnRequest"
                                     For="@(() => Model.Price)" />
                                 <MudNumericField @bind-Value="Model.LandArea" Label="@L["Admin:Listings:Form:LandArea"]" 
                                     Variant="Variant.Outlined" 
@@ -341,7 +351,8 @@
                 Title = ExistingListing.Title,
                 Description = ExistingListing.Description,
                 Location = ExistingListing.Location?.Address ?? "", // Map from LocationDto
-                Price = ExistingListing.Price,
+                Price = ExistingListing.Price == -1 ? 0 : ExistingListing.Price,
+                IsPriceOnRequest = ExistingListing.Price == -1,
                 LandArea = ExistingListing.LandArea,
                 ConstructionArea = ExistingListing.ConstructionArea,
                 Bedrooms = ExistingListing.Bedrooms,
@@ -408,7 +419,7 @@
                     Title = Model.Title,
                     Description = Model.Description,
                     Address = new AddressDto { Value = Model.Location },
-                    Price = Model.Price,
+                    Price = Model.IsPriceOnRequest ? -1 : Model.Price,
                     LandArea = Model.LandArea,
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
@@ -429,7 +440,7 @@
                     Title = Model.Title,
                     Description = Model.Description,
                     Address = new AddressDto { Value = Model.Location },
-                    Price = Model.Price,
+                    Price = Model.IsPriceOnRequest ? -1 : Model.Price,
                     LandArea = Model.LandArea,
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
@@ -561,6 +572,7 @@
         public string Description { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public decimal Price { get; set; }
+        public bool IsPriceOnRequest { get; set; }
         public decimal LandArea { get; set; }
         public decimal ConstructionArea { get; set; }
         public int Bedrooms { get; set; }

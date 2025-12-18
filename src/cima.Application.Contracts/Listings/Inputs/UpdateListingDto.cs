@@ -19,7 +19,10 @@ public class UpdateListingDto
 
     public AddressDto? Address { get; set; }
 
-    [Range(0, double.MaxValue)]
+    /// <summary>
+    /// Precio de la propiedad. Use -1 para indicar "precio a consultar".
+    /// </summary>
+    [Range(-1, double.MaxValue)]
     public decimal Price { get; set; }
 
     [Range(0, double.MaxValue)]

@@ -16,7 +16,7 @@
                         @L["Admin:Listings:Title"]
                     </h1>
                     <p class="text-neutral-600 mt-1">
-                        Gestiona el catálogo de propiedades
+                        @L["Admin:Listings:Subtitle"]
                     </p>
                 </div>
                 <a href="/admin/listings/create" class="cima-btn cima-btn-primary">
@@ -41,7 +41,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
-                        <span class="font-medium">@SelectedIds.Count seleccionadas</span>
+                        <span class="font-medium">@string.Format(L["Admin:Listings:SelectedCount"], SelectedIds.Count)</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <button @onclick="BulkPublish" 
@@ -49,21 +49,21 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Publicar
+                            @L["Admin:Listings:BulkPublish"]
                         </button>
                         <button @onclick="BulkArchive" 
                                 class="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                             </svg>
-                            Archivar
+                            @L["Admin:Listings:BulkArchive"]
                         </button>
                         <button @onclick="BulkMoveToPortfolio" 
                                 class="px-3 py-1.5 bg-gray-500 hover:bg-gray-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                             </svg>
-                            Portafolio
+                            @L["Admin:Listings:BulkPortfolio"]
                         </button>
                         <div class="w-px h-6 bg-white/20 mx-1"></div>
                         <button @onclick="BulkDelete" 
@@ -71,7 +71,7 @@
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
-                            Eliminar
+                            @L["Admin:Listings:BulkDelete"]
                         </button>
                     </div>
                 </div>
@@ -88,8 +88,8 @@
                         <input type="text" 
                                @bind="SearchTerm" 
                                @onkeyup="HandleSearchKeyUp"
-                               placeholder="Buscar por título, ubicación o código..." 
-                               aria-label="Buscar propiedades"
+                               placeholder="@L["Admin:Listings:SearchPlaceholder"]" 
+                               aria-label="@L["Menu:Search"]"
                                class="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
                         <svg class="w-5 h-5 text-neutral-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -98,7 +98,7 @@
                 </div>
                 <div>
                      <select @bind="StatusFilter" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
-                        <option value="">Todos los Estados</option>
+                        <option value="">@L["Admin:Listings:AllStatuses"]</option>
                         @foreach (ListingStatus status in Enum.GetValues(typeof(ListingStatus)))
                         {
                             <option value="@((int)status)">@EnumLocalizer.GetListingStatusName(status)</option>
@@ -107,7 +107,7 @@
                 </div>
                 <div>
                     <select @bind="CategoryFilter" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
-                        <option value="">Todas las Categorías</option>
+                        <option value="">@L["Admin:Listings:AllCategories"]</option>
                         @foreach (PropertyCategory category in Enum.GetValues(typeof(PropertyCategory)))
                         {
                             <option value="@((int)category)">@EnumLocalizer.GetPropertyCategoryName(category)</option>
@@ -131,8 +131,8 @@
                     <svg class="w-12 h-12 mx-auto mb-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    <p class="text-lg font-medium">No se encontraron propiedades</p>
-                    <p class="text-sm">Intenta ajustar los filtros de búsqueda</p>
+                    <p class="text-lg font-medium">@L["Admin:Listings:NotFound"]</p>
+                    <p class="text-sm">@L["Admin:Listings:NotFoundDetail"]</p>
                 </div>
             }
             else
@@ -149,11 +149,11 @@
                                        class="rounded border-neutral-300 text-primary-600 focus:ring-primary-500 h-4 w-4" />
                             </div>
                         </div>
-                        <div class="col-span-4">Propiedad</div>
-                        <div class="col-span-2">Categoría</div>
-                        <div class="col-span-2">Precio</div>
-                        <div class="col-span-2">Estado</div>
-                        <div class="col-span-1 text-right">Acciones</div>
+                        <div class="col-span-4">@L["Admin:Listings:TableHeader:Property"]</div>
+                        <div class="col-span-2">@L["Admin:Listings:TableHeader:Category"]</div>
+                        <div class="col-span-2">@L["Admin:Listings:TableHeader:Price"]</div>
+                        <div class="col-span-2">@L["Admin:Listings:TableHeader:Status"]</div>
+                        <div class="col-span-1 text-right">@L["Admin:Listings:TableHeader:Actions"]</div>
                     </div>
 
                     @* Table Body *@
@@ -226,15 +226,15 @@
                                 <div class="col-span-1 lg:col-span-1 flex items-center justify-start lg:justify-end flex-wrap gap-1.5">
                                     @* Preview *@
                                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" 
-                                        Href="@($"/properties/{listing.Id}")" Target="_blank" title="Vista previa" aria-label="Vista previa" />
+                                        Href="@($"/properties/{listing.Id}")" Target="_blank" title="@L["Admin:Listings:Action:Preview"]" aria-label="@L["Admin:Listings:Action:Preview"]" />
 
                                     @* Edit *@
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
-                                        Href="@($"/admin/listings/edit/{listing.Id}")" title="Editar" aria-label="Editar" />
+                                        Href="@($"/admin/listings/edit/{listing.Id}")" title="@L["Admin:Listings:Action:Edit"]" aria-label="@L["Admin:Listings:Action:Edit"]" />
 
                                     @* Duplicate *@
                                     <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" 
-                                        Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" title="Duplicar" aria-label="Duplicar" />
+                                        Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" title="@L["Admin:Listings:Action:Duplicate"]" aria-label="@L["Admin:Listings:Action:Duplicate"]" />
 
                                     @if (listing.Status == ListingStatus.Draft || listing.Status == ListingStatus.Portfolio)
                                     {
@@ -260,7 +260,7 @@
                                     }
 
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                        Color="Color.Error" OnClick="@(() => DeleteListing(listing.Id))" title="Eliminar" aria-label="Eliminar" />
+                                        Color="Color.Error" OnClick="@(() => DeleteListing(listing.Id))" title="@L["Admin:Listings:Action:Delete"]" aria-label="@L["Admin:Listings:Action:Delete"]" />
                                 </div>
                             </div>
                         }
@@ -269,7 +269,7 @@
                     @* Pagination *@
                     <div class="px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
                         <div class="text-sm text-neutral-500">
-                             Mostrando @((CurrentPage - 1) * PageSize + 1) - @(Math.Min(CurrentPage * PageSize, TotalCount)) de @TotalCount
+                             @string.Format(L["Admin:Listings:Pagination:Showing"], (CurrentPage - 1) * PageSize + 1, Math.Min(CurrentPage * PageSize, TotalCount), TotalCount)
                         </div>
                         <div class="flex items-center gap-2">
                             <button class="p-1 rounded hover:bg-neutral-100 disabled:opacity-50"

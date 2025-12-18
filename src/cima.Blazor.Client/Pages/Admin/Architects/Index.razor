@@ -1,29 +1,33 @@
 @page "/admin/architects"
 @using cima.Architects
 @using cima.Permissions
-@using MudBlazor
 @attribute [Authorize(cimaPermissions.Architects.Default)]
 @inject IArchitectAppService ArchitectService
-@inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IJSRuntime JS
 @inherits cimaComponentBase
 
-<PageTitle>Gestionar Arquitectos - @L["CompanyName"]</PageTitle>
+<PageTitle>@L["Admin:Architects:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
+<div class="min-h-screen bg-neutral-50 pt-20">
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">Gestionar Arquitectos</h1>
-                    <p class="text-neutral-600 mt-1">Administra los perfiles de arquitectos del sistema</p>
+                    <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
+                        @L["Admin:Architects:Title"]
+                    </h1>
+                    <p class="text-neutral-600 mt-1">
+                        @L["Admin:Architects:Subtitle"]
+                    </p>
                 </div>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/admin/architects/create"
-                    StartIcon="@Icons.Material.Filled.PersonAdd">
-                    Nuevo Arquitecto
-                </MudButton>
+                <div class="flex items-center gap-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/admin/architects/create"
+                        StartIcon="@Icons.Material.Filled.PersonAdd">
+                        @L["Admin:Architects:Create"]
+                    </MudButton>
+                </div>
             </div>
         </div>
     </div>
@@ -31,80 +35,75 @@
     <div class="cima-container py-8">
         @if (IsLoading)
         {
-            <MudCard Class="p-6">
-                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-                <p class="text-center mt-4 text-neutral-600">Cargando arquitectos...</p>
-            </MudCard>
+            <div class="flex justify-center py-12">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            </div>
         }
         else if (Architects?.Any() == true)
         {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach (var architect in Architects)
                 {
-                    <MudCard Class="rounded-xl">
-                        <MudCardContent>
-                            <div class="flex items-start gap-4 mb-4">
-                                <MudAvatar Color="Color.Primary" Size="Size.Large">@GetInitials(architect.Name, architect.Surname)</MudAvatar>
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-semibold text-lg text-neutral-900 truncate">
-                                        @architect.Name @architect.Surname
-                                    </h3>
-                                    <p class="text-sm text-neutral-600 truncate">@architect.Email</p>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <MudChip T="string" Size="Size.Small" Color="@(architect.IsActive ? Color.Success : Color.Default)">
-                                            @(architect.IsActive ? "Activo" : "Inactivo")
-                                        </MudChip>
-                                        @if (architect.MustChangePassword)
-                                        {
-                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">
-                                                Cambio pendiente
-                                            </MudChip>
-                                        }
-                                    </div>
+                    <MudCard Class="cima-card h-full flex flex-col">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                                    @GetInitials(architect.Name, architect.Surname)
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.body1" Class="font-bold">@architect.Name @architect.Surname</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@architect.UserName</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip T="string" Size="Size.Small" 
+                                    Color="@(architect.IsActive ? Color.Success : Color.Default)"
+                                    Variant="Variant.Text">
+                                    @(architect.IsActive ? L["Admin:Architects:Active"] : L["Admin:Architects:Inactive"])
+                                </MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent Class="flex-grow pt-0">
+                            <div class="grid grid-cols-2 gap-2 text-center mt-2">
+                                <div class="bg-neutral-50 p-2 rounded">
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">@architect.ActiveListings</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@L["Admin:Architects:ActiveListingsCount"]</MudText>
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4 mb-4 pt-4 border-t border-neutral-200">
-                                <div>
-                                    <p class="text-2xl font-bold text-primary">@architect.TotalListingsPublished</p>
-                                    <p class="text-xs text-neutral-600">Total Publicadas</p>
+                                <div class="bg-neutral-50 p-2 rounded">
+                                    <MudText Typo="Typo.h6">@architect.TotalListingsPublished</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@L["Admin:Architects:TotalPublishedCount"]</MudText>
                                 </div>
-                                <div>
-                                    <p class="text-2xl font-bold text-green-600">@architect.ActiveListings</p>
-                                    <p class="text-xs text-neutral-600">Activas</p>
-                                </div>
-                            </div>
-
-                            <div class="text-xs text-neutral-500">
-                                <p>Registro: @architect.RegistrationDate.ToString("dd/MM/yyyy")</p>
                             </div>
                         </MudCardContent>
-                        <MudCardActions Class="justify-between">
-                            <div>
+                        <MudCardActions Class="border-t border-neutral-100 flex justify-between px-4">
+                            <div class="flex gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                    Href="@($"/admin/architects/edit/{architect.Id}")" />
+                                
                                 @if (architect.IsActive)
                                 {
-                                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small"
+                                    <MudButton Variant="Variant.Text" Color="Color.Warning" Size="Size.Small"
                                         OnClick="@(() => DeactivateArchitect(architect.Id))">
-                                        Desactivar
+                                        @L["Admin:Architects:DeactivateAction"]
                                     </MudButton>
                                 }
                                 else
                                 {
                                     <MudButton Variant="Variant.Text" Color="Color.Success" Size="Size.Small"
                                         OnClick="@(() => ActivateArchitect(architect.Id))">
-                                        Activar
+                                        @L["Admin:Architects:ActivateAction"]
                                     </MudButton>
                                 }
                             </div>
                             <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small">
                                 <MudMenuItem Icon="@Icons.Material.Filled.Key" OnClick="@(() => HandleResetPassword(architect))">
-                                    Restablecer Contraseña
+                                    @L["Admin:Architects:ResetPasswordAction"]
                                 </MudMenuItem>
                                 @if (architect.ActiveListings == 0 && architect.TotalListingsPublished == 0)
                                 {
                                     <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error"
                                         OnClick="@(() => DeleteArchitect(architect))">
-                                        Eliminar
+                                        @L["Common:Delete"]
                                     </MudMenuItem>
                                 }
                             </MudMenu>
@@ -117,44 +116,44 @@
         {
             <MudCard Class="p-16 text-center">
                 <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Class="text-neutral-400 mb-4" Style="font-size: 4rem;" />
-                <h3 class="text-xl font-semibold text-neutral-900 mb-2">No hay arquitectos registrados</h3>
-                <p class="text-neutral-600 mb-6">Comienza creando el primer arquitecto</p>
+                <h3 class="text-xl font-semibold text-neutral-900 mb-2">@L["Admin:Architects:NoArchitectsFound"]</h3>
+                <p class="text-neutral-600 mb-6">@L["Admin:Architects:NoArchitectsFoundDetail"]</p>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/admin/architects/create"
                     StartIcon="@Icons.Material.Filled.PersonAdd">
-                    Crear Arquitecto
+                    @L["Admin:Architects:Create"]
                 </MudButton>
             </MudCard>
         }
     </div>
 </div>
 
-@* Dialog para mostrar contraseña temporal después de reset *@
+@* Dialog para mostrar contraseÃ±a temporal despuÃ©s de reset *@
 <MudDialog @bind-Visible="ShowResetDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
         <MudText Typo="Typo.h6">
             <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Warning" Class="mr-2" />
-            Contraseña Restablecida
+            @L["Admin:Architects:ResetDialog:Title"]
         </MudText>
     </TitleContent>
     <DialogContent>
         <MudAlert Severity="Severity.Warning" Class="mb-4">
-            <strong>¡Importante!</strong> Comparte esta contraseña de forma segura con el arquitecto.
+            <strong>@L["Admin:Architects:ResetDialog:Important"]</strong> @L["Admin:Architects:ResetDialog:Instruction"]
         </MudAlert>
 
-        <MudText Typo="Typo.body1" Class="mb-2">Arquitecto: <strong>@ResetArchitectName</strong></MudText>
+        <MudText Typo="Typo.body1" Class="mb-2">@L["Profile:AccountDetails"]: <strong>@ResetArchitectName</strong></MudText>
 
-        <MudTextField Value="@NewTempPassword" Label="Nueva Contraseña Temporal" ReadOnly="true"
+        <MudTextField Value="@NewTempPassword" Label="@L["Admin:Architects:ResetDialog:TempPasswordLabel"]" ReadOnly="true"
             Variant="Variant.Outlined" Adornment="Adornment.End"
             AdornmentIcon="@Icons.Material.Filled.ContentCopy"
             OnAdornmentClick="CopyResetPassword" />
 
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
-            El arquitecto deberá cambiar esta contraseña en su próximo inicio de sesión.
+            @L["Admin:Architects:ResetDialog:Footer"]
         </MudText>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ShowResetDialog = false)">
-            Entendido
+            @L["Common:Ok"]
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -186,7 +185,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar: {ex.Message}", Severity.Error);
+            Snackbar.Add(string.Format(L["Dashboard:Error:LoadingStats"], ex.Message), Severity.Error);
         }
         finally
         {
@@ -197,21 +196,21 @@
     private async Task DeactivateArchitect(Guid id)
     {
         var result = await DialogService.ShowMessageBox(
-            "Desactivar Arquitecto",
-            "¿Estás seguro? El arquitecto no podrá iniciar sesión.",
-            yesText: "Desactivar", cancelText: "Cancelar");
+            L["Admin:Architects:Dialog:DeactivateTitle"],
+            L["Admin:Architects:Dialog:DeactivateConfirm"],
+            yesText: L["Admin:Architects:DeactivateAction"], cancelText: L["Common:Cancel"]);
 
         if (result == true)
         {
             try
             {
                 await ArchitectService.UpdateAsync(id, new UpdateArchitectDto { IsActive = false });
-                Snackbar.Add("Arquitecto desactivado", Severity.Success);
+                Snackbar.Add(L["Admin:Architects:Success:Deactivated"], Severity.Success);
                 await LoadArchitects();
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+                Snackbar.Add(ex.Message, Severity.Error);
             }
         }
     }
@@ -221,37 +220,37 @@
         try
         {
             await ArchitectService.UpdateAsync(id, new UpdateArchitectDto { IsActive = true });
-            Snackbar.Add("Arquitecto activado", Severity.Success);
+            Snackbar.Add(L["Admin:Architects:Success:Activated"], Severity.Success);
             await LoadArchitects();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
 
     private async Task HandleResetPassword(ArchitectDto architect)
     {
         var result = await DialogService.ShowMessageBox(
-            "Restablecer Contraseña",
-            $"¿Generar una nueva contraseña temporal para {architect.Name} {architect.Surname}?",
-            yesText: "Restablecer", cancelText: "Cancelar");
+            L["Admin:Architects:ResetPasswordAction"],
+            string.Format(L["Admin:Architects:Dialog:DeleteConfirm"], $"{architect.Name} {architect.Surname}"),
+            yesText: L["Admin:Architects:ResetPasswordAction"], cancelText: L["Common:Cancel"]);
 
         if (result == true)
         {
             try
             {
                 var newPassword = await ArchitectService.ResetPasswordAsync(architect.Id, new ResetArchitectPasswordDto());
-                
+
                 ResetArchitectName = $"{architect.Name} {architect.Surname}";
                 NewTempPassword = newPassword;
                 ShowResetDialog = true;
-                
+
                 await LoadArchitects();
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+                Snackbar.Add(ex.Message, Severity.Error);
             }
         }
     }
@@ -259,21 +258,21 @@
     private async Task DeleteArchitect(ArchitectDto architect)
     {
         var result = await DialogService.ShowMessageBox(
-            "Eliminar Arquitecto",
-            $"¿Eliminar permanentemente a {architect.Name} {architect.Surname}? Esta acción no se puede deshacer.",
-            yesText: "Eliminar", cancelText: "Cancelar");
+            L["Admin:Architects:Dialog:DeleteTitle"],
+            string.Format(L["Admin:Architects:Dialog:DeleteConfirm"], $"{architect.Name} {architect.Surname}"),
+            yesText: L["Common:Delete"], cancelText: L["Common:Cancel"]);
 
         if (result == true)
         {
             try
             {
                 await ArchitectService.DeleteAsync(architect.Id);
-                Snackbar.Add("Arquitecto eliminado", Severity.Success);
+                Snackbar.Add(L["Admin:Architects:Success:Deleted"], Severity.Success);
                 await LoadArchitects();
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+                Snackbar.Add(ex.Message, Severity.Error);
             }
         }
     }
@@ -283,11 +282,11 @@
         try
         {
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", NewTempPassword);
-            Snackbar.Add("Contraseña copiada al portapapeles", Severity.Success);
+            Snackbar.Add(L["Common:Copied"], Severity.Success);
         }
         catch
         {
-            Snackbar.Add("No se pudo copiar. Copia manualmente.", Severity.Warning);
+            Snackbar.Add(L["Common:CopyError"], Severity.Warning);
         }
     }
 

@@ -3,11 +3,14 @@
 @using cima.Statistics
 @using cima.Listings
 @using cima.ContactRequests
+@using cima.Export
 @using MudBlazor
 @attribute [Authorize]
 @inject IStatisticsAppService StatisticsService
 @inject IListingAppService ListingService
 @inject IContactRequestAppService ContactRequestService
+@inject IExportAppService ExportService
+@inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @inherits cimaComponentBase
 
@@ -42,7 +45,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm font-medium text-gray-500">Total Propiedades</span>
+                        <span class="text-sm font-medium text-gray-500">@L["Dashboard:Stats:TotalProperties"]</span>
                         <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -51,15 +54,15 @@
                     </div>
                     <div class="text-3xl font-bold text-gray-900">@Stats.TotalListings</div>
                     <div class="flex items-center gap-2 mt-2 text-sm">
-                        <span class="text-green-600 font-medium">@Stats.PublishedListings publicadas</span>
+                        <span class="text-green-600 font-medium">@Stats.PublishedListings @L["Dashboard:Stats:Published"]</span>
                         <span class="text-gray-400">&bull;</span>
-                        <span class="text-yellow-600">@Stats.DraftListings borradores</span>
+                        <span class="text-yellow-600">@Stats.DraftListings @L["Dashboard:Stats:Drafts"]</span>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm font-medium text-gray-500">Arquitectos</span>
+                        <span class="text-sm font-medium text-gray-500">@L["Dashboard:Stats:Architects"]</span>
                         <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
@@ -67,12 +70,12 @@
                         </div>
                     </div>
                     <div class="text-3xl font-bold text-gray-900">@Stats.TotalArchitects</div>
-                    <div class="text-sm text-green-600 font-medium mt-2">@Stats.ActiveArchitects activos</div>
+                    <div class="text-sm text-green-600 font-medium mt-2">@Stats.ActiveArchitects @L["Dashboard:Stats:Active"]</div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm font-medium text-gray-500">Solicitudes</span>
+                        <span class="text-sm font-medium text-gray-500">@L["Dashboard:Stats:Requests"]</span>
                         <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 012 2z"/>
@@ -84,19 +87,19 @@
                     {
                         <div class="flex items-center gap-2 mt-2">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                @Stats.PendingContactRequests nuevas
+                                @Stats.PendingContactRequests @L["Dashboard:Stats:New"]
                             </span>
                         </div>
                     }
                     else
                     {
-                        <div class="text-sm text-green-600 font-medium mt-2">Todas atendidas</div>
+                        <div class="text-sm text-green-600 font-medium mt-2">@L["Dashboard:Stats:AllHandled"]</div>
                     }
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-sm font-medium text-gray-500">Portafolio</span>
+                        <span class="text-sm font-medium text-gray-500">@L["Dashboard:Stats:Portfolio"]</span>
                         <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                             <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
@@ -104,7 +107,7 @@
                         </div>
                     </div>
                     <div class="text-3xl font-bold text-gray-900">@Stats.PortfolioListings</div>
-                    <div class="text-sm text-gray-500 mt-2">proyectos completados</div>
+                    <div class="text-sm text-gray-500 mt-2">@L["Dashboard:Stats:CompletedProjects"]</div>
                 </div>
             </div>
 
@@ -112,7 +115,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 @* Listings by Status *@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Propiedades por Estado</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">@L["Dashboard:Charts:StatusTitle"]</h3>
                     <div class="space-y-4">
                         @{
                             var total = Stats.TotalListings > 0 ? Stats.TotalListings : 1;
@@ -123,7 +126,7 @@
                         }
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Publicadas</span>
+                                <span class="text-gray-600">@L["Dashboard:Charts:Published"]</span>
                                 <span class="font-medium">@Stats.PublishedListings (@publishedPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -132,7 +135,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Borradores</span>
+                                <span class="text-gray-600">@L["Dashboard:Charts:Drafts"]</span>
                                 <span class="font-medium">@Stats.DraftListings (@draftPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -141,7 +144,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Portafolio</span>
+                                <span class="text-gray-600">@L["Dashboard:Charts:Portfolio"]</span>
                                 <span class="font-medium">@Stats.PortfolioListings (@portfolioPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -150,7 +153,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Archivadas</span>
+                                <span class="text-gray-600">@L["Dashboard:Charts:Archived"]</span>
                                 <span class="font-medium">@Stats.ArchivedListings (@archivedPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
@@ -163,8 +166,8 @@
                 @* Recent Contact Requests *@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Solicitudes Recientes</h3>
-                        <a href="/admin/contact-requests" class="text-sm text-navy-600 hover:underline">Ver todas ?</a>
+                        <h3 class="text-lg font-semibold text-gray-900">@L["Dashboard:RecentRequests"]</h3>
+                        <a href="/admin/contact-requests" class="text-sm text-navy-600 hover:underline">@L["Dashboard:ViewAllRequests"]</a>
                     </div>
                     @if (RecentRequests?.Any() == true)
                     {
@@ -179,15 +182,15 @@
                                     <div class="ml-4">
                                         @if (request.Status == ContactRequestStatus.New)
                                         {
-                                            <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Nueva</span>
+                                            <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">@L["Dashboard:Status:New"]</span>
                                         }
                                         else if (request.Status == ContactRequestStatus.Replied)
                                         {
-                                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Respondida</span>
+                                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">@L["Dashboard:Status:Replied"]</span>
                                         }
                                         else
                                         {
-                                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Cerrada</span>
+                                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">@L["Dashboard:Status:Closed"]</span>
                                         }
                                     </div>
                                 </div>
@@ -200,7 +203,7 @@
                             <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                             </svg>
-                            <p>No hay solicitudes recientes</p>
+                            <p>@L["Dashboard:NoRecentRequests"]</p>
                         </div>
                     }
                 </div>
@@ -216,8 +219,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="font-medium text-gray-900">Nueva Propiedad</div>
-                        <div class="text-xs text-gray-500">Agregar al catálogo</div>
+                        <div class="font-medium text-gray-900">@L["Dashboard:QuickActions:NewProperty"]</div>
+                        <div class="text-xs text-gray-500">@L["Dashboard:QuickActions:NewPropertyDesc"]</div>
                     </div>
                 </button>
 
@@ -229,8 +232,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="font-medium text-gray-900">Nuevo Arquitecto</div>
-                        <div class="text-xs text-gray-500">Registrar usuario</div>
+                        <div class="font-medium text-gray-900">@L["Dashboard:QuickActions:NewArchitect"]</div>
+                        <div class="text-xs text-gray-500">@L["Dashboard:QuickActions:NewArchitectDesc"]</div>
                     </div>
                 </button>
 
@@ -242,8 +245,8 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="font-medium text-gray-900">Ver Propiedades</div>
-                        <div class="text-xs text-gray-500">Gestionar catálogo</div>
+                        <div class="font-medium text-gray-900">@L["Dashboard:QuickActions:ViewProperties"]</div>
+                        <div class="text-xs text-gray-500">@L["Dashboard:QuickActions:ViewPropertiesDesc"]</div>
                     </div>
                 </button>
 
@@ -256,32 +259,31 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="font-medium text-gray-900">Configuración</div>
-                        <div class="text-xs text-gray-500">Email, WhatsApp, etc.</div>
+                        <div class="font-medium text-gray-900">@L["Dashboard:QuickActions:Settings"]</div>
+                        <div class="text-xs text-gray-500">@L["Dashboard:QuickActions:SettingsDesc"]</div>
                     </div>
-                </button>
             </div>
 
             @* System Status *@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Estado del Sistema</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">@L["Dashboard:System:Title"]</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span class="text-sm font-medium text-gray-700">Base de Datos</span>
+                            <span class="text-sm font-medium text-gray-700">@L["Dashboard:System:Database"]</span>
                         </div>
-                        <span class="text-xs font-medium text-green-700">Conectado</span>
+                        <span class="text-xs font-medium text-green-700">@L["Dashboard:System:Connected"]</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                         <div class="flex items-center gap-3">
                             <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span class="text-sm font-medium text-gray-700">API</span>
+                            <span class="text-sm font-medium text-gray-700">@L["Dashboard:System:API"]</span>
                         </div>
-                        <span class="text-xs font-medium text-green-700">Operacional</span>
+                        <span class="text-xs font-medium text-green-700">@L["Dashboard:System:Operational"]</span>
                     </div>
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span class="text-sm text-gray-600">Última actualización</span>
+                        <span class="text-sm text-gray-600">@L["Dashboard:System:LastUpdate"]</span>
                         <span class="text-sm font-medium text-gray-900">@Stats.LastUpdated.ToLocalTime().ToString("HH:mm")</span>
                     </div>
                 </div>
@@ -293,10 +295,10 @@
                 <svg class="w-16 h-16 mx-auto text-red-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">Error al cargar datos</h3>
-                <p class="text-gray-500 mb-4">No se pudieron obtener las estadísticas</p>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">@L["Dashboard:Error:Title"]</h3>
+                <p class="text-gray-500 mb-4">@L["Dashboard:Error:Message"]</p>
                 <button @onclick="LoadStats" class="cima-btn cima-btn-primary">
-                    Reintentar
+                    @L["Common:Retry"]
                 </button>
             </div>
         }
@@ -333,7 +335,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error al cargar estadísticas: {ex.Message}", Severity.Error);
+            Snackbar.Add(string.Format(L["Dashboard:Error:LoadingStats"], ex.Message), Severity.Error);
             Stats = null;
         }
         finally

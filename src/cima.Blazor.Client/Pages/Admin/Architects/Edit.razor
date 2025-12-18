@@ -1,0 +1,252 @@
+@page "/admin/architects/edit/{Id:guid}"
+@using cima.Architects
+@using cima.Permissions
+@using MudBlazor
+@attribute [Authorize(cimaPermissions.Architects.Edit)]
+@inject IArchitectAppService ArchitectService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@inherits cimaComponentBase
+
+<PageTitle>@L["Admin:Architects:Edit"] - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-neutral-50 pt-20">
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <div class="flex items-center gap-4 mb-2">
+                <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Href="/admin/architects">
+                    @L["Common:Back"]
+                </MudButton>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
+                @L["Admin:Architects:Edit"]
+            </h1>
+            <p class="text-neutral-600 mt-1">@L["Admin:Architects:EditSubtitle"]</p>
+        </div>
+    </div>
+
+    <div class="cima-container py-8">
+        @if (IsLoading)
+        {
+            <div class="flex justify-center py-12">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            </div>
+        }
+        else if (Architect == null)
+        {
+            <MudAlert Severity="Severity.Error">@L["Admin:Architects:NotFound"]</MudAlert>
+        }
+        else
+        {
+            <div class="max-w-2xl">
+                <MudCard Class="p-6">
+                    <MudCardContent>
+                        <MudForm @ref="Form" @bind-IsValid="@IsFormValid">
+                            @* Account Info (read-only) *@
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-neutral-900 mb-4">@L["Profile:AccountDetails"]</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <MudTextField Value="@Architect.Email" Label="@L["Contact:Email"]" ReadOnly="true" 
+                                                  Variant="Variant.Outlined" Adornment="Adornment.Start" 
+                                                  AdornmentIcon="@Icons.Material.Filled.Email" />
+                                    <MudTextField Value="@Architect.UserName" Label="@L["Admin:Architects:Username"]" ReadOnly="true" 
+                                                  Variant="Variant.Outlined" Adornment="Adornment.Start" 
+                                                  AdornmentIcon="@Icons.Material.Filled.Person" />
+                                </div>
+                            </div>
+
+                            <MudDivider Class="my-6" />
+
+                            @* Editable Fields *@
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-neutral-900 mb-4">@L["Admin:Architects:PersonalInfo"]</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <MudTextField @bind-Value="Model.Name" Label="@L["Contact:Name"]" Required="true"
+                                                  Variant="Variant.Outlined" MaxLength="64" />
+                                    <MudTextField @bind-Value="Model.Surname" Label="@L["Admin:Architects:Surname"]" Required="true"
+                                                  Variant="Variant.Outlined" MaxLength="64" />
+                                </div>
+                            </div>
+
+                            @* Status *@
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-neutral-900 mb-4">@L["Common:Status"]</h3>
+                                <MudSwitch @bind-Value="IsActive" Color="Color.Success" Label="@GetActiveLabel()" />
+                            </div>
+
+                            @* Statistics (read-only) *@
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-neutral-900 mb-4">@L["Admin:Architects:Statistics"]</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-neutral-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-navy-600">@Architect.ActiveListings</div>
+                                        <div class="text-sm text-neutral-600">@L["Admin:Architects:ActiveListingsCount"]</div>
+                                    </div>
+                                    <div class="bg-neutral-50 p-4 rounded-lg text-center">
+                                        <div class="text-2xl font-bold text-neutral-900">@Architect.TotalListingsPublished</div>
+                                        <div class="text-sm text-neutral-600">@L["Admin:Architects:TotalPublishedCount"]</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </MudForm>
+                    </MudCardContent>
+                    <MudCardActions Class="justify-between">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" 
+                                   StartIcon="@Icons.Material.Filled.Key"
+                                   OnClick="HandleResetPassword">
+                            @L["Admin:Architects:ResetPasswordAction"]
+                        </MudButton>
+                        <div class="flex gap-2">
+                            <MudButton Variant="Variant.Outlined" Href="/admin/architects">
+                                @L["Common:Cancel"]
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                                       Disabled="@(!IsFormValid || IsSubmitting)"
+                                       OnClick="HandleSubmit">
+                                @if (IsSubmitting)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                @L["Common:Save"]
+                            </MudButton>
+                        </div>
+                    </MudCardActions>
+                </MudCard>
+            </div>
+        }
+    </div>
+</div>
+
+@* Password Reset Dialog *@
+<MudDialog @bind-Visible="ShowResetDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Key" Color="Color.Warning" Class="mr-2" />
+            @L["Admin:Architects:ResetDialog:Title"]
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAlert Severity="Severity.Warning" Class="mb-4">
+            <strong>@L["Admin:Architects:ResetDialog:Important"]</strong> @L["Admin:Architects:ResetDialog:Instruction"]
+        </MudAlert>
+        <MudText Typo="Typo.body1" Class="mb-2">@L["Profile:AccountDetails"]: <strong>@Architect?.Name @Architect?.Surname</strong></MudText>
+        <MudTextField Value="@NewTempPassword" Label="@L["Admin:Architects:ResetDialog:TempPasswordLabel"]" ReadOnly="true"
+                      Variant="Variant.Outlined" Adornment="Adornment.End"
+                      AdornmentIcon="@Icons.Material.Filled.ContentCopy"
+                      OnAdornmentClick="CopyResetPassword" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+            @L["Admin:Architects:ResetDialog:Footer"]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => ShowResetDialog = false)">
+            @L["Common:Ok"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private MudForm Form { get; set; } = null!;
+    private bool IsFormValid { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsSubmitting { get; set; }
+    private ArchitectDto? Architect { get; set; }
+    private UpdateArchitectDto Model { get; set; } = new();
+    private bool IsActive { get; set; }
+
+    private bool ShowResetDialog { get; set; }
+    private string NewTempPassword { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadArchitect();
+    }
+
+    private async Task LoadArchitect()
+    {
+        try
+        {
+            IsLoading = true;
+            Architect = await ArchitectService.GetAsync(Id);
+            if (Architect != null)
+            {
+                Model.Name = Architect.Name;
+                Model.Surname = Architect.Surname;
+                IsActive = Architect.IsActive;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!IsFormValid) return;
+
+        try
+        {
+            IsSubmitting = true;
+            Model.IsActive = IsActive;
+            await ArchitectService.UpdateAsync(Id, Model);
+            Snackbar.Add(L["Common:SaveSuccess"], Severity.Success);
+            NavManager.NavigateTo("/admin/architects");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+    private async Task HandleResetPassword()
+    {
+        var result = await DialogService.ShowMessageBox(
+            L["Admin:Architects:ResetPasswordAction"],
+            L["Admin:Architects:Dialog:ResetPasswordConfirm"],
+            yesText: L["Admin:Architects:ResetPasswordAction"],
+            cancelText: L["Common:Cancel"]);
+
+        if (result == true)
+        {
+            try
+            {
+                var newPassword = await ArchitectService.ResetPasswordAsync(Id, new ResetArchitectPasswordDto());
+                NewTempPassword = newPassword;
+                ShowResetDialog = true;
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+    }
+
+    private async Task CopyResetPassword()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", NewTempPassword);
+            Snackbar.Add(L["Common:Copied"], Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add(L["Common:CopyError"], Severity.Warning);
+        }
+    }
+
+    private string GetActiveLabel() => IsActive ? L["Admin:Architects:Active"] : L["Admin:Architects:Inactive"];
+}
