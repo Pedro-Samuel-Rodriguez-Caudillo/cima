@@ -1,0 +1,329 @@
+@page "/admin/audit-logs"
+@using cima.AuditLogs
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.Application.Dtos
+@using cima.Localization
+@attribute [Authorize(Roles = "admin")]
+@inject IAuditLogAppService AuditLogService
+@inject IStringLocalizer<cimaResource> L
+
+<PageTitle>Audit Logs</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fas fa-history me-2"></i>@L["AuditLogs"]
+        </h2>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">@L["StartDate"]</label>
+                    <InputDate @bind-Value="StartTime" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">@L["EndDate"]</label>
+                    <InputDate @bind-Value="EndTime" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">@L["UserName"]</label>
+                    <InputText @bind-Value="UserNameFilter" class="form-control" placeholder="@L["FilterByUser"]" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">@L["HttpMethod"]</label>
+                    <select @bind="HttpMethodFilter" class="form-select">
+                        <option value="">@L["All"]</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-primary" @onclick="SearchAsync">
+                    <i class="fas fa-search me-1"></i>@L["Search"]
+                </button>
+                <button class="btn btn-outline-secondary ms-2" @onclick="ResetFilters">
+                    <i class="fas fa-undo me-1"></i>@L["Reset"]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de resultados -->
+    @if (IsLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (AuditLogs?.Items?.Any() == true)
+    {
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>@L["Time"]</th>
+                            <th>@L["User"]</th>
+                            <th>@L["Method"]</th>
+                            <th>@L["URL"]</th>
+                            <th>@L["Status"]</th>
+                            <th>@L["Duration"]</th>
+                            <th>@L["Actions"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in AuditLogs.Items)
+                        {
+                            <tr>
+                                <td>@log.ExecutionTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>@(log.UserName ?? "Anonymous")</td>
+                                <td>
+                                    <span class="badge @GetMethodBadgeClass(log.HttpMethod)">
+                                        @log.HttpMethod
+                                    </span>
+                                </td>
+                                <td class="text-truncate" style="max-width: 300px;" title="@log.Url">
+                                    @log.Url
+                                </td>
+                                <td>
+                                    <span class="badge @GetStatusBadgeClass(log.HttpStatusCode)">
+                                        @log.HttpStatusCode
+                                    </span>
+                                </td>
+                                <td>@log.ExecutionDuration ms</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewDetails(log.Id)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Paginación -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <span class="text-muted">
+                @L["ShowingResults", AuditLogs.Items.Count, AuditLogs.TotalCount]
+            </span>
+            <nav>
+                <ul class="pagination mb-0">
+                    <li class="page-item @(CurrentPage == 0 ? "disabled" : "")">
+                        <button class="page-link" @onclick="PreviousPage">@L["Previous"]</button>
+                    </li>
+                    <li class="page-item @(!HasNextPage ? "disabled" : "")">
+                        <button class="page-link" @onclick="NextPage">@L["Next"]</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>@L["NoAuditLogsFound"]
+        </div>
+    }
+</div>
+
+<!-- Modal de detalles -->
+@if (SelectedLog != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@L["AuditLogDetails"]</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>@L["User"]:</strong> @(SelectedLog.UserName ?? "Anonymous")
+                        </div>
+                        <div class="col-6">
+                            <strong>@L["Time"]:</strong> @SelectedLog.ExecutionTime.ToLocalTime()
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>@L["IP"]:</strong> @SelectedLog.ClientIpAddress
+                        </div>
+                        <div class="col-6">
+                            <strong>@L["Duration"]:</strong> @SelectedLog.ExecutionDuration ms
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>@L["Browser"]:</strong>
+                        <small class="text-muted d-block">@SelectedLog.BrowserInfo</small>
+                    </div>
+
+                    @if (SelectedLog.EntityChanges.Any())
+                    {
+                        <h6 class="mt-4">@L["EntityChanges"]</h6>
+                        @foreach (var change in SelectedLog.EntityChanges)
+                        {
+                            <div class="card mb-2">
+                                <div class="card-header py-2">
+                                    <span class="badge @GetChangeTypeBadge(change.ChangeType)">@change.ChangeType</span>
+                                    <strong class="ms-2">@GetEntityName(change.EntityTypeFullName)</strong>
+                                    <small class="text-muted">(ID: @change.EntityId)</small>
+                                </div>
+                                @if (change.PropertyChanges.Any())
+                                {
+                                    <div class="card-body py-2">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>@L["Property"]</th>
+                                                    <th>@L["OldValue"]</th>
+                                                    <th>@L["NewValue"]</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var prop in change.PropertyChanges)
+                                                {
+                                                    <tr>
+                                                        <td>@prop.PropertyName</td>
+                                                        <td class="text-danger">@prop.OriginalValue</td>
+                                                        <td class="text-success">@prop.NewValue</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">@L["Close"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private PagedResultDto<AuditLogDto>? AuditLogs { get; set; }
+    private AuditLogDto? SelectedLog { get; set; }
+    private bool IsLoading { get; set; }
+    private int CurrentPage { get; set; }
+    private const int PageSize = 20;
+
+    // Filtros
+    private DateTime? StartTime { get; set; }
+    private DateTime? EndTime { get; set; }
+    private string? UserNameFilter { get; set; }
+    private string? HttpMethodFilter { get; set; }
+
+    private bool HasNextPage => AuditLogs != null && (CurrentPage + 1) * PageSize < AuditLogs.TotalCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartTime = DateTime.Today.AddDays(-7);
+        EndTime = DateTime.Today.AddDays(1);
+        await SearchAsync();
+    }
+
+    private async Task SearchAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            AuditLogs = await AuditLogService.GetListAsync(new GetAuditLogsInput
+            {
+                StartTime = StartTime,
+                EndTime = EndTime,
+                UserName = UserNameFilter,
+                HttpMethod = HttpMethodFilter,
+                SkipCount = CurrentPage * PageSize,
+                MaxResultCount = PageSize
+            });
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ViewDetails(Guid id)
+    {
+        SelectedLog = await AuditLogService.GetAsync(id);
+    }
+
+    private void CloseModal() => SelectedLog = null;
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 0)
+        {
+            CurrentPage--;
+            await SearchAsync();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (HasNextPage)
+        {
+            CurrentPage++;
+            await SearchAsync();
+        }
+    }
+
+    private async Task ResetFilters()
+    {
+        StartTime = DateTime.Today.AddDays(-7);
+        EndTime = DateTime.Today.AddDays(1);
+        UserNameFilter = null;
+        HttpMethodFilter = null;
+        CurrentPage = 0;
+        await SearchAsync();
+    }
+
+    private static string GetMethodBadgeClass(string? method) => method switch
+    {
+        "GET" => "bg-info",
+        "POST" => "bg-success",
+        "PUT" => "bg-warning text-dark",
+        "DELETE" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string GetStatusBadgeClass(int? status) => status switch
+    {
+        >= 200 and < 300 => "bg-success",
+        >= 300 and < 400 => "bg-info",
+        >= 400 and < 500 => "bg-warning text-dark",
+        >= 500 => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string GetChangeTypeBadge(string? changeType) => changeType switch
+    {
+        "Created" => "bg-success",
+        "Updated" => "bg-warning text-dark",
+        "Deleted" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private static string GetEntityName(string? fullName)
+    {
+        if (string.IsNullOrEmpty(fullName)) return "Unknown";
+        var lastDot = fullName.LastIndexOf('.');
+        return lastDot >= 0 ? fullName[(lastDot + 1)..] : fullName;
+    }
+}
