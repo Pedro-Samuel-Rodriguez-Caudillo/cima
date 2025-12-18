@@ -101,12 +101,12 @@
         try
         {
             IsLoading = true;
-            var settings = await SettingsService.GetSettingsAsync();
+            var legalData = await SettingsService.GetLegalContentAsync();
             
             LegalContent = new LegalContentModel
             {
-                PrivacyContent = settings.PrivacyPolicy ?? "",
-                TermsContent = settings.TermsAndConditions ?? ""
+                PrivacyContent = legalData.PrivacyContent ?? "",
+                TermsContent = legalData.TermsContent ?? ""
             };
         }
         catch (Exception ex)
