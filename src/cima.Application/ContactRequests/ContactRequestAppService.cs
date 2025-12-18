@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using cima.BackgroundJobs;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
 using cima.Notifications;
@@ -14,6 +15,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Settings;
 
@@ -24,7 +26,7 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
     private readonly IRepository<Listing, Guid> _propertyRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
-    private readonly IEmailNotificationService _emailService;
+    private readonly IBackgroundJobManager _backgroundJobManager;
     private readonly ISettingProvider _settingProvider;
     private readonly IConfiguration _configuration;
 
@@ -32,14 +34,14 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
         IRepository<ContactRequest, Guid> contactRequestRepository,
         IRepository<Listing, Guid> propertyRepository,
         IRepository<Architect, Guid> architectRepository,
-        IEmailNotificationService emailService,
+        IBackgroundJobManager backgroundJobManager,
         ISettingProvider settingProvider,
         IConfiguration configuration)
     {
         _contactRequestRepository = contactRequestRepository;
         _propertyRepository = propertyRepository;
         _architectRepository = architectRepository;
-        _emailService = emailService;
+        _backgroundJobManager = backgroundJobManager;
         _settingProvider = settingProvider;
         _configuration = configuration;
     }
@@ -107,8 +109,26 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
 
         await _contactRequestRepository.InsertAsync(contactRequest);
 
-        // Enviar notificaciones por email (fire and forget)
-        _ = SendNotificationsAsync(contactRequest, property, normalizedName!, normalizedEmail!, normalizedMessage!);
+        // Encolar job para envío asíncrono de emails (con reintentos automáticos)
+        var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
+        var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
+            ?? _configuration["Email:AdminNotification"]
+            ?? _configuration["Email:Smtp:FromAddress"];
+
+        if (!string.IsNullOrEmpty(adminEmail))
+        {
+            await _backgroundJobManager.EnqueueAsync(new ContactEmailJobArgs
+            {
+                AdminEmail = adminEmail,
+                CustomerName = normalizedName!,
+                CustomerEmail = normalizedEmail!,
+                CustomerPhone = normalizedPhone,
+                Message = normalizedMessage!,
+                PropertyTitle = property.Title,
+                PropertyUrl = $"{baseUrl}/properties/{property.Id}",
+                SendConfirmationToCustomer = true
+            });
+        }
 
         return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);
     }
@@ -158,103 +178,30 @@ public class ContactRequestAppService : cimaAppService, IContactRequestAppServic
 
         await _contactRequestRepository.InsertAsync(contactRequest);
 
-        // Enviar notificaciones por email (fire and forget)
-        _ = SendGeneralNotificationsAsync(contactRequest, normalizedName!, normalizedEmail!, normalizedMessage!);
+        // Encolar job para envío asíncrono de emails
+        var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
+        var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
+            ?? _configuration["Email:AdminNotification"]
+            ?? _configuration["Email:Smtp:FromAddress"];
+
+        if (!string.IsNullOrEmpty(adminEmail))
+        {
+            await _backgroundJobManager.EnqueueAsync(new ContactEmailJobArgs
+            {
+                AdminEmail = adminEmail,
+                CustomerName = normalizedName!,
+                CustomerEmail = normalizedEmail!,
+                CustomerPhone = normalizedPhone,
+                Message = normalizedMessage!,
+                PropertyTitle = "Consulta General",
+                PropertyUrl = $"{baseUrl}/contact",
+                SendConfirmationToCustomer = true
+            });
+        }
 
         return ObjectMapper.Map<ContactRequest, ContactRequestDto>(contactRequest);
     }
 
-    /// <summary>
-    /// Envía notificaciones para contacto general
-    /// </summary>
-    private async Task SendGeneralNotificationsAsync(
-        ContactRequest contactRequest,
-        string customerName,
-        string customerEmail,
-        string message)
-    {
-        try
-        {
-            var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
-            var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
-                ?? _configuration["Email:AdminNotification"]
-                ?? _configuration["Email:Smtp:FromAddress"];
-
-            // Notificar al admin
-            if (!string.IsNullOrEmpty(adminEmail))
-            {
-                await _emailService.SendContactRequestNotificationAsync(new ContactRequestNotificationDto
-                {
-                    AdminEmail = adminEmail,
-                    CustomerName = customerName,
-                    CustomerEmail = customerEmail,
-                    CustomerPhone = contactRequest.Phone,
-                    Message = message,
-                    PropertyTitle = "Consulta General",
-                    PropertyUrl = $"{baseUrl}/contact"
-                });
-            }
-
-            // Confirmar al cliente
-            await _emailService.SendContactRequestConfirmationAsync(new ContactRequestConfirmationDto
-            {
-                CustomerEmail = customerEmail,
-                CustomerName = customerName,
-                PropertyTitle = "Consulta General"
-            });
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Error al enviar notificaciones de contacto general {ContactRequestId}", contactRequest.Id);
-        }
-    }
-
-    /// <summary>
-    /// Envía notificaciones por email de forma asíncrona
-    /// </summary>
-    private async Task SendNotificationsAsync(
-        ContactRequest contactRequest, 
-        Listing property,
-        string customerName,
-        string customerEmail,
-        string message)
-    {
-        try
-        {
-            var baseUrl = _configuration["App:SelfUrl"] ?? "https://4cima.com";
-            var adminEmail = await _settingProvider.GetOrNullAsync(SiteSettingNames.AdminNotificationEmail)
-                ?? _configuration["Email:AdminNotification"]
-                ?? _configuration["Email:Smtp:FromAddress"];
-
-            // Notificar al admin
-            if (!string.IsNullOrEmpty(adminEmail))
-            {
-                await _emailService.SendContactRequestNotificationAsync(new ContactRequestNotificationDto
-                {
-                    AdminEmail = adminEmail,
-                    CustomerName = customerName,
-                    CustomerEmail = customerEmail,
-                    CustomerPhone = contactRequest.Phone,
-                    Message = message,
-                    PropertyTitle = property.Title,
-                    PropertyUrl = $"{baseUrl}/properties/{property.Id}"
-                });
-            }
-
-            // Confirmar al cliente
-            await _emailService.SendContactRequestConfirmationAsync(new ContactRequestConfirmationDto
-            {
-                CustomerEmail = customerEmail,
-                CustomerName = customerName,
-                PropertyTitle = property.Title
-            });
-        }
-        catch (Exception ex)
-        {
-            // Log pero no interrumpir el flujo
-            Logger.LogWarning(ex, "Error al enviar notificaciones de solicitud de contacto {ContactRequestId}", contactRequest.Id);
-        }
-    }
 
     [Authorize(cimaPermissions.ContactRequests.View)]
     public async Task<PagedResultDto<ContactRequestDto>> GetListAsync(

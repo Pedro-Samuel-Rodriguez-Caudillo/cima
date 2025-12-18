@@ -2,63 +2,120 @@
 @using cima.ContactRequests
 @using cima.Permissions
 @using MudBlazor
+@using cima.Blazor.Client.Components.Admin
 @attribute [Authorize(cimaPermissions.ContactRequests.Default)]
 @inherits cimaComponentBase
 
 <PageTitle>@L["Menu:ContactRequests"] - @L["CompanyName"]</PageTitle>
 
-<div class="cima-container mt-24 pb-20">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">@L["Menu:ContactRequests"]</h1>
-        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData" Disabled="@IsLoading">
-            @L["Common:Retry"]
-        </MudButton>
+<div class="min-h-screen bg-neutral-50 pt-20">
+    @* Header *@
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
+                        @L["Menu:ContactRequests"]
+                    </h1>
+                    <p class="text-neutral-600 mt-1">
+                        @L["Admin:ContactRequests:Subtitle"]
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" 
+                               OnClick="LoadData" Disabled="@IsLoading">
+                        @L["Common:Retry"]
+                    </MudButton>
+                </div>
+            </div>
+        </div>
     </div>
 
-    @if (IsLoading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
-    }
-
-    <MudDataGrid T="ContactRequestDto" Items="@Requests" Elevation="0" Outlined="true" Class="bg-white rounded-lg border border-gray-200"
-                 Loading="@IsLoading">
-        <Columns>
-            <MudBlazor.PropertyColumn Property="x => x.CreatedAt" Title="@L["Date"]">
-                <CellTemplate>
-                    @context.Item.CreatedAt.ToLocalTime().ToString("g")
-                </CellTemplate>
-            </MudBlazor.PropertyColumn>
-            
-            <MudBlazor.PropertyColumn Property="x => x.Name" Title="@L["Contact:Name"]" />
-            <MudBlazor.PropertyColumn Property="x => x.Email" Title="@L["Contact:Email"]" />
-            
-            <MudBlazor.TemplateColumn Title="@L["Common:Status"]">
-                <CellTemplate>
-                    <MudChip T="string" Color="@GetStatusColor(context.Item.Status)" Size="Size.Small">
-                        @context.Item.Status.ToString()
-                    </MudChip>
-                </CellTemplate>
-            </MudBlazor.TemplateColumn>
-            
-            <MudBlazor.TemplateColumn Title="@L["Common:Actions"]">
-                <CellTemplate>
-                    <div class="flex gap-2">
-                        @if (context.Item.ListingId.HasValue)
-                        {
-                             <MudTooltip Text="Ver Propiedad">
-                                <MudIconButton Icon="@Icons.Material.Filled.Home" Size="Size.Small" Href="@($"/propiedades/{context.Item.ListingId}")" Target="_blank" />
-                             </MudTooltip>
-                        }
-                        
-                        <!-- Actions can be expanded here -->
+    <div class="cima-container py-8">
+        @if (IsLoading)
+        {
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                @for (int i = 0; i < 4; i++)
+                {
+                    <div class="bg-white rounded-xl shadow-sm border border-neutral-100 p-6 animate-pulse">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-neutral-200"></div>
+                            <div class="flex-1">
+                                <div class="h-4 bg-neutral-200 rounded w-1/2 mb-2"></div>
+                                <div class="h-3 bg-neutral-200 rounded w-1/3"></div>
+                            </div>
+                        </div>
+                        <div class="h-16 bg-neutral-100 rounded-lg mb-4"></div>
+                        <div class="h-8 bg-neutral-100 rounded w-full"></div>
                     </div>
-                </CellTemplate>
-            </MudBlazor.TemplateColumn>
-        </Columns>
-        <PagerContent>
-            <div class="p-4 flex justify-center">
-                 <MudPagination SelectedChanged="OnPageChanged" Count="@((TotalCount + PageSize - 1) / PageSize)" Selected="@CurrentPage" Class="mt-4" />
+                }
             </div>
-        </PagerContent>
-    </MudDataGrid>
+        }
+        else if (Requests?.Any() == true)
+        {
+            @* Stats summary *@
+            <div class="flex flex-wrap gap-4 mb-6">
+                <div class="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                    @TotalCount @L["Admin:ContactRequests:TotalRequests"]
+                </div>
+                @{
+                    var newCount = Requests.Count(r => r.Status == Domain.Shared.ContactRequestStatus.New);
+                    if (newCount > 0)
+                    {
+                        <div class="px-4 py-2 bg-amber-50 text-amber-700 rounded-lg text-sm font-medium">
+                            @newCount @L["Admin:ContactRequests:PendingReview"]
+                        </div>
+                    }
+                }
+            </div>
+            
+            @* 2-column grid *@
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                @foreach (var request in Requests)
+                {
+                    <ContactRequestCard Request="request" OnStatusChanged="HandleStatusChange" />
+                }
+            </div>
+
+            @* Pagination *@
+            @if (TotalCount > PageSize)
+            {
+                <div class="mt-8 flex justify-center">
+                    <nav class="inline-flex items-center gap-1 bg-white rounded-xl shadow-md p-2">
+                        <button @onclick="PreviousPage" disabled="@(CurrentPage == 1)"
+                                class="flex items-center justify-center w-10 h-10 rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+
+                        <div class="px-4 text-sm text-neutral-600">
+                            @L["Common:Page"] @CurrentPage / @TotalPages
+                        </div>
+
+                        <button @onclick="NextPage" disabled="@(CurrentPage == TotalPages)"
+                                class="flex items-center justify-center w-10 h-10 rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </nav>
+                </div>
+            }
+        }
+        else
+        {
+            @* Empty state *@
+            <div class="bg-white rounded-xl shadow-sm p-16 text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-neutral-100 mb-6">
+                    <svg class="w-10 h-10 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-neutral-900 mb-2">@L["Admin:ContactRequests:NoRequests"]</h3>
+                <p class="text-neutral-600">@L["Admin:ContactRequests:NoRequestsDetail"]</p>
+            </div>
+        }
+    </div>
 </div>

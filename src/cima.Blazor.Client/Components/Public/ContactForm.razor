@@ -6,8 +6,8 @@
 @inherits cimaComponentBase
 
 @*
-    Formulario de contacto asociado a una propiedad específica
-    Para página de detalle de propiedad
+    Formulario de contacto asociado a una propiedad especÃ­fica
+    Para pÃ¡gina de detalle de propiedad
 *@
 
 <div class="cima-card p-6">
@@ -29,7 +29,7 @@
             <p class="text-sm text-neutral-600 mb-6">
                 @L["ContactForm:SuccessMessage"]
             </p>
-            <button 
+            <button
                 @onclick="ResetForm"
                 class="cima-btn cima-btn-outline text-sm">
                 @L["ContactForm:SendAnother"]
@@ -47,7 +47,7 @@
                     <label for="contact-name" class="cima-label cima-label-required">
                         @L["ContactForm:Name"]
                     </label>
-                    <InputText 
+                    <InputText
                         id="contact-name"
                         @bind-Value="Model.Name"
                         class="cima-input"
@@ -61,7 +61,7 @@
                     <label for="contact-email" class="cima-label cima-label-required">
                         @L["ContactForm:Email"]
                     </label>
-                    <InputText 
+                    <InputText
                         id="contact-email"
                         type="email"
                         @bind-Value="Model.Email"
@@ -71,12 +71,12 @@
                     <ValidationMessage For="@(() => Model.Email)" class="cima-error-message" />
                 </div>
 
-                @* Teléfono (opcional) *@
+                @* TelÃ©fono (opcional) *@
                 <div class="cima-form-group">
                     <label for="contact-phone" class="cima-label">
                         @L["ContactForm:Phone"] <span class="text-neutral-500 text-xs">(@L["Common:Optional"])</span>
                     </label>
-                    <InputText 
+                    <InputText
                         id="contact-phone"
                         type="tel"
                         @bind-Value="Model.Phone"
@@ -91,7 +91,7 @@
                     <label for="contact-message" class="cima-label cima-label-required">
                         @L["ContactForm:Message"]
                     </label>
-                    <InputTextArea 
+                    <InputTextArea
                         id="contact-message"
                         @bind-Value="Model.Message"
                         class="cima-input min-h-[100px]"
@@ -106,9 +106,9 @@
                     <p class="font-medium mb-1">@L["ContactForm:InterestedInProperty", ListingTitle]</p>
                 </div>
 
-                @* Botón de envío *@
-                <button 
-                    type="submit" 
+                @* BotÃ³n de envÃ­o *@
+                <button
+                    type="submit"
                     class="cima-btn cima-btn-primary w-full"
                     disabled="@IsSubmitting">
                     @if (IsSubmitting)
@@ -139,19 +139,19 @@
 
     private class ContactModel
     {
-        [Required(ErrorMessage = "El nombre es requerido")]
-        [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
+        [Required(ErrorMessage = "ContactForm:Error:NameRequired")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "ContactForm:Error:NameLength")]
         public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El email es requerido")]
-        [EmailAddress(ErrorMessage = "Email inválido")]
+        [Required(ErrorMessage = "ContactForm:Error:EmailRequired")]
+        [EmailAddress(ErrorMessage = "ContactForm:Error:EmailInvalid")]
         public string Email { get; set; } = string.Empty;
 
-        [Phone(ErrorMessage = "Teléfono inválido")]
+        [Phone(ErrorMessage = "ContactForm:Error:PhoneInvalid")]
         public string? Phone { get; set; }
 
-        [Required(ErrorMessage = "El mensaje es requerido")]
-        [StringLength(5000, MinimumLength = 10, ErrorMessage = "El mensaje debe tener entre 10 y 5000 caracteres")]
+        [Required(ErrorMessage = "ContactForm:Error:MessageRequired")]
+        [StringLength(5000, MinimumLength = 10, ErrorMessage = "ContactForm:Error:MessageLength")]
         public string Message { get; set; } = string.Empty;
     }
 
@@ -173,7 +173,7 @@
             await ContactRequestService.CreateAsync(dto);
 
             IsSuccess = true;
-            
+
             await MessageService.Success(L["ContactForm:Success"]);
         }
         catch (Exception ex)

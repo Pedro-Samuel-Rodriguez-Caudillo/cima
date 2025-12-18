@@ -1,0 +1,125 @@
+@using cima.ContactRequests
+@using cima.Domain.Shared
+@using Microsoft.Extensions.Localization
+@using cima.Localization
+@inject IStringLocalizer<cimaResource> L
+
+<div class="bg-white rounded-xl shadow-sm border border-neutral-100 overflow-hidden hover:shadow-md transition-shadow">
+    @* Header con estado y fecha *@
+    <div class="flex items-center justify-between px-5 py-3 border-b border-neutral-100 bg-neutral-50">
+        <div class="flex items-center gap-2">
+            <span class="@GetStatusBadgeClass()">
+                @GetStatusText()
+            </span>
+        </div>
+        <div class="text-sm text-neutral-500">
+            @Request.CreatedAt.ToLocalTime().ToString("g")
+        </div>
+    </div>
+    
+    @* Contenido principal *@
+    <div class="p-5 space-y-4">
+        @* Info del contacto *@
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
+                <span class="text-navy-700 font-semibold text-lg">@GetInitials()</span>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-neutral-900 truncate">@Request.Name</h3>
+                <a href="mailto:@Request.Email" class="text-sm text-navy-600 hover:underline truncate block">
+                    @Request.Email
+                </a>
+                @if (!string.IsNullOrWhiteSpace(Request.Phone))
+                {
+                    <a href="tel:@Request.Phone" class="text-sm text-neutral-500 hover:text-neutral-700 flex items-center gap-1 mt-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                        @Request.Phone
+                    </a>
+                }
+            </div>
+        </div>
+
+        @* Mensaje *@
+        <div class="bg-neutral-50 rounded-lg p-4">
+            <p class="text-neutral-700 text-sm line-clamp-3">@Request.Message</p>
+        </div>
+        
+        @* Propiedad asociada (si existe) *@
+        @if (Request.ListingId.HasValue)
+        {
+            <div class="flex items-center gap-2 text-xs text-neutral-500">
+                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <a href="/properties/@Request.ListingId" target="_blank" class="text-navy-600 hover:underline">
+                    @L["Admin:ContactRequests:ViewProperty"]
+                </a>
+            </div>
+        }
+    </div>
+    
+    @* Footer con acciones *@
+    <div class="px-5 py-3 border-t border-neutral-100 flex items-center justify-end gap-2">
+        @if (Request.Status == ContactRequestStatus.New)
+        {
+            <button @onclick="OnMarkAsRead" class="text-sm px-3 py-1.5 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors">
+                @L["Admin:ContactRequests:MarkAsRead"]
+            </button>
+        }
+        <button @onclick="OnMarkAsReplied" class="text-sm px-3 py-1.5 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+            @L["Admin:ContactRequests:MarkAsReplied"]
+        </button>
+        <a href="mailto:@Request.Email?subject=@GetReplySubject()" class="text-sm px-3 py-1.5 text-navy-700 bg-navy-50 hover:bg-navy-100 rounded-lg transition-colors flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            @L["Admin:ContactRequests:Reply"]
+        </a>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ContactRequestDto Request { get; set; } = default!;
+    [Parameter] public EventCallback<ContactRequestDto> OnStatusChanged { get; set; }
+
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(Request.Name)) return "?";
+        var parts = Request.Name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+
+    private string GetStatusBadgeClass() => Request.Status switch
+    {
+        ContactRequestStatus.New => "px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700",
+        ContactRequestStatus.Read => "px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-700",
+        ContactRequestStatus.Replied => "px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700",
+        ContactRequestStatus.Closed => "px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700",
+        _ => "px-2.5 py-1 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700"
+    };
+
+    private string GetStatusText() => Request.Status switch
+    {
+        ContactRequestStatus.New => L["Dashboard:Status:New"],
+        ContactRequestStatus.Read => L["Admin:ContactRequests:Status:Read"],
+        ContactRequestStatus.Replied => L["Dashboard:Status:Replied"],
+        ContactRequestStatus.Closed => L["Dashboard:Status:Closed"],
+        _ => Request.Status.ToString()
+    };
+
+    private string GetReplySubject() => Uri.EscapeDataString($"Re: Consulta sobre propiedad - CIMA");
+
+    private async Task OnMarkAsRead()
+    {
+        await OnStatusChanged.InvokeAsync(Request);
+    }
+
+    private async Task OnMarkAsReplied()
+    {
+        await OnStatusChanged.InvokeAsync(Request);
+    }
+}

@@ -54,7 +54,7 @@
 
         <!-- Submit -->
         <div class="pt-4">
-            <button type="submit" 
+            <button type="submit"
                     class="cima-btn cima-btn-primary w-full sm:w-auto px-8 py-3 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
                     disabled="@_isSubmitting">
                 @if (_isSubmitting)
@@ -94,7 +94,7 @@
             Console.WriteLine("GeneralContactForm: Success!");
             _isSubmitted = true;
             Snackbar.Add(L["ContactForm:SuccessMessage"], Severity.Success);
-            
+
             // Reset form for potential new submission
             _model = new ContactModel();
         }
@@ -113,22 +113,21 @@
     private void HandleInvalidSubmit()
     {
         Console.WriteLine("GeneralContactForm: Validation FAILED");
-        Snackbar.Add("Por favor, completa todos los campos requeridos.", Severity.Warning);
+        Snackbar.Add(L["Common:ValidationErrorMessage"], Severity.Warning);
     }
 
     public class ContactModel
     {
-        [Required(ErrorMessage = "El nombre es requerido")]
+        [Required(ErrorMessage = "ContactForm:Error:NameRequired")]
         public string Name { get; set; } = "";
 
-        [Required(ErrorMessage = "El email es requerido")]
-        [EmailAddress(ErrorMessage = "Email inválido")]
+        [Required(ErrorMessage = "ContactForm:Error:EmailRequired")]
+        [EmailAddress(ErrorMessage = "ContactForm:Error:EmailInvalid")]
         public string Email { get; set; } = "";
 
         public string Phone { get; set; } = "";
 
-        [Required(ErrorMessage = "El mensaje es requerido")]
+        [Required(ErrorMessage = "ContactForm:Error:MessageRequired")]
         public string Message { get; set; } = "";
     }
 }
-

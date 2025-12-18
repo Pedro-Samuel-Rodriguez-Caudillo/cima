@@ -75,8 +75,8 @@ public partial class Index : cimaComponentBase
     {
         var parameters = new DialogParameters
         {
-            { "ContentText", "¿Marcar esta solicitud como respondida?" },
-            { "ButtonText", "Confirmar" },
+            { "ContentText", L["Admin:ContactRequests:MarkAsRepliedConfirm"].Value },
+            { "ButtonText", L["Common:Confirm"].Value },
             { "Color", Color.Success }
         };
 
@@ -90,4 +90,32 @@ public partial class Index : cimaComponentBase
     
     // Implement Full View / Reply logic in a separate method or Dialog later
     // For MVP, just list and show details.
+
+    private int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 1;
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            await LoadData();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            await LoadData();
+        }
+    }
+
+    private async Task HandleStatusChange(ContactRequestDto request)
+    {
+        // TODO: Implement status change logic using IContactRequestAppService
+        // For now, just reload data
+        await LoadData();
+        Snackbar.Add(L["Common:Success"], Severity.Success);
+    }
 }
