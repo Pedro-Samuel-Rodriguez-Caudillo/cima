@@ -1,0 +1,56 @@
+@page "/terms"
+@rendermode InteractiveAuto
+@using Markdig
+@using cima.Settings
+@inject ISiteSettingsAppService SettingsService
+@inherits cimaComponentBase
+
+<PageTitle>@L["Legal:Terms:Title"] - @L["CompanyName"]</PageTitle>
+
+<div class="min-h-screen bg-neutral-50 pt-24 pb-12">
+    <div class="cima-container max-w-4xl">
+        @if (IsLoading)
+        {
+            <div class="flex justify-center py-12">
+                <div class="cima-spinner"></div>
+            </div>
+        }
+        else
+        {
+            <article class="prose prose-neutral max-w-none bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
+                @((MarkupString)HtmlContent)
+            </article>
+        }
+        
+        <div class="mt-8">
+            <a href="/" class="cima-btn cima-btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                @L["Profile:BackToHome"]
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private string HtmlContent { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var legalContent = await SettingsService.GetLegalContentAsync();
+            HtmlContent = Markdown.ToHtml(legalContent.TermsContent ?? "# Términos y Condiciones\n\nContenido pendiente.");
+        }
+        catch (Exception)
+        {
+            HtmlContent = "<p>Error al cargar el contenido.</p>";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
