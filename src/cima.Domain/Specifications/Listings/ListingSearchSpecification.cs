@@ -50,6 +50,7 @@ public class ListingSearchSpecification : Specification<Listing>
     public override Expression<Func<Listing, bool>> ToExpression()
     {
         return listing =>
+            listing.Status == ListingStatus.Published &&
             (string.IsNullOrWhiteSpace(_searchTerm) || 
              listing.Title.Contains(_searchTerm) || 
              (listing.Location != null && listing.Location.Value.Contains(_searchTerm))) &&
