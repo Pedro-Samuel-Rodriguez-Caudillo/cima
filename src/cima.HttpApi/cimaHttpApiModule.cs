@@ -9,6 +9,8 @@ using Volo.Abp.PermissionManagement.HttpApi;
 using Volo.Abp.Localization;
 using Volo.Abp.TenantManagement;
 using Volo.Abp.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Asp.Versioning;
 
 namespace cima;
 
@@ -27,15 +29,27 @@ public class cimaHttpApiModule : AbpModule
     {
         ConfigureConventionalControllers();
         ConfigureLocalization();
+        ConfigureApiVersioning(context);
+    }
+
+    private void ConfigureApiVersioning(ServiceConfigurationContext context)
+    {
+        context.Services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+        }).AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+        });
     }
 
     private void ConfigureConventionalControllers()
     {
         Configure<AbpAspNetCoreMvcOptions>(options =>
         {
-            // Registrar controladores de Application Contracts (auto-generated API)
-            // Los controladores manuales como HealthController (que heredan de ControllerBase)
-            // son descubiertos automaticamente por ASP.NET Core MVC
             options.ConventionalControllers.Create(typeof(cimaApplicationContractsModule).Assembly);
         });
     }

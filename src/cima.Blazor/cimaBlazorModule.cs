@@ -60,6 +60,9 @@ using Volo.Abp.VirtualFileSystem;
 using Volo.Abp.AspNetCore.Components.Messages;
 using cima.Blazor.Client.Services;
 using Volo.Abp.Data;
+using Asp.Versioning;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Volo.Abp.AspNetCore.SignalR;
 
 namespace cima.Blazor;
 
@@ -71,7 +74,9 @@ namespace cima.Blazor;
     typeof(AbpSwashbuckleModule),
     typeof(AbpAccountWebOpenIddictModule),
     typeof(AbpAspNetCoreMvcUiBasicThemeModule),
-    typeof(AbpAspNetCoreSerilogModule)
+    typeof(AbpAspNetCoreSerilogModule),
+    typeof(AbpAspNetCoreSignalRModule)
+    // Note: ABP Blazor WebAssembly modules are registered in cimaBlazorClientModule
    )]
 public class cimaBlazorModule : AbpModule
 {
@@ -233,10 +238,50 @@ public class cimaBlazorModule : AbpModule
 
         Configure<AbpAntiForgeryOptions>(options =>
         {
-            options.AutoValidate = false;
+            options.AutoValidate = true;
             options.TokenCookie.SecurePolicy = CookieSecurePolicy.Always;
             options.TokenCookie.SameSite = SameSiteMode.None;
         });
+
+        // ========================================
+        // CONFIGURACIÓN DE SEGURIDAD AVANZADA
+        // ========================================
+        
+        // Bloqueo de cuenta después de intentos fallidos
+        Configure<Microsoft.AspNetCore.Identity.IdentityOptions>(options =>
+        {
+            // Lockout settings
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.AllowedForNewUsers = true;
+
+            // Password settings (más estrictos)
+            options.Password.RequiredLength = 8;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+
+            // User settings
+            options.User.RequireUniqueEmail = true;
+
+            // SignIn settings
+            options.SignIn.RequireConfirmedEmail = false; // Cambiar a true si quieres verificación obligatoria
+        });
+
+        // Google Authentication (OAuth2)
+        var googleClientId = configuration["Authentication:Google:ClientId"];
+        var googleClientSecret = configuration["Authentication:Google:ClientSecret"];
+        if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret))
+        {
+            context.Services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = googleClientId;
+                    options.ClientSecret = googleClientSecret;
+                    options.CallbackPath = "/signin-google";
+                });
+        }
 
         // ========================================
         // CONFIGURACIÓN DE DATA PROTECTION (PERSISTENCIA DE LLAVES)
@@ -393,7 +438,26 @@ public class cimaBlazorModule : AbpModule
             options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "cima API", Version = "v1" });
-                options.DocInclusionPredicate((docName, description) => true);
+                options.DocInclusionPredicate((docName, description) =>
+                {
+                    if (!description.TryGetMethodInfo(out var methodInfo))
+                    {
+                        return false;
+                    }
+
+                    var versions = methodInfo.DeclaringType?
+                        .GetCustomAttributes(true)
+                        .OfType<ApiVersionAttribute>()
+                        .SelectMany(attr => attr.Versions)
+                        .ToList();
+
+                    if (versions == null || !versions.Any())
+                    {
+                        return docName == "v1";
+                    }
+
+                    return versions.Any(v => $"v{v}" == docName);
+                });
                 options.CustomSchemaIds(type => type.FullName);
             }
         );
@@ -608,7 +672,15 @@ public class cimaBlazorModule : AbpModule
             endpoints.MapRazorComponents<Components.App>()
                 .AddInteractiveServerRenderMode()
                 .AddInteractiveWebAssemblyRenderMode()
-                .AddAdditionalAssemblies(typeof(cimaBlazorClientModule).Assembly);
+                .AddAdditionalAssemblies(
+                    typeof(cimaBlazorClientModule).Assembly,
+                    typeof(Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule).Assembly,
+                    typeof(Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule).Assembly,
+                    typeof(Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule).Assembly
+                );
+            
+            // SignalR Hub para notificaciones en tiempo real
+            endpoints.MapHub<cima.Hubs.CimaNotificationHub>("/hubs/notifications");
             
             // Health check endpoints
             endpoints.MapHealthChecks("/health", new HealthCheckOptions

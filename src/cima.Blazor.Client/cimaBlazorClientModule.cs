@@ -13,6 +13,10 @@ using Volo.Abp.AspNetCore.Components.Web;
 using Volo.Abp.Modularity;
 using Volo.Abp.Identity.Blazor;
 using MudBlazor.Services;
+using Volo.Abp.UI.Navigation;
+using Volo.Abp.Identity.Blazor.WebAssembly;
+using Volo.Abp.PermissionManagement.Blazor.WebAssembly;
+using Volo.Abp.SettingManagement.Blazor.WebAssembly;
 
 
 namespace cima.Blazor.Client;
@@ -21,7 +25,9 @@ namespace cima.Blazor.Client;
     typeof(AbpAutofacWebAssemblyModule),
     typeof(cimaHttpApiClientModule),
     typeof(AbpAspNetCoreComponentsWebModule),
-    typeof(AbpIdentityBlazorModule)
+    typeof(AbpIdentityBlazorWebAssemblyModule),
+    typeof(AbpPermissionManagementBlazorWebAssemblyModule),
+    typeof(AbpSettingManagementBlazorWebAssemblyModule)
 )]
 public class cimaBlazorClientModule : AbpModule
 {
@@ -38,7 +44,6 @@ public class cimaBlazorClientModule : AbpModule
         ConfigureApplicationServices(context);
         ConfigurePerformanceServices(context);
     }
-
     private void ConfigureAuthentication(ServiceConfigurationContext context)
     {
         context.Services.AddScoped<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();

@@ -224,6 +224,7 @@
     "Admin:Listings:Form:Description": "Description",
     "Admin:Listings:Form:Location": "Location",
     "Admin:Listings:Form:Price": "Price (MXN)",
+    "Admin:Listings:Form:PriceOnRequest": "Price on request (not publicly visible)",
     "Admin:Listings:Form:LandArea": "Land area (m²)",
     "Admin:Listings:Form:ConstructionArea": "Construction area (m²)",
     "Admin:Listings:Form:Bedrooms": "Bedrooms",
@@ -364,6 +365,15 @@
     "Admin:Settings:Business:Sunday": "Sunday",
     "Admin:Settings:Business:Save": "Save Information",
     "Admin:Settings:Business:Saved": "Business information saved",
+    "Admin:Settings:Legal:PageTitle": "Legal Content - 4cima Admin",
+    "Admin:Settings:Legal:Title": "Legal Content",
+    "Admin:Settings:Legal:Subtitle": "Privacy policy and terms",
+    "Admin:Settings:Legal:ContentTitle": "Legal Documents",
+    "Admin:Settings:Legal:ContentSubtitle": "Edit content in Markdown format",
+    "Admin:Settings:Legal:Privacy": "Privacy Policy",
+    "Admin:Settings:Legal:Terms": "Terms and Conditions",
+    "Admin:Settings:Legal:Save": "Save Legal Content",
+    "Admin:Settings:Legal:Saved": "Legal content saved",
     "AccessDenied:PageTitle": "Access Denied - 4cima",
     "AccessDenied:Title": "Access Denied",
     "AccessDenied:Message": "You do not have permission to access this page. If you believe this is an error, contact the administrator.",
@@ -583,6 +593,11 @@
     "Portfolio:CompletedProject": "Completed project",
     "Portfolio:ProjectInfo": "Project information",
     "Portfolio:ViewMoreProjects": "View more projects",
-    "ImageGallery:ViewFull": "View in fullscreen"
+    "ImageGallery:ViewFull": "View in fullscreen",
+    "Listing:InvalidPrice": "The price is not valid",
+    "Listing:NoImages": "The property must have at least one image to be published",
+    "Listing:MaxImagesExceeded": "Maximum of {Max} images allowed has been exceeded",
+    "Listing:LandAreaMustBePositive": "Land area must be greater than 0",
+    "Listing:ConstructionAreaCannotBeNegative": "Construction area cannot be negative"
   }
 }

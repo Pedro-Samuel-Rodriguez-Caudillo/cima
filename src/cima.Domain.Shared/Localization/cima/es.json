@@ -223,6 +223,7 @@
     "Admin:Listings:Form:Description": "Descripción",
     "Admin:Listings:Form:Location": "Ubicación",
     "Admin:Listings:Form:Price": "Precio (MXN)",
+    "Admin:Listings:Form:PriceOnRequest": "Precio a consultar (no visible públicamente)",
     "Admin:Listings:Form:LandArea": "Área de terreno (m²)",
     "Admin:Listings:Form:ConstructionArea": "Área construida (m²)",
     "Admin:Listings:Form:Bedrooms": "Recámaras",
@@ -391,6 +392,15 @@
     "Admin:Settings:Business:Sunday": "Domingo",
     "Admin:Settings:Business:Save": "Guardar Información",
     "Admin:Settings:Business:Saved": "Información del negocio guardada",
+    "Admin:Settings:Legal:PageTitle": "Contenido Legal - 4cima Admin",
+    "Admin:Settings:Legal:Title": "Contenido Legal",
+    "Admin:Settings:Legal:Subtitle": "Política de privacidad y términos",
+    "Admin:Settings:Legal:ContentTitle": "Documentos Legales",
+    "Admin:Settings:Legal:ContentSubtitle": "Edita el contenido en formato Markdown",
+    "Admin:Settings:Legal:Privacy": "Política de Privacidad",
+    "Admin:Settings:Legal:Terms": "Términos y Condiciones",
+    "Admin:Settings:Legal:Save": "Guardar Contenido Legal",
+    "Admin:Settings:Legal:Saved": "Contenido legal guardado",
     "AccessDenied:PageTitle": "Acceso Denegado - 4cima",
     "AccessDenied:Title": "Acceso Denegado",
     "AccessDenied:Message": "No tienes permisos para acceder a esta página. Si crees que esto es un error, contacta al administrador.",
@@ -610,6 +620,11 @@
     "Portfolio:CompletedProject": "Proyecto completado",
     "Portfolio:ProjectInfo": "Información del proyecto",
     "Portfolio:ViewMoreProjects": "Ver más proyectos",
-    "ImageGallery:ViewFull": "Ver en pantalla completa"
+    "ImageGallery:ViewFull": "Ver en pantalla completa",
+    "Listing:InvalidPrice": "El precio no es válido",
+    "Listing:NoImages": "La propiedad debe tener al menos una imagen para publicarse",
+    "Listing:MaxImagesExceeded": "Se ha excedido el máximo de {Max} imágenes permitidas",
+    "Listing:LandAreaMustBePositive": "El área del terreno debe ser mayor a 0",
+    "Listing:ConstructionAreaCannotBeNegative": "El área de construcción no puede ser negativa"
   }
 }

@@ -6,7 +6,11 @@
 @inject NavigationManager Navigation
 
 <CascadingAuthenticationState>
-    <Router AppAssembly="typeof(Program).Assembly">
+    <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { 
+        typeof(Volo.Abp.Identity.Blazor.WebAssembly.AbpIdentityBlazorWebAssemblyModule).Assembly,
+        typeof(Volo.Abp.PermissionManagement.Blazor.WebAssembly.AbpPermissionManagementBlazorWebAssemblyModule).Assembly,
+        typeof(Volo.Abp.SettingManagement.Blazor.WebAssembly.AbpSettingManagementBlazorWebAssemblyModule).Assembly
+    }">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
                 <NotAuthorized>
@@ -21,16 +25,12 @@
                     }
                 </NotAuthorized>
                 <Authorizing>
-                    <div class="min-h-screen flex items-center justify-center">
-                        <div class="text-center">
-                            <div class="cima-saving-indicator mb-4 justify-center">
-                                <span class="cima-saving-dot"></span>
-                                <span class="cima-saving-dot"></span>
-                                <span class="cima-saving-dot"></span>
-                            </div>
-                            <p class="text-gray-500">@L["Auth:Verifying"]</p>
+                    <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
+                        <div class="h-full w-full flex flex-col items-center justify-center min-h-[50vh]">
+                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
+                            <p class="mt-4 text-gray-500 text-sm">@L["Auth:Verifying"]</p>
                         </div>
-                    </div>
+                    </LayoutView>
                 </Authorizing>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="#main-content" />

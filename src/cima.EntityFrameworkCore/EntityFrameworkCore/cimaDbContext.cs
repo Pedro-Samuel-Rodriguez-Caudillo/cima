@@ -34,6 +34,7 @@ public class cimaDbContext :
     public DbSet<ListingPriceHistory> ListingPriceHistories { get; set; }
     public DbSet<PropertyCategoryEntity> PropertyCategories { get; set; }
     public DbSet<PropertyTypeEntity> PropertyTypes { get; set; }
+    public DbSet<TransactionTypeEntity> TransactionTypes { get; set; }
 
     #region Entities from the modules
 
@@ -228,6 +229,17 @@ public class cimaDbContext :
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<TransactionTypeEntity>(b =>
+        {
+            b.ToTable("TransactionTypes");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Name).IsRequired().HasMaxLength(100);
+            b.Property(x => x.Code).IsRequired().HasMaxLength(50);
+            b.Property(x => x.Description).HasMaxLength(500);
+            b.HasIndex(x => x.Code).IsUnique().HasDatabaseName("IX_TransactionType_Code");
+            b.HasIndex(x => x.SortOrder).HasDatabaseName("IX_TransactionType_SortOrder");
         });
     }
 }
