@@ -59,6 +59,9 @@ public class cimaBlazorClientModule : AbpModule
         context.Services.AddSingleton<SeoJsonLdService>();
         context.Services.AddScoped<ICimaThemeService, CimaThemeService>();
         
+        // State service for MustChangePassword check (cached per session)
+        context.Services.AddScoped<MustChangePasswordStateService>();
+        
         // Toast service con accesibilidad
         context.Services.AddCimaToastService();
     }

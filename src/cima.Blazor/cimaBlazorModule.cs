@@ -364,6 +364,9 @@ public class cimaBlazorModule : AbpModule
         // Registrar LoginRedirectService para paginas de post-login
         context.Services.AddScoped<Client.Services.ILoginRedirectService, Client.Services.LoginRedirectService>();
         
+        // State service for MustChangePassword check (cached per session)
+        context.Services.AddScoped<Client.Services.MustChangePasswordStateService>();
+        
         // SEO helpers usados en prerender (paginas publicas)
         context.Services.AddSingleton<Client.Services.SeoJsonLdService>();
 
