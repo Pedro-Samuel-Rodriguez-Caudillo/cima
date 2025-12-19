@@ -7,11 +7,12 @@ using cima.Domain.Shared;
 using cima.Statistics;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
+using cima.Domain.Entities.Listings;
 
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests de integracin para StatisticsAppService
+/// Tests de integración para StatisticsAppService
 /// </summary>
 public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -36,11 +37,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
     public async Task GetDashboardAsync_Should_Return_Statistics()
     {
         // Act
-        DashboardStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetDashboardAsync();
-        });
+        var result = await _statisticsAppService.GetDashboardAsync();
 
         // Assert
         result.ShouldNotBeNull();
@@ -57,11 +54,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         await CreateTestListingAsync(status: ListingStatus.Archived);
 
         // Act
-        DashboardStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetDashboardAsync();
-        });
+        var result = await _statisticsAppService.GetDashboardAsync();
 
         // Assert
         result.TotalListings.ShouldBeGreaterThanOrEqualTo(4);
@@ -81,11 +74,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         await CreateTestContactRequestAsync(listing.Id, ContactRequestStatus.Closed);
 
         // Act
-        DashboardStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetDashboardAsync();
-        });
+        var result = await _statisticsAppService.GetDashboardAsync();
 
         // Assert
         result.TotalContactRequests.ShouldBeGreaterThanOrEqualTo(3);
@@ -105,11 +94,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         await CreateTestListingAsync(type: PropertyType.Apartment);
 
         // Act
-        ListingStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetListingStatsAsync();
-        });
+        var result = await _statisticsAppService.GetListingStatsAsync();
 
         // Assert
         result.ShouldNotBeNull();
@@ -125,11 +110,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         await CreateTestListingAsync(price: 2000000m, status: ListingStatus.Published);
 
         // Act
-        ListingStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetListingStatsAsync();
-        });
+        var result = await _statisticsAppService.GetListingStatsAsync();
 
         // Assert
         result.AveragePrice.ShouldBeGreaterThan(0);
@@ -147,11 +128,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         await CreateTestContactRequestAsync(listing.Id);
 
         // Act
-        ContactRequestStatsDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _statisticsAppService.GetContactRequestStatsAsync();
-        });
+        var result = await _statisticsAppService.GetContactRequestStatsAsync();
 
         // Assert
         result.ShouldNotBeNull();
@@ -169,23 +146,36 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
     {
         var architect = await CreateTestArchitectAsync();
 
-        var listing = new Listing
+        var listing = new Listing(
+            Guid.NewGuid(),
+            $"Test Listing {Guid.NewGuid():N}",
+            "Test description with minimum 20 characters",
+            new Address("Test Location Mexico"),
+            price,
+            200m,
+            120m,
+            3,
+            2,
+            PropertyCategory.Residential,
+            type,
+            TransactionType.Sale,
+            architect.Id,
+            _currentUser.Id
+        );
+
+        if (status == ListingStatus.Published)
         {
-            Title = $"Test Listing {Guid.NewGuid():N}",
-            Description = "Test description with minimum 20 characters",
-            Location = "Test Location Mexico",
-            Price = price,
-            LandArea = 200m,
-            ConstructionArea = 120m,
-            Bedrooms = 3,
-            Bathrooms = 2,
-            Category = PropertyCategory.Residential,
-            Type = type,
-            TransactionType = TransactionType.Sale,
-            ArchitectId = architect.Id,
-            Status = status,
-            CreatedAt = DateTime.UtcNow
-        };
+            listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
+            listing.Publish(_currentUser.Id);
+        }
+        else if (status == ListingStatus.Archived)
+        {
+            listing.Archive(_currentUser.Id);
+        }
+        else if (status == ListingStatus.Portfolio)
+        {
+            listing.MoveToPortfolio(_currentUser.Id);
+        }
 
         await WithUnitOfWorkAsync(async () =>
         {
@@ -198,7 +188,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
     private async Task<Architect> CreateTestArchitectAsync()
     {
         var adminUserId = Guid.NewGuid(); // usar siempre un usuario nuevo para evitar colisiones en tests
-        
+
         var architect = new Architect
         {
             UserId = adminUserId,

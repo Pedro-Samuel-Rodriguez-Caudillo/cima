@@ -2,29 +2,25 @@ using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.Modularity;
 using Xunit;
 using cima.Domain.Entities;
 using cima.Architects;
 using Volo.Abp.Domain.Repositories;
-using Volo.Abp.Identity;
 
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests b·sicos de integraÁ„o para ArchitectAppService
+/// Tests b√°sicos de integra√ß√£o para ArchitectAppService
 /// </summary>
 public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
     private readonly IArchitectAppService _architectAppService;
     private readonly IRepository<Architect, Guid> _architectRepository;
-    private readonly IIdentityUserRepository _userRepository;
 
     public ArchitectAppServiceTests()
     {
         _architectAppService = GetRequiredService<IArchitectAppService>();
         _architectRepository = GetRequiredService<IRepository<Architect, Guid>>();
-        _userRepository = GetRequiredService<IIdentityUserRepository>();
     }
 
     #region GetListAsync Tests
@@ -40,11 +36,7 @@ public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaAppli
         };
 
         // Act
-        PagedResultDto<ArchitectDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _architectAppService.GetListAsync(input);
-        });
+        var result = await _architectAppService.GetListAsync(input);
 
         // Assert
         result.ShouldNotBeNull();
@@ -62,11 +54,7 @@ public sealed class ArchitectAppServiceTests : cimaApplicationTestBase<cimaAppli
         var architect = await CreateTestArchitectAsync();
 
         // Act
-        ArchitectDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _architectAppService.GetAsync(architect.Id);
-        });
+        var result = await _architectAppService.GetAsync(architect.Id);
 
         // Assert
         result.ShouldNotBeNull();

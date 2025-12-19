@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Shouldly;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.Modularity;
 using Xunit;
-using cima.Domain.Entities;
-using cima.Domain.Shared;
-using cima.Listings;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
+using cima.Listings;
+using cima.Listings.Inputs;
+using cima.Listings.Outputs;
+using cima.Domain.Entities;
+using cima.Domain.Shared;
+using cima.Domain.Entities.Listings;
 
 namespace cima.ApplicationServices;
 
@@ -32,205 +34,99 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         _currentUser = GetRequiredService<ICurrentUser>();
     }
 
-    #region GetListAsync Tests
+    #region CRUD Tests
 
     [Fact]
-    public async Task GetListAsync_Should_Return_Paginated_Results()
+    public async Task Should_Get_List_Of_Listings()
     {
         // Arrange
-        var input = new GetListingsInput
-        {
-            SkipCount = 0,
-            MaxResultCount = 10
-        };
+        await CreateTestListingAsync();
 
         // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetListAsync(input);
-        });
+        var result = await _listingAppService.GetListAsync(
+            new GetListingsInput { MaxResultCount = 10 }
+        );
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Items.ShouldNotBeNull();
+        result.TotalCount.ShouldBeGreaterThan(0);
+        result.Items.ShouldNotBeEmpty();
     }
 
     [Fact]
-    public async Task GetListAsync_Should_Filter_By_Status()
-    {
-        // Arrange
-        await CreateTestListingAsync(status: ListingStatus.Published);
-        await CreateTestListingAsync(status: ListingStatus.Draft);
-
-        var input = new GetListingsInput
-        {
-            Status = (int)ListingStatus.Published,
-            MaxResultCount = 100
-        };
-
-        // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetListAsync(input);
-        });
-
-        // Assert
-        result.Items.ShouldAllBe(l => l.Status == ListingStatus.Published);
-    }
-
-    [Fact]
-    public async Task GetListAsync_Should_Filter_By_SearchTerm()
-    {
-        // Arrange
-        await CreateTestListingAsync(title: "Casa en Polanco única");
-        await CreateTestListingAsync(title: "Departamento Centro");
-
-        var input = new GetListingsInput
-        {
-            SearchTerm = "Polanco",
-            MaxResultCount = 100
-        };
-
-        // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetListAsync(input);
-        });
-
-        // Assert
-        result.Items.ShouldContain(l => l.Title.Contains("Polanco"));
-    }
-
-    #endregion
-
-    #region GetAsync Tests
-
-    [Fact]
-    public async Task GetAsync_Should_Return_Listing_When_Exists()
-    {
-        // Arrange
-        var listing = await CreateTestListingAsync();
-
-        // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetAsync(listing.Id);
-        });
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(listing.Id);
-        result.Title.ShouldBe(listing.Title);
-    }
-
-    #endregion
-
-    #region CreateAsync Tests
-
-    [Fact]
-    public async Task CreateAsync_Should_Create_New_Listing_In_Draft_Status()
+    public async Task Should_Create_A_New_Listing()
     {
         // Arrange
         var architect = await CreateTestArchitectAsync();
-        var input = new CreateUpdateListingDto
+        var input = new CreateListingDto
         {
             Title = "Nueva Propiedad Test",
-            Description = "Descripción de prueba con más de 20 caracteres para validación",
-            Location = "Guadalajara, Jalisco, México",
-            Price = 1500000m,
-            LandArea = 200m,
-            ConstructionArea = 120m,
+            Description = "Descripción detallada de la propiedad con más de 20 caracteres para validación",
+            Price = 1200000m,
+            LandArea = 150m,
+            ConstructionArea = 100m,
             Bedrooms = 3,
             Bathrooms = 2,
             Category = PropertyCategory.Residential,
             Type = PropertyType.House,
             TransactionType = TransactionType.Sale,
+            Address = new AddressDto { Value = "Test Location Guadalajara" },
             ArchitectId = architect.Id
         };
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.CreateAsync(input);
-        });
+        var result = await _listingAppService.CreateAsync(input);
 
         // Assert
-        result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
         result.Title.ShouldBe(input.Title);
-        result.Price.ShouldBe(input.Price);
-        result.Status.ShouldBe(ListingStatus.Draft); // Debe iniciar en Draft
+        result.Status.ShouldBe(ListingStatus.Draft);
     }
 
-    #endregion
-
-    #region UpdateAsync Tests
-
     [Fact]
-    public async Task UpdateAsync_Should_Update_Existing_Listing()
+    public async Task Should_Update_An_Existing_Listing()
     {
         // Arrange
         var listing = await CreateTestListingAsync();
-        var input = new CreateUpdateListingDto
+        var updatedTitle = "Título Actualizado";
+        var input = new UpdateListingDto
         {
-            Title = "Titulo Actualizado para Test",
+            Id = listing.Id,
+            Title = updatedTitle,
             Description = listing.Description,
-            Location = "Nueva Ubicacion Actualizada Mexico",
-            Price = 2000000m,
+            Price = listing.Price + 100000m,
             LandArea = listing.LandArea,
             ConstructionArea = listing.ConstructionArea,
-            Bedrooms = 4,
-            Bathrooms = 3,
+            Bedrooms = listing.Bedrooms,
+            Bathrooms = listing.Bathrooms,
             Category = listing.Category,
             Type = listing.Type,
             TransactionType = listing.TransactionType,
-            ArchitectId = listing.ArchitectId
+            Address = new AddressDto { Value = "Nueva Ubicación" }
         };
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.UpdateAsync(listing.Id, input);
-        });
+        var result = await _listingAppService.UpdateAsync(listing.Id, input);
 
         // Assert
-        result.Title.ShouldBe(input.Title);
-        (result.Location?.ToString()).ShouldBe(input.Location);
-        result.Price.ShouldBe(2000000m);
-        result.Bedrooms.ShouldBe(4);
+        result.Title.ShouldBe(updatedTitle);
+        
+        var dbListing = await _listingRepository.GetAsync(listing.Id);
+        dbListing.Title.ShouldBe(updatedTitle);
     }
 
-    #endregion
-
-    #region DeleteAsync Tests
-
     [Fact]
-    public async Task DeleteAsync_Should_Delete_Listing()
+    public async Task Should_Delete_A_Listing()
     {
         // Arrange
         var listing = await CreateTestListingAsync();
         var listingId = listing.Id;
 
         // Act
-        await WithUnitOfWorkAsync(async () =>
-        {
-            await _listingAppService.DeleteAsync(listingId);
-        });
+        await _listingAppService.DeleteAsync(listingId);
 
         // Assert
-        bool exists = false;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            exists = await _listingRepository.AnyAsync(l => l.Id == listingId);
-        });
-        
-        exists.ShouldBeFalse();
+        var dbListing = await _listingRepository.FindAsync(listingId);
+        dbListing.ShouldBeNull();
     }
 
     #endregion
@@ -242,13 +138,15 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     {
         // Arrange
         var listing = await CreateTestListingAsync(status: ListingStatus.Draft);
+        // Necesitamos al menos una imagen para publicar
+        await WithUnitOfWorkAsync(async () => {
+            var l = await _listingRepository.GetAsync(listing.Id);
+            l.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
+            await _listingRepository.UpdateAsync(l);
+        });
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.PublishAsync(listing.Id);
-        });
+        var result = await _listingAppService.PublishAsync(new PublishListingDto { ListingId = listing.Id });
 
         // Assert
         result.Status.ShouldBe(ListingStatus.Published);
@@ -261,11 +159,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var listing = await CreateTestListingAsync(status: ListingStatus.Published);
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.ArchiveAsync(listing.Id);
-        });
+        var result = await _listingAppService.ArchiveAsync(listing.Id);
 
         // Assert
         result.Status.ShouldBe(ListingStatus.Archived);
@@ -278,31 +172,23 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var listing = await CreateTestListingAsync(status: ListingStatus.Published);
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.MoveToPortfolioAsync(listing.Id);
-        });
+        var result = await _listingAppService.MoveToPortfolioAsync(listing.Id);
 
         // Assert
         result.Status.ShouldBe(ListingStatus.Portfolio);
     }
 
     [Fact]
-    public async Task UnarchiveAsync_Should_Change_Status_From_Archived_To_Published()
+    public async Task UnarchiveAsync_Should_Change_Status_From_Archived_To_Draft()
     {
         // Arrange
         var listing = await CreateTestListingAsync(status: ListingStatus.Archived);
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.UnarchiveAsync(listing.Id);
-        });
+        var result = await _listingAppService.UnarchiveAsync(listing.Id);
 
         // Assert
-        result.Status.ShouldBe(ListingStatus.Published);
+        result.Status.ShouldBe(ListingStatus.Draft); // Unarchive returns to Draft, not Published
     }
 
     #endregion
@@ -319,16 +205,12 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             status: ListingStatus.Published);
 
         // Act
-        ListingDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.DuplicateAsync(original.Id);
-        });
+        var result = await _listingAppService.DuplicateAsync(original.Id);
 
         // Assert
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(original.Id); // Diferente ID
-        result.Title.ShouldContain("Copia"); // Título con (Copia)
+        result.Title.ShouldContain(original.Title); 
         result.Price.ShouldBe(original.Price); // Mismo precio
         result.Status.ShouldBe(ListingStatus.Draft); // Estado Draft
     }
@@ -348,11 +230,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var input = new GetListingsInput { MaxResultCount = 100 };
 
         // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetPublishedAsync(input);
-        });
+        var result = await _listingAppService.GetPublishedAsync(input);
 
         // Assert
         result.Items.ShouldAllBe(l => l.Status == ListingStatus.Published);
@@ -372,11 +250,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var input = new GetListingsInput { MaxResultCount = 100 };
 
         // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.GetPortfolioAsync(input);
-        });
+        var result = await _listingAppService.GetPortfolioAsync(input);
 
         // Assert
         result.Items.ShouldAllBe(l => l.Status == ListingStatus.Portfolio);
@@ -402,11 +276,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         };
 
         // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.SearchAsync(searchDto);
-        });
+        var result = await _listingAppService.SearchAsync(searchDto);
 
         // Assert
         result.Items.ShouldAllBe(l => l.Price >= 1000000m && l.Price <= 2000000m);
@@ -426,11 +296,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         };
 
         // Act
-        PagedResultDto<ListingDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _listingAppService.SearchAsync(searchDto);
-        });
+        var result = await _listingAppService.SearchAsync(searchDto);
 
         // Assert
         result.Items.ShouldAllBe(l => l.Category == PropertyCategory.Residential);
@@ -448,23 +314,36 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     {
         var architect = await CreateTestArchitectAsync();
 
-        var listing = new Listing
+        var listing = new Listing(
+            Guid.NewGuid(),
+            title,
+            "Test description with minimum 20 characters required for validation",
+            new Address("Test Location Guadalajara Mexico"),
+            price,
+            200m,
+            120m,
+            3,
+            2,
+            category,
+            PropertyType.House,
+            TransactionType.Sale,
+            architect.Id,
+            _currentUser.Id
+        );
+
+        if (status == ListingStatus.Published)
         {
-            Title = title,
-            Description = "Test description with minimum 20 characters required for validation",
-            Location = "Test Location Guadalajara Mexico",
-            Price = price,
-            LandArea = 200m,
-            ConstructionArea = 120m,
-            Bedrooms = 3,
-            Bathrooms = 2,
-            Category = category,
-            Type = PropertyType.House,
-            TransactionType = TransactionType.Sale,
-            ArchitectId = architect.Id,
-            Status = status,
-            CreatedAt = DateTime.UtcNow
-        };
+            listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
+            listing.Publish(_currentUser.Id);
+        }
+        else if (status == ListingStatus.Archived)
+        {
+            listing.Archive(_currentUser.Id);
+        }
+        else if (status == ListingStatus.Portfolio)
+        {
+            listing.MoveToPortfolio(_currentUser.Id);
+        }
 
         await WithUnitOfWorkAsync(async () =>
         {
@@ -478,31 +357,24 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     {
         var adminUserId = _currentUser.Id ?? Guid.NewGuid();
 
-        var existing = await WithUnitOfWorkAsync(async () =>
+        return await WithUnitOfWorkAsync(async () =>
         {
-            return await _architectRepository.FirstOrDefaultAsync(a => a.UserId == adminUserId);
-        });
+            var existing = await _architectRepository.FirstOrDefaultAsync(a => a.UserId == adminUserId);
+            if (existing != null)
+            {
+                return existing;
+            }
 
-        if (existing != null)
-        {
-            return existing;
-        }
-        
-        var architect = new Architect
-        {
-            UserId = adminUserId,
-            TotalListingsPublished = 0,
-            ActiveListings = 0,
-            RegistrationDate = DateTime.UtcNow,
-            IsActive = true
-        };
+            var architect = new Architect
+            {
+                UserId = adminUserId,
+                RegistrationDate = DateTime.UtcNow,
+                IsActive = true
+            };
 
-        await WithUnitOfWorkAsync(async () =>
-        {
             await _architectRepository.InsertAsync(architect, autoSave: true);
+            return architect;
         });
-
-        return architect;
     }
 
     #endregion

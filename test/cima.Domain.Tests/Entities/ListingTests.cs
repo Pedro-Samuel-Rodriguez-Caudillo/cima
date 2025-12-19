@@ -1,10 +1,10 @@
 using System;
 using Shouldly;
 using Volo.Abp.Domain.Entities;
-using Volo.Abp.Modularity;
 using Xunit;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
+using cima.Domain.Entities.Listings;
 
 namespace cima.Entities;
 
@@ -13,13 +13,38 @@ namespace cima.Entities;
 /// </summary>
 public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
 {
-    private static Listing CreateTestListing()
+    private static Listing CreateTestListing(
+        Guid? id = null,
+        string title = "Casa de prueba",
+        string description = "DescripciÃ³n de prueba",
+        Address? location = null,
+        decimal price = 1000000m,
+        decimal landArea = 200m,
+        decimal constructionArea = 150m,
+        int bedrooms = 3,
+        int bathrooms = 2,
+        PropertyCategory category = PropertyCategory.Residential,
+        PropertyType type = PropertyType.House,
+        TransactionType transactionType = TransactionType.Sale,
+        Guid? architectId = null,
+        Guid? createdBy = null)
     {
-        return new Listing
-        {
-            Title = "Casa de prueba",
-            Description = "Descripción de prueba"
-        };
+        return new Listing(
+            id ?? Guid.NewGuid(),
+            title,
+            description,
+            location,
+            price,
+            landArea,
+            constructionArea,
+            bedrooms,
+            bathrooms,
+            category,
+            type,
+            transactionType,
+            architectId ?? Guid.NewGuid(),
+            createdBy
+        );
     }
 
     [Fact]
@@ -40,8 +65,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Allow_Null_Location()
     {
         // Arrange & Act
-        var listing = CreateTestListing();
-        listing.Location = null;
+        var listing = CreateTestListing(location: null);
 
         // Assert
         listing.Location.ShouldBeNull();
@@ -51,35 +75,43 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     public void Should_Set_Location_When_Provided()
     {
         // Arrange
-        var listing = CreateTestListing();
-        var location = "Guadalajara, Jalisco";
+        var location = new Address("Guadalajara, Jalisco");
 
         // Act
-        listing.Location = location;
+        var listing = CreateTestListing(location: location);
 
         // Assert
         listing.Location.ShouldBe(location);
     }
 
     [Fact]
-    public void Should_Set_Basic_Properties()
+    public void Should_Update_Basic_Properties()
     {
         // Arrange
         var listing = CreateTestListing();
         var title = "Casa en Venta - Zona Residencial";
-        var description = "Hermosa casa con jardín";
-        var location = "Guadalajara, Jalisco";
+        var description = "Hermosa casa con jardÃ­n";
+        var location = new Address("Guadalajara, Jalisco");
         var price = 2500000m;
         var landArea = 250m;
         var constructionArea = 150m;
+        var modifiedBy = Guid.NewGuid();
 
         // Act
-        listing.Title = title;
-        listing.Description = description;
-        listing.Location = location;
-        listing.Price = price;
-        listing.LandArea = landArea;
-        listing.ConstructionArea = constructionArea;
+        listing.UpdateInfo(
+            title,
+            description,
+            location,
+            price,
+            landArea,
+            constructionArea,
+            listing.Bedrooms,
+            listing.Bathrooms,
+            listing.Category,
+            listing.Type,
+            listing.TransactionType,
+            modifiedBy
+        );
 
         // Assert
         listing.Title.ShouldBe(title);
@@ -88,119 +120,153 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
         listing.Price.ShouldBe(price);
         listing.LandArea.ShouldBe(landArea);
         listing.ConstructionArea.ShouldBe(constructionArea);
+        listing.LastModifiedBy.ShouldBe(modifiedBy);
     }
 
     [Fact]
-    public void Should_Set_Property_Specifications()
+    public void Should_Update_Property_Specifications()
     {
         // Arrange
         var listing = CreateTestListing();
+        var bedrooms = 3;
+        var bathrooms = 2;
 
         // Act
-        listing.Bedrooms = 3;
-        listing.Bathrooms = 2;
+        listing.UpdateInfo(
+            listing.Title,
+            listing.Description,
+            listing.Location,
+            listing.Price,
+            listing.LandArea,
+            listing.ConstructionArea,
+            bedrooms,
+            bathrooms,
+            listing.Category,
+            listing.Type,
+            listing.TransactionType,
+            null
+        );
 
         // Assert
-        listing.Bedrooms.ShouldBe(3);
-        listing.Bathrooms.ShouldBe(2);
+        listing.Bedrooms.ShouldBe(bedrooms);
+        listing.Bathrooms.ShouldBe(bathrooms);
     }
 
-    [Theory]
-    [InlineData(ListingStatus.Draft)]
-    [InlineData(ListingStatus.Published)]
-    [InlineData(ListingStatus.Archived)]
-    [InlineData(ListingStatus.Portfolio)]
-    public void Should_Set_Status(ListingStatus status)
+    [Fact]
+    public void Should_Update_Status_Via_Methods()
     {
         // Arrange
         var listing = CreateTestListing();
+        listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
 
         // Act
-        listing.Status = status;
+        listing.Publish(Guid.NewGuid());
+        listing.Status.ShouldBe(ListingStatus.Published);
 
-        // Assert
-        listing.Status.ShouldBe(status);
+        listing.Unpublish(Guid.NewGuid());
+        listing.Status.ShouldBe(ListingStatus.Draft);
+
+        listing.Archive(Guid.NewGuid());
+        listing.Status.ShouldBe(ListingStatus.Archived);
+
+        listing.Unarchive(Guid.NewGuid());
+        listing.Status.ShouldBe(ListingStatus.Draft);
+
+        listing.MoveToPortfolio(Guid.NewGuid());
+        listing.Status.ShouldBe(ListingStatus.Portfolio);
     }
 
-    [Theory]
-    [InlineData(PropertyCategory.Residential)]
-    [InlineData(PropertyCategory.Commercial)]
-    [InlineData(PropertyCategory.Mixed)]
-    [InlineData(PropertyCategory.Land)]
-    public void Should_Set_PropertyCategory(PropertyCategory category)
+    [Fact]
+    public void Should_Update_PropertyCategory()
     {
         // Arrange
         var listing = CreateTestListing();
+        var category = PropertyCategory.Commercial;
 
         // Act
-        listing.Category = category;
+        listing.UpdateInfo(
+            listing.Title,
+            listing.Description,
+            listing.Location,
+            listing.Price,
+            listing.LandArea,
+            listing.ConstructionArea,
+            listing.Bedrooms,
+            listing.Bathrooms,
+            category,
+            listing.Type,
+            listing.TransactionType,
+            null
+        );
 
         // Assert
         listing.Category.ShouldBe(category);
     }
 
-    [Theory]
-    [InlineData(PropertyType.House)]
-    [InlineData(PropertyType.Apartment)]
-    [InlineData(PropertyType.Office)]
-    [InlineData(PropertyType.ResidentialLand)]
-    public void Should_Set_PropertyType(PropertyType type)
+    [Fact]
+    public void Should_Update_PropertyType()
     {
         // Arrange
         var listing = CreateTestListing();
+        var type = PropertyType.Office;
 
         // Act
-        listing.Type = type;
+        listing.UpdateInfo(
+            listing.Title,
+            listing.Description,
+            listing.Location,
+            listing.Price,
+            listing.LandArea,
+            listing.ConstructionArea,
+            listing.Bedrooms,
+            listing.Bathrooms,
+            listing.Category,
+            type,
+            listing.TransactionType,
+            null
+        );
 
         // Assert
         listing.Type.ShouldBe(type);
     }
 
-    [Theory]
-    [InlineData(TransactionType.Sale)]
-    [InlineData(TransactionType.Rent)]
-    [InlineData(TransactionType.Lease)]
-    public void Should_Set_TransactionType(TransactionType transactionType)
+    [Fact]
+    public void Should_Update_TransactionType()
     {
         // Arrange
         var listing = CreateTestListing();
+        var transactionType = TransactionType.Rent;
 
         // Act
-        listing.TransactionType = transactionType;
+        listing.UpdateInfo(
+            listing.Title,
+            listing.Description,
+            listing.Location,
+            listing.Price,
+            listing.LandArea,
+            listing.ConstructionArea,
+            listing.Bedrooms,
+            listing.Bathrooms,
+            listing.Category,
+            listing.Type,
+            transactionType,
+            null
+        );
 
         // Assert
         listing.TransactionType.ShouldBe(transactionType);
     }
 
     [Fact]
-    public void Should_Associate_With_Architect()
-    {
-        // Arrange
-        var listing = CreateTestListing();
-        var architectId = Guid.NewGuid();
-
-        // Act
-        listing.ArchitectId = architectId;
-
-        // Assert
-        listing.ArchitectId.ShouldBe(architectId);
-    }
-
-    [Fact]
     public void Should_Track_Creation_Metadata()
     {
-        // Arrange
-        var listing = CreateTestListing();
-        var createdAt = DateTime.UtcNow;
+        // Arrange & Act
         var createdBy = Guid.NewGuid();
-
-        // Act
-        listing.CreatedAt = createdAt;
-        listing.CreatedBy = createdBy;
+        var listing = CreateTestListing(createdBy: createdBy);
 
         // Assert
-        listing.CreatedAt.ShouldBe(createdAt);
         listing.CreatedBy.ShouldBe(createdBy);
+        listing.CreatedAt.ShouldNotBe(default);
     }
 
     [Fact]
@@ -208,15 +274,26 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     {
         // Arrange
         var listing = CreateTestListing();
-        var modifiedAt = DateTime.UtcNow;
         var modifiedBy = Guid.NewGuid();
 
         // Act
-        listing.LastModifiedAt = modifiedAt;
-        listing.LastModifiedBy = modifiedBy;
+        listing.UpdateInfo(
+            listing.Title,
+            listing.Description,
+            listing.Location,
+            listing.Price,
+            listing.LandArea,
+            listing.ConstructionArea,
+            listing.Bedrooms,
+            listing.Bathrooms,
+            listing.Category,
+            listing.Type,
+            listing.TransactionType,
+            modifiedBy
+        );
 
         // Assert
-        listing.LastModifiedAt.ShouldBe(modifiedAt);
+        listing.LastModifiedAt.ShouldNotBeNull();
         listing.LastModifiedBy.ShouldBe(modifiedBy);
     }
 
@@ -229,40 +306,6 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
         // Assert
         listing.Images.ShouldNotBeNull();
         listing.Images.ShouldBeEmpty();
-    }
-
-    [Theory]
-    [InlineData(100000)]
-    [InlineData(2500000)]
-    [InlineData(5000000)]
-    public void Should_Store_Different_Prices(decimal price)
-    {
-        // Arrange
-        var listing = CreateTestListing();
-
-        // Act
-        listing.Price = price;
-
-        // Assert
-        listing.Price.ShouldBe(price);
-    }
-
-    [Theory]
-    [InlineData(50, 30)]
-    [InlineData(120, 90)]
-    [InlineData(300, 240)]
-    public void Should_Store_Different_Areas(decimal landArea, decimal constructionArea)
-    {
-        // Arrange
-        var listing = CreateTestListing();
-
-        // Act
-        listing.LandArea = landArea;
-        listing.ConstructionArea = constructionArea;
-
-        // Assert
-        listing.LandArea.ShouldBe(landArea);
-        listing.ConstructionArea.ShouldBe(constructionArea);
     }
 
     [Fact]

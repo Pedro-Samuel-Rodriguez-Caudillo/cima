@@ -2,17 +2,18 @@ using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.Modularity;
 using Xunit;
 using cima.Domain.Entities;
 using cima.Domain.Shared;
 using cima.ContactRequests;
 using Volo.Abp.Domain.Repositories;
+using cima.Domain.Entities.Listings;
+using Volo.Abp.Users;
 
 namespace cima.ApplicationServices;
 
 /// <summary>
-/// Tests b·sicos de integraciÛn para ContactRequestAppService
+/// Tests b√°sicos de integraci√≥n para ContactRequestAppService
 /// </summary>
 public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cimaApplicationTestModule>
 {
@@ -20,6 +21,7 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly ICurrentUser _currentUser;
 
     public ContactRequestAppServiceTests()
     {
@@ -27,6 +29,7 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
         _contactRequestRepository = GetRequiredService<IRepository<ContactRequest, Guid>>();
         _listingRepository = GetRequiredService<IRepository<Listing, Guid>>();
         _architectRepository = GetRequiredService<IRepository<Architect, Guid>>();
+        _currentUser = GetRequiredService<ICurrentUser>();
     }
 
     #region GetListAsync Tests
@@ -39,11 +42,7 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
         int maxResultCount = 10;
 
         // Act
-        PagedResultDto<ContactRequestDto> result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _contactRequestAppService.GetListAsync(skipCount, maxResultCount);
-        });
+        var result = await _contactRequestAppService.GetListAsync(skipCount, maxResultCount);
 
         // Assert
         result.ShouldNotBeNull();
@@ -61,11 +60,7 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
         var contactRequest = await CreateTestContactRequestAsync();
 
         // Act
-        ContactRequestDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _contactRequestAppService.GetAsync(contactRequest.Id);
-        });
+        var result = await _contactRequestAppService.GetAsync(contactRequest.Id);
 
         // Assert
         result.ShouldNotBeNull();
@@ -82,22 +77,18 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
     {
         // Arrange
         var listing = await CreateTestListingAsync();
-        
+
         var input = new CreateContactRequestDto
         {
             ListingId = listing.Id,
-            Name = "Juan PÈrez GarcÌa",
+            Name = "Juan P√©rez Garc√≠a",
             Email = "juan.perez@example.com",
             Phone = "+52 33 1234 5678",
-            Message = "Me interesa conocer m·s detalles sobre esta propiedad"
+            Message = "Me interesa conocer m√°s detalles sobre esta propiedad"
         };
 
         // Act
-        ContactRequestDto result = null!;
-        await WithUnitOfWorkAsync(async () =>
-        {
-            result = await _contactRequestAppService.CreateAsync(input);
-        });
+        var result = await _contactRequestAppService.CreateAsync(input);
 
         // Assert
         result.ShouldNotBeNull();
@@ -114,7 +105,7 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
     private async Task<ContactRequest> CreateTestContactRequestAsync()
     {
         var listing = await CreateTestListingAsync();
-        
+
         var contactRequest = new ContactRequest
         {
             ListingId = listing.Id,
@@ -139,23 +130,26 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
     {
         var architect = await CreateTestArchitectAsync();
 
-        var listing = new Listing
-        {
-            Title = "Test Property for Contact",
-            Description = "Test description with enough characters for validation purposes",
-            Location = "Test Location City Country",
-            Price = 1500000m,
-            LandArea = 200m,
-            ConstructionArea = 120m,
-            Bedrooms = 3,
-            Bathrooms = 2,
-            Category = PropertyCategory.Residential,
-            Type = PropertyType.House,
-            TransactionType = TransactionType.Sale,
-            ArchitectId = architect.Id,
-            Status = ListingStatus.Published,
-            CreatedAt = DateTime.UtcNow
-        };
+        var listing = new Listing(
+            Guid.NewGuid(),
+            "Test Property for Contact",
+            "Test description with enough characters for validation purposes",
+            new Address("Test Location City Country"),
+            1500000m,
+            200m,
+            120m,
+            3,
+            2,
+            PropertyCategory.Residential,
+            PropertyType.House,
+            TransactionType.Sale,
+            architect.Id,
+            _currentUser.Id
+        );
+        
+        // Add image before publishing (business rule requires at least one image)
+        listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
+        listing.Publish(_currentUser.Id);
 
         await WithUnitOfWorkAsync(async () =>
         {

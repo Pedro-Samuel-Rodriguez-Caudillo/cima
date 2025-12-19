@@ -16,6 +16,7 @@ using Volo.Abp.PermissionManagement;
 using Volo.Abp.Threading;
 using Volo.Abp.Uow;
 using cima.EntityFrameworkCore;
+using cima.Images;
 
 namespace cima;
 
@@ -42,11 +43,18 @@ public class cimaApplicationTestModule : AbpModule
             options.SaveStaticPermissionsToDatabase = false;
             options.IsDynamicPermissionStoreEnabled = false;
         });
+
+        // Configurar ImageStorage para usar el provider local en tests
+        Configure<ImageStorageOptions>(options =>
+        {
+            options.Provider = "local";
+        });
         
         context.Services.AddAlwaysDisableUnitOfWorkTransaction();
 
         // Registrar un entorno de host básico para servicios que dependen de IHostEnvironment (ej. LocalImageStorageService)
         context.Services.AddSingleton<IHostEnvironment>(_ => new TestHostEnvironment());
+        context.Services.AddHttpContextAccessor();
 
         ConfigureInMemorySqlite(context.Services);
     }
