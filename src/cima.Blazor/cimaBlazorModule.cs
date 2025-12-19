@@ -483,7 +483,7 @@ public class cimaBlazorModule : AbpModule
         {
             options.AppAssembly = typeof(cimaBlazorModule).Assembly;
             options.AdditionalAssemblies.Add(typeof(cimaBlazorClientModule).Assembly);
-            options.AdditionalAssemblies.Add(typeof(AbpIdentityBlazorModule).Assembly);
+            // Note: AbpIdentityBlazorModule assembly removed - using wrapper pages in cima.Blazor.Client
             options.AdditionalAssemblies.Add(typeof(AbpPermissionManagementBlazorModule).Assembly);
             options.AdditionalAssemblies.Add(typeof(AbpSettingManagementBlazorModule).Assembly);
         });
@@ -683,7 +683,7 @@ public class cimaBlazorModule : AbpModule
                 .AddInteractiveWebAssemblyRenderMode()
                 .AddAdditionalAssemblies(
                     typeof(cimaBlazorClientModule).Assembly,
-                    typeof(Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule).Assembly,
+                    typeof(Volo.Abp.Identity.Blazor.AbpIdentityBlazorModule).Assembly, // Identity pages from NuGet
                     typeof(Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule).Assembly,
                     typeof(Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule).Assembly
                 );
