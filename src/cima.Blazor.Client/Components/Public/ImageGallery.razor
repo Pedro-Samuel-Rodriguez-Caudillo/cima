@@ -2,6 +2,7 @@
 @using cima.Localization
 @inject IJSRuntime JS
 @inject IStringLocalizer<cimaResource> L
+@implements IAsyncDisposable
 
 <div class="image-gallery space-y-4">
     @* Imagen principal con altura responsive *@
@@ -10,7 +11,7 @@
              alt="@GetMainAltText()"
              class="absolute inset-0 w-full h-full object-cover cursor-pointer transition-transform duration-500 hover:scale-[1.01]"
              loading="eager"
-             @onclick="OpenFullscreen" />
+             @onclick="OpenLightbox" />
         
         @if (Images.Count > 1)
         {
@@ -35,65 +36,28 @@
         }
     </div>
     
-        @* Miniaturas Grid *@
-        <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mt-4">
-            @for (int i = 0; i < Images.Count; i++)
-            {
-                var index = i;
-                var isActive = index == currentIndex;
-                <div class="relative cursor-pointer rounded-xl overflow-hidden aspect-[4/3] @(isActive ? "ring-2 ring-navy-900 ring-offset-2" : "hover:ring-2 hover:ring-gray-300 hover:ring-offset-1") transition-all duration-200" 
-                     @onclick="() => SetCurrentImage(index)">
-                    <img src="@Images[index]"
-                         alt="@GetThumbnailAltText(index)"
-                         class="w-full h-full object-cover @(isActive ? "opacity-100" : "opacity-60 hover:opacity-100") transition-opacity duration-200"
-                         loading="lazy" />
-                </div>
-            }
-        </div>
-</div>
-
-@* Modal de pantalla completa *@
-@if (showFullscreen)
-{
-    <div class="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8" @onclick="CloseFullscreen">
-        <button @onclick="CloseFullscreen" 
-                class="absolute top-4 right-4 text-white hover:text-gray-300 z-10 p-2">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
-        
-        <div class="relative w-full max-w-5xl" @onclick:stopPropagation>
-            <img src="@CurrentImage"
-                 alt="@GetFullscreenAltText()"
-                 class="w-full max-h-[85vh] mx-auto object-contain rounded-2xl shadow-2xl border border-white/20 bg-black/20" />
-            
-            @if (Images.Count > 1)
-            {
-                <button @onclick="PreviousImage" 
-                        @onclick:stopPropagation
-                        class="absolute left-0 sm:-left-8 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-3 sm:p-4 rounded-full transition">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </button>
-                <button @onclick="NextImage" 
-                        @onclick:stopPropagation
-                        class="absolute right-0 sm:-right-8 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 p-3 sm:p-4 rounded-full transition">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-            }
-        </div>
+    @* Miniaturas Grid *@
+    <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 mt-4">
+        @for (int i = 0; i < Images.Count; i++)
+        {
+            var index = i;
+            var isActive = index == currentIndex;
+            <div class="relative cursor-pointer rounded-xl overflow-hidden aspect-[4/3] @(isActive ? "ring-2 ring-navy-900 ring-offset-2" : "hover:ring-2 hover:ring-gray-300 hover:ring-offset-1") transition-all duration-200" 
+                 @onclick="() => SetCurrentImage(index)">
+                <img src="@Images[index]"
+                     alt="@GetThumbnailAltText(index)"
+                     class="w-full h-full object-cover @(isActive ? "opacity-100" : "opacity-60 hover:opacity-100") transition-opacity duration-200"
+                     loading="lazy" />
+            </div>
+        }
     </div>
-}
+</div>
 
 @code {
     [Parameter] public List<string> Images { get; set; } = new();
 
     private int currentIndex = 0;
-    private bool showFullscreen = false;
+    private DotNetObjectReference<ImageGallery>? _dotNetRef;
 
     private const string PlaceholderImage = "/images/placeholder.jpg";
     private string CurrentImage => Images.Count > 0 ? Images[currentIndex] : PlaceholderImage;
@@ -111,10 +75,6 @@
             ? L["ImageGallery:PlaceholderAltThumb"]
             : L["ImageGallery:ThumbAlt", index + 1];
     }
-
-    private string GetFullscreenAltText() => IsPlaceholder(CurrentImage)
-        ? L["ImageGallery:PlaceholderAltFullscreen"]
-        : L["ImageGallery:FullscreenAlt"];
     
     private void NextImage()
     {
@@ -137,14 +97,25 @@
         currentIndex = index;
     }
     
-    private void OpenFullscreen()
+    private async Task OpenLightbox()
     {
-        showFullscreen = true;
+        if (Images.Count == 0) return;
+        
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("cimaLightbox.open", Images, currentIndex, _dotNetRef);
     }
     
-    private void CloseFullscreen()
+    [JSInvokable]
+    public void OnLightboxIndexChanged(int newIndex)
     {
-        showFullscreen = false;
+        currentIndex = newIndex;
+        StateHasChanged();
+    }
+    
+    [JSInvokable]
+    public void OnLightboxClosed()
+    {
+        // Lightbox cerrado, nada que hacer aquí por ahora
     }
     
     protected override void OnInitialized()
@@ -152,7 +123,22 @@
         // Si no hay imagenes, agregar una de placeholder
         if (Images.Count == 0)
         {
-            Images.Add("/images/placeholder.jpg");
+            Images.Add(PlaceholderImage);
         }
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("cimaLightbox.close");
+        }
+        catch
+        {
+            // Ignore errors during disposal
+        }
+        
+        _dotNetRef?.Dispose();
+    }
 }
+

@@ -459,3 +459,193 @@ window.cimaScrollIntoViewWithin = (containerEl, targetEl) => {
     containerEl.scrollTo({ top, behavior: "smooth" });
 };
 
+// ========================================
+// Image Lightbox Modal (renders at body level)
+// ========================================
+
+window.cimaLightbox = {
+    overlay: null,
+    images: [],
+    currentIndex: 0,
+    dotNetRef: null,
+
+    open: function (images, startIndex, dotNetRef) {
+        this.images = images || [];
+        this.currentIndex = startIndex || 0;
+        this.dotNetRef = dotNetRef;
+
+        if (this.images.length === 0) return;
+
+        // Create overlay at body level
+        this.overlay = document.createElement('div');
+        this.overlay.id = 'cima-lightbox-overlay';
+        this.overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            z-index: 999999;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: cimaLightboxFadeIn 0.2s ease-out;
+        `;
+
+        // Add styles if not exists
+        if (!document.getElementById('cima-lightbox-styles')) {
+            const style = document.createElement('style');
+            style.id = 'cima-lightbox-styles';
+            style.textContent = `
+                @keyframes cimaLightboxFadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                #cima-lightbox-overlay img {
+                    max-width: 90vw;
+                    max-height: 85vh;
+                    object-fit: contain;
+                    border-radius: 12px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                }
+                .cima-lightbox-btn {
+                    position: absolute;
+                    background: rgba(0, 0, 0, 0.6);
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    padding: 12px;
+                    border-radius: 50%;
+                    transition: background 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .cima-lightbox-btn:hover {
+                    background: rgba(0, 0, 0, 0.8);
+                }
+                .cima-lightbox-close {
+                    top: 1rem;
+                    right: 1rem;
+                }
+                .cima-lightbox-prev {
+                    left: 1rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                }
+                .cima-lightbox-next {
+                    right: 1rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                }
+                .cima-lightbox-counter {
+                    position: absolute;
+                    bottom: 1.5rem;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0, 0, 0, 0.7);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 9999px;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        this.render();
+        document.body.appendChild(this.overlay);
+        document.body.style.overflow = 'hidden';
+
+        // Add keyboard listener
+        document.addEventListener('keydown', this.handleKeydown);
+    },
+
+    render: function () {
+        if (!this.overlay) return;
+
+        const imgSrc = this.images[this.currentIndex];
+        const hasMultiple = this.images.length > 1;
+
+        this.overlay.innerHTML = `
+            <button class="cima-lightbox-btn cima-lightbox-close" onclick="window.cimaLightbox.close()">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <img src="${imgSrc}" alt="Imagen ${this.currentIndex + 1}" onclick="event.stopPropagation()" />
+            
+            ${hasMultiple ? `
+                <button class="cima-lightbox-btn cima-lightbox-prev" onclick="window.cimaLightbox.prev(); event.stopPropagation()">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button class="cima-lightbox-btn cima-lightbox-next" onclick="window.cimaLightbox.next(); event.stopPropagation()">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                <div class="cima-lightbox-counter">${this.currentIndex + 1} / ${this.images.length}</div>
+            ` : ''}
+        `;
+
+        // Close on overlay click
+        this.overlay.onclick = (e) => {
+            if (e.target === this.overlay) {
+                this.close();
+            }
+        };
+    },
+
+    next: function () {
+        if (this.images.length > 1) {
+            this.currentIndex = (this.currentIndex + 1) % this.images.length;
+            this.render();
+            this.notifyIndexChange();
+        }
+    },
+
+    prev: function () {
+        if (this.images.length > 1) {
+            this.currentIndex = this.currentIndex === 0 ? this.images.length - 1 : this.currentIndex - 1;
+            this.render();
+            this.notifyIndexChange();
+        }
+    },
+
+    notifyIndexChange: function () {
+        if (this.dotNetRef) {
+            this.dotNetRef.invokeMethodAsync('OnLightboxIndexChanged', this.currentIndex);
+        }
+    },
+
+    close: function () {
+        if (this.overlay) {
+            this.overlay.remove();
+            this.overlay = null;
+        }
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', this.handleKeydown);
+
+        if (this.dotNetRef) {
+            this.dotNetRef.invokeMethodAsync('OnLightboxClosed');
+        }
+    },
+
+    handleKeydown: function (e) {
+        switch (e.key) {
+            case 'Escape':
+                window.cimaLightbox.close();
+                break;
+            case 'ArrowLeft':
+                window.cimaLightbox.prev();
+                break;
+            case 'ArrowRight':
+                window.cimaLightbox.next();
+                break;
+        }
+    }
+};
+
