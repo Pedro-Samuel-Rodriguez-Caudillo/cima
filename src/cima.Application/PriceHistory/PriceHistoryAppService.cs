@@ -48,16 +48,21 @@ public class PriceHistoryAppService : ApplicationService, IPriceHistoryAppServic
         queryable = queryable
             .WhereIf(input.ListingId.HasValue, x => x.ListingId == input.ListingId)
             .WhereIf(input.UserId.HasValue, x => x.ChangedByUserId == input.UserId)
+            .WhereIf(!string.IsNullOrWhiteSpace(input.UserName),
+                x => x.ChangedByUserName != null && x.ChangedByUserName.Contains(input.UserName))
             .WhereIf(!string.IsNullOrEmpty(input.IpAddress), x => x.ClientIpAddress == input.IpAddress)
             .WhereIf(input.FromDate.HasValue, x => x.ChangedAt >= input.FromDate)
             .WhereIf(input.ToDate.HasValue, x => x.ChangedAt <= input.ToDate);
 
-        var totalCount = queryable.Count();
+        var totalCount = await AsyncExecuter.CountAsync(queryable);
 
-        var items = queryable
-            .OrderByDescending(x => x.ChangedAt)
-            .Skip(input.SkipCount)
-            .Take(input.MaxResultCount)
+        var histories = await AsyncExecuter.ToListAsync(
+            queryable
+                .OrderByDescending(x => x.ChangedAt)
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount));
+
+        var items = histories
             .Select(h => new ListingPriceHistoryDto
             {
                 Id = h.Id,

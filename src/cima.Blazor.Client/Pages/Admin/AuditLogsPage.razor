@@ -1,235 +1,450 @@
 @page "/admin/audit-logs"
 @using cima.AuditLogs
+@using cima.PriceHistory
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.Extensions.Localization
 @using Volo.Abp.Application.Dtos
 @using cima.Localization
+@using MudBlazor
+@using System.Text.Json
+
 @attribute [Authorize(Roles = "admin")]
 @inject IAuditLogAppService AuditLogService
+@inject IPriceHistoryAppService PriceHistoryService
 @inject IStringLocalizer<cimaResource> L
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-<PageTitle>Audit Logs</PageTitle>
+<PageTitle>@L["AuditLogs:PageTitle"] - @L["CompanyName"]</PageTitle>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">
-            <i class="fas fa-history me-2"></i>@L["AuditLogs"]
-        </h2>
-    </div>
-
-    <!-- Filtros -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">@L["StartDate"]</label>
-                    <InputDate @bind-Value="StartTime" class="form-control" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">@L["EndDate"]</label>
-                    <InputDate @bind-Value="EndTime" class="form-control" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">@L["UserName"]</label>
-                    <InputText @bind-Value="UserNameFilter" class="form-control" placeholder="@L["FilterByUser"]" />
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">@L["HttpMethod"]</label>
-                    <select @bind="HttpMethodFilter" class="form-select">
-                        <option value="">@L["All"]</option>
-                        <option value="GET">GET</option>
-                        <option value="POST">POST</option>
-                        <option value="PUT">PUT</option>
-                        <option value="DELETE">DELETE</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3">
-                <button class="btn btn-primary" @onclick="SearchAsync">
-                    <i class="fas fa-search me-1"></i>@L["Search"]
-                </button>
-                <button class="btn btn-outline-secondary ms-2" @onclick="ResetFilters">
-                    <i class="fas fa-undo me-1"></i>@L["Reset"]
-                </button>
-            </div>
+<div class="min-h-screen bg-neutral-50 pt-20">
+    @* Header *@
+    <div class="bg-white border-b border-neutral-200">
+        <div class="cima-container py-6">
+            <h1 class="text-2xl md:text-3xl font-display font-bold text-neutral-900">
+                @L["AuditLogs:Title"]
+            </h1>
+            <p class="text-neutral-600 mt-1">
+                @L["AuditLogs:Subtitle"]
+            </p>
         </div>
     </div>
 
-    <!-- Tabla de resultados -->
-    @if (IsLoading)
-    {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+    <div class="cima-container py-8">
+        @* Filters *@
+        <MudPaper Elevation="0" Class="pa-4 mb-4 border rounded-xl bg-white">
+            <div class="d-flex align-center gap-2 mb-3">
+                <MudIcon Icon="@Icons.Material.Outlined.FilterList" Color="Color.Primary" />
+                <MudText Typo="Typo.h6">@L["AuditLogs:Filters:Title"]</MudText>
             </div>
-        </div>
-    }
-    else if (AuditLogs?.Items?.Any() == true)
-    {
-        <div class="card shadow-sm">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>@L["Time"]</th>
-                            <th>@L["User"]</th>
-                            <th>@L["Method"]</th>
-                            <th>@L["URL"]</th>
-                            <th>@L["Status"]</th>
-                            <th>@L["Duration"]</th>
-                            <th>@L["Actions"]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var log in AuditLogs.Items)
+            
+            <MudGrid>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker Label="@L["AuditLogs:Filters:StartDate"]" 
+                                  @bind-Date="StartTime" 
+                                  Variant="Variant.Outlined" 
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudDatePicker Label="@L["AuditLogs:Filters:EndDate"]" 
+                                  @bind-Date="EndTime" 
+                                  Variant="Variant.Outlined" 
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudTextField @bind-Value="UserNameFilter" 
+                                 Label="@L["AuditLogs:Filters:User"]" 
+                                 Variant="Variant.Outlined" 
+                                 Margin="Margin.Dense" 
+                                 Adornment="Adornment.End" 
+                                 AdornmentIcon="@Icons.Material.Outlined.Search" />
+                </MudItem>
+                
+                @if (SelectedLogType == LogType.HttpRequests)
+                {
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudSelect T="string" Label="@L["AuditLogs:Filters:Method"]" @bind-Value="HttpMethodFilter" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                            <MudSelectItem Value="@("GET")">GET (Read)</MudSelectItem>
+                            <MudSelectItem Value="@("POST")">POST (Create)</MudSelectItem>
+                            <MudSelectItem Value="@("PUT")">PUT (Update)</MudSelectItem>
+                            <MudSelectItem Value="@("DELETE")">DELETE (Remove)</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                }
+                else
+                {
+                     <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value="ListingIdFilter" 
+                                     Label="Listing ID (Optional)" 
+                                     Variant="Variant.Outlined" 
+                                     Margin="Margin.Dense" />
+                    </MudItem>
+                }
+
+                <MudItem xs="12" Class="d-flex justify-end gap-2">
+                     <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Secondary" 
+                               StartIcon="@Icons.Material.Outlined.RestartAlt"
+                               OnClick="ResetFilters">
+                        @L["Common:Reset"]
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               StartIcon="@Icons.Material.Outlined.Search"
+                               OnClick="SearchAsync"
+                               Disabled="IsLoading">
+                        @L["Common:Search"]
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @* Content Tabs *@
+        <MudTabs Elevation="0" 
+                 Rounded="true" 
+                 ApplyEffectsToContainer="true" 
+                 PanelClass="pt-4"
+                 ActivePanelIndexChanged="OnTabChanged">
+            
+            <MudTabPanel Text="@L["AuditLogs:Tab:System"]" Icon="@Icons.Material.Outlined.Dns">
+                <MudPaper Elevation="0" Class="border rounded-xl overflow-hidden">
+                    <MudTable Items="@AuditLogs?.Items" 
+                              Hover="true" 
+                              Loading="@IsLoading" 
+                              Elevation="0"
+                              Dense="true"
+                              Striped="true">
+                        <HeaderContent>
+                            <MudTh>@L["AuditLogs:Table:Time"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:User"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Action"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Resource"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Status"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Duration"]</MudTh>
+                            <MudTh>@L["Common:Actions"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Time">
+                                <div class="d-flex flex-column">
+                                    <MudText Typo="Typo.body2" Class="font-bold">@context.ExecutionTime.ToLocalTime().ToShortDateString()</MudText>
+                                    <MudText Typo="Typo.caption" Class="text-gray-500">@context.ExecutionTime.ToLocalTime().ToLongTimeString()</MudText>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="User">
+                                <div class="d-flex align-center gap-2">
+                                    <MudAvatar Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                        @(context.UserName?.FirstOrDefault() ?? '?')
+                                    </MudAvatar>
+                                    <MudText Typo="Typo.body2">@(context.UserName ?? "Anonymous")</MudText>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Method">
+                                <MudChip T="string" Size="Size.Small" Color="@GetMethodColor(context.HttpMethod)" Label="true">
+                                    @context.HttpMethod
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="URL">
+                                <MudTooltip Text="@context.Url">
+                                    <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 250px;">
+                                        @context.Url
+                                    </MudText>
+                                </MudTooltip>
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.HttpStatusCode)" Icon="@GetStatusIcon(context.HttpStatusCode)">
+                                    @context.HttpStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Duration">
+                                <MudText Typo="Typo.caption" Color="@(context.ExecutionDuration > 1000 ? Color.Warning : Color.Default)">
+                                    @context.ExecutionDuration ms
+                                </MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Actions">
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Size="Size.Small">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => ShowLogDetails(context))">
+                                        @L["Properties:ViewDetails"]
+                                    </MudMenuItem>
+                                    <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => CopyLogDetails(context))">
+                                        @L["Common:Copy"]
+                                    </MudMenuItem>
+                                </MudMenu>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <div class="d-flex justify-center py-4 gap-2">
+                                <MudButton Disabled="@(CurrentPage == 0)" OnClick="PreviousPage" Variant="Variant.Outlined" Size="Size.Small">
+                                    @L["Common:Previous"]
+                                </MudButton>
+                                <MudText Class="align-self-center mx-2">
+                                    @L["Admin:Listings:Pagination:Showing", 
+                                        (CurrentPage * PageSize) + 1, 
+                                        Math.Min((CurrentPage + 1) * PageSize, (int)(AuditLogs?.TotalCount ?? 0)), 
+                                        AuditLogs?.TotalCount ?? 0]
+                                </MudText>
+                                <MudButton Disabled="@(!HasNextPage)" OnClick="NextPage" Variant="Variant.Outlined" Size="Size.Small">
+                                    @L["Common:Next"]
+                                </MudButton>
+                            </div>
+                        </PagerContent>
+                        <NoRecordsContent>
+                            <div class="d-flex flex-column align-center justify-center py-8">
+                                <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Class="mb-2 text-gray-400" />
+                                <MudText Color="Color.Secondary">@L["Search:NoResults"]</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudPaper>
+            </MudTabPanel>
+
+            <MudTabPanel Text="@L["AuditLogs:Tab:Price"]" Icon="@Icons.Material.Outlined.AttachMoney">
+                 <MudPaper Elevation="0" Class="border rounded-xl overflow-hidden">
+                    <MudTable Items="@PriceLogs?.Items" 
+                              Hover="true" 
+                              Loading="@IsLoading" 
+                              Elevation="0"
+                              Dense="true">
+                        <HeaderContent>
+                            <MudTh>@L["AuditLogs:Table:Time"]</MudTh>
+                            <MudTh>Listing</MudTh>
+                            <MudTh>@L["AuditLogs:Table:User"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Change"]</MudTh>
+                            <MudTh>@L["AuditLogs:Table:Details"]</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                 <div class="d-flex flex-column">
+                                    <MudText Typo="Typo.body2" Class="font-bold">@context.ChangedAt.ToLocalTime().ToShortDateString()</MudText>
+                                    <MudText Typo="Typo.caption" Class="text-gray-500">@context.ChangedAt.ToLocalTime().ToLongTimeString()</MudText>
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                <MudChip T="string" Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">
+                                    @context.ListingId.ToString().Substring(0, 8)...
+                                </MudChip>
+                            </MudTd>
+                             <MudTd>
+                                <div class="d-flex align-center gap-2">
+                                    <MudAvatar Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">
+                                        @(context.ChangedByUserName?.FirstOrDefault() ?? '?')
+                                    </MudAvatar>
+                                    <MudText Typo="Typo.body2">@(context.ChangedByUserName ?? "Unknown")</MudText>
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                 <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.body2" Class="text-gray-500 strike-through">
+                                        @context.OldPrice.ToString("C0")
+                                    </MudText>
+                                    <MudIcon Icon="@Icons.Material.Outlined.ArrowForward" Size="Size.Small" Class="text-gray-400" />
+                                    <MudText Typo="Typo.body1" Color="@(context.NewPrice > context.OldPrice ? Color.Success : Color.Error)" Class="font-bold">
+                                        @context.NewPrice.ToString("C0")
+                                    </MudText>
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@(context.NewPrice > context.OldPrice ? Color.Success : Color.Error)">
+                                        @((context.NewPrice - context.OldPrice).ToString("C0"))
+                                    </MudChip>
+                                </div>
+                            </MudTd>
+                             <MudTd>
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Size="Size.Small">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Info" OnClick="@(() => ShowPriceDetails(context))">
+                                        @L["Properties:ViewDetails"]
+                                    </MudMenuItem>
+                                </MudMenu>
+                            </MudTd>
+                        </RowTemplate>
+                         <PagerContent>
+                            <div class="d-flex justify-center py-4 gap-2">
+                                <MudButton Disabled="@(CurrentPage == 0)" OnClick="PreviousPage" Variant="Variant.Outlined" Size="Size.Small">
+                                    @L["Common:Previous"]
+                                </MudButton>
+                                <MudText Class="align-self-center mx-2">
+                                    @L["Admin:Listings:Pagination:Showing", 
+                                        (CurrentPage * PageSize) + 1, 
+                                        Math.Min((CurrentPage + 1) * PageSize, (int)(PriceLogs?.TotalCount ?? 0)), 
+                                        PriceLogs?.TotalCount ?? 0]
+                                </MudText>
+                                <MudButton Disabled="@(!HasNextPage)" OnClick="NextPage" Variant="Variant.Outlined" Size="Size.Small">
+                                    @L["Common:Next"]
+                                </MudButton>
+                            </div>
+                        </PagerContent>
+                        <NoRecordsContent>
+                             <div class="d-flex flex-column align-center justify-center py-8">
+                                <MudIcon Icon="@Icons.Material.Outlined.MoneyOff" Size="Size.Large" Class="mb-2 text-gray-400" />
+                                <MudText Color="Color.Secondary">@L["Search:NoResults"]</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudPaper>
+            </MudTabPanel>
+        </MudTabs>
+
+        @* Dialog Template for Log Details *@
+        <MudDialog @bind-IsVisible="IsLogDialogVisible" Options="DialogOptions">
+            <TitleContent>
+                <MudText Typo="Typo.h6">
+                    <MudIcon Icon="@Icons.Material.Outlined.Description" Class="mr-2"/> @L["AuditLogs:Details:Title"]
+                </MudText>
+            </TitleContent>
+            <DialogContent>
+                @if (SelectedLog != null)
+                {
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="@L["AuditLogs:Table:User"]" Variant="Variant.Outlined">@(SelectedLog.UserName ?? "Anonymous")</MudField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="@L["AuditLogs:Table:Time"]" Variant="Variant.Outlined">@SelectedLog.ExecutionTime.ToLocalTime()</MudField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="IP Address" Variant="Variant.Outlined">@SelectedLog.ClientIpAddress</MudField>
+                        </MudItem>
+                         <MudItem xs="12" md="6">
+                            <MudField Label="@L["AuditLogs:Table:Status"]" Variant="Variant.Outlined">
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(SelectedLog.HttpStatusCode)" Label="true">
+                                    @SelectedLog.HttpStatusCode
+                                </MudChip>
+                            </MudField>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudField Label="Browser / User Agent" Variant="Variant.Outlined" Lines="2">@SelectedLog.BrowserInfo</MudField>
+                        </MudItem>
+
+                        @if (SelectedLog.EntityChanges.Any())
                         {
-                            <tr>
-                                <td>@log.ExecutionTime.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td>
-                                <td>@(log.UserName ?? "Anonymous")</td>
-                                <td>
-                                    <span class="badge @GetMethodBadgeClass(log.HttpMethod)">
-                                        @log.HttpMethod
-                                    </span>
-                                </td>
-                                <td class="text-truncate" style="max-width: 300px;" title="@log.Url">
-                                    @log.Url
-                                </td>
-                                <td>
-                                    <span class="badge @GetStatusBadgeClass(log.HttpStatusCode)">
-                                        @log.HttpStatusCode
-                                    </span>
-                                </td>
-                                <td>@log.ExecutionDuration ms</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewDetails(log.Id)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                            <MudItem xs="12" Class="mt-4">
+                                <MudText Typo="Typo.h6" Class="mb-2">@L["AuditLogs:Details:Changes"]</MudText>
+                                @foreach (var change in SelectedLog.EntityChanges)
+                                {
+                                    <MudCard Elevation="0" Class="border mb-2">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <div class="d-flex align-center gap-2">
+                                                     <MudChip T="string" Size="Size.Small" Color="@GetChangeTypeColor(change.ChangeType)">@change.ChangeType</MudChip>
+                                                     <MudText Typo="Typo.subtitle2">@GetEntityName(change.EntityTypeFullName)</MudText>
+                                                </div>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            @if (change.PropertyChanges.Any())
+                                            {
+                                                <MudSimpleTable Dense="true" Hover="true" Elevation="0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Property</th>
+                                                            <th>Old Value</th>
+                                                            <th>New Value</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var prop in change.PropertyChanges)
+                                                        {
+                                                            <tr>
+                                                                <td>@prop.PropertyName</td>
+                                                                <td class="red-text">@prop.OriginalValue</td>
+                                                                <td class="green-text">@prop.NewValue</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </MudSimpleTable>
+                                            }
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            </MudItem>
                         }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    </MudGrid>
+                }
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="CloseDialog">@L["Common:Close"]</MudButton>
+            </DialogActions>
+        </MudDialog>
 
-        <!-- Paginación -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <span class="text-muted">
-                @L["ShowingResults", AuditLogs.Items.Count, AuditLogs.TotalCount]
-            </span>
-            <nav>
-                <ul class="pagination mb-0">
-                    <li class="page-item @(CurrentPage == 0 ? "disabled" : "")">
-                        <button class="page-link" @onclick="PreviousPage">@L["Previous"]</button>
-                    </li>
-                    <li class="page-item @(!HasNextPage ? "disabled" : "")">
-                        <button class="page-link" @onclick="NextPage">@L["Next"]</button>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>@L["NoAuditLogsFound"]
-        </div>
-    }
+        @* Dialog Template for Price Details *@
+        <MudDialog @bind-IsVisible="IsPriceDialogVisible" Options="DialogOptions">
+            <TitleContent>
+                <MudText Typo="Typo.h6">
+                     <MudIcon Icon="@Icons.Material.Outlined.PriceCheck" Class="mr-2"/> Price Change Details
+                </MudText>
+            </TitleContent>
+            <DialogContent>
+                @if (SelectedPriceLog != null)
+                {
+                     <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="@L["AuditLogs:Table:User"]" Variant="Variant.Outlined">@(SelectedPriceLog.ChangedByUserName ?? "Unknown")</MudField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="@L["AuditLogs:Table:Time"]" Variant="Variant.Outlined">@SelectedPriceLog.ChangedAt.ToLocalTime()</MudField>
+                        </MudItem>
+                         <MudItem xs="12">
+                            <MudField Label="Price Update" Variant="Variant.Outlined">
+                                <div class="d-flex align-center gap-3">
+                                    <MudText Class="text-gray-500 strike-through">@SelectedPriceLog.OldPrice.ToString("C2")</MudText>
+                                    <MudIcon Icon="@Icons.Material.Outlined.ArrowRightAlt" />
+                                    <MudText Class="font-bold text-success">@SelectedPriceLog.NewPrice.ToString("C2")</MudText>
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info">
+                                        @SelectedPriceLog.PercentageChange.ToString("0.##")%
+                                    </MudChip>
+                                </div>
+                            </MudField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="Listing ID" Variant="Variant.Outlined">@SelectedPriceLog.ListingId</MudField>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudField Label="IP Address" Variant="Variant.Outlined">@SelectedPriceLog.ClientIpAddress</MudField>
+                        </MudItem>
+                         <MudItem xs="12">
+                            <MudField Label="User Agent" Variant="Variant.Outlined" Lines="2">@SelectedPriceLog.UserAgent</MudField>
+                        </MudItem>
+                        @if (!string.IsNullOrEmpty(SelectedPriceLog.ChangeReason))
+                        {
+                            <MudItem xs="12">
+                                <MudAlert Severity="Severity.Info">@SelectedPriceLog.ChangeReason</MudAlert>
+                            </MudItem>
+                        }
+                     </MudGrid>
+                }
+            </DialogContent>
+             <DialogActions>
+                <MudButton OnClick="CloseDialog">@L["Common:Close"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+    </div>
 </div>
 
-<!-- Modal de detalles -->
-@if (SelectedLog != null)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">@L["AuditLogDetails"]</h5>
-                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>@L["User"]:</strong> @(SelectedLog.UserName ?? "Anonymous")
-                        </div>
-                        <div class="col-6">
-                            <strong>@L["Time"]:</strong> @SelectedLog.ExecutionTime.ToLocalTime()
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>@L["IP"]:</strong> @SelectedLog.ClientIpAddress
-                        </div>
-                        <div class="col-6">
-                            <strong>@L["Duration"]:</strong> @SelectedLog.ExecutionDuration ms
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <strong>@L["Browser"]:</strong>
-                        <small class="text-muted d-block">@SelectedLog.BrowserInfo</small>
-                    </div>
-
-                    @if (SelectedLog.EntityChanges.Any())
-                    {
-                        <h6 class="mt-4">@L["EntityChanges"]</h6>
-                        @foreach (var change in SelectedLog.EntityChanges)
-                        {
-                            <div class="card mb-2">
-                                <div class="card-header py-2">
-                                    <span class="badge @GetChangeTypeBadge(change.ChangeType)">@change.ChangeType</span>
-                                    <strong class="ms-2">@GetEntityName(change.EntityTypeFullName)</strong>
-                                    <small class="text-muted">(ID: @change.EntityId)</small>
-                                </div>
-                                @if (change.PropertyChanges.Any())
-                                {
-                                    <div class="card-body py-2">
-                                        <table class="table table-sm mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>@L["Property"]</th>
-                                                    <th>@L["OldValue"]</th>
-                                                    <th>@L["NewValue"]</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var prop in change.PropertyChanges)
-                                                {
-                                                    <tr>
-                                                        <td>@prop.PropertyName</td>
-                                                        <td class="text-danger">@prop.OriginalValue</td>
-                                                        <td class="text-success">@prop.NewValue</td>
-                                                    </tr>
-                                                }
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    }
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">@L["Close"]</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
+    private enum LogType { HttpRequests = 0, PriceChanges = 1 }
+
     private PagedResultDto<AuditLogDto>? AuditLogs { get; set; }
+    private PagedResultDto<ListingPriceHistoryDto>? PriceLogs { get; set; }
+    
+    // Dialog State
+    private bool IsLogDialogVisible;
+    private bool IsPriceDialogVisible;
+    private DialogOptions DialogOptions = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
     private AuditLogDto? SelectedLog { get; set; }
+    private ListingPriceHistoryDto? SelectedPriceLog { get; set; }
+
     private bool IsLoading { get; set; }
     private int CurrentPage { get; set; }
-    private const int PageSize = 20;
+    private const int PageSize = 15;
 
-    // Filtros
+    // Filters
     private DateTime? StartTime { get; set; }
     private DateTime? EndTime { get; set; }
     private string? UserNameFilter { get; set; }
     private string? HttpMethodFilter { get; set; }
+    private string? ListingIdFilter { get; set; }
+    private LogType SelectedLogType { get; set; } = LogType.HttpRequests;
 
-    private bool HasNextPage => AuditLogs != null && (CurrentPage + 1) * PageSize < AuditLogs.TotalCount;
+    private bool HasNextPage => SelectedLogType == LogType.HttpRequests
+        ? AuditLogs != null && (CurrentPage + 1) * PageSize < AuditLogs.TotalCount
+        : PriceLogs != null && (CurrentPage + 1) * PageSize < PriceLogs.TotalCount;
 
     protected override async Task OnInitializedAsync()
     {
@@ -238,33 +453,64 @@
         await SearchAsync();
     }
 
+    private async Task OnTabChanged(int index)
+    {
+        SelectedLogType = (LogType)index;
+        CurrentPage = 0;
+        await SearchAsync();
+    }
+
+    private async Task ResetFilters()
+    {
+        StartTime = DateTime.Today.AddDays(-7);
+        EndTime = DateTime.Today.AddDays(1);
+        UserNameFilter = null;
+        HttpMethodFilter = null;
+        ListingIdFilter = null;
+        CurrentPage = 0;
+        await SearchAsync();
+    }
+
     private async Task SearchAsync()
     {
         IsLoading = true;
         try
         {
-            AuditLogs = await AuditLogService.GetListAsync(new GetAuditLogsInput
+            if (SelectedLogType == LogType.HttpRequests)
             {
-                StartTime = StartTime,
-                EndTime = EndTime,
-                UserName = UserNameFilter,
-                HttpMethod = HttpMethodFilter,
-                SkipCount = CurrentPage * PageSize,
-                MaxResultCount = PageSize
-            });
+                AuditLogs = await AuditLogService.GetListAsync(new GetAuditLogsInput
+                {
+                    StartTime = StartTime,
+                    EndTime = EndTime,
+                    UserName = UserNameFilter,
+                    HttpMethod = HttpMethodFilter,
+                    SkipCount = CurrentPage * PageSize,
+                    MaxResultCount = PageSize
+                });
+            }
+            else
+            {
+                PriceLogs = await PriceHistoryService.GetListAsync(new GetPriceHistoryInput
+                {
+                    FromDate = StartTime,
+                    ToDate = EndTime,
+                    UserName = UserNameFilter,
+                    ListingId = ParseListingId(ListingIdFilter),
+                    SkipCount = CurrentPage * PageSize,
+                    MaxResultCount = PageSize
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error loading logs", Severity.Error);
+            Console.WriteLine(ex);
         }
         finally
         {
             IsLoading = false;
         }
     }
-
-    private async Task ViewDetails(Guid id)
-    {
-        SelectedLog = await AuditLogService.GetAsync(id);
-    }
-
-    private void CloseModal() => SelectedLog = null;
 
     private async Task PreviousPage()
     {
@@ -284,40 +530,80 @@
         }
     }
 
-    private async Task ResetFilters()
+    private void ShowLogDetails(AuditLogDto log)
     {
-        StartTime = DateTime.Today.AddDays(-7);
-        EndTime = DateTime.Today.AddDays(1);
-        UserNameFilter = null;
-        HttpMethodFilter = null;
-        CurrentPage = 0;
-        await SearchAsync();
+        SelectedLog = log;
+        IsLogDialogVisible = true;
     }
 
-    private static string GetMethodBadgeClass(string? method) => method switch
+    private async Task CopyLogDetails(AuditLogDto log)
     {
-        "GET" => "bg-info",
-        "POST" => "bg-success",
-        "PUT" => "bg-warning text-dark",
-        "DELETE" => "bg-danger",
-        _ => "bg-secondary"
+        try 
+        {
+            var json = JsonSerializer.Serialize(log, new JsonSerializerOptions { WriteIndented = true });
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", json);
+            Snackbar.Add(L["Common:Copied"], Severity.Success);
+        }
+        catch
+        {
+            Snackbar.Add("Error copying to clipboard", Severity.Error);
+        }
+    }
+
+    private void ShowPriceDetails(ListingPriceHistoryDto log)
+    {
+        SelectedPriceLog = log;
+        IsPriceDialogVisible = true;
+    }
+
+    private void CloseDialog()
+    {
+        IsLogDialogVisible = false;
+        IsPriceDialogVisible = false;
+        SelectedLog = null;
+        SelectedPriceLog = null;
+    }
+
+    // Helpers
+    private static Guid? ParseListingId(string? listingId)
+    {
+        if (Guid.TryParse(listingId, out var parsed)) return parsed;
+        return null;
+    }
+
+    private Color GetMethodColor(string? method) => method switch
+    {
+        "GET" => Color.Info,
+        "POST" => Color.Success,
+        "PUT" => Color.Warning,
+        "DELETE" => Color.Error,
+        _ => Color.Default
     };
 
-    private static string GetStatusBadgeClass(int? status) => status switch
+    private Color GetStatusColor(int? status) => status switch
     {
-        >= 200 and < 300 => "bg-success",
-        >= 300 and < 400 => "bg-info",
-        >= 400 and < 500 => "bg-warning text-dark",
-        >= 500 => "bg-danger",
-        _ => "bg-secondary"
+        >= 200 and < 300 => Color.Success,
+        >= 300 and < 400 => Color.Info,
+        >= 400 and < 500 => Color.Warning,
+        >= 500 => Color.Error,
+        _ => Color.Default
     };
 
-    private static string GetChangeTypeBadge(string? changeType) => changeType switch
+    private string GetStatusIcon(int? status) => status switch
     {
-        "Created" => "bg-success",
-        "Updated" => "bg-warning text-dark",
-        "Deleted" => "bg-danger",
-        _ => "bg-secondary"
+        >= 200 and < 300 => Icons.Material.Filled.CheckCircle,
+        >= 300 and < 400 => Icons.Material.Filled.Info,
+        >= 400 and < 500 => Icons.Material.Filled.Warning,
+        >= 500 => Icons.Material.Filled.Error,
+        _ => Icons.Material.Filled.Help
+    };
+
+    private Color GetChangeTypeColor(string? changeType) => changeType switch
+    {
+        "Created" => Color.Success,
+        "Updated" => Color.Warning,
+        "Deleted" => Color.Error,
+        _ => Color.Default
     };
 
     private static string GetEntityName(string? fullName)
