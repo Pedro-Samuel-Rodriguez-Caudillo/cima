@@ -5,15 +5,15 @@
 
 ## ?? Problemas Identificados y Solucionados
 
-### 1. ? No Detecta Propiedades Despu�s del Seeder
+### 1. ? No Detecta Propiedades Después del Seeder
 
-**Problema**: Despu�s de ejecutar el seeder, la p�gina no muestra propiedades.
+**Problema**: Después de ejecutar el seeder, la p�gina no muestra propiedades.
 
 **Causa Probable**:
 - El seeder verifica si ya existen datos (`_listingRepository.AnyAsync()`)
 - Si hay datos previos, no vuelve a insertar
 
-**Soluci�n**:
+**Solución**:
 ? **Script creado**: `etc/scripts/verificar-datos.ps1`
 
 **Uso**:
@@ -44,7 +44,7 @@ dotnet run
 - No hab�a control de altura de secciones
 - CSS no estaba centralizado
 
-**Soluci�n**:
+**Solución**:
 ? **Sistema CSS Centralizado Completo**
 
 #### Cambios Realizados:
@@ -54,7 +54,7 @@ dotnet run
 /* Secciones fullscreen (100vh) */
 .cima-section-fullscreen { min-height: 100vh; }
 
-/* Secci�n con padding est�ndar */
+/* Sección con padding estándar */
 .cima-section { py-16 px-4; }
 
 /* Hero section */
@@ -87,21 +87,21 @@ dotnet run
 
 **Problema**: CSS disperso, dif�cil de mantener.
 
-**Soluci�n**:
+**Solución**:
 ? **Sistema de Clases Sem�nticas CIMA**
 
-#### Categor�as Creadas:
+#### Categorías Creadas:
 
 **Layouts**
-- `cima-section-fullscreen` - Secci�n de altura completa
-- `cima-section` - Secci�n con padding est�ndar
+- `cima-section-fullscreen` - Sección de altura completa
+- `cima-section` - Sección con padding estándar
 - `cima-container` - Contenedor responsivo
 - `cima-hero` - Hero section
 - `cima-hero-overlay` - Overlay de gradiente
 - `cima-hero-content` - Contenido del hero
 
 **Cards**
-- `cima-card` - Card b�sico con sombra
+- `cima-card` - Card bbásico con sombra
 - `cima-card-glass` - Card con glassmorphism
 - `cima-card-header` - Header de card con gradiente
 - `cima-card-body` - Body de card
@@ -128,7 +128,7 @@ dotnet run
 - `cima-price` - Precio destacado
 
 **Forms**
-- `cima-input` - Input est�ndar
+- `cima-input` - Input estándar
 - `cima-label` - Label de form
 - `cima-input-group` - Grupo de input
 
@@ -170,12 +170,12 @@ dotnet run
 ### Scripts
 - ? `etc/scripts/verificar-datos.ps1` - Debug de seeder
 
-### Documentaci�n
+### Documentación
 - ? `docs/GUIA_CLASES_CSS_CIMA.md` - Gu�a completa de clases
 
 ---
 
-## ?? Antes vs Despu�s
+## ?? Antes vs Después
 
 ### Antes
 ```razor
@@ -194,7 +194,7 @@ dotnet run
 - No fullscreen
 - CSS no reutilizable
 
-### Despu�s
+### Después
 ```razor
 <!-- Limpio y centralizado -->
 <section class="cima-section-fullscreen bg-white no-section-gap">
@@ -244,7 +244,7 @@ dotnet run
 
 ---
 
-## ?? Documentaci�n
+## ?? Documentación
 
 ### Gu�a Completa
 Ver: `docs/GUIA_CLASES_CSS_CIMA.md`
@@ -258,14 +258,14 @@ Ver: `docs/GUIA_CLASES_CSS_CIMA.md`
     <div class="cima-hero-content">
         <div class="cima-card-glass p-12">
             <h1 class="cima-heading-1">T�tulo</h1>
-            <p class="cima-subtitle">Descripci�n</p>
-            <button class="cima-btn-primary">Acci�n</button>
+            <p class="cima-subtitle">Descripción</p>
+            <button class="cima-btn-primary">Acción</button>
         </div>
     </div>
 </div>
 ```
 
-**Secci�n de Propiedades**:
+**Sección de Propiedades**:
 ```razor
 <section class="cima-section-fullscreen cima-bg-light">
     <div class="cima-container">
@@ -292,17 +292,17 @@ Ver: `docs/GUIA_CLASES_CSS_CIMA.md`
 
 ---
 
-## ? Checklist de Verificaci�n
+## ? Checklist de Verificación
 
 - [x] Sistema CSS centralizado creado
 - [x] Bandas blancas eliminadas
 - [x] Secciones fullscreen implementadas
 - [x] Clases sem�nticas documentadas
-- [x] Script de verificaci�n de datos creado
+- [x] Script de verificación de datos creado
 - [x] CSS compilado
 - [x] Componentes actualizados
 - [x] Animaciones agregadas
-- [x] Documentaci�n completa
+- [x] Documentación completa
 - [x] Commit realizado
 
 ---
@@ -331,7 +331,7 @@ Ver: `docs/GUIA_CLASES_CSS_CIMA.md`
 ## ?? Troubleshooting
 
 ### Problema: No veo los cambios de CSS
-**Soluci�n**:
+**Solución**:
 ```powershell
 cd src\cima.Blazor.Client
 npm run build:css
@@ -339,13 +339,13 @@ npm run build:css
 ```
 
 ### Problema: Siguen apareciendo bandas blancas
-**Soluci�n**:
+**Solución**:
 - Verificar que todas las secciones tengan `no-section-gap`
 - Verificar que el contenedor padre tenga `no-section-gap`
 - Hard refresh en el browser (Ctrl+F5)
 
 ### Problema: No aparecen propiedades
-**Soluci�n**:
+**Solución**:
 ```powershell
 .\etc\scripts\verificar-datos.ps1
 # Seleccionar 'S' para borrar datos y re-ejecutar seeder
@@ -357,7 +357,7 @@ npm run build:css
 
 ### L�neas de CSS
 - **Antes**: ~100 l�neas dispersas
-- **Despu�s**: ~500 l�neas organizadas
+- **Después**: ~500 l�neas organizadas
 
 ### Clases Creadas
 - **Layouts**: 10 clases
@@ -369,7 +369,7 @@ npm run build:css
 
 ### Tiempo Ahorrado
 - **Antes**: 5-10 min por componente (estilos desde cero)
-- **Despu�s**: 1-2 min por componente (usar clases existentes)
+- **Después**: 1-2 min por componente (usar clases existentes)
 - **Ahorro**: **70-80%** de tiempo en styling
 
 ---
@@ -385,7 +385,7 @@ npm run build:css
 
 ### Sistema de Dise�o
 1. ? **48+ clases** sem�nticas
-2. ? **Documentaci�n completa**
+2. ? **Documentación completa**
 3. ? **Ejemplos de uso**
 4. ? **Gu�a de referencia r�pida**
 
@@ -393,30 +393,30 @@ npm run build:css
 
 **Commit**: `refactor: centralizar estilos CSS y eliminar bandas blancas en homepage`  
 **Archivos**: 6 modificados, 2 creados  
-**Fecha**: D�a 7 - Mejoras UX
+**Fecha**: Día 7 - Mejoras UX
 
 ## DIA_7_QUE_HACER_AHORA.md
-# ? RESUMEN R�PIDO - Qu� Hacer Ahora
+# ? RESUMEN R�PIDO - Qué Hacer Ahora
 
-## ? D�a 7 - COMPLETADO
+## ? Día 7 - COMPLETADO
 
 **10 commits at�micos realizados**:
-1. Migraci�n BD
-2. DTOs y Validaci�n
+1. Migración BD
+2. DTOs y Validación
 3. AppServices
 4. Client Proxies
-5. Localizaci�n ES/EN
+5. Localización ES/EN
 6. Hero y Filtros
 7. Featured Properties
-8. Integraci�n Homepage
+8. Integración Homepage
 9. Data Seeder
-10. Navegaci�n y CSS
+10. Navegación y CSS
 
 ---
 
-## ?? Pr�ximos Pasos INMEDIATOS
+## ?? Próximos Pasos INMEDIATOS
 
-### Opci�n A: Push y Documentar (15 min)
+### Opción A: Push y Documentar (15 min)
 ```powershell
 # 1. Hacer push de commits
 git push origin master
@@ -428,7 +428,7 @@ git push origin master
 # O continuar en master
 ```
 
-### Opci�n B: Probar Aplicaci�n (30 min)
+### Opción B: Probar Aplicación (30 min)
 ```powershell
 # 1. Ejecutar seeder
 .\etc\scripts\seed-dev-data.ps1
@@ -437,7 +437,7 @@ git push origin master
 cd src/cima.Blazor.Client
 npm run build:css
 
-# 3. Ejecutar aplicaci�n
+# 3. Ejecutar aplicación
 cd ../cima.Blazor
 dotnet run
 
@@ -452,10 +452,10 @@ dotnet run
 # - Listado de propiedades
 ```
 
-### Opci�n C: Comenzar D�a 8 (4-5 horas)
+### Opción C: Comenzar Día 8 (4-5 horas)
 
 **Prioridad 1 - Detalle de Propiedad** (2h):
-- Galer�a con lightbox
+- Galería con lightbox
 - Mapa de Google
 - Formulario contextual
 - Propiedades relacionadas
@@ -480,8 +480,8 @@ dotnet run
 - [x] Migraciones aplicadas
 - [x] Commits realizados
 - [ ] **Push a GitHub** ? RECOMENDADO
-- [ ] **Probar aplicaci�n** ? RECOMENDADO
-- [ ] Comenzar D�a 8
+- [ ] **Probar aplicación** ? RECOMENDADO
+- [ ] Comenzar Día 8
 
 ---
 
@@ -491,17 +491,17 @@ dotnet run
 1. ? Hacer PUSH primero (backup)
 2. ? Probar que todo funciona
 3. ? Descansar 10 minutos
-4. ?? Comenzar D�a 8 Fase 1
+4. ?? Comenzar Día 8 Fase 1
 
 ### Si terminas por hoy:
 1. ? Hacer PUSH
 2. ? Commit de docs
 3. ? Cerrar issues pendientes
-4. ?? Ma�ana: D�a 8
+4. ?? Ma�ana: Día 8
 
 ---
 
-## ?? Recomendaci�n
+## ?? Recomendación
 
 **HAZLO EN ESTE ORDEN**:
 
@@ -516,7 +516,7 @@ dotnet run
 # Abrir https://localhost:44365 y verificar
 
 # 3. Decidir:
-# �Tienes 4+ horas m�s? ? D�a 8
+# �Tienes 4+ horas m�s? ? Día 8
 # �Menos tiempo? ? Documentar y cerrar por hoy
 ```
 
@@ -527,12 +527,12 @@ dotnet run
 ### Completado (70%)
 - ? Arquitectura base
 - ? BD y migraciones
-- ? DTOs y validaci�n
+- ? DTOs y validación
 - ? CRUD Listings
 - ? AppServices
 - ? B�squeda avanzada
 - ? Featured properties
-- ? Localizaci�n ES/EN
+- ? Localización ES/EN
 - ? Homepage completa
 - ? Listado de propiedades
 - ? Data seeder
@@ -551,12 +551,12 @@ dotnet run
 
 ## ?? Para Terminar MVP (Estimado)
 
-- **D�a 8**: Detalle + SEO + Portafolio (4-5h)
-- **D�a 9**: Admin Dashboard + Analytics (3-4h)
-- **D�a 10**: Email + Testing + Deployment (4-5h)
+- **Día 8**: Detalle + SEO + Portafolio (4-5h)
+- **Día 9**: Admin Dashboard + Analytics (3-4h)
+- **Día 10**: Email + Testing + Deployment (4-5h)
 
 **Total restante**: ~12-14 horas  
-**MVP listo**: En 3 d�as de trabajo
+**MVP listo**: En 3 días de trabajo
 
 ---
 
@@ -586,7 +586,7 @@ npm run build:css
 
 ---
 
-## ? MI RECOMENDACI�N PERSONAL
+## ? MI RECOMENDAción PERSONAL
 
 **Haz esto AHORA** (total: 15 minutos):
 
@@ -606,14 +606,14 @@ npm run build:css
 3. **Commit Docs** (3 min)
    ```powershell
    git add docs/
-   git commit -m "docs: agregar resumen d�a 7 y plan d�a 8"
+   git commit -m "docs: agregar resumen día 7 y plan día 8"
    git push
    ```
 
 **LUEGO decide**:
-- ? Continuar con D�a 8 (si tienes 4+ horas)
+- ? Continuar con Día 8 (si tienes 4+ horas)
 - ? Cerrar por hoy (si tienes menos tiempo)
 
 ---
 
-**La decisi�n es tuya. �Qu� prefieres hacer?** ??
+**La decisión es tuya. �Qué prefieres hacer?** ??

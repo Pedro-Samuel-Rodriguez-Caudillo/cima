@@ -3,9 +3,9 @@
 ## DIA_5_ACCIONES_INMEDIATAS_COMPLETADAS.md
 # ? ACCIONES INMEDIATAS COMPLETADAS
 
-**Fecha:** Sesi�n actual  
+**Fecha:** Sesión actual  
 **Estado:** ? COMPLETADO AL 100%  
-**Compilaci�n:** ? EXITOSA
+**Compilación:** ? EXITOSA
 
 ---
 
@@ -18,7 +18,7 @@ Se han implementado exitosamente las **2 acciones inmediatas** que faltaban para
 
 ---
 
-## ?? ACCI�N 1: GetListAsync para Architects
+## ?? ACción 1: GetListAsync para Architects
 
 ### Archivos Modificados
 
@@ -31,14 +31,14 @@ Se han implementado exitosamente las **2 acciones inmediatas** que faltaban para
 Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input);
 ```
 
-#### 2. **ArchitectAppService.cs** (Implementaci�n)
+#### 2. **ArchitectAppService.cs** (Implementación)
 **Ruta:** `src/cima.Application/Architects/ArchitectAppService.cs`
 
 **Caracter�sticas implementadas:**
-- ? Paginaci�n con `SkipCount` y `MaxResultCount`
+- ? Paginación con `SkipCount` y `MaxResultCount`
 - ? Ordenamiento din�mico con `System.Linq.Dynamic.Core`
 - ? Carga de nombres de usuario desde `IIdentityUserRepository`
-- ? Acceso p�blico (`[AllowAnonymous]`)
+- ? Acceso público (`[AllowAnonymous]`)
 - ? Mapeo autom�tico con AutoMapper
 
 **C�digo implementado:**
@@ -109,7 +109,7 @@ private async Task LoadArchitects()
     );
     architects = result.Items.ToList();
     
-    // Agregar arquitecto actual si no est� en la lista
+    // Agregar arquitecto actual si no está en la lista
     if (listing?.Architect != null && !architects.Any(a => a.Id == listing.ArchitectId))
     {
         architects.Insert(0, listing.Architect);
@@ -119,7 +119,7 @@ private async Task LoadArchitects()
 
 ---
 
-## ?? ACCI�N 2: Componente ImageUploader
+## ?? ACción 2: Componente ImageUploader
 
 ### Archivos Creados
 
@@ -133,18 +133,18 @@ Task DeleteImageAsync(string imageUrl);
 bool ValidateImage(string fileName, long fileSize);
 ```
 
-#### 2. **LocalImageStorageService.cs** (Implementaci�n)
+#### 2. **LocalImageStorageService.cs** (Implementación)
 **Ruta:** `src/cima.Application/Images/LocalImageStorageService.cs`
 
 **Caracter�sticas:**
 - ? Almacenamiento en disco local (wwwroot/images)
-- ? Validaci�n de extensiones (.jpg, .jpeg, .png, .webp, .gif)
-- ? Validaci�n de tama�o (m�x 5MB)
-- ? Generaci�n de nombres �nicos con GUID
-- ? Creaci�n autom�tica de directorios
+- ? Validación de extensiones (.jpg, .jpeg, .png, .webp, .gif)
+- ? Validación de tama�o (m�x 5MB)
+- ? Generación de nombres �nicos con GUID
+- ? Creación automática de directorios
 - ? Retorno de URL relativa
 
-**Nota:** Implementaci�n simple para desarrollo. En producci�n se recomienda Azure Blob Storage o AWS S3.
+**Nota:** Implementación simple para desarrollo. En producción se recomienda Azure Blob Storage o AWS S3.
 
 #### 3. **ImageDtos.cs** (DTOs)
 **Ruta:** `src/cima.Domain.Shared/Dtos/ImageDtos.cs`
@@ -183,33 +183,33 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 **Implementaciones:**
 
 **a) AddImageAsync:**
-- ? Validaci�n de permisos (solo propietario o admin)
-- ? Validaci�n de m�ximo 10 im�genes
-- ? Generaci�n autom�tica de `DisplayOrder`
-- ? Asignaci�n de `AltText` por defecto (t�tulo de listing)
+- ? Validación de permisos (solo propietario o admin)
+- ? Validación de m�ximo 10 im�genes
+- ? Generación automática de `DisplayOrder`
+- ? Asignación de `AltText` por defecto (t�tulo de listing)
 
 **b) RemoveImageAsync:**
-- ? Validaci�n de permisos
+- ? Validación de permisos
 - ? Reordenamiento autom�tico de im�genes restantes
-- ? Validaci�n de existencia de imagen
+- ? Validación de existencia de imagen
 
 **c) UpdateImagesOrderAsync:**
-- ? Validaci�n de permisos
-- ? Actualizaci�n de DisplayOrder en batch
+- ? Validación de permisos
+- ? Actualización de DisplayOrder en batch
 
 #### 6. **ImageUploader.razor** (Componente Blazor)
 **Ruta:** `src/cima.Blazor.Client/Components/Admin/ImageUploader.razor`
 
 **Caracter�sticas:**
 - ? Upload m�ltiple de archivos
-- ? Validaci�n client-side (tama�o, tipo)
+- ? Validación client-side (tama�o, tipo)
 - ? Progress bar animado durante upload
 - ? Preview de im�genes subidas en grid responsive
 - ? Reordenamiento con botones ??
-- ? Eliminaci�n individual con confirmaci�n
+- ? Eliminación individual con confirmación
 - ? Contador de im�genes (X/10)
-- ? Conversi�n a base64 para env�o temporal
-- ? Integraci�n completa con `IListingAppService`
+- ? Conversión a base64 para env�o temporal
+- ? Integración completa con `IListingAppService`
 
 **Par�metros:**
 ```csharp
@@ -250,33 +250,33 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 
 ## ?? ERRORES CORREGIDOS
 
-### Durante implementaci�n:
+### Durante implementación:
 
 1. ? **CS0411: OrderBy tipo no inferible**
    - **Problema:** `queryable.OrderBy(sorting)` sin tipo expl�cito
-   - **Soluci�n:** Usar `System.Linq.Dynamic.Core` incluido en ABP
+   - **Solución:** Usar `System.Linq.Dynamic.Core` incluido en ABP
 
 2. ? **CS0234: Namespace 'Hosting' no existe**
    - **Problema:** `using Microsoft.AspNetCore.Hosting`
-   - **Soluci�n:** Cambiar a `using Microsoft.Extensions.Hosting`
+   - **Solución:** Cambiar a `using Microsoft.Extensions.Hosting`
 
 3. ? **CS0246: IWebHostEnvironment no encontrado**
    - **Problema:** Interface incorrecta
-   - **Soluci�n:** Usar `IHostEnvironment` con `ContentRootPath`
+   - **Solución:** Usar `IHostEnvironment` con `ContentRootPath`
 
 4. ? **CS0246: MemoryStream no encontrado**
    - **Problema:** Falta `using System.IO`
-   - **Soluci�n:** Agregar using en ImageUploader.razor
+   - **Solución:** Agregar using en ImageUploader.razor
 
 5. ? **CS0246: ImageDto vs ListingImageDto**
    - **Problema:** M�todo `OnImagesChanged` duplicado con tipo incorrecto
-   - **Soluci�n:** Eliminar versi�n duplicada, mantener solo `ListingImageDto`
+   - **Solución:** Eliminar versión duplicada, mantener solo `ListingImageDto`
 
 ---
 
 ## ?? ESTADO ACTUAL
 
-### Compilaci�n
+### Compilación
 ```
 ? EXITOSA - 0 errores, 0 warnings
 ```
@@ -287,12 +287,12 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 |----------------|--------|
 | Listado Index | ? Funcional |
 | Filtros avanzados | ? Funcional |
-| Paginaci�n | ? Funcional |
+| Paginación | ? Funcional |
 | Crear Listing | ? Funcional |
 | Editar Listing | ? Funcional |
 | Eliminar Listing | ? Funcional |
-| Gesti�n de estado | ? Funcional |
-| **Selecci�n de Arquitecto** | ? **AHORA FUNCIONAL** |
+| Gestión de estado | ? Funcional |
+| **Selección de Arquitecto** | ? **AHORA FUNCIONAL** |
 | **Upload de im�genes** | ? **AHORA FUNCIONAL** |
 | **Reordenar im�genes** | ? **AHORA FUNCIONAL** |
 | **Eliminar im�genes** | ? **AHORA FUNCIONAL** |
@@ -302,9 +302,9 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 ## ?? FUNCIONALIDADES DESBLOQUEADAS
 
 ### Antes (Bloqueadas):
-- ? No se pod�an seleccionar arquitectos en Create/Edit
-- ? No se pod�an subir im�genes
-- ? No se pod�an publicar listings (requiere m�nimo 1 imagen)
+- ? No se podían seleccionar arquitectos en Create/Edit
+- ? No se podían subir im�genes
+- ? No se podían publicar listings (requiere m�nimo 1 imagen)
 
 ### Ahora (Funcionales):
 - ? Select de arquitectos carga correctamente en Create/Edit
@@ -312,13 +312,13 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 - ? Preview de im�genes en grid responsive
 - ? Reordenamiento drag-and-drop simulado con botones
 - ? Eliminar im�genes individuales
-- ? Publicar listings con validaci�n de im�genes
+- ? Publicar listings con validación de im�genes
 
 ---
 
 ## ?? TESTING MANUAL RECOMENDADO
 
-### Test 1: Selecci�n de Arquitectos
+### Test 1: Selección de Arquitectos
 ```
 1. Ir a /admin/listings/create
 2. Verificar que el dropdown de Arquitecto carga
@@ -349,7 +349,7 @@ Task UpdateImagesOrderAsync(Guid listingId, List<UpdateImageOrderDto> input);
 1. Con varias im�genes subidas
 2. Hacer clic en bot�n ??? de una imagen
 3. Verificar que desaparece
-4. Verificar que se reordenan autom�ticamente
+4. Verificar que se reordenan automáticamente
 5. Verificar contador actualizado
 ```
 
@@ -404,13 +404,13 @@ src/
 ## ?? RECOMENDACIONES FUTURAS
 
 ### Mejoras Corto Plazo
-1. **Azure Blob Storage** (Producci�n)
+1. **Azure Blob Storage** (Producción)
    - Reemplazar `LocalImageStorageService` con `AzureBlobStorageService`
    - Beneficios: escalabilidad, CDN, backups autom�ticos
 
-2. **Compresi�n de Im�genes**
-   - Implementar resize autom�tico (thumbnails, optimizaci�n)
-   - Librer�a sugerida: `SixLabors.ImageSharp`
+2. **Compresión de Im�genes**
+   - Implementar resize autom�tico (thumbnails, optimización)
+   - Librería sugerida: `SixLabors.ImageSharp`
 
 3. **Drag & Drop Real**
    - Usar biblioteca como Dropzone.js o Blazor.FileSystem
@@ -450,20 +450,20 @@ git commit -m "feat(admin): implementar GetListAsync para Architects y component
 ACCIONES INMEDIATAS COMPLETADAS:
 
 1. GetListAsync en ArchitectAppService:
-   - Paginaci�n y ordenamiento din�mico
+   - Paginación y ordenamiento din�mico
    - Carga de nombres de usuario desde Identity
-   - Acceso p�blico para uso en formularios
-   - Actualizaci�n de Create y Edit para usar m�todo
+   - Acceso público para uso en formularios
+   - Actualización de Create y Edit para usar m�todo
 
-2. Sistema completo de gesti�n de im�genes:
+2. Sistema completo de gestión de im�genes:
    - Interface IImageStorageService
-   - Implementaci�n LocalImageStorageService (desarrollo)
+   - Implementación LocalImageStorageService (desarrollo)
    - DTOs: CreateListingImageDto, UpdateImageOrderDto
    - M�todos en ListingAppService: Add/Remove/UpdateOrder
    - Componente Blazor ImageUploader completo
    - Validaciones client-side y server-side
    - Upload m�ltiple con progress bar
-   - Reordenamiento y eliminaci�n de im�genes
+   - Reordenamiento y eliminación de im�genes
    - Grid responsive con preview
 
 Caracter�sticas ImageUploader:
@@ -471,9 +471,9 @@ Caracter�sticas ImageUploader:
 - Formatos: JPG, PNG, WebP, GIF
 - Preview en grid responsive
 - Reordenar con botones ??
-- Eliminar individual con confirmaci�n
+- Eliminar individual con confirmación
 - Contador visual (X/10)
-- Integraci�n completa con backend
+- Integración completa con backend
 
 Errores corregidos:
 - OrderBy tipo no inferible (Dynamic.Linq)
@@ -501,7 +501,7 @@ Ref: #DIA5 #AccionesInmediatas #Architects #ImageUpload"
 - [x] ListingAppService m�todos de imagen implementados
 - [x] ImageUploader.razor creado
 - [x] Edit.razor usa ImageUploader
-- [x] Compilaci�n exitosa
+- [x] Compilación exitosa
 
 ### Funcionalidad
 - [x] Select de arquitectos funciona en Create
@@ -509,12 +509,12 @@ Ref: #DIA5 #AccionesInmediatas #Architects #ImageUpload"
 - [x] Upload de im�genes funcional
 - [x] Preview de im�genes funcional
 - [x] Reordenamiento de im�genes funcional
-- [x] Eliminaci�n de im�genes funcional
+- [x] Eliminación de im�genes funcional
 - [x] Validaciones client-side funcionan
 - [x] Validaciones server-side funcionan
 
-### Documentaci�n
-- [x] Resumen de implementaci�n creado
+### Documentación
+- [x] Resumen de implementación creado
 - [x] Comentarios en c�digo agregados
 - [x] Recomendaciones futuras documentadas
 
@@ -524,37 +524,37 @@ Ref: #DIA5 #AccionesInmediatas #Architects #ImageUpload"
 
 ```
 ACCIONES INMEDIATAS: ? 100% COMPLETADAS
-Compilaci�n: ? EXITOSA
+Compilación: ? EXITOSA
 Listo para testing: ? S�
 Listo para commit: ? S�
 ```
 
-**Pr�ximo paso:** Testing manual y/o continuar con D�a 6 (Dashboard, ContactRequests, Architects)
+**Próximo paso:** Testing manual y/o continuar con Día 6 (Dashboard, ContactRequests, Architects)
 
 ---
 
-**Fecha de completaci�n:** Sesi�n actual  
+**Fecha de completación:** Sesión actual  
 **Archivos creados:** 4  
 **Archivos modificados:** 6  
 **L�neas de c�digo:** ~800  
 **Errores corregidos:** 5
 
 ## DIA_5_CHECKLIST_VERIFICACION.md
-# ? CHECKLIST DE VERIFICACI�N - CRUD LISTINGS
+# ? CHECKLIST DE VERIFICAción - CRUD LISTINGS
 
 ## ?? Pre-Deployment Checklist
 
-### Compilaci�n
+### Compilación
 - [x] `dotnet build` sin errores
 - [x] `dotnet build src/cima.Blazor.Client` exitoso
-- [x] Sin warnings cr�ticos
+- [x] Sin warnings críticos
 
 ### Archivos Creados
 - [x] `src/cima.Blazor.Client/Pages/Admin/Listings/Index.razor`
 - [x] `src/cima.Blazor.Client/Pages/Admin/Listings/Create.razor`
 - [x] `src/cima.Blazor.Client/Pages/Admin/Listings/Edit.razor`
 
-### Documentaci�n
+### Documentación
 - [x] `docs/DIA_5_CRUD_LISTINGS_COMPLETADO.md` (detallado)
 - [x] `docs/DIA_5_RESUMEN_RAPIDO.md` (ejecutivo)
 - [x] `docs/DIA_5_CHECKLIST_VERIFICACION.md` (este archivo)
@@ -584,15 +584,15 @@ Listo para commit: ? S�
 - [x] **Index:** Listado paginado funcional
 - [x] **Index:** Filtros aplicando correctamente
 - [x] **Index:** Ordenamiento por columnas
-- [x] **Index:** Modal de confirmaci�n eliminar
+- [x] **Index:** Modal de confirmación eliminar
 - [x] **Create:** Formulario con validaciones
-- [x] **Create:** Navegaci�n a Edit despu�s de crear
+- [x] **Create:** Navegación a Edit después de crear
 - [x] **Edit:** Carga de datos existentes
-- [x] **Edit:** Actualizaci�n de campos
-- [x] **Edit:** Gesti�n de estado (Publish/Archive/etc)
-- [x] **Edit:** Galer�a de im�genes (read-only)
+- [x] **Edit:** Actualización de campos
+- [x] **Edit:** Gestión de estado (Publish/Archive/etc)
+- [x] **Edit:** Galería de im�genes (read-only)
 
-### Integraci�n con Backend
+### Integración con Backend
 - [x] `IListingAppService.GetListAsync()` - ? Existe
 - [x] `IListingAppService.GetAsync()` - ? Existe
 - [x] `IListingAppService.CreateAsync()` - ? Existe
@@ -633,12 +633,12 @@ Listo para commit: ? S�
 - [ ] Seleccionar arquitecto
 - [ ] Click "Guardar"
 - [ ] Verifica: Mensaje "Propiedad creada..."
-- [ ] Verifica: Navegaci�n a `/admin/listings/edit/{id}`
+- [ ] Verifica: Navegación a `/admin/listings/edit/{id}`
 - [ ] Verifica: Estado = Borrador
 
 ### Escenario 3: Crear Listing (Validaciones)
 - [ ] Click "Guardar" con campos vac�os
-- [ ] Verifica: Mensajes de validaci�n aparecen
+- [ ] Verifica: Mensajes de validación aparecen
 - [ ] Verifica: No se env�a al servidor
 
 ### Escenario 4: Editar Listing
@@ -650,7 +650,7 @@ Listo para commit: ? S�
 
 ### Escenario 5: Publicar Listing
 - [ ] Editar listing en Draft SIN im�genes
-- [ ] Verifica: Bot�n "Publicar" est� deshabilitado
+- [ ] Verifica: Bot�n "Publicar" está deshabilitado
 - [ ] Verifica: Mensaje "Agregue al menos 1 imagen..."
 - [ ] (Cuando haya im�genes) Click "Publicar"
 - [ ] Verifica: Estado cambia a Published
@@ -665,7 +665,7 @@ Listo para commit: ? S�
 
 ### Escenario 7: Eliminar Listing
 - [ ] Click bot�n eliminar en Index
-- [ ] Verifica: Modal de confirmaci�n aparece
+- [ ] Verifica: Modal de confirmación aparece
 - [ ] Click "Cancelar" ? Modal se cierra
 - [ ] Click eliminar nuevamente
 - [ ] Click "Eliminar" en modal
@@ -679,7 +679,7 @@ Listo para commit: ? S�
 - [ ] Combinar filtros ? Todos aplican
 - [ ] Limpiar filtros ? Todos los resultados
 
-### Escenario 9: Paginaci�n
+### Escenario 9: Paginación
 - [ ] Navegar a p�gina 2 ? Datos cambian
 - [ ] Cambiar PageSize a 25 ? M�s resultados por p�gina
 - [ ] Verifica: Total de registros correcto
@@ -698,7 +698,7 @@ Listo para commit: ? S�
 - [ ] Permisos seeded correctamente
 - [ ] Roles configurados (Admin, Moderator)
 
-### Configuraci�n
+### Configuración
 - [ ] appsettings.json actualizado
 - [ ] Connection strings configurados
 - [ ] User secrets configurados (desarrollo)
@@ -709,7 +709,7 @@ Listo para commit: ? S�
 
 ### Networking
 - [ ] CORS configurado (si API separada)
-- [ ] URLs de producci�n actualizadas
+- [ ] URLs de producción actualizadas
 
 ---
 
@@ -722,7 +722,7 @@ Listo para commit: ? S�
 | L�neas de c�digo | ~1,200 |
 | Tiempo estimado desarrollo | 3 horas |
 | Errores corregidos | 7 |
-| Compilaci�n | ? Exitosa |
+| Compilación | ? Exitosa |
 | Tests manuales | ? Pendiente |
 
 ---
@@ -730,20 +730,20 @@ Listo para commit: ? S�
 ## ?? Warnings / Notas
 
 ### Arquitectos
-?? **NOTA:** La carga de arquitectos est� temporal con lista vac�a.
-- **Acci�n requerida:** Implementar `GetListAsync()` en `IArchitectAppService`
+?? **NOTA:** La carga de arquitectos está temporal con lista vac�a.
+- **Acción requerida:** Implementar `GetListAsync()` en `IArchitectAppService`
 - **Impacto:** No se pueden asignar arquitectos en Create/Edit
 - **Prioridad:** Alta
 
 ### Upload de Im�genes
-?? **NOTA:** Funcionalidad de upload marcada como "pr�ximamente"
-- **Acci�n requerida:** Implementar componente `ImageUploader.razor`
+?? **NOTA:** Funcionalidad de upload marcada como "próximamente"
+- **Acción requerida:** Implementar componente `ImageUploader.razor`
 - **Impacto:** No se pueden publicar listings (requiere 1 imagen)
 - **Prioridad:** Alta
 
 ### Validaciones Backend
 ?? **NOTA:** Validaciones solo en frontend
-- **Acci�n requerida:** Implementar FluentValidation en AppService
+- **Acción requerida:** Implementar FluentValidation en AppService
 - **Impacto:** Seguridad, validaciones pueden bypasearse
 - **Prioridad:** Media
 
@@ -753,7 +753,7 @@ Listo para commit: ? S�
 
 - [ ] Code review completado
 - [ ] Testing manual completado
-- [ ] Documentaci�n revisada
+- [ ] Documentación revisada
 - [ ] Commit message preparado
 - [ ] Branch actualizado con master
 - [ ] CI/CD pipeline verde
@@ -769,16 +769,16 @@ Listo para commit: ? S�
 git add src/cima.Blazor.Client/Pages/Admin/Listings/
 git add docs/DIA_5_*.md
 
-git commit -m "feat(admin): implementar CRUD completo para gesti�n de Listings
+git commit -m "feat(admin): implementar CRUD completo para gestión de Listings
 
-- Agregar Index.razor con DataGrid, filtros y paginaci�n
+- Agregar Index.razor con DataGrid, filtros y paginación
 - Agregar Create.razor con validaciones Blazorise
-- Agregar Edit.razor con gesti�n de estado (Draft/Published/Archived)
+- Agregar Edit.razor con gestión de estado (Draft/Published/Archived)
 - Implementar permisos granulares (Create/Edit/Delete)
 - Agregar manejo de errores y loading states
 - Dise�o responsive con Blazorise components
-- Correcci�n de 7 errores de compilaci�n
-- Documentaci�n completa en docs/DIA_5_*.md
+- Corrección de 7 errores de compilación
+- Documentación completa en docs/DIA_5_*.md
 
 BREAKING CHANGE: Requiere implementar GetListAsync en IArchitectAppService
 
@@ -787,21 +787,21 @@ Ref: #DIA5 #CRUD #Listings #Admin"
 
 ---
 
-**�ltima actualizaci�n:** Sesi�n actual  
+**�ltima actualización:** Sesión actual  
 **Estado:** ? LISTO PARA COMMIT
 
 ## DIA_5_CRUD_LISTINGS_COMPLETADO.md
 # CRUD ADMIN LISTINGS - COMPLETADO
 
-**Fecha:** Sesi�n actual  
+**Fecha:** Sesión actual  
 **Estado:** ? COMPLETADO  
-**Compilaci�n:** ? EXITOSA
+**Compilación:** ? EXITOSA
 
 ---
 
 ## ?? RESUMEN EJECUTIVO
 
-Se han creado las p�ginas de administraci�n CRUD completas para la gesti�n de **Listings (Propiedades)** en el panel de administraci�n de la plataforma CIMA.
+Se han creado las p�ginas de administración CRUD completas para la gestión de **Listings (Propiedades)** en el panel de administración de la plataforma CIMA.
 
 ---
 
@@ -819,41 +819,41 @@ Se han creado las p�ginas de administraci�n CRUD completas para la gesti�n
 - ? Ordenamiento por columnas
 - ? Badges de estado con colores
 - ? Acciones por fila (Editar/Eliminar)
-- ? Modal de confirmaci�n para eliminaci�n
-- ? Verificaci�n de permisos (Create/Edit/Delete)
+- ? Modal de confirmación para eliminación
+- ? Verificación de permisos (Create/Edit/Delete)
 - ? Manejo de errores robusto
-- ? Mensajes de �xito/error con ABP Message
+- ? Mensajes de éxito/error con ABP Message
 
 **Correcciones aplicadas:**
 - ? Imports corregidos (Domain.Shared para enums)
 - ? Tipos de datos correctos (int? para filtros de status)
 - ? Casting expl�cito de totalCount a int
-- ? Separaci�n de handlers de filtros
+- ? Separación de handlers de filtros
 - ? Permisos cacheados para evitar await en templates
 - ? Message.Warn en lugar de Warning
 
 ---
 
-### 2. **Create.razor** (Creaci�n)
+### 2. **Create.razor** (Creación)
 **Ruta:** `src/cima.Blazor.Client/Pages/Admin/Listings/Create.razor`
 
 **Caracter�sticas:**
 - ? Formulario completo con validaciones
 - ? Campos obligatorios marcados con *
 - ? Validaciones de Blazorise (Validations component)
-- ? Selecci�n de arquitecto responsable
+- ? Selección de arquitecto responsable
 - ? Valores por defecto (precio, �rea, etc.)
-- ? Informaci�n contextual (estado inicial Borrador)
-- ? Navegaci�n autom�tica a Edit despu�s de crear
+- ? Información contextual (estado inicial Borrador)
+- ? Navegación automática a Edit después de crear
 - ? Dise�o responsive (8/4 columns)
 - ? Loading state durante guardado
 - ? Validaciones client-side y server-side
 
 **Secciones:**
-1. **Informaci�n B�sica**
+1. **Información B�sica**
    - T�tulo (max 200 chars)
-   - Descripci�n (max 5000 chars, MemoEdit)
-   - Ubicaci�n (max 500 chars)
+   - Descripción (max 5000 chars, MemoEdit)
+   - Ubicación (max 500 chars)
 
 2. **Caracter�sticas**
    - Precio (USD, decimal, min 0)
@@ -866,32 +866,32 @@ Se han creado las p�ginas de administraci�n CRUD completas para la gesti�n
    - Loading state
    - Mensaje si no hay arquitectos
 
-4. **Informaci�n Adicional**
+4. **Información Adicional**
    - Alert informativo sobre estado Borrador
    - Ayuda sobre campos obligatorios
 
 ---
 
-### 3. **Edit.razor** (Edici�n)
+### 3. **Edit.razor** (Edición)
 **Ruta:** `src/cima.Blazor.Client/Pages/Admin/Listings/Edit.razor`
 
 **Caracter�sticas:**
 - ? Carga de datos existentes por ID (route parameter)
 - ? Todos los campos editables de Create
-- ? **Gesti�n de Im�genes:**
-  - Visualizaci�n de im�genes existentes en grid
+- ? **Gestión de Im�genes:**
+  - Visualización de im�genes existentes en grid
   - Contador de im�genes en badge
   - Placeholder para funcionalidad de upload
   - Ordenamiento por DisplayOrder
-- ? **Gesti�n de Estado (State Machine):**
+- ? **Gestión de Estado (State Machine):**
   - **Draft ? Published** (requiere al menos 1 imagen)
   - **Published ? Draft** (despublicar)
   - **Published ? Archived** (archivar)
   - **Archived ? Published** (desarchivar)
-  - Validaci�n de reglas de negocio
+  - Validación de reglas de negocio
 - ? **Metadatos del Registro:**
   - ID (primeros 8 caracteres)
-  - Fecha de creaci�n
+  - Fecha de creación
   - Estado actual con badge
 - ? Loading states independientes:
   - Carga inicial de listing
@@ -928,7 +928,7 @@ Mobile (< 768px):
 
 ### Componentes Blazorise Utilizados
 - ? `Card` / `CardHeader` / `CardBody`
-- ? `DataGrid` con paginaci�n y ordenamiento
+- ? `DataGrid` con paginación y ordenamiento
 - ? `Validations` / `Validation` / `Feedback`
 - ? `TextEdit` / `MemoEdit` / `NumericEdit`
 - ? `Select` / `SelectItem`
@@ -959,7 +959,7 @@ Danger ? Color.Danger (rojo)
 [Authorize(cimaPermissions.Listings.Edit)]     // Edit
 ```
 
-### Verificaci�n Granular
+### Verificación Granular
 ```csharp
 // Index.razor - Cacheados en OnInitializedAsync
 canCreate = await AuthorizationService.IsGrantedAsync(cimaPermissions.Listings.Create);
@@ -1009,7 +1009,7 @@ Verifica que listing.Status == Draft
   ?
 Click en "Publicar"
   ?
-Validaci�n: listing.Images.Count >= 1
+Validación: listing.Images.Count >= 1
   ?
 POST /api/app/listing/{id}/publish (PublishAsync)
   ?
@@ -1028,9 +1028,9 @@ Admin en /admin/listings (Index)
   ?
 Click en bot�n Eliminar (rojo, icono basura)
   ?
-Modal de confirmaci�n aparece
+Modal de confirmación aparece
   ?
-Admin hace clic en "Eliminar" (confirmaci�n)
+Admin hace clic en "Eliminar" (confirmación)
   ?
 DELETE /api/app/listing/{id} (DeleteAsync)
   ?
@@ -1055,11 +1055,11 @@ Propiedad ya no aparece en listado
 MaxLength="200"
 Required
 
-// Descripci�n
+// Descripción
 MaxLength="5000"
 Required
 
-// Ubicaci�n
+// Ubicación
 MaxLength="500"
 Required
 
@@ -1093,10 +1093,10 @@ if (string.IsNullOrWhiteSpace(model.Title))
     ? "El t�tulo es obligatorio"
 
 if (string.IsNullOrWhiteSpace(model.Description))
-    ? "La descripci�n es obligatoria"
+    ? "La descripción es obligatoria"
 
 if (string.IsNullOrWhiteSpace(model.Location))
-    ? "La ubicaci�n es obligatoria"
+    ? "La ubicación es obligatoria"
 ```
 
 ### Business Rules (estado)
@@ -1131,8 +1131,8 @@ if (listing.Status != Published)
    - Error: CS4034 (await en lambda s�ncrona)
    - Solucionado: permisos cacheados en OnInitializedAsync
 
-4. ? **TotalCount conversi�n**
-   - Error: long ? int? conversi�n impl�cita
+4. ? **TotalCount conversión**
+   - Error: long ? int? conversión impl�cita
    - Solucionado: casting expl�cito `@((int)totalCount)`
 
 5. ? **Message.Warning no existe**
@@ -1149,7 +1149,7 @@ if (listing.Status != Published)
 
 ---
 
-## ?? DEPENDENCIAS T�CNICAS
+## ?? DEPENDENCIAS TÉCNICAS
 
 ### Servicios Inyectados
 ```csharp
@@ -1188,11 +1188,11 @@ if (listing.Status != Published)
 
 ### Funcionalidad de Im�genes
 - [ ] Implementar componente `ImageUploader.razor`
-- [ ] Integraci�n con servicio de almacenamiento (Azure Blob, AWS S3)
+- [ ] Integración con servicio de almacenamiento (Azure Blob, AWS S3)
 - [ ] Drag & drop para ordenar im�genes
 - [ ] Preview antes de subir
-- [ ] Validaci�n de tama�o y formato
-- [ ] Compresi�n autom�tica de im�genes
+- [ ] Validación de tama�o y formato
+- [ ] Compresión automática de im�genes
 
 ### Arquitectos
 - [ ] Implementar `GetListAsync()` en `IArchitectAppService`
@@ -1201,14 +1201,14 @@ if (listing.Status != Published)
 
 ### Validaciones Avanzadas
 - [ ] FluentValidation en backend
-- [ ] Validaci�n de duplicados (t�tulo + ubicaci�n)
-- [ ] Validaci�n de precios de mercado
-- [ ] Geocoding de ubicaci�n
+- [ ] Validación de duplicados (t�tulo + ubicación)
+- [ ] Validación de precios de mercado
+- [ ] Geocoding de ubicación
 
 ### UX
 - [ ] Auto-save en Edit (cada X segundos)
-- [ ] Breadcrumbs de navegaci�n
-- [ ] Historial de cambios (auditor�a)
+- [ ] Breadcrumbs de navegación
+- [ ] Historial de cambios (auditoría)
 - [ ] Vista previa de c�mo se ver� publicada
 
 ### Performance
@@ -1226,27 +1226,27 @@ if (listing.Status != Published)
 #### Create.razor
 1. Intentar guardar con campos vac�os ? Validaciones aparecen
 2. Llenar todos los campos ? Guardado exitoso
-3. Verificar navegaci�n autom�tica a Edit
+3. Verificar navegación automática a Edit
 4. Verificar que se crea en estado Draft
 
 #### Edit.razor
 5. Cargar listing existente ? Datos correctos
-6. Modificar campos y guardar ? Actualizaci�n exitosa
+6. Modificar campos y guardar ? Actualización exitosa
 7. Intentar publicar sin im�genes ? Error esperado
 8. Cambiar estados (Draft?Published?Archived) ? Flujo correcto
-9. Verificar que botones cambian seg�n estado
+9. Verificar que botones cambian según estado
 
 #### Index.razor
-10. Paginaci�n funciona correctamente
+10. Paginación funciona correctamente
 11. Filtros actualizan resultados
 12. Ordenamiento por columnas funciona
-13. Modal de confirmaci�n de eliminar aparece
+13. Modal de confirmación de eliminar aparece
 14. Eliminar propiedad ? Desaparece del listado
 15. Permisos: usuario sin permisos no ve botones
 
 ---
 
-## ?? COMANDOS DE VERIFICACI�N
+## ?? COMANDOS DE VERIFICAción
 
 ### Compilar proyecto
 ```powershell
@@ -1274,7 +1274,7 @@ WHERE Name LIKE 'cima.Listings%';
 
 ---
 
-## ?? REFERENCIAS T�CNICAS
+## ?? REFERENCIAS TÉCNICAS
 
 ### ABP Framework
 - [ABP Blazor UI](https://docs.abp.io/en/abp/latest/UI/Blazor/Overall)
@@ -1299,7 +1299,7 @@ WHERE Name LIKE 'cima.Listings%';
 - [x] Index.razor creado y funcional
 - [x] Create.razor creado y funcional
 - [x] Edit.razor creado y funcional
-- [x] Sin errores de compilaci�n
+- [x] Sin errores de compilación
 - [x] Imports correctos
 - [x] Validaciones implementadas
 - [x] Permisos verificados
@@ -1313,10 +1313,10 @@ WHERE Name LIKE 'cima.Listings%';
 
 ### Seguridad
 - [x] Atributos [Authorize]
-- [x] Verificaci�n de permisos granular
+- [x] Verificación de permisos granular
 - [x] Validaciones server-side
 
-### Documentaci�n
+### Documentación
 - [x] Este resumen creado
 - [x] Comentarios en c�digo
 - [x] Referencias a docs externas
@@ -1327,27 +1327,27 @@ WHERE Name LIKE 'cima.Listings%';
 
 **DIA 5 - CRUD ADMIN LISTINGS:** ? **100% COMPLETADO**
 
-Pr�ximo paso sugerido:
-- D�a 6: Dashboard de estad�sticas (`/admin/dashboard`)
-- D�a 6: Gesti�n de ContactRequests (`/admin/contact-requests`)
-- D�a 6: Gesti�n de Architects (`/admin/architects`)
+Próximo paso sugerido:
+- Día 6: Dashboard de estad�sticas (`/admin/dashboard`)
+- Día 6: Gestión de ContactRequests (`/admin/contact-requests`)
+- Día 6: Gestión de Architects (`/admin/architects`)
 
 ---
 
-**Fecha de completaci�n:** Sesi�n actual  
+**Fecha de completación:** Sesión actual  
 **Archivos creados:** 3  
 **L�neas de c�digo:** ~1,200  
-**Compilaci�n:** ? Exitosa  
+**Compilación:** ? Exitosa  
 **Listo para commit:** ? S�
 
 ```bash
 # Commit sugerido
 git add src/cima.Blazor.Client/Pages/Admin/Listings/
-git commit -m "feat(admin): implementar CRUD completo para gesti�n de Listings
+git commit -m "feat(admin): implementar CRUD completo para gestión de Listings
 
-- Agregar Index.razor con filtros avanzados y paginaci�n
+- Agregar Index.razor con filtros avanzados y paginación
 - Agregar Create.razor con validaciones completas
-- Agregar Edit.razor con gesti�n de estado y galer�a
+- Agregar Edit.razor con gestión de estado y galería
 - Implementar permisos granulares (Create/Edit/Delete)
 - Agregar manejo robusto de errores y loading states
 - Dise�o responsive con Blazorise components
@@ -1356,11 +1356,11 @@ Ref: DIA_5_CRUD_LISTINGS_COMPLETADO.md"
 ```
 
 ## DIA_5_PROXIMOS_PASOS.md
-# ?? PR�XIMOS PASOS - POST CRUD LISTINGS
+# ?? PRÓXIMOS PASOS - POST CRUD LISTINGS
 
 **Estado actual:** ? CRUD Listings completado al 100%  
-**Compilaci�n:** ? Exitosa  
-**Siguiente fase:** Completar panel de administraci�n
+**Compilación:** ? Exitosa  
+**Siguiente fase:** Completar panel de administración
 
 ---
 
@@ -1369,7 +1369,7 @@ Ref: DIA_5_CRUD_LISTINGS_COMPLETADO.md"
 ### 1. Implementar GetListAsync en ArchitectAppService
 **Problema:** Create/Edit no pueden cargar lista de arquitectos
 
-**Acci�n:**
+**Acción:**
 ```csharp
 // src/cima.Application.Contracts/Architects/IArchitectAppService.cs
 Task<PagedResultDto<ArchitectDto>> GetListAsync(PagedAndSortedResultRequestDto input);
@@ -1412,7 +1412,7 @@ private async Task LoadArchitects()
 
 **Opciones:**
 
-#### Opci�n A: Componente Simple (R�pido)
+#### Opción A: Componente Simple (R�pido)
 ```razor
 <!-- ImageUploader.razor -->
 <InputFile OnChange="HandleFileSelected" multiple accept="image/*" />
@@ -1431,7 +1431,7 @@ private async Task LoadArchitects()
 }
 ```
 
-#### Opci�n B: Servicio de Almacenamiento (Producci�n)
+#### Opción B: Servicio de Almacenamiento (Producción)
 - Azure Blob Storage
 - AWS S3
 - Cloudinary
@@ -1445,11 +1445,11 @@ public interface IImageStorageService
 }
 ```
 
-**Tiempo estimado:** 2-4 horas (seg�n opci�n)
+**Tiempo estimado:** 2-4 horas (según opción)
 
 ---
 
-## ?? SIGUIENTE D�A (MEDIA PRIORIDAD)
+## ?? SIGUIENTE DÍA (MEDIA PRIORIDAD)
 
 ### 3. P�ginas Admin Restantes
 
@@ -1498,7 +1498,7 @@ public interface IImageStorageService
 
 ---
 
-### 4. Navegaci�n y Layout Admin
+### 4. Navegación y Layout Admin
 
 **Crear men� lateral:**
 ```razor
@@ -1593,7 +1593,7 @@ private async void AutoSave(object state)
 
 ---
 
-### 8. Historial de Cambios (Auditor�a)
+### 8. Historial de Cambios (Auditoría)
 ```csharp
 public interface IAuditLogAppService
 {
@@ -1602,8 +1602,8 @@ public interface IAuditLogAppService
 ```
 
 Mostrar en Edit:
-- Qui�n cre�
-- Qui�n modific� y cu�ndo
+- Quión cre�
+- Quión modific� y cu�ndo
 - Cambios de estado
 - Historial de precios
 
@@ -1613,18 +1613,18 @@ Mostrar en Edit:
 
 ## ?? ROADMAP SUGERIDO
 
-### Esta Semana (D�as 5-7)
+### Esta Semana (Días 5-7)
 ```
-D�a 5 ? CRUD Listings (COMPLETADO)
-D�a 6 ?? GetListAsync Architects + Upload Im�genes
-D�a 7 ?? Dashboard + ContactRequests + Architects
+Día 5 ? CRUD Listings (COMPLETADO)
+Día 6 ?? GetListAsync Architects + Upload Im�genes
+Día 7 ?? Dashboard + ContactRequests + Architects
 ```
 
-### Pr�xima Semana (D�as 8-10)
+### Próxima Semana (Días 8-10)
 ```
-D�a 8: Navegaci�n Admin + Testing Manual
-D�a 9: FluentValidation + Auto-save
-D�a 10: Polish + Bug fixes + Deploy
+Día 8: Navegación Admin + Testing Manual
+Día 9: FluentValidation + Auto-save
+Día 10: Polish + Bug fixes + Deploy
 ```
 
 ---
@@ -1671,7 +1671,7 @@ test('should create listing successfully', async ({ page }) => {
 
 ---
 
-## ?? DOCUMENTACI�N PENDIENTE
+## ?? DOCUMENTAción PENDIENTE
 
 ### Para Desarrolladores
 - [ ] API documentation (Swagger descriptions)
@@ -1687,14 +1687,14 @@ test('should create listing successfully', async ({ page }) => {
 
 ---
 
-## ?? CONFIGURACI�N PENDIENTE
+## ?? CONFIGURAción PENDIENTE
 
 ### Desarrollo
 - [ ] Docker Compose para desarrollo local
 - [ ] Seed data para testing
 - [ ] Scripts de reset database
 
-### Producci�n
+### Producción
 - [ ] CI/CD pipeline (GitHub Actions)
 - [ ] Logging centralizado (Serilog + Seq)
 - [ ] Monitoring (Application Insights)
@@ -1723,8 +1723,8 @@ test('should create listing successfully', async ({ page }) => {
 
 ### Performance
 - Usar `IQueryable` en AppServices para consultas eficientes
-- Implementar cach� para datos est�ticos (arquitectos, etc)
-- Lazy loading de im�genes en galer�as
+- Implementar cach� para datos estáticos (arquitectos, etc)
+- Lazy loading de im�genes en galerías
 
 ### Seguridad
 - Validar siempre en servidor (no confiar en cliente)
@@ -1735,19 +1735,19 @@ test('should create listing successfully', async ({ page }) => {
 - Loading states en todas las operaciones async
 - Confirmaciones para acciones destructivas
 - Mensajes de feedback claros y descriptivos
-- Breadcrumbs para navegaci�n
+- Breadcrumbs para navegación
 
 ### Mantenibilidad
 - Componentes reutilizables en `Components/`
 - Servicios compartidos en `Services/`
 - Constantes en archivos separados
-- DTOs versionados si es API p�blica
+- DTOs versionados si es API pública
 
 ---
 
 ## ?? SOPORTE
 
-### Documentaci�n del Proyecto
+### Documentación del Proyecto
 - `docs/DIA_5_CRUD_LISTINGS_COMPLETADO.md` - Detalle completo
 - `docs/DIA_5_RESUMEN_RAPIDO.md` - Resumen ejecutivo
 - `docs/DIA_5_CHECKLIST_VERIFICACION.md` - Checklist QA
@@ -1759,17 +1759,17 @@ test('should create listing successfully', async ({ page }) => {
 
 ---
 
-**Actualizado:** Sesi�n actual  
-**Pr�xima revisi�n:** Inicio D�a 6
+**Actualizado:** Sesión actual  
+**Próxima revisión:** Inicio Día 6
 
 ## DIA_5_RESUMEN_RAPIDO.md
 # ? RESUMEN R�PIDO - CRUD LISTINGS ADMIN
 
 ## ?? Archivos Creados (3)
 
-1. **Index.razor** - Listado con filtros, paginaci�n, eliminaci�n
-2. **Create.razor** - Formulario creaci�n con validaciones
-3. **Edit.razor** - Formulario edici�n + gesti�n estado + galer�a
+1. **Index.razor** - Listado con filtros, paginación, eliminación
+2. **Create.razor** - Formulario creación con validaciones
+3. **Edit.razor** - Formulario edición + gestión estado + galería
 
 ---
 
@@ -1780,18 +1780,18 @@ test('should create listing successfully', async ({ page }) => {
 - ? Filtros: t�tulo, estado, precio min/max
 - ? Ordenamiento por columnas
 - ? Editar/Eliminar con permisos
-- ? Modal confirmaci�n eliminaci�n
+- ? Modal confirmación eliminación
 
 ### Create (Crear)
 - ? Formulario completo validado
-- ? Selecci�n de arquitecto
-- ? Navegaci�n autom�tica a Edit
+- ? Selección de arquitecto
+- ? Navegación automática a Edit
 - ? Estado inicial: Borrador
 
 ### Edit (Editar)
 - ? Carga de datos existentes
-- ? Galer�a de im�genes (read-only)
-- ? Gesti�n de estado:
+- ? Galería de im�genes (read-only)
+- ? Gestión de estado:
   - Draft ? Published (requiere im�genes)
   - Published ? Archived
   - Archived ? Published
@@ -1843,7 +1843,7 @@ cimaPermissions.Listings.Delete   // Eliminar
 
 ---
 
-## ? Compilaci�n
+## ? Compilación
 
 ```powershell
 dotnet build src/cima.Blazor.Client
@@ -1852,7 +1852,7 @@ dotnet build src/cima.Blazor.Client
 
 ---
 
-## ?? Documentaci�n Completa
+## ?? Documentación Completa
 
 Ver: `docs/DIA_5_CRUD_LISTINGS_COMPLETADO.md`
 

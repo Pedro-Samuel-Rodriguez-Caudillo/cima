@@ -12,16 +12,16 @@ ERROR: failed to build: failed to solve: process "/bin/sh -c dotnet publish \"ci
 ```
 
 **Causa:** 
-La instrucci�n `COPY . .` copia todo en `/src`, pero luego `WORKDIR` usaba `/src/src/cima.Blazor`, creando una estructura incorrecta.
+La instrucción `COPY . .` copia todo en `/src`, pero luego `WORKDIR` usaba `/src/src/cima.Blazor`, creando una estructura incorrecta.
 
-**Soluci�n:**
+**Solución:**
 Cambiar la ruta en el stage de publish:
 ```dockerfile
 # ANTES (incorrecto)
 WORKDIR "/src/src/cima.Blazor"
 RUN dotnet publish "cima.Blazor.csproj" ...
 
-# DESPU�S (correcto)
+# DESpués (correcto)
 RUN dotnet publish "/src/src/cima.Blazor/cima.Blazor.csproj" ...
 ```
 
@@ -32,10 +32,10 @@ error MSB3030: Could not copy the file ".../appsettings.secrets.json" because it
 ```
 
 **Causa:**
-Los archivos `appsettings.secrets.json` existen localmente pero est�n en `.gitignore`, entonces no est�n en GitHub. Los proyectos de test intentan copiarlos siempre.
+Los archivos `appsettings.secrets.json` existen localmente pero están en `.gitignore`, entonces no están en GitHub. Los proyectos de test intentan copiarlos siempre.
 
-**Soluci�n:**
-Agregar condici�n `Exists()` en los `.csproj` de test:
+**Solución:**
+Agregar condición `Exists()` en los `.csproj` de test:
 ```xml
 <!-- ANTES -->
 <Content Include="appsettings.secrets.json">
@@ -43,7 +43,7 @@ Agregar condici�n `Exists()` en los `.csproj` de test:
   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 </Content>
 
-<!-- DESPU�S -->
+<!-- DESpués -->
 <Content Include="appsettings.secrets.json" Condition="Exists('appsettings.secrets.json')">
   <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
   <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -63,7 +63,7 @@ Agregar condici�n `Exists()` en los `.csproj` de test:
 ```
 
 ### 2. `test/cima.HttpApi.Client.ConsoleTestApp/cima.HttpApi.Client.ConsoleTestApp.csproj`
-**Cambio:** Agregar condici�n Exists para appsettings.secrets.json
+**Cambio:** Agregar condición Exists para appsettings.secrets.json
 ```diff
 - <None Remove="appsettings.secrets.json" />
 - <Content Include="appsettings.secrets.json">
@@ -71,7 +71,7 @@ Agregar condici�n `Exists()` en los `.csproj` de test:
 ```
 
 ### 3. `test/cima.TestBase/cima.TestBase.csproj`
-**Cambio:** Agregar condici�n Exists para appsettings.secrets.json
+**Cambio:** Agregar condición Exists para appsettings.secrets.json
 ```diff
 - <None Remove="appsettings.secrets.json" />
 - <Content Include="appsettings.secrets.json">
@@ -94,7 +94,7 @@ Agregar condici�n `Exists()` en los `.csproj` de test:
 ### `etc/scripts/test-docker-build.ps1`
 Script para probar el Dockerfile localmente antes de push.
 
-**Uso b�sico:**
+**Uso bbásico:**
 ```powershell
 # Solo build
 .\etc\scripts\test-docker-build.ps1
@@ -108,15 +108,15 @@ Script para probar el Dockerfile localmente antes de push.
 
 **Caracter�sticas:**
 - ? Build de imagen Docker
-- ? Verificaci�n de imagen creada
-- ? Ejecuci�n de contenedor de prueba (opcional)
+- ? Verificación de imagen creada
+- ? Ejecución de contenedor de prueba (opcional)
 - ? Test de health check endpoint
 - ? Limpieza de im�genes anteriores (opcional)
-- ? Informaci�n de troubleshooting
+- ? Información de troubleshooting
 
 ---
 
-## VALIDACI�N LOCAL
+## VALIDAción LOCAL
 
 ### Paso 1: Build Local
 ```powershell
@@ -147,7 +147,7 @@ dotnet build
 
 ---
 
-## VALIDACI�N EN GITHUB ACTIONS
+## VALIDAción EN GITHUB ACTIONS
 
 ### Workflows Afectados
 
@@ -188,21 +188,21 @@ git commit -m "fix(cicd): corregir Dockerfile y appsettings.secrets.json en CI"
 git push origin master
 ```
 
-### Despu�s de Push
+### Después de Push
 1. Ir a GitHub Actions: https://github.com/Pedro-Samuel-Rodriguez-Caudillo/cima/actions
 2. Verificar que workflow "CI - Build and Test" pasa ?
-3. Si est� en master, verificar workflow "CD - Deploy Production"
+3. Si está en master, verificar workflow "CD - Deploy Production"
 
 ---
 
-## EXPLICACI�N T�CNICA
+## EXPLICAción TÉCNICA
 
-### �Por qu� el Dockerfile ten�a rutas incorrectas?
+### �Por qué el Dockerfile ten�a rutas incorrectas?
 
 ```dockerfile
 # Estructura del filesystem en el contenedor:
 
-# Despu�s de: COPY . .
+# Después de: COPY . .
 /src
   ??? cima.sln
   ??? src/
@@ -213,12 +213,12 @@ git push origin master
 # Al hacer: WORKDIR "/src/src/cima.Blazor"
 # Se creaba: /src/src/cima.Blazor (NO EXISTE)
 
-# Deber�a ser:
+# Debería ser:
 # WORKDIR ya apunta a /src
 # Entonces la ruta correcta es: /src/src/cima.Blazor/cima.Blazor.csproj
 ```
 
-### �Por qu� fallan los tests en CI con secrets.json?
+### �Por qué fallan los tests en CI con secrets.json?
 
 ```
 Local (tu PC):
@@ -226,7 +226,7 @@ Local (tu PC):
 - Build: OK (archivo se copia)
 
 GitHub Actions:
-- appsettings.secrets.json NO EXISTE (no est� en repo)
+- appsettings.secrets.json NO EXISTE (no está en repo)
 - Build sin Condition: FALLA (intenta copiar archivo inexistente)
 - Build con Condition="Exists()": OK (solo copia si existe)
 ```
@@ -236,21 +236,21 @@ GitHub Actions:
 ## TROUBLESHOOTING
 
 ### Error: "Docker build fall�"
-**Soluci�n:**
-1. Verificar Docker Desktop est� corriendo
+**Solución:**
+1. Verificar Docker Desktop está corriendo
 2. Ejecutar: `docker system prune -a` (limpiar cach�)
 3. Reintentar build
 
 ### Error: "Health check fall�"
 **Causa:** Base de datos no disponible en contenedor
 
-**Soluci�n:**
+**Solución:**
 1. Es normal en pruebas locales sin BD
 2. Verificar logs: `docker logs cima-test-local`
-3. Para producci�n, asegurar que PostgreSQL est� corriendo
+3. Para producción, asegurar que PostgreSQL está corriendo
 
 ### Error: "Cannot find image cima:test-local"
-**Soluci�n:**
+**Solución:**
 ```powershell
 # Listar im�genes
 docker images
@@ -261,7 +261,7 @@ docker images
 
 ---
 
-## PR�XIMOS PASOS
+## PRÓXIMOS PASOS
 
 ### 1. Testing Inmediato
 ```powershell
@@ -285,7 +285,7 @@ git push origin master
 
 ---
 
-## COMANDOS �TILES
+## COMANDOS ÚTILES
 
 ### Docker Local
 ```powershell
@@ -327,14 +327,14 @@ git push origin master
 
 ---
 
-## CHECKLIST DE VERIFICACI�N
+## CHECKLIST DE VERIFICAción
 
 ### Antes de Commit
 - [ ] `dotnet build` pasa sin errores
 - [ ] `.\etc\scripts\test-docker-build.ps1` pasa sin errores
 - [ ] No hay archivos secrets.json en staging area (`git status`)
 
-### Despu�s de Push
+### Después de Push
 - [ ] GitHub Actions "CI - Build and Test" pasa ?
 - [ ] Si es master, "CD - Deploy Production" pasa ?
 - [ ] No hay errores de Dockerfile en logs
@@ -345,10 +345,10 @@ git push origin master
 ## RESUMEN
 
 **Problema 1:** Dockerfile con rutas incorrectas
-**Soluci�n:** Corregir ruta en stage publish
+**Solución:** Corregir ruta en stage publish
 
 **Problema 2:** appsettings.secrets.json no existe en CI
-**Soluci�n:** Agregar `Condition="Exists()"` en .csproj de tests
+**Solución:** Agregar `Condition="Exists()"` en .csproj de tests
 
 **Resultado:** CI/CD funcionando correctamente ?
 
@@ -358,7 +358,7 @@ git push origin master
 **Nuevo script:** 1 (`test-docker-build.ps1`)
 **Tiempo estimado de fix:** 5 minutos
 **Testing local:** ? PASADO
-**Testing en CI:** ? PENDIENTE (despu�s de push)
+**Testing en CI:** ? PENDIENTE (después de push)
 
 ## DIA_8_FIX_CICD_QUICK.md
 # FIX CI/CD - RESUMEN EJECUTIVO
@@ -368,15 +368,15 @@ git push origin master
 ### 1. Dockerfile - Ruta Incorrecta en Publish ? ? ?
 **Archivo:** `src/cima.Blazor/Dockerfile`
 **Problema:** `dotnet publish "cima.Blazor.csproj"` fallaba
-**Soluci�n:** Usar ruta absoluta `/src/src/cima.Blazor/cima.Blazor.csproj`
+**Solución:** Usar ruta absoluta `/src/src/cima.Blazor/cima.Blazor.csproj`
 
 ### 2. Tests - appsettings.secrets.json No Encontrado ? ? ?
 **Archivos:** 
 - `test/cima.HttpApi.Client.ConsoleTestApp/cima.HttpApi.Client.ConsoleTestApp.csproj`
 - `test/cima.TestBase/cima.TestBase.csproj`
 
-**Problema:** CI falla porque secrets.json no est� en repo
-**Soluci�n:** Agregar `Condition="Exists('appsettings.secrets.json')"`
+**Problema:** CI falla porque secrets.json no está en repo
+**Solución:** Agregar `Condition="Exists('appsettings.secrets.json')"`
 
 ---
 
@@ -399,14 +399,14 @@ git push origin master
 
 ---
 
-## ?? DESPU�S DE PUSH - MONITOREAR
+## ?? DESpués DE PUSH - MONITOREAR
 
 1. **Ir a GitHub Actions:**
    https://github.com/Pedro-Samuel-Rodriguez-Caudillo/cima/actions
 
 2. **Verificar workflows:**
    - ? CI - Build and Test
-   - ? CD - Deploy Production (si est�s en master)
+   - ? CD - Deploy Production (si estás en master)
 
 3. **Si falla:**
    - Ver logs en GitHub
@@ -417,7 +417,7 @@ git push origin master
 ## ?? ARCHIVOS NUEVOS
 
 - `etc/scripts/test-docker-build.ps1` - Test Docker local
-- `docs/DIA_8_FIX_CICD.md` - Documentaci�n completa
+- `docs/DIA_8_FIX_CICD.md` - Documentación completa
 - `.git_commit_msg_fix_cicd.txt` - Mensaje de commit
 
 ---
@@ -511,7 +511,7 @@ test/cima.TestBase/cima.TestBase.csproj
   </ItemGroup>
 ```
 
-**Raz�n:** Los archivos secrets est�n en `.gitignore`, entonces no existen en GitHub CI.
+**Raz�n:** Los archivos secrets están en `.gitignore`, entonces no existen en GitHub CI.
 
 ---
 
@@ -590,7 +590,7 @@ test/cima.TestBase/cima.TestBase.csproj
 
 ## ?? COMANDOS R�PIDOS
 
-### Opci�n A: Testing Completo
+### Opción A: Testing Completo
 ```powershell
 # 1. Build local
 dotnet build
@@ -604,7 +604,7 @@ git commit -F .git_commit_msg_fix_cicd.txt
 git push origin master
 ```
 
-### Opci�n B: Quick Push
+### Opción B: Quick Push
 ```powershell
 # Si conf�as en los cambios
 dotnet build && `
@@ -655,7 +655,7 @@ git push origin master
 ### ? Docker build local falla
 
 ```powershell
-# Verificar Docker est� corriendo
+# Verificar Docker está corriendo
 docker ps
 
 # Limpiar cach�
@@ -701,7 +701,7 @@ docker system prune -a
 
 ## ?? IMPACTO
 
-| M�trica | Antes | Despu�s |
+| M�trica | Antes | Después |
 |---------|-------|---------|
 | CI Build | ? FALLA | ? PASA |
 | Docker Build | ? FALLA | ? PASA |
@@ -731,7 +731,7 @@ docker system prune -a
 
 ---
 
-## ?? SIGUIENTE ACCI�N
+## ?? SIGUIENTE ACción
 
 ```powershell
 # Ejecutar ahora:
@@ -745,7 +745,7 @@ git push origin master
 
 ---
 
-**Creado:** D�a 8
+**Creado:** Día 8
 **Tipo:** Fix CI/CD
 **Prioridad:** Alta
 **Confianza:** 95%
@@ -769,7 +769,7 @@ dotnet add package AspNetCore.HealthChecks.NpgSql
 
 #### A. `src/cima.Blazor/cimaBlazorModule.cs`
 - Agregados using statements para HealthChecks
-- Agregado m�todo `ConfigureHealthChecks` con configuraci�n de PostgreSQL
+- Agregado m�todo `ConfigureHealthChecks` con configuración de PostgreSQL
 - Mapeados endpoints en `OnApplicationInitialization`:
   - `/health` - Health check completo con detalles
   - `/health/ready` - Readiness probe (para Kubernetes/Docker)
@@ -795,16 +795,16 @@ dotnet add package AspNetCore.HealthChecks.NpgSql
 ### Opcion 1: Health Checks Nativos de ASP.NET Core
 Estos son los que configuramos en `cimaBlazorModule.cs` usando `MapHealthChecks`:
 
-| Endpoint | Descripci�n | Uso |
+| Endpoint | Descripción | Uso |
 |----------|-------------|-----|
 | `/health` | Health check completo con detalles de BD | Monitoreo general |
-| `/health/ready` | Verifica que BD est� lista | Readiness probe Kubernetes |
+| `/health/ready` | Verifica que BD está lista | Readiness probe Kubernetes |
 | `/health/live` | Siempre retorna 200 OK | Liveness probe Kubernetes |
 
 ### Opcion 2: API Controller Custom
 Estos son del `HealthController` personalizado:
 
-| Endpoint | Descripci�n | Uso |
+| Endpoint | Descripción | Uso |
 |----------|-------------|-----|
 | `/api/health` | Verifica BD + cuenta de listings | Monitoring detallado |
 | `/api/health/ping` | Simple pong response | Liveness Docker/curl |
@@ -814,9 +814,9 @@ Estos son del `HealthController` personalizado:
 
 ## COMO PROBAR
 
-### PASO 1: Detener la Aplicaci�n
+### PASO 1: Detener la Aplicación
 ```powershell
-# Si la aplicaci�n est� corriendo, detenerla
+# Si la aplicación está corriendo, detenerla
 # En Visual Studio: Stop debugging
 # O en terminal donde corre: Ctrl+C
 ```
@@ -827,7 +827,7 @@ Estos son del `HealthController` personalizado:
 dotnet build
 ```
 
-### PASO 3: Iniciar la Aplicaci�n
+### PASO 3: Iniciar la Aplicación
 ```powershell
 cd src/cima.Blazor
 dotnet run
@@ -835,12 +835,12 @@ dotnet run
 
 ### PASO 4: Probar Endpoints (en otra terminal)
 
-#### Opci�n A: Usar el Script PowerShell
+#### Opción A: Usar el Script PowerShell
 ```powershell
 ./etc/scripts/test-health-endpoints.ps1
 ```
 
-#### Opci�n B: Probar Manualmente
+#### Opción B: Probar Manualmente
 
 **Health checks nativos:**
 ```powershell
@@ -866,7 +866,7 @@ Invoke-WebRequest -Uri "http://localhost:8080/api/health/ping" -Method Get
 Invoke-WebRequest -Uri "http://localhost:8080/api/health/ready" -Method Get
 ```
 
-#### Opci�n C: Usar curl
+#### Opción C: Usar curl
 ```bash
 # Health checks nativos
 curl http://localhost:8080/health
@@ -879,7 +879,7 @@ curl http://localhost:8080/api/health/ping
 curl http://localhost:8080/api/health/ready
 ```
 
-#### Opci�n D: Usar el Navegador
+#### Opción D: Usar el Navegador
 ```
 http://localhost:8080/health
 http://localhost:8080/api/health
@@ -977,8 +977,8 @@ docker exec cima-blazor-prod curl http://localhost:8080/api/health/ping
 ## TROUBLESHOOTING
 
 ### Error: "Cannot connect to database"
-**Soluci�n:**
-1. Verificar que PostgreSQL est� corriendo
+**Solución:**
+1. Verificar que PostgreSQL está corriendo
 2. Verificar connection string en `appsettings.json`
 3. Verificar que DbMigrator ejecut� las migraciones
 
@@ -995,7 +995,7 @@ dotnet run
 ```
 
 ### Error: "Pending migrations"
-**Soluci�n:**
+**Solución:**
 ```powershell
 cd src/cima.DbMigrator
 dotnet run
@@ -1003,11 +1003,11 @@ dotnet run
 
 ### Error: "404 Not Found"
 **Causas posibles:**
-1. La aplicaci�n no est� corriendo
-2. Puerto incorrecto (deber�a ser 8080)
+1. La aplicación no está corriendo
+2. Puerto incorrecto (debería ser 8080)
 3. Endpoint URL incorrecto
 
-**Soluci�n:**
+**Solución:**
 ```powershell
 # Verificar que la app corre
 curl http://localhost:8080
@@ -1017,8 +1017,8 @@ curl http://localhost:8080
 ```
 
 ### Error: "Connection refused"
-**Soluci�n:**
-1. Iniciar la aplicaci�n
+**Solución:**
+1. Iniciar la aplicación
 2. Verificar que usa puerto 8080
 3. Verificar firewall no bloquea puerto
 
@@ -1028,18 +1028,18 @@ curl http://localhost:8080
 
 ### Para Docker/Kubernetes
 - **Liveness**: `/api/health/ping` (no accede BD, m�s r�pido)
-- **Readiness**: `/health/ready` (verifica BD est� lista)
+- **Readiness**: `/health/ready` (verifica BD está lista)
 
 ### Para Monitoreo/Dashboards
 - `/health` - Vista completa del estado
-- `/api/health` - Informaci�n detallada incluyendo contadores
+- `/api/health` - Información detallada incluyendo contadores
 
 ### Para Debugging
 - `/api/health` - Muestra detalles completos incluyendo conteo de registros
 - `/api/health/ready` - Verifica migraciones pendientes
 
 ### Para Load Balancers
-- `/health/live` - Verificaci�n r�pida sin l�gica
+- `/health/live` - Verificación r�pida sin l�gica
 - `/api/health/ping` - Simple pong response
 
 ---
@@ -1047,7 +1047,7 @@ curl http://localhost:8080
 ## PROXIMO PASO
 
 ### 1. DETENER LA APLICACION
-Si est� corriendo en Visual Studio o terminal, detenerla.
+Si está corriendo en Visual Studio o terminal, detenerla.
 
 ### 2. COMPILAR Y EJECUTAR
 ```powershell
@@ -1080,7 +1080,7 @@ Todos los endpoints deben retornar:
 
 ## ARCHIVOS MODIFICADOS
 
-1. `src/cima.Blazor/cimaBlazorModule.cs` - Configuraci�n health checks
+1. `src/cima.Blazor/cimaBlazorModule.cs` - Configuración health checks
 2. `src/cima.Blazor/Controllers/HealthController.cs` - Controller con endpoints custom
 3. `docker-compose.prod.yml` - Health check en Docker
 4. `src/cima.Blazor/cima.Blazor.csproj` - Paquete NuGet agregado
@@ -1125,21 +1125,21 @@ curl http://localhost:8080/api/health/ping"
 **TESTING**: PENDIENTE ? (requiere detener app actual y reiniciar)
 
 ## DIA_8_PLAN_DETALLADO.md
-# ?? D�A 8 - Detalle de Propiedad, Portafolio y SEO
+# ?? DÍA 8 - Detalle de Propiedad, Portafolio y SEO
 
 **Fecha Estimada**: 26 de Noviembre de 2024  
-**Duraci�n Estimada**: 4-5 horas  
+**Duración Estimada**: 4-5 horas  
 **Prioridad**: ALTA
 
 ---
 
-## ?? Objetivos del D�a
+## ?? Objetivos del Día
 
 ### 1. P�gina de Detalle de Propiedad (2 horas)
-- Galer�a de im�genes con lightbox
-- Informaci�n completa de la propiedad
+- Galería de im�genes con lightbox
+- Información completa de la propiedad
 - Formulario de contacto integrado
-- Mapa de ubicaci�n (Google Maps)
+- Mapa de ubicación (Google Maps)
 - Propiedades relacionadas
 - Botones de compartir (WhatsApp, Facebook, Email)
 
@@ -1157,9 +1157,9 @@ curl http://localhost:8080/api/health/ping"
 - Canonical URLs
 
 ### 4. Optimizaciones (0.5 horas)
-- Compresi�n de im�genes
-- Preload de recursos cr�ticos
-- Service Worker b�sico
+- Compresión de im�genes
+- Preload de recursos críticos
+- Service Worker bbásico
 
 ---
 
@@ -1181,33 +1181,33 @@ Task<List<ListingDto>> GetRelatedPropertiesAsync(Guid listingId, int count = 4);
 #### 1.2 Componente ImageGallery
 Actualizar `src/cima.Blazor.Client/Components/Public/ImageGallery.razor`:
 - Thumbnails navegables
-- Lightbox con navegaci�n
+- Lightbox con navegación
 - Zoom en hover
 - Swipe en mobile
 
 #### 1.3 Componente PropertyDetailInfo
 Crear `src/cima.Blazor.Client/Components/Public/PropertyDetailInfo.razor`:
-- Informaci�n completa de la propiedad
+- Información completa de la propiedad
 - Caracter�sticas en grid
-- Descripci�n expandible
-- Informaci�n del arquitecto
+- Descripción expandible
+- Información del arquitecto
 
-#### 1.4 Integraci�n Google Maps
+#### 1.4 Integración Google Maps
 Crear `src/cima.Blazor.Client/Components/Public/PropertyMap.razor`:
 - Mapa embebido de Google Maps
-- Marcador de ubicaci�n
+- Marcador de ubicación
 - Zoom ajustable
 
 #### 1.5 Formulario de Contacto Contextual
 Actualizar `src/cima.Blazor.Client/Components/Public/ContactForm.razor`:
-- Pre-poblar con informaci�n de la propiedad
-- Validaci�n mejorada
+- Pre-poblar con información de la propiedad
+- Validación mejorada
 - Success/Error messages
 
 #### 1.6 Propiedades Relacionadas
 Crear `src/cima.Blazor.Client/Components/Public/RelatedProperties.razor`:
 - Carousel de propiedades similares
-- Filtrado por categor�a y precio
+- Filtrado por categoría y precio
 - M�ximo 4 propiedades
 
 #### 1.7 Share Buttons
@@ -1236,12 +1236,12 @@ Actualizar `src/cima.Blazor.Client/Pages/Public/Portfolio/Index.razor`:
 - Hero section espec�fico
 - Grid de proyectos
 - Filtros laterales
-- Paginaci�n
+- Paginación
 
 #### 2.4 Caso de Estudio
 Crear `src/cima.Blazor.Client/Pages/Public/Portfolio/CaseStudy.razor`:
 - Detalle del proyecto
-- Galer�a de im�genes
+- Galería de im�genes
 - Proceso de dise�o
 - Testimonios
 
@@ -1289,10 +1289,10 @@ Crear `src/cima.Blazor.Client/Components/SEO/PropertySchema.razor`:
 
 #### 3.3 Sitemap Generator
 Crear `src/cima.Application/SEO/SitemapService.cs`:
-- Generar sitemap.xml autom�ticamente
+- Generar sitemap.xml automáticamente
 - Incluir todas las propiedades publicadas
-- Incluir p�ginas est�ticas
-- Actualizaci�n autom�tica
+- Incluir p�ginas estáticas
+- Actualización automática
 
 #### 3.4 robots.txt
 Crear `src/cima.Blazor/wwwroot/robots.txt`:
@@ -1324,7 +1324,7 @@ Actualizar `src/cima.Blazor/Components/App.razor`:
 
 #### 4.3 Service Worker (Opcional)
 Crear `src/cima.Blazor/wwwroot/service-worker.js`:
-- Cach� de assets est�ticos
+- Cach� de assets estáticos
 - Offline fallback
 - Background sync
 
@@ -1375,7 +1375,7 @@ src/cima.Blazor/Components/App.razor
 
 ---
 
-## ?? Checklist de Implementaci�n
+## ?? Checklist de Implementación
 
 ### Fase 1: Detalle de Propiedad
 - [ ] Agregar m�todo `GetRelatedPropertiesAsync` al backend
@@ -1386,14 +1386,14 @@ src/cima.Blazor/Components/App.razor
 - [ ] Crear `RelatedProperties.razor`
 - [ ] Crear `ShareButtons.razor`
 - [ ] Actualizar `Detail.razor` con todos los componentes
-- [ ] Probar navegaci�n completa
+- [ ] Probar navegación completa
 - [ ] Validar responsive design
 
 ### Fase 2: Portafolio
 - [ ] Crear `PortfolioGrid.razor`
 - [ ] Crear p�gina `Portfolio/Index.razor`
 - [ ] Crear `Portfolio/CaseStudy.razor`
-- [ ] Agregar navegaci�n en men�
+- [ ] Agregar navegación en men�
 - [ ] Probar filtros
 - [ ] Validar carga de proyectos
 
@@ -1409,7 +1409,7 @@ src/cima.Blazor/Components/App.razor
 
 ### Fase 4: Optimizaciones
 - [ ] Implementar `ImageOptimizationService.cs`
-- [ ] Agregar preload de recursos cr�ticos
+- [ ] Agregar preload de recursos críticos
 - [ ] Configurar lazy loading mejorado
 - [ ] (Opcional) Implementar Service Worker
 - [ ] Medir performance con Lighthouse
@@ -1417,7 +1417,7 @@ src/cima.Blazor/Components/App.razor
 
 ---
 
-## ?? Configuraci�n Requerida
+## ?? Configuración Requerida
 
 ### Google Maps API Key
 1. Ir a [Google Cloud Console](https://console.cloud.google.com/)
@@ -1469,7 +1469,7 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 
 ---
 
-## ?? M�tricas de �xito
+## ?? M�tricas de éxito
 
 ### Performance
 - [ ] Lighthouse Performance Score > 90
@@ -1485,7 +1485,7 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 - [ ] robots.txt configurado
 
 ### UX
-- [ ] Galer�a de im�genes fluida
+- [ ] Galería de im�genes fluida
 - [ ] Mapa carga correctamente
 - [ ] Share buttons funcionan
 - [ ] Formulario valida inputs
@@ -1497,31 +1497,31 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 
 ### Google Maps
 **Problema**: Clave API no funciona  
-**Soluci�n**: Verificar que est� habilitada Maps JavaScript API y que el dominio est� en la lista blanca
+**Solución**: Verificar que está habilitada Maps JavaScript API y que el dominio está en la lista blanca
 
 ### Lightbox
 **Problema**: No abre en mobile  
-**Soluci�n**: Usar librer�a compatible con touch events (PhotoSwipe)
+**Solución**: Usar librería compatible con touch events (PhotoSwipe)
 
 ### Meta Tags
 **Problema**: No se actualizan en redes sociales  
-**Soluci�n**: Usar Facebook Debugger para invalidar cach�
+**Solución**: Usar Facebook Debugger para invalidar cach�
 
 ### Sitemap
-**Problema**: No se genera autom�ticamente  
-**Soluci�n**: Implementar endpoint y job scheduler
+**Problema**: No se genera automáticamente  
+**Solución**: Implementar endpoint y job scheduler
 
 ---
 
 ## ?? Recursos y Referencias
 
-### Librer�as Recomendadas
+### Librerías Recomendadas
 - **Lightbox**: PhotoSwipe, GLightbox
 - **Maps**: Google Maps JavaScript API
 - **Share**: Web Share API nativo
 - **SEO**: MetaTags NuGet package
 
-### Documentaci�n
+### Documentación
 - [Open Graph Protocol](https://ogp.me/)
 - [Schema.org - RealEstateListing](https://schema.org/RealEstateListing)
 - [Google Maps JavaScript API](https://developers.google.com/maps/documentation/javascript)
@@ -1532,7 +1532,7 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 ## ? Entregables
 
 1. **P�gina de Detalle Completa**
-   - Con galer�a, mapa, formulario y shares
+   - Con galería, mapa, formulario y shares
    
 2. **P�gina de Portafolio**
    - Grid de proyectos y casos de estudio
@@ -1543,9 +1543,9 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 4. **Optimizaciones**
    - Im�genes, preload, cach�
 
-5. **Documentaci�n**
+5. **Documentación**
    - `DIA_8_COMPLETADO.md`
-   - Gu�a de configuraci�n de Google Maps
+   - Gu�a de configuración de Google Maps
    - Gu�a de SEO
 
 6. **Commits At�micos**
@@ -1554,7 +1554,7 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 
 ---
 
-## ?? Siguientes Pasos (D�a 9)
+## ?? Siguientes Pasos (Día 9)
 
 1. **Admin Dashboard Completo**
    - Estad�sticas visuales
@@ -1572,7 +1572,7 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
    - Conversion funnels
 
 4. **Email Templates**
-   - Notificaciones autom�ticas
+   - Notificaciones automáticas
    - Templates responsive
    - SendGrid/SMTP
 
@@ -1584,4 +1584,4 @@ magick convert input.jpg -quality 85 -resize 1200x output.webp
 
 ---
 
-�Deseas comenzar con el D�a 8 ahora o prefieres hacer push de los commits del D�a 7 primero?
+�Deseas comenzar con el Día 8 ahora o prefieres hacer push de los commits del Día 7 primero?

@@ -1,49 +1,49 @@
 # ?? PLAN DE DESARROLLO: PLATAFORMA INMOBILIARIA CIMA (2 Semanas)
 
-**Fecha inicio:** Pr�ximo lunes  
-**Duraci�n:** 10 d�as laborales (2 semanas)  
+**Fecha inicio:** Próximo lunes  
+**Duración:** 10 días laborales (2 semanas)  
 **Stack:** .NET 9 + Blazor Web App + PostgreSQL + ABP 9.3.6  
 **Equipo:** 1 desarrollador full-stack
 
 ---
 
-## ?? �NDICE
+## ?? ÍNDICE
 
-1. [Visi�n del Proyecto](#visi�n-del-proyecto)
+1. [Visión del Proyecto](#visión-del-proyecto)
 2. [Scope Funcional](#scope-funcional)
-3. [Arquitectura T�cnica](#arquitectura-t�cnica)
+3. [Arquitectura Técnica](#arquitectura-técnica)
 4. [Timeline Detallado (2 Semanas)](#timeline-detallado-2-semanas)
-5. [D�a 1: Setup & Infraestructura](#d�a-1-setup--infraestructura)
+5. [Día 1: Setup & Infraestructura](#día-1-setup--infraestructura)
 6. [Entregables Finales](#entregables-finales)
 7. [Backlog & Fases Futuras](#backlog--fases-futuras)
 
 ---
 
-## ?? VISI�N DEL PROYECTO
+## ?? VISIÓN DEL PROYECTO
 
-**Objetivo:** Dise�ar y entregar una plataforma inmobiliaria moderna, escalable y operativa en 2 semanas.
+**Objetivo:** Diseñar y entregar una plataforma inmobiliaria moderna, escalable y operativa en 2 semanas.
 
 **Usuarios finales:**
-- **P�blico:** Visitantes buscando propiedades
+- **Público:** Visitantes buscando propiedades
 - **Arquitectos:** Proveedores que publican sus proyectos
-- **Moderadores:** Gesti�n de contenido
-- **Admin:** Administraci�n completa del sistema
+- **Moderadores:** Gestión de contenido
+- **Admin:** Administración completa del sistema
 
-**KPIs de �xito:**
+**KPIs de éxito:**
 - ? MVP 100% funcional y deployable
-- ? Zero deuda t�cnica cr�tica
-- ? Documentaci�n lista para handoff
+- ? Zero deuda técnica crítica
+- ? Documentación lista para handoff
 - ? Base s�lida para escalar
 
 ---
 
 ## ?? SCOPE FUNCIONAL
 
-### **Cat�logo P�blico (Sin login)**
-- Listado de propiedades publicadas con paginaci�n
+### **Cat�logo Público (Sin login)**
+- Listado de propiedades publicadas con paginación
 - Filtros: t�tulo, dormitorios, ba�os, rango de precio, �rea
-- P�gina de detalle con galer�a de im�genes
-- Informaci�n de arquitecto responsable
+- P�gina de detalle con galería de im�genes
+- Información de arquitecto responsable
 - Formulario de contacto por propiedad
 
 ### **Portafolios de Arquitectos**
@@ -51,20 +51,20 @@
 - P�gina: `/architects/{id}` ? Perfil con bio y proyectos
 - Grid de propiedades publicadas del arquitecto
 
-### **Panel de Administraci�n (Con login)**
+### **Panel de Administración (Con login)**
 
-#### Gesti�n de Propiedades
+#### Gestión de Propiedades
 - CRUD completo (Crear, Leer, Actualizar, Eliminar)
 - Estados: Borrador, Publicada, Archivada
 - Carga de m�ltiples im�genes (max 10, max 5MB c/u)
-- Edici�n de orden de im�genes
+- Edición de orden de im�genes
 
-#### Gesti�n de Usuarios
+#### Gestión de Usuarios
 - Listado de usuarios por rol
-- Edici�n de datos de arquitecto (bio, portfolio URL)
-- Asignaci�n de propiedades a arquitectos
+- Edición de datos de arquitecto (bio, portfolio URL)
+- Asignación de propiedades a arquitectos
 
-#### Gesti�n de Solicitudes
+#### Gestión de Solicitudes
 - Listado de solicitudes de contacto
 - Filtro por estado (Nueva, Respondida, Cerrada)
 - Marcar como respondida/cerrada
@@ -75,11 +75,11 @@
 - Gr�ficos: Propiedades por estado, solicitudes por mes (�ltimos 3 meses)
 - Tabla de solicitudes recientes sin responder
 
-### **Autenticaci�n & Autorizaci�n**
+### **Autenticación & Autorización**
 - Login con identidad propia (OpenIddict)
 - Roles: Admin, Moderator, Architect
 - Permisos granulares por rol
-- Auditor�a de acciones cr�ticas
+- Auditoría de acciones críticas
 
 ### **Exclusiones (Fuera de MVP)**
 - ? Multi-tenancy
@@ -91,20 +91,20 @@
 
 ---
 
-## ??? ARQUITECTURA T�CNICA
+## ??? ARQUITECTURA TÉCNICA
 
 ### **Stack Seleccionado**
 
-| Capa | Tecnolog�a | Versi�n |
+| Capa | Tecnolog�a | Versión |
 |------|-----------|---------|
 | **Frontend (SSR)** | Blazor Web App (Interactive Server) | .NET 9 |
 | **Frontend (WASM)** | Blazor WebAssembly (Interactive) | .NET 9 |
 | **Backend** | ASP.NET Core + ABP Framework | 9.3.6 |
 | **ORM** | Entity Framework Core | 9.0 |
 | **Base Datos** | PostgreSQL | 16-alpine |
-| **Autenticaci�n** | OpenIddict + ABP Identity | 9.3.6 |
+| **Autenticación** | OpenIddict + ABP Identity | 9.3.6 |
 | **UI Components** | Blazorise | 1.8.1 |
-| **Validaci�n** | FluentValidation | 11.x |
+| **Validación** | FluentValidation | 11.x |
 | **Mapeo** | AutoMapper | 13.x |
 | **Logging** | Serilog | 9.x |
 | **DI/IoC** | Autofac | 7.x |
@@ -117,15 +117,15 @@
 src/
 ??? cima.Domain                          ? Entidades, agregados, l�gica de dominio
 ??? cima.Domain.Shared                   ? DTOs, constantes, enums compartidos
-??? cima.Application                     ? Servicios de aplicaci�n (CRUD, l�gica business)
+??? cima.Application                     ? Servicios de aplicación (CRUD, l�gica business)
 ??? cima.Application.Contracts           ? Interfaces de servicios (abstracciones)
 ??? cima.EntityFrameworkCore             ? DbContext, migraciones, seeders
 ??? cima.HttpApi                         ? Controllers REST (sin vistas)
 ??? cima.HttpApi.Client                  ? Cliente HTTP tipado (consumo de API)
-??? cima.Blazor                          ? App Web principal (SSR + orquestaci�n)
+??? cima.Blazor                          ? App Web principal (SSR + orquestación)
 ??? cima.Blazor.Client                   ? Componentes interactivos (WASM)
-??? cima.DbMigrator                      ? Utilidad de migraci�n de BD
-??? cima.Web                             (si aplica) ? Configuraci�n web
+??? cima.DbMigrator                      ? Utilidad de migración de BD
+??? cima.Web                             (si aplica) ? Configuración web
 
 Database/
 ??? cima ? Base de datos PostgreSQL
@@ -158,7 +158,7 @@ Architect (Ra�z de Agregado)
   ?? UserId: Guid (FK ? Identity.User)
   ?? Bio: string
   ?? PortfolioUrl: string
-  ?? Listings: ICollection<Listing> (navegaci�n)
+  ?? Listings: ICollection<Listing> (navegación)
 
 ContactRequest (Ra�z de Agregado)
   ?? ContactRequestId: Guid
@@ -217,7 +217,7 @@ Listing (dominio)
 EF Core DbContext
   ? [INSERT + ADD images]
 PostgreSQL
-  ? [Confirmaci�n]
+  ? [Confirmación]
 Respuesta
   ? [ListingDto + redirect]
 Admin (Listings/Detail.razor)
@@ -249,43 +249,43 @@ Admin (ContactRequests/Index.razor)
 
 ### **SEMANA 1: Infraestructura & Backend Core**
 
-| D�a | Focus | Duraci�n | Resultado |
+| Día | Focus | Duración | Resultado |
 |-----|-------|----------|-----------|
 | **Lunes** | Setup, modelo de dominio, BD | 8h | Proyectos listos, migraciones, seeders |
 | **Martes** | EF Core, DbContext, migrations | 8h | BD con esquema, datos de prueba |
-| **Mi�rcoles** | Application Services, validaci�n | 8h | CRUD services, permisos, mapeos |
+| **Mi�rcoles** | Application Services, validación | 8h | CRUD services, permisos, mapeos |
 | **Jueves** | API REST, Swagger, CORS | 8h | Controllers documentados, testeable |
 | **Viernes** | Auth, OpenIddict, seguridad | 8h | Usuarios, roles, permisos funcionales |
 
 ### **SEMANA 2: Frontend & Deployment**
 
-| D�a | Focus | Duraci�n | Resultado |
+| Día | Focus | Duración | Resultado |
 |-----|-------|----------|-----------|
-| **Lunes** | Cat�logo p�blico UI | 8h | Listado, filtros, detalle, responsive |
-| **Martes** | Admin CRUD, upload im�genes | 8h | Panel funcional, gesti�n Listings |
+| **Lunes** | Cat�logo público UI | 8h | Listado, filtros, detalle, responsive |
+| **Martes** | Admin CRUD, upload im�genes | 8h | Panel funcional, gestión Listings |
 | **Mi�rcoles** | Portafolios, estad�sticas | 8h | Perfiles arquitectos, dashboard KPI |
 | **Jueves** | Docker, CI/CD, deployment | 8h | Contenedores, GitHub Actions, VPS ready |
-| **Viernes** | QA, bugs, documentaci�n | 8h | MVP pulido, docs completas, handoff |
+| **Viernes** | QA, bugs, documentación | 8h | MVP pulido, docs completas, handoff |
 
 ---
 
-## ?? D�A 1: SETUP & INFRAESTRUCTURA (LUNES)
+## ?? DÍA 1: SETUP & INFRAESTRUCTURA (LUNES)
 
-### **Objetivo del D�a**
+### **Objetivo del Día**
 Al finalizar viernes tendr�s:
-- ? Soluci�n compilada sin errores
+- ? Solución compilada sin errores
 - ? Base de datos PostgreSQL corriendo localmente
 - ? Modelo de dominio implementado
 - ? Migrations iniciales
-- ? Data seeders b�sicos
+- ? Data seeders bbásicos
 - ? Repositorios de lectura-escritura
 
 ### **Tareas Detalladas (Con Tiempos)**
 
 #### **08:00 - 09:00 | 1. Validar Setup Existente**
 
-**Qu� hacer:**
-1. Abrir soluci�n `cima.sln`
+**Qué hacer:**
+1. Abrir solución `cima.sln`
 2. Verificar proyectos existentes:
    ```
    ? cima.Blazor (Servidor Web App)
@@ -315,7 +315,7 @@ Al finalizar viernes tendr�s:
    - Confirmar: `.AddInteractiveServerComponents()` + `.AddInteractiveWebAssemblyComponents()`
 
 **Checklist:**
-- [ ] Soluci�n abre sin errores
+- [ ] Solución abre sin errores
 - [ ] .NET 9 SDK instalado (`dotnet --version`)
 - [ ] Proyectos compilables (`dotnet build`)
 
@@ -323,7 +323,7 @@ Al finalizar viernes tendr�s:
 
 #### **09:00 - 10:30 | 2. Configurar PostgreSQL Local (Docker)**
 
-**Qu� hacer:**
+**Qué hacer:**
 
 1. **Levantar contenedor** (PowerShell/Terminal):
 ```powershell
@@ -339,7 +339,7 @@ docker run --name cima-postgres `
 docker start cima-postgres
 ```
 
-2. **Verificar conexi�n** (usando pgAdmin o DBeaver):
+2. **Verificar conexión** (usando pgAdmin o DBeaver):
    - Host: `localhost`
    - Port: `5432`
    - User: `postgres`
@@ -364,7 +364,7 @@ docker start cima-postgres
 
 #### **10:30 - 12:00 | 3. Definir Modelo de Dominio**
 
-**Qu� hacer:**
+**Qué hacer:**
 
 1. **Crear archivo** `src/cima.Domain/Entities/Listing.cs`:
 ```csharp
@@ -391,10 +391,10 @@ namespace cima.Domain.Entities
         public DateTime? LastModifiedAt { get; set; }
         public Guid? LastModifiedBy { get; set; }
 
-        // Colecci�n de im�genes
+        // Colección de im�genes
         public ICollection<ListingImage> Images { get; set; } = new List<ListingImage>();
 
-        // Navegaci�n
+        // Navegación
         public virtual Architect Architect { get; set; }
     }
 
@@ -421,7 +421,7 @@ namespace cima.Domain.Entities
         public string Bio { get; set; }
         public string PortfolioUrl { get; set; }
 
-        // Navegaci�n
+        // Navegación
         public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>();
     }
 }
@@ -447,7 +447,7 @@ namespace cima.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public string ReplyNotes { get; set; }
 
-        // Navegaci�n
+        // Navegación
         public virtual Listing Listing { get; set; }
         public virtual Architect Architect { get; set; }
     }
@@ -490,7 +490,7 @@ namespace cima.Domain.Entities
 **Checklist:**
 - [ ] Archivos creados en `src/cima.Domain/Entities/`
 - [ ] Enums definidos (`ListingStatus`, `ContactRequestStatus`)
-- [ ] Compilaci�n sin errores (`dotnet build`)
+- [ ] Compilación sin errores (`dotnet build`)
 
 ---
 
@@ -500,7 +500,7 @@ namespace cima.Domain.Entities
 
 #### **13:00 - 14:30 | 4. Crear DTOs en Domain.Shared**
 
-**Qu� hacer:**
+**Qué hacer:**
 
 1. **Crear archivo** `src/cima.Domain.Shared/Dtos/ListingDto.cs`:
 ```csharp
@@ -605,13 +605,13 @@ namespace cima.Domain.Shared.Dtos
 
 **Checklist:**
 - [ ] Todos los DTOs creados
-- [ ] Compilaci�n OK
+- [ ] Compilación OK
 
 ---
 
 #### **14:30 - 16:00 | 5. Configurar DbContext (EF Core)**
 
-**Qu� hacer:**
+**Qué hacer:**
 
 1. **Crear archivo** `src/cima.EntityFrameworkCore/CimaDbContext.cs`:
 ```csharp
@@ -652,7 +652,7 @@ namespace cima.EntityFrameworkCore
                 b.Listing(x => x.Area).HasPrecision(10, 2);
                 b.Listing(x => x.Status).IsRequired();
 
-                // �ndices
+                // índices
                 b.HasIndex(x => new { x.Status, x.ArchitectId });
                 b.HasIndex(x => x.CreatedAt);
 
@@ -712,13 +712,13 @@ namespace cima.EntityFrameworkCore
 **Checklist:**
 - [ ] DbContext compilable
 - [ ] Mappeos EF Core correctos
-- [ ] �ndices definidos
+- [ ] índices definidos
 
 ---
 
 #### **16:00 - 17:00 | 6. Crear & Ejecutar Migration Inicial**
 
-**Qu� hacer:**
+**Qué hacer:**
 
 1. **Generar migration**:
 ```powershell
@@ -746,7 +746,7 @@ dotnet ef database update
 
 ---
 
-### **FIN D�A 1**
+### **FIN DÍA 1**
 
 **Resumen de lo logrado:**
 - ? Proyectos configurados (.NET 9, ABP 9.3.6)
@@ -757,45 +757,45 @@ dotnet ef database update
 - ? Migration inicial ejecutada
 - ? BD lista con esquema completo
 
-**Pr�ximos pasos (Martes):**
+**Próximos pasos (Martes):**
 - Crear data seeders (usuarios, propiedades demo)
 - Implementar repositorios
 - Testing de queries b�sicas
 
 ---
 
-## ?? ENTREGABLES FINALES (despu�s de 2 semanas)
+## ?? ENTREGABLES FINALES (después de 2 semanas)
 
 ### **C�digo & Repositorio**
-- ? Soluci�n compilable, sin warnings cr�ticos
+- ? Solución compilable, sin warnings críticos
 - ? Todas las migraciones versionadas
 - ? Data seeders para desarrollo
 - ? `.gitignore` con secretos excluidos
 - ? `common.props` actualizado
 
 ### **Funcionalidades Completadas**
-- ? Cat�logo p�blico (listado, filtros, detalle)
+- ? Cat�logo público (listado, filtros, detalle)
 - ? Panel administrativo (CRUD Listings)
-- ? Upload y gesti�n de im�genes
+- ? Upload y gestión de im�genes
 - ? Portafolios de arquitectos
 - ? Formularios de contacto
-- ? Gesti�n de usuarios y roles
+- ? Gestión de usuarios y roles
 - ? Dashboard de estad�sticas
-- ? Autenticaci�n y autorizaci�n completa
+- ? Autenticación y autorización completa
 
 ### **Infraestructura**
 - ? Dockerfile optimizado (multi-stage)
 - ? docker-compose.yml (desarrollo)
-- ? docker-compose.prod.yml (producci�n)
+- ? docker-compose.prod.yml (producción)
 - ? GitHub Actions CI/CD
 - ? Scripts de deployment a VPS
 
-### **Documentaci�n**
-- ? `ARCHITECTURE.md` ? Estructura t�cnica detallada
-- ? `API.md` ? Documentaci�n de todos los endpoints
+### **Documentación**
+- ? `ARCHITECTURE.md` ? Estructura técnica detallada
+- ? `API.md` ? Documentación de todos los endpoints
 - ? `DATABASE.md` ? Esquema, migraciones, backup
 - ? `DEPLOYMENT.md` ? Gu�a paso a paso de deployment
-- ? `ADMIN_GUIDE.md` ? Manual de operaci�n para cliente
+- ? `ADMIN_GUIDE.md` ? Manual de operación para cliente
 - ? `DEVELOPMENT.md` ? Setup local, debugging, testing
 
 ### **Calidad**
@@ -804,7 +804,7 @@ dotnet ef database update
 - ? Manejo robusto de errores
 - ? Logging centralizado (Serilog)
 - ? Accesibilidad b�sica (labels, alt text)
-- ? Rendimiento optimizado (�ndices BD, lazy loading)
+- ? Rendimiento optimizado (índices BD, lazy loading)
 
 ---
 
@@ -817,8 +817,8 @@ dotnet ef database update
 - Search avanzado (Elasticsearch, opcional)
 
 ### **Fase 3 (Semanas 5-6)**
-- Galer�a de fotos avanzada (carousel 360�, lightbox)
-- B�squeda por ubicaci�n (Google Maps API)
+- Galería de fotos avanzada (carousel 360�, lightbox)
+- B�squeda por ubicación (Google Maps API)
 - Notificaciones por email (SendGrid)
 - Reportes PDF exportables
 
@@ -838,15 +838,15 @@ dotnet ef database update
 
 ## ?? NOTAS OPERACIONALES
 
-| Aspecto | Decisi�n | Justificaci�n |
+| Aspecto | Decisión | Justificación |
 |---------|----------|---------------|
 | **Scope MVP** | Solo cat�logo + admin + auth | M�ximo impacto m�nimo en 2 semanas |
 | **DB Sofware** | PostgreSQL (no SQLite) | Escalable, production-ready |
-| **Auth** | OpenIddict (no terceros) | Control total, simple integraci�n ABP |
+| **Auth** | OpenIddict (no terceros) | Control total, simple integración ABP |
 | **UI Framework** | Blazorise sobre Blazor | Componentes premium, ahorra desarrollo |
 | **DevOps** | Docker + GitHub Actions | Standard industry, f�cil deployment |
 | **Testing** | Manual en MVP (auto en Fase 2) | Trade-off: velocidad vs cobertura |
-| **Logging** | Serilog estructurado | Debugging eficiente en producci�n |
+| **Logging** | Serilog estructurado | Debugging eficiente en producción |
 
 ---
 
@@ -861,7 +861,7 @@ dotnet ef database update
 
 ---
 
-**�ltima actualizaci�n:** [Fecha]  
-**Pr�xima revisi�n:** Viernes EOD (despu�s de Semana 1)  
+**�ltima actualización:** [Fecha]  
+**Próxima revisión:** Viernes EOD (después de Semana 1)  
 **Contacto:** [Tu email]
 

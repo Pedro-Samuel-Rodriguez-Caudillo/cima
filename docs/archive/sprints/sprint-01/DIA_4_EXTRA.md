@@ -1,34 +1,34 @@
 # DIA_4 extras
 
 ## DIA_4_COMANDOS_VERIFICACION.md
-# Comandos de Verificaci�n R�pida - D�a 4
+# Comandos de Verificación R�pida - Día 4
 
 ## ?? Inicio R�pido
 
 ### 1. Compilar y Verificar
 ```powershell
-# Compilar toda la soluci�n
+# Compilar toda la solución
 dotnet build C:\Users\rodri\Documents\Inmobiliaria\cima\cima.sln
 
 # Compilar solo Application layer
 dotnet build C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Application\cima.Application.csproj
 
-# Verificar errores de compilaci�n
+# Verificar errores de compilación
 dotnet build --no-incremental --verbosity detailed
 ```
 
 ---
 
-### 2. Ejecutar la Aplicaci�n
+### 2. Ejecutar la Aplicación
 ```powershell
-# Iniciar PostgreSQL (si no est� corriendo)
+# Iniciar PostgreSQL (si no está corriendo)
 docker start cima-postgres
 
 # Aplicar migraciones (si hay pendientes)
 cd C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.DbMigrator
 dotnet run
 
-# Iniciar la aplicaci�n Blazor
+# Iniciar la aplicación Blazor
 cd C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Blazor
 dotnet run
 ```
@@ -42,7 +42,7 @@ dotnet run
 
 ## ?? Probar Nuevos Endpoints
 
-### 1. Obtener Propiedades Publicadas (SIN AUTENTICACI�N)
+### 1. Obtener Propiedades Publicadas (SIN AUTENTICAción)
 ```powershell
 # PowerShell
 Invoke-WebRequest -Uri "https://localhost:44307/api/app/listing/published?SkipCount=0&MaxResultCount=10" `
@@ -191,7 +191,7 @@ Start-Process "https://localhost:44307/swagger"
 ### Endpoints a verificar en Swagger:
 
 #### Listings
-- ? `GET /api/app/listing/published` (p�blico)
+- ? `GET /api/app/listing/published` (público)
 - ? `GET /api/app/listing`
 - ? `POST /api/app/listing/{id}/publish`
 - ? `POST /api/app/listing/{id}/archive`
@@ -200,8 +200,8 @@ Start-Process "https://localhost:44307/swagger"
 - ? `GET /api/app/listing/by-architect/{architectId}`
 
 #### Architects
-- ? `GET /api/app/architect/{id}` (p�blico)
-- ? `GET /api/app/architect/by-user-id/{userId}` (p�blico)
+- ? `GET /api/app/architect/{id}` (público)
+- ? `GET /api/app/architect/by-user-id/{userId}` (público)
 - ? `POST /api/app/architect`
 - ? `PUT /api/app/architect/{id}`
 - ? `DELETE /api/app/architect/{id}`
@@ -250,7 +250,7 @@ dotnet run
 
 ## ?? Verificar Logs
 
-### Ver logs de la aplicaci�n
+### Ver logs de la aplicación
 ```powershell
 # Logs m�s recientes
 Get-Content "C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Blazor\Logs\logs.txt" -Tail 50
@@ -258,13 +258,13 @@ Get-Content "C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Blazor\Logs\log
 # Logs con errores
 Select-String -Path "C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Blazor\Logs\*.txt" -Pattern "ERROR" | Select-Object -Last 10
 
-# Logs con warnings de publicaci�n sin im�genes
+# Logs con warnings de publicación sin im�genes
 Select-String -Path "C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.Blazor\Logs\*.txt" -Pattern "Publicando propiedad" | Select-Object -Last 5
 ```
 
 ---
 
-## ?? Gesti�n de Permisos
+## ?? Gestión de Permisos
 
 ### Verificar permisos del rol admin
 ```sql
@@ -291,14 +291,14 @@ ORDER BY "Name";
 
 ---
 
-## ?? Soluci�n de Problemas Comunes
+## ?? Solución de Problemas Comunes
 
 ### Problema 1: "Connection refused" al conectar a PostgreSQL
 ```powershell
-# Verificar que el contenedor est� corriendo
+# Verificar que el contenedor está corriendo
 docker ps | Select-String cima-postgres
 
-# Si no est� corriendo, iniciarlo
+# Si no está corriendo, iniciarlo
 docker start cima-postgres
 
 # Ver logs del contenedor
@@ -311,7 +311,7 @@ docker logs cima-postgres
 cd C:\Users\rodri\Documents\Inmobiliaria\cima\src\cima.EntityFrameworkCore
 dotnet ef migrations list
 
-# Eliminar �ltima migraci�n (si es necesario)
+# Eliminar �ltima migración (si es necesario)
 dotnet ef migrations remove
 ```
 
@@ -409,12 +409,12 @@ Write-Host "Test completed successfully!"
 
 ---
 
-## ?? Checklist de Verificaci�n Post-D�a 4
+## ?? Checklist de Verificación Post-Día 4
 
-### Compilaci�n
+### Compilación
 - [ ] `dotnet build` sin errores
 - [ ] Solo warnings esperados (nullable references, etc.)
-- [ ] Tiempo de compilaci�n < 10s
+- [ ] Tiempo de compilación < 10s
 
 ### Base de Datos
 - [ ] PostgreSQL corriendo
@@ -432,33 +432,33 @@ Write-Host "Test completed successfully!"
 ### Swagger
 - [ ] Swagger UI carga correctamente
 - [ ] Todos los endpoints visibles
-- [ ] Autenticaci�n con Bearer token funciona
+- [ ] Autenticación con Bearer token funciona
 - [ ] Modelos de request/response visibles
 
 ### Permisos
 - [ ] Rol "admin" tiene todos los permisos
-- [ ] Endpoints p�blicos accesibles sin token
+- [ ] Endpoints públicos accesibles sin token
 - [ ] Endpoints protegidos rechazan sin token
 - [ ] Owner checks funcionan correctamente
 
 ### Logging
 - [ ] Warning se registra al publicar sin im�genes
 - [ ] Logs se guardan en `Logs/` correctamente
-- [ ] No hay errores cr�ticos en logs
+- [ ] No hay errores críticos en logs
 
 ---
 
-## ?? Recursos �tiles
+## ?? Recursos útiles
 
-### Documentaci�n
-- **Gu�a completa D�a 4**: `docs/DIA_4_METODOS_LISTING_COMPLETADOS.md`
+### Documentación
+- **Gu�a completa Día 4**: `docs/DIA_4_METODOS_LISTING_COMPLETADOS.md`
 - **Resumen ejecutivo**: `docs/DIA_4_RESUMEN_EJECUTIVO.md`
 - **Este archivo**: `docs/DIA_4_COMANDOS_VERIFICACION.md`
 
 ### Comandos de emergencia
 ```powershell
 # Si todo falla, reset completo:
-# 1. Detener aplicaci�n (Ctrl+C)
+# 1. Detener aplicación (Ctrl+C)
 # 2. Limpiar binarios
 dotnet clean
 
@@ -476,14 +476,14 @@ cd ../cima.Blazor; dotnet build; dotnet run
 
 ---
 
-**�ltima actualizaci�n**: D�a 4 Post-Implementaci�n  
-**Siguiente**: D�a 5 - CORS, Swagger, FluentValidation  
-**Estado**: ? LISTO PARA VERIFICACI�N
+**�ltima actualización**: Día 4 Post-Implementación  
+**Siguiente**: Día 5 - CORS, Swagger, FluentValidation  
+**Estado**: ? LISTO PARA VERIFICAción
 
 ## DIA_4_METODOS_LISTING_COMPLETADOS.md
-# D�a 4: M�todos Especiales de Listing - COMPLETADO
+# Día 4: M�todos Especiales de Listing - COMPLETADO
 
-## Fecha de Implementaci�n
+## Fecha de Implementación
 **Fecha**: [Actualiza con la fecha actual]
 
 ---
@@ -494,26 +494,26 @@ cd ../cima.Blazor; dotnet build; dotnet run
 - ? `PublishAsync(Guid id)` - Publicar propiedad de Draft ? Published
 - ? `ArchiveAsync(Guid id)` - Archivar propiedad
 - ? `UnarchiveAsync(Guid id)` - Restaurar propiedad archivada ? Published
-- ? `UnpublishAsync(Guid id)` - Revertir publicaci�n ? Draft
-- ? `GetPublishedAsync(GetListingsInput)` - Obtener solo propiedades publicadas (p�blico)
+- ? `UnpublishAsync(Guid id)` - Revertir publicación ? Draft
+- ? `GetPublishedAsync(GetListingsInput)` - Obtener solo propiedades publicadas (público)
 - ? `GetByArchitectAsync(Guid, int, int)` - Obtener propiedades de un arquitecto
 
 ### 2. Mejoras en Filtros
 - ? Filtro por `PropertyType` (House, Apartment, Commercial, Land, Office)
 - ? Filtro por `TransactionType` (Sale, Rent, Lease)
-- ? M�todo helper `ApplySorting()` para reutilizaci�n de l�gica
+- ? M�todo helper `ApplySorting()` para reutilización de l�gica
 
 ### 3. Validaciones de Negocio
 - ? Solo el propietario o admin puede modificar propiedades
-- ? Validaci�n de estados al publicar/archivar
+- ? Validación de estados al publicar/archivar
 - ? Warning en logs si se publica sin im�genes
-- ? Verificaci�n de permisos en cada operaci�n
+- ? Verificación de permisos en cada operación
 
 ---
 
 ## ?? M�todos Implementados
 
-### Gesti�n de Estados
+### Gestión de Estados
 
 #### 1. PublishAsync
 ```csharp
@@ -524,7 +524,7 @@ public async Task<ListingDto> PublishAsync(Guid id)
 - Cambia estado de `Draft` ? `Published`
 - Valida que solo el propietario o admin puede publicar
 - Registra warning si no tiene im�genes (pero permite publicar)
-- Previene re-publicaci�n si ya est� publicada
+- Previene re-publicación si ya está publicada
 
 **Validaciones**:
 - ? Usuario es due�o o admin
@@ -540,7 +540,7 @@ public async Task<ListingDto> ArchiveAsync(Guid id)
 ```
 **Funcionalidad**:
 - Cambia estado a `Archived`
-- Oculta la propiedad de listados p�blicos
+- Oculta la propiedad de listados públicos
 - Mantiene datos hist�ricos
 
 **Uso**:
@@ -556,11 +556,11 @@ public async Task<ListingDto> UnarchiveAsync(Guid id)
 ```
 **Funcionalidad**:
 - Reactiva propiedad archivada ? `Published`
-- Valida que est� en estado `Archived` antes de restaurar
+- Valida que está en estado `Archived` antes de restaurar
 
 **Caso de Uso**:
 - Propiedad vuelve al mercado
-- Transacci�n cancelada
+- Transacción cancelada
 
 ---
 
@@ -570,16 +570,16 @@ public async Task<ListingDto> UnarchiveAsync(Guid id)
 public async Task<ListingDto> UnpublishAsync(Guid id)
 ```
 **Funcionalidad**:
-- Revierte publicaci�n: `Published` ? `Draft`
-- �til para ediciones masivas sin afectar cat�logo p�blico
+- Revierte publicación: `Published` ? `Draft`
+- útil para ediciones masivas sin afectar cat�logo público
 
 **Caso de Uso**:
 - Correcciones extensas
-- Actualizaci�n de im�genes
+- Actualización de im�genes
 
 ---
 
-### Consultas P�blicas
+### Consultas Públicas
 
 #### 5. GetPublishedAsync (NUEVO)
 ```csharp
@@ -587,23 +587,23 @@ public async Task<ListingDto> UnpublishAsync(Guid id)
 public async Task<PagedResultDto<ListingDto>> GetPublishedAsync(GetListingsInput input)
 ```
 **Funcionalidad**:
-- **Sin autenticaci�n** (p�blico)
+- **Sin autenticación** (público)
 - Solo retorna propiedades con `Status = Published`
-- Filtros completos: precio, ubicaci�n, tipo, transacci�n
-- Paginaci�n y ordenamiento
+- Filtros completos: precio, ubicación, tipo, transacción
+- Paginación y ordenamiento
 
 **Filtros Disponibles**:
-- `SearchTerm`: B�squeda en t�tulo, descripci�n, ubicaci�n
+- `SearchTerm`: B�squeda en t�tulo, descripción, ubicación
 - `MinPrice` / `MaxPrice`: Rango de precios
 - `MinBedrooms` / `MinBathrooms`: M�nimos de habitaciones/ba�os
 - `PropertyType`: Tipo de propiedad (0-4)
-- `TransactionType`: Tipo de transacci�n (0-2)
+- `TransactionType`: Tipo de transacción (0-2)
 - `Sorting`: Ordenamiento personalizado
 
 **Opciones de Ordenamiento**:
 - `price` / `pricedesc` ? Precio ascendente/descendente
 - `area` / `areadesc` ? �rea ascendente/descendente
-- `createdat` / `createdat desc` ? Fecha de creaci�n
+- `createdat` / `createdat desc` ? Fecha de creación
 - `title` / `title desc` ? T�tulo alfab�tico
 
 ---
@@ -615,8 +615,8 @@ public async Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
 ```
 **Funcionalidad**:
 - Obtiene todas las propiedades de un arquitecto espec�fico
-- Ordenadas por fecha de creaci�n (m�s recientes primero)
-- Paginaci�n configurable
+- Ordenadas por fecha de creación (m�s recientes primero)
+- Paginación configurable
 
 **Uso**:
 - Portafolio de arquitecto
@@ -624,7 +624,7 @@ public async Task<PagedResultDto<ListingDto>> GetByArchitectAsync(
 
 ---
 
-## ?? Mejoras T�cnicas
+## ?? Mejoras Técnicas
 
 ### M�todo Helper: ApplySorting
 ```csharp
@@ -646,7 +646,7 @@ private IQueryable<Listing> ApplySorting(IQueryable<Listing> queryable, string? 
 ```
 
 **Beneficios**:
-- ? Reutilizaci�n en m�ltiples m�todos
+- ? Reutilización en m�ltiples m�todos
 - ? C�digo DRY (Don't Repeat Yourself)
 - ? F�cil mantenimiento
 - ? Ordenamiento por defecto: m�s recientes primero
@@ -678,7 +678,7 @@ private IQueryable<Listing> ApplySorting(IQueryable<Listing> queryable, string? 
 
 ## ?? Permisos Requeridos
 
-| M�todo | Permiso | Validaci�n Adicional |
+| M�todo | Permiso | Validación Adicional |
 |--------|---------|---------------------|
 | `PublishAsync` | `cimaPermissions.Listings.Publish` | Solo due�o o admin |
 | `ArchiveAsync` | `cimaPermissions.Listings.Archive` | Solo due�o o admin |
@@ -705,7 +705,7 @@ public interface IListingAppService : IApplicationService
 }
 ```
 
-### Despu�s:
+### Después:
 ```csharp
 public interface IListingAppService : IApplicationService
 {
@@ -716,7 +716,7 @@ public interface IListingAppService : IApplicationService
     Task<ListingDto> UpdateAsync(Guid id, CreateUpdateListingDto input);
     Task DeleteAsync(Guid id);
     
-    // M�todos de gesti�n de estado
+    // M�todos de gestión de estado
     Task<ListingDto> PublishAsync(Guid id);
     Task<ListingDto> ArchiveAsync(Guid id);
     Task<ListingDto> UnarchiveAsync(Guid id);        // ? NUEVO
@@ -747,7 +747,7 @@ public class GetListingsInput : PagedAndSortedResultRequestDto
 }
 ```
 
-### Despu�s:
+### Después:
 ```csharp
 public class GetListingsInput : PagedAndSortedResultRequestDto
 {
@@ -785,7 +785,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 2. Obtener propiedades publicadas (p�blico)
+### 2. Obtener propiedades publicadas (público)
 ```http
 GET /api/app/listing/published?
     SearchTerm=casa&
@@ -798,7 +798,7 @@ GET /api/app/listing/published?
     MaxResultCount=10
 ```
 
-**Sin token** (p�blico)
+**Sin token** (público)
 
 ---
 
@@ -819,7 +819,7 @@ GET /api/app/listing/by-architect/{architectId}?
 
 ---
 
-##  Pr�ximos Pasos (D�a 5)
+##  Próximos Pasos (Día 5)
 
 1. **Configurar CORS mejorado**
    - Permitir or�genes espec�ficos
@@ -834,7 +834,7 @@ GET /api/app/listing/by-architect/{architectId}?
    - Validadores para filtros
    
 4. **Rate Limiting**
-   - Limitar requests p�blicos
+   - Limitar requests públicos
    - Proteger endpoints sensibles
 
 5. **Tests Unitarios**
@@ -844,13 +844,13 @@ GET /api/app/listing/by-architect/{architectId}?
 
 ---
 
-## ?? Estad�sticas de Implementaci�n
+## ?? Estad�sticas de Implementación
 
 - **Nuevos m�todos**: 4 (Unarchive, Unpublish, GetPublished, ApplySorting)
 - **M�todos mejorados**: 3 (Publish, Archive, GetList)
 - **Nuevos filtros**: 2 (PropertyType, TransactionType)
 - **L�neas de c�digo agregadas**: ~150
-- **Tiempo de compilaci�n**: 6.3s
+- **Tiempo de compilación**: 6.3s
 - **Errores corregidos**: 3 (ILogger import, GetByArchitect signature, duplicate sorting)
 
 ---
@@ -858,47 +858,47 @@ GET /api/app/listing/by-architect/{architectId}?
 ## ? Checklist Final
 
 - [x] M�todos de estado implementados (Publish, Archive, Unarchive, Unpublish)
-- [x] Consulta p�blica GetPublishedAsync
+- [x] Consulta pública GetPublishedAsync
 - [x] Filtros por PropertyType y TransactionType
 - [x] M�todo helper ApplySorting
 - [x] Validaciones de permisos
-- [x] Compilaci�n exitosa
+- [x] Compilación exitosa
 - [x] Logging configurado
 - [x] Interfaz actualizada
 - [x] DTOs actualizados
-- [ ] Tests unitarios (D�a 5)
-- [ ] Documentaci�n Swagger (D�a 5)
-- [ ] FluentValidation (D�a 5)
+- [ ] Tests unitarios (Día 5)
+- [ ] Documentación Swagger (Día 5)
+- [ ] FluentValidation (Día 5)
 
 ---
 
 ## ?? Estado del Proyecto
 
-### Completado (D�as 1-4)
-- ? Setup & Infraestructura (D�a 1)
-- ? EF Core, Migraciones, Seeders (D�a 2)
-- ? Application Services, Validaci�n (D�a 3)
-- ? ArchitectAppService completo (D�a 4)
-- ? StatisticsAppService completo (D�a 4)
-- ? **ListingAppService con m�todos especiales (D�a 4)** ? T� EST�S AQU�
+### Completado (Días 1-4)
+- ? Setup & Infraestructura (Día 1)
+- ? EF Core, Migraciones, Seeders (Día 2)
+- ? Application Services, Validación (Día 3)
+- ? ArchitectAppService completo (Día 4)
+- ? StatisticsAppService completo (Día 4)
+- ? **ListingAppService con m�todos especiales (Día 4)** ? T� ESTÁS AQU�
 
 ### Pendiente (Semana 2)
-- ?? API REST, Swagger, CORS (D�a 5)
-- ?? Auth, OpenIddict, Seguridad (D�a 5)
-- ?? Cat�logo p�blico UI (D�a 6)
-- ?? Admin CRUD, Upload im�genes (D�a 7)
+- ?? API REST, Swagger, CORS (Día 5)
+- ?? Auth, OpenIddict, Seguridad (Día 5)
+- ?? Cat�logo público UI (Día 6)
+- ?? Admin CRUD, Upload im�genes (Día 7)
 
 ---
 
-**�ltima actualizaci�n**: [Fecha]  
-**Compilaci�n**: ? Exitosa  
-**Tests**: ?? Pendiente D�a 5  
-**Documentaci�n**: ? Completa
+**�ltima actualización**: [Fecha]  
+**Compilación**: ? Exitosa  
+**Tests**: ?? Pendiente Día 5  
+**Documentación**: ? Completa
 
 ## DIA_4_RESUMEN_EJECUTIVO.md
-# Resumen Ejecutivo - Estado del Proyecto D�a 4
+# Resumen Ejecutivo - Estado del Proyecto Día 4
 
-## ?? Objetivos del D�a 4: COMPLETADOS ?
+## ?? Objetivos del Día 4: COMPLETADOS ?
 
 | Objetivo | Estado | Notas |
 |----------|--------|-------|
@@ -906,12 +906,12 @@ GET /api/app/listing/by-architect/{architectId}?
 | StatisticsAppService | ? COMPLETADO | Dashboard stats + m�tricas |
 | ListingAppService - M�todos Especiales | ? COMPLETADO | Publish/Archive/Unarchive/Unpublish |
 | Filtros Avanzados | ? COMPLETADO | PropertyType + TransactionType |
-| Consultas P�blicas | ? COMPLETADO | GetPublishedAsync sin auth |
-| Compilaci�n Limpia | ? COMPLETADO | 0 errores, warnings OK |
+| Consultas Públicas | ? COMPLETADO | GetPublishedAsync sin auth |
+| Compilación Limpia | ? COMPLETADO | 0 errores, warnings OK |
 
 ---
 
-## ?? M�tricas del D�a 4
+## ?? M�tricas del Día 4
 
 ### C�digo Generado
 - **Archivos modificados**: 4
@@ -922,21 +922,21 @@ GET /api/app/listing/by-architect/{architectId}?
 - **DTOs extendidos**: 1
 
 ### Calidad
-- **Errores de compilaci�n**: 0
-- **Warnings cr�ticos**: 0
-- **Coverage de tests**: Pendiente D�a 5
-- **Deuda t�cnica**: M�nima
+- **Errores de compilación**: 0
+- **Warnings críticos**: 0
+- **Coverage de tests**: Pendiente Día 5
+- **Deuda técnica**: M�nima
 
 ### Performance
-- **Tiempo de compilaci�n**: 6.3s
-- **Tiempo de migraci�n**: 4.5s (migraci�n previa)
-- **Queries optimizados**: S� (�ndices ya aplicados)
+- **Tiempo de compilación**: 6.3s
+- **Tiempo de migración**: 4.5s (migración previa)
+- **Queries optimizados**: SÍ(índices ya aplicados)
 
 ---
 
 ## ??? Arquitectura Actual
 
-### Capa de Aplicaci�n (Application Layer)
+### Capa de Aplicación (Application Layer)
 
 ```
 src/cima.Application/
@@ -951,7 +951,7 @@ src/cima.Application/
 ??? Listings/
 ?   ??? ListingAppService.cs ?? (MEJORADO)
 ?       ??? GetListAsync (con filtros extendidos)
-?       ??? GetPublishedAsync (NUEVO - p�blico)
+?       ??? GetPublishedAsync (NUEVO - público)
 ?       ??? GetByArchitectAsync
 ?       ??? GetAsync
 ?       ??? CreateAsync
@@ -965,7 +965,7 @@ src/cima.Application/
 ?
 ??? ContactRequests/
 ?   ??? ContactRequestAppService.cs ?
-?       ??? CreateAsync (p�blico)
+?       ??? CreateAsync (público)
 ?       ??? GetListAsync
 ?       ??? GetByArchitectAsync
 ?       ??? GetAsync
@@ -983,10 +983,10 @@ src/cima.Application/
 
 ## ?? Matriz de Permisos
 
-| Servicio | M�todo | Permiso Requerido | Acceso P�blico |
+| Servicio | M�todo | Permiso Requerido | Acceso Público |
 |----------|--------|------------------|----------------|
 | **ListingAppService** |
-| | GetPublishedAsync | - | ? S� |
+| | GetPublishedAsync | - | ? SÍ|
 | | GetListAsync | Default | ? No |
 | | GetAsync | Default | ? No |
 | | CreateAsync | Create | ? No |
@@ -997,13 +997,13 @@ src/cima.Application/
 | | UnarchiveAsync | Publish | ? No (+ owner check) |
 | | UnpublishAsync | Edit | ? No (+ owner check) |
 | **ArchitectAppService** |
-| | GetAsync | - | ? S� |
-| | GetByUserIdAsync | - | ? S� |
+| | GetAsync | - | ? SÍ|
+| | GetByUserIdAsync | - | ? SÍ|
 | | CreateAsync | Create | ? No |
 | | UpdateAsync | Edit | ? No (+ owner check) |
 | | DeleteAsync | Delete | ? No (admin only) |
 | **ContactRequestAppService** |
-| | CreateAsync | - | ? S� |
+| | CreateAsync | - | ? SÍ|
 | | GetListAsync | View | ? No |
 | | MarkAsRepliedAsync | Reply | ? No (+ owner check) |
 | | CloseAsync | Close | ? No (+ owner check) |
@@ -1018,7 +1018,7 @@ src/cima.Application/
 
 ### Listings
 ```
-PUBLIC (sin autenticaci�n):
+PUBLIC (sin autenticación):
 GET  /api/app/listing/published
 
 PROTECTED (requiere token):
@@ -1036,7 +1036,7 @@ GET    /api/app/listing/by-architect/{architectId}
 
 ### Architects
 ```
-PUBLIC (sin autenticaci�n):
+PUBLIC (sin autenticación):
 GET  /api/app/architect/{id}
 GET  /api/app/architect/by-user-id/{userId}
 
@@ -1048,7 +1048,7 @@ DELETE /api/app/architect/{id}
 
 ### Contact Requests
 ```
-PUBLIC (sin autenticaci�n):
+PUBLIC (sin autenticación):
 POST /api/app/contact-request
 
 PROTECTED (requiere token):
@@ -1076,7 +1076,7 @@ GET  /api/app/statistics/contact-request-stats
 {
   "id": "guid",
   "title": "Casa en venta",
-  "description": "Descripci�n...",
+  "description": "Descripción...",
   "location": "Ciudad",
   "price": 250000,
   "area": 120.5,
@@ -1129,7 +1129,7 @@ stateDiagram-v2
     Archived --> [*]: DeleteAsync()
     
     note right of Published
-        Visible al p�blico
+        Visible al público
         via GetPublishedAsync()
     end note
     
@@ -1148,9 +1148,9 @@ stateDiagram-v2
 
 ## ?? Ejemplos de Uso desde Frontend
 
-### 1. Cat�logo P�blico (Sin Login)
+### 1. Cat�logo Público (Sin Login)
 ```typescript
-// Blazor WASM - P�gina p�blica de cat�logo
+// Blazor WASM - P�gina pública de cat�logo
 const response = await fetch('/api/app/listing/published?' + new URLSearchParams({
     searchTerm: 'casa',
     minPrice: '100000',
@@ -1185,7 +1185,7 @@ const publishListing = async (listingId: string) => {
 };
 ```
 
-### 3. Portafolio de Arquitecto (P�blico)
+### 3. Portafolio de Arquitecto (Público)
 ```typescript
 // P�gina de perfil de arquitecto
 const loadArchitectPortfolio = async (architectId: string) => {
@@ -1203,7 +1203,7 @@ const loadArchitectPortfolio = async (architectId: string) => {
 
 ---
 
-## ?? Configuraci�n Actual
+## ?? Configuración Actual
 
 ### ABP Auto-API
 ```csharp
@@ -1213,7 +1213,7 @@ Configure<AbpAspNetCoreMvcOptions>(options =>
     options.ConventionalControllers.Create(typeof(cimaApplicationModule).Assembly);
 });
 ```
-? Genera autom�ticamente controladores HTTP para todos los AppServices
+? Genera automáticamente controladores HTTP para todos los AppServices
 
 ### Permisos Seeder
 ```csharp
@@ -1228,13 +1228,13 @@ await _permissionDataSeeder.SeedAsync(
     }
 );
 ```
-? Rol "admin" tiene todos los permisos autom�ticamente
+? Rol "admin" tiene todos los permisos automáticamente
 
 ---
 
-## ?? Pr�ximos Pasos (D�a 5)
+## ?? Próximos Pasos (Día 5)
 
-### 1. Configuraci�n CORS Avanzada
+### 1. Configuración CORS Avanzada
 ```csharp
 services.AddCors(options =>
 {
@@ -1258,7 +1258,7 @@ services.AddCors(options =>
 ```
 
 ### 2. Swagger Mejorado
-- ? Documentaci�n XML ya habilitada
+- ? Documentación XML ya habilitada
 - ?? Agregar ejemplos de request/response
 - ?? Agrupar endpoints por dominio
 - ?? Documentar c�digos de error
@@ -1284,7 +1284,7 @@ public class CreateUpdateListingDtoValidator : AbstractValidator<CreateUpdateLis
 
 ### 4. Rate Limiting
 ```csharp
-// Limitar requests p�blicos a cat�logo
+// Limitar requests públicos a cat�logo
 services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("catalog", limiterOptions =>
@@ -1316,20 +1316,20 @@ public async Task PublishAsync_ShouldChangeStatus_WhenDraft()
 ## ?? Progreso del Plan de 2 Semanas
 
 ### Semana 1: Backend Core
-- ? D�a 1: Setup, Modelo de Dominio, BD (100%)
-- ? D�a 2: EF Core, Migraciones, Seeders (100%)
-- ? D�a 3: Application Services Base (100%)
-- ? D�a 4: M�todos Especiales + Filtros (100%) ? **EST�S AQU�**
-- ?? D�a 5: API REST, Swagger, CORS, Validaciones (0%)
+- ? Día 1: Setup, Modelo de Dominio, BD (100%)
+- ? Día 2: EF Core, Migraciones, Seeders (100%)
+- ? Día 3: Application Services Base (100%)
+- ? Día 4: M�todos Especiales + Filtros (100%) ? **ESTÁS AQU�**
+- ?? Día 5: API REST, Swagger, CORS, Validaciones (0%)
 
 ### Semana 2: Frontend & Deploy
-- ?? D�a 6: Cat�logo P�blico UI (0%)
-- ?? D�a 7: Admin CRUD, Upload Im�genes (0%)
-- ?? D�a 8: Portafolios, Estad�sticas UI (0%)
-- ?? D�a 9: Docker, CI/CD, Deployment (0%)
-- ?? D�a 10: QA, Bugs, Documentaci�n Final (0%)
+- ?? Día 6: Cat�logo Público UI (0%)
+- ?? Día 7: Admin CRUD, Upload Im�genes (0%)
+- ?? Día 8: Portafolios, Estad�sticas UI (0%)
+- ?? Día 9: Docker, CI/CD, Deployment (0%)
+- ?? Día 10: QA, Bugs, Documentación Final (0%)
 
-**Progreso Global**: 40% (4/10 d�as)
+**Progreso Global**: 40% (4/10 días)
 
 ---
 
@@ -1340,47 +1340,47 @@ public async Task PublishAsync_ShouldChangeStatus_WhenDraft()
 | Endpoints Implementados | 25 | 24 | ?? 96% |
 | AppServices Completos | 4 | 4 | ?? 100% |
 | Validaciones de Negocio | 15 | 15 | ?? 100% |
-| Tests Unitarios | 20 | 0 | ?? 0% (D�a 5) |
+| Tests Unitarios | 20 | 0 | ?? 0% (Día 5) |
 | Cobertura de C�digo | 80% | - | ? Pendiente |
-| Documentaci�n | 100% | 85% | ?? 85% |
+| Documentación | 100% | 85% | ?? 85% |
 
 ---
 
-## ?? Lecciones Aprendidas (D�a 4)
+## ?? Lecciones Aprendidas (Día 4)
 
 ### ? Lo que funcion� bien:
-1. **ABP Auto-API**: Generaci�n autom�tica de endpoints ahorra tiempo
+1. **ABP Auto-API**: Generación automática de endpoints ahorra tiempo
 2. **Pattern Matching en ApplySorting**: C�digo limpio y mantenible
 3. **Validaciones en cascada**: Owner check + Estado check = seguro
 4. **Logging no bloqueante**: Warning en publish sin im�genes es flexible
 
 ### ?? Desaf�os encontrados:
 1. **ILogger import**: Necesit� `using Microsoft.Extensions.Logging;`
-2. **Firma de GetByArchitectAsync**: Inconsistencia entre interfaz e implementaci�n
+2. **Firma de GetByArchitectAsync**: Inconsistencia entre interfaz e implementación
 3. **Llave extra**: Error de sintaxis al editar archivos largos
 
-### ?? Mejoras para siguientes d�as:
-1. **Tests antes de compilar**: TDD podr�a prevenir errores
-2. **Validadores tempranos**: FluentValidation deber�a estar desde D�a 3
-3. **Documentaci�n inline**: XML docs mientras se codifica, no despu�s
+### ?? Mejoras para siguientes días:
+1. **Tests antes de compilar**: TDD podría prevenir errores
+2. **Validadores tempranos**: FluentValidation debería estar desde Día 3
+3. **Documentación inline**: XML docs mientras se codifica, no después
 
 ---
 
 ## ?? Contacto y Soporte
 
-- **Documentaci�n completa**: `docs/DIA_4_METODOS_LISTING_COMPLETADOS.md`
+- **Documentación completa**: `docs/DIA_4_METODOS_LISTING_COMPLETADOS.md`
 - **Commit message**: `.git_commit_msg_dia4_listings.txt`
 - **Swagger UI**: https://localhost:44307/swagger (cuando corras el proyecto)
-- **Logs**: `logs/` (se crean autom�ticamente)
+- **Logs**: `logs/` (se crean automáticamente)
 
 ---
 
-**�ltima actualizaci�n**: D�a 4 - Post-M�todos Especiales  
-**Pr�xima sesi�n**: D�a 5 - CORS, Swagger, Validaciones  
+**�ltima actualización**: Día 4 - Post-M�todos Especiales  
+**Próxima sesión**: Día 5 - CORS, Swagger, Validaciones  
 **Estado general**: ?? EN TIEMPO Y DENTRO DEL PRESUPUESTO
 
 ## DIA_4_RESUMEN_TAILWIND.md
-# D�a 4 - Configuraci�n de Tailwind CSS - Resumen Ejecutivo
+# Día 4 - Configuración de Tailwind CSS - Resumen Ejecutivo
 
 ## ? Estado: COMPLETADO
 
@@ -1388,7 +1388,7 @@ Fecha: 19 de noviembre de 2025
 
 ## Objetivos Completados
 
-### 1. Instalaci�n y Configuraci�n de Tailwind CSS
+### 1. Instalación y Configuración de Tailwind CSS
 
 ? **Dependencias instaladas**
 - tailwindcss v3.4.0
@@ -1397,25 +1397,25 @@ Fecha: 19 de noviembre de 2025
 - autoprefixer v10.4.22
 - postcss v8.5.6
 
-? **Archivos de configuraci�n creados/actualizados**
+? **Archivos de configuración creados/actualizados**
 - `src/cima.Blazor.Client/tailwind.config.js` - Optimizado para rendimiento
-- `src/cima.Blazor.Client/postcss.config.js` - Nueva configuraci�n PostCSS
+- `src/cima.Blazor.Client/postcss.config.js` - Nueva configuración PostCSS
 - `src/cima.Blazor.Client/package.json` - Scripts npm configurados
 - `src/cima.Blazor/Components/App.razor` - Referencia a CSS agregada
 
-### 2. Sistema de Compilaci�n
+### 2. Sistema de Compilación
 
 ? **Scripts NPM configurados**
 ```json
 {
-  "build:css": "Compilaci�n para producci�n (minificado)",
+  "build:css": "Compilación para producción (minificado)",
   "watch:css": "Modo watch para desarrollo",
   "dev": "Alias para watch:css"
 }
 ```
 
 ? **Scripts PowerShell creados**
-- `etc/scripts/build-tailwind.ps1` - Build de producci�n con estad�sticas
+- `etc/scripts/build-tailwind.ps1` - Build de producción con estad�sticas
 - `etc/scripts/start-tailwind-watch.ps1` - Watcher autom�tico para desarrollo
 
 ### 3. Clases Personalizadas CIMA
@@ -1440,20 +1440,20 @@ Fecha: 19 de noviembre de 2025
 - `cima-info`: #06b6d4 (Cyan)
 
 **Animaciones:**
-- `.fade-in` - Animaci�n de entrada con keyframes
+- `.fade-in` - Animación de entrada con keyframes
 
 ### 4. Optimizaciones Realizadas
 
 ? **Rendimiento**
 - Patrones de contenido espec�ficos (no escanea node_modules)
-- CSS purgado autom�ticamente
-- Minificaci�n en producci�n
+- CSS purgado automáticamente
+- Minificación en producción
 - Autoprefixer para compatibilidad
 
 ? **DX (Developer Experience)**
 - Hot reload con modo watch
 - Scripts automatizados
-- Documentaci�n completa
+- Documentación completa
 
 ## Archivos Modificados
 
@@ -1470,7 +1470,7 @@ docs/DIA_4_RESUMEN_TAILWIND.md (este archivo)
 ```
 src/cima.Blazor.Client/tailwind.config.js (optimizado)
 src/cima.Blazor/Components/App.razor (referencia CSS agregada)
-etc/scripts/README.md (documentaci�n actualizada)
+etc/scripts/README.md (documentación actualizada)
 ```
 
 ### Generados
@@ -1482,16 +1482,16 @@ src/cima.Blazor.Client/node_modules/ (66 paquetes)
 ## Comandos Ejecutados
 
 ```powershell
-# 1. Instalaci�n de dependencias
+# 1. Instalación de dependencias
 cd src/cima.Blazor.Client
 npm install
 # ? 66 packages instalados, 0 vulnerabilidades
 
-# 2. Actualizaci�n de browserslist
+# 2. Actualización de browserslist
 npx update-browserslist-db@latest
 # ? caniuse-lite actualizado
 
-# 3. Compilaci�n inicial
+# 3. Compilación inicial
 npm run build:css
 # ? CSS generado en 908ms
 ```
@@ -1501,13 +1501,13 @@ npm run build:css
 | M�trica | Valor |
 |---------|-------|
 | Tama�o CSS compilado | 10.7 KB |
-| Tiempo de compilaci�n | ~900ms |
+| Tiempo de compilación | ~900ms |
 | Paquetes instalados | 66 |
 | Vulnerabilidades | 0 |
 | Clases personalizadas | 15+ |
 | Colores de marca | 6 |
 
-## Pr�ximos Pasos (D�a 5)
+## Próximos Pasos (Día 5)
 
 ### Componentes Blazor a Crear
 
@@ -1540,7 +1540,7 @@ npm run build:css
    - Sorting options
 
 3. **PropertyDetail.razor**
-   - Galer�a de im�genes
+   - Galería de im�genes
    - Detalles completos
    - Formulario de contacto integrado
 
@@ -1548,7 +1548,7 @@ npm run build:css
 
 - Conectar con `IPropertyAppService`
 - Conectar con `IContactRequestAppService`
-- Implementar autenticaci�n (opcional para p�blico)
+- Implementar autenticación (opcional para público)
 - Agregar loading states con `.cima-spinner`
 
 ## Gu�a de Uso para Desarrollo
@@ -1559,7 +1559,7 @@ npm run build:css
 # Terminal 1: Tailwind watcher
 .\etc\scripts\start-tailwind-watch.ps1
 
-# Terminal 2: Aplicaci�n Blazor
+# Terminal 2: Aplicación Blazor
 dotnet run --project src/cima.Blazor
 ```
 
@@ -1581,7 +1581,7 @@ dotnet run --project src/cima.Blazor
 </div>
 ```
 
-### Build para Producci�n
+### Build para Producción
 
 ```powershell
 # 1. Compilar CSS optimizado
@@ -1590,14 +1590,14 @@ dotnet run --project src/cima.Blazor
 # 2. Build de .NET
 dotnet publish src/cima.Blazor -c Release
 
-# El CSS minificado ya est� incluido en wwwroot
+# El CSS minificado ya está incluido en wwwroot
 ```
 
 ## Troubleshooting
 
 ### ? CSS no se actualiza
 
-**Soluci�n:**
+**Solución:**
 ```powershell
 cd src/cima.Blazor.Client
 Remove-Item wwwroot/css/app.min.css -Force
@@ -1606,22 +1606,22 @@ npm run build:css
 
 ### ? Clases no se aplican
 
-1. Verificar que la clase est� en el patr�n de `content` en `tailwind.config.js`
+1. Verificar que la clase está en el patr�n de `content` en `tailwind.config.js`
 2. Asegurarse de usar clases completas (no din�micas)
 3. Recompilar con `npm run build:css`
 
 ### ? Warning de node_modules
 
-Ya resuelto con la optimizaci�n de patrones en `tailwind.config.js`
+Ya resuelto con la optimización de patrones en `tailwind.config.js`
 
-## Documentaci�n
+## Documentación
 
-?? **Documentaci�n completa disponible en:**
+?? **Documentación completa disponible en:**
 - `docs/CONFIGURACION_TAILWIND.md` - Gu�a detallada
 - `etc/scripts/README.md` - Scripts disponibles
 - `src/cima.Blazor.Client/wwwroot/css/app.css` - Clases definidas
 
-## Checklist de Verificaci�n
+## Checklist de Verificación
 
 - [x] npm install exitoso
 - [x] tailwind.config.js optimizado
@@ -1629,20 +1629,20 @@ Ya resuelto con la optimizaci�n de patrones en `tailwind.config.js`
 - [x] app.min.css generado
 - [x] Referencia en App.razor
 - [x] Scripts PowerShell funcionando
-- [x] Documentaci�n completa
+- [x] Documentación completa
 - [x] 0 vulnerabilidades de seguridad
-- [x] Compilaci�n sin errores
+- [x] Compilación sin errores
 - [x] Patrones de contenido optimizados
 
-## Conclusi�n
+## Conclusión
 
-? **Tailwind CSS est� completamente configurado y listo para desarrollo.**
+? **Tailwind CSS está completamente configurado y listo para desarrollo.**
 
-El sistema est� optimizado para:
+El sistema está optimizado para:
 - ? Desarrollo r�pido con hot reload
-- ?? Builds de producci�n minificados
+- ?? Builds de producción minificados
 - ?? Dise�o consistente con marca CIMA
-- ?? F�cil mantenimiento y extensi�n
+- ?? F�cil mantenimiento y extensión
 
 **Tiempo total invertido:** ~30 minutos
 **Archivos creados:** 4
@@ -1651,4 +1651,4 @@ El sistema est� optimizado para:
 
 ---
 
-**Pr�ximo paso:** Implementar componentes Blazor usando las clases Tailwind ??
+**Próximo paso:** Implementar componentes Blazor usando las clases Tailwind ??
