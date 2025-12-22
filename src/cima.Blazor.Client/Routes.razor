@@ -6,12 +6,13 @@
 @inject NavigationManager Navigation
 
 <CascadingAuthenticationState>
-    <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { 
+    @* ABP modules that expose razor pages (Identity, Permission, Settings) *@
+    <Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="@(new[] {
         typeof(Volo.Abp.PermissionManagement.Blazor.WebAssembly.AbpPermissionManagementBlazorWebAssemblyModule).Assembly,
         typeof(Volo.Abp.SettingManagement.Blazor.WebAssembly.AbpSettingManagementBlazorWebAssemblyModule).Assembly,
         typeof(Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule).Assembly,
         typeof(Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule).Assembly
-    }">
+    })">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
                 <NotAuthorized>
@@ -26,12 +27,18 @@
                     }
                 </NotAuthorized>
                 <Authorizing>
-                    <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
-                        <div class="h-full w-full flex flex-col items-center justify-center min-h-[50vh]">
-                            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Medium" />
-                            <p class="mt-4 text-gray-500 text-sm">@L["Auth:Verifying"]</p>
+                    <div class="auth-checking">
+                        <div class="auth-checking-logo">
+                            <img src="images/logo/4cima - B&W.png" alt="CIMA logo" />
                         </div>
-                    </LayoutView>
+                        <div class="auth-checking-dots" aria-hidden="true">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <p class="mt-4 text-gray-500 text-sm">@L["Auth:Verifying"]</p>
+                    </div>
                 </Authorizing>
             </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="#main-content" />

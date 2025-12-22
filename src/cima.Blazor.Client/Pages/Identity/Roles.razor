@@ -205,18 +205,7 @@
                 @if (_isCreatingRole)
                 {
                     <MudPaper Class="p-4 w-full" Elevation="1" Style="min-width:0;">
-                        @if (_loadingRoleDetail)
-                        {
-                            <MudStack Spacing="1" AlignItems="AlignItems.Center" Class="py-6">
-                                <MudProgressCircular Indeterminate="true" />
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @L["Common:Loading"]
-                                </MudText>
-                            </MudStack>
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2">
+                        <MudStack Spacing="2">
                             <MudText Typo="Typo.h6">@L["Identity:Roles:Create"]</MudText>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">
                                 @L["Identity:Roles:Create:Hint"]
@@ -253,7 +242,18 @@
                     var selectedRole = _selectedRole;
 
                     <MudPaper Class="p-4 w-full" Elevation="1" Style="min-width:0;">
-                        <MudStack Spacing="2">
+                        @if (_loadingRoleDetail)
+                        {
+                            <MudStack Spacing="1" AlignItems="AlignItems.Center" Class="py-6">
+                                <MudProgressCircular Indeterminate="true" />
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @L["Common:Loading"]
+                                </MudText>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack Spacing="2">
                             <MudText Typo="Typo.h6">@selectedRole.Name</MudText>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">
                                 @L["Common:Id"] @selectedRole.Id · @L["Identity:Roles:MembersCount", _roleMembersCount]
@@ -698,13 +698,15 @@
 
     private async Task LoadRolePermissionsAsync(string roleName, int requestId)
     {
+        if (requestId != _roleSelectionVersion)
+        {
+            return;
+        }
+
         if (string.IsNullOrWhiteSpace(roleName))
         {
-            if (requestId == _roleSelectionVersion)
-            {
-                _permissionGroups = new List<PermissionGroupDto>();
-                _loadingPermissions = false;
-            }
+            _permissionGroups = new List<PermissionGroupDto>();
+            _loadingPermissions = false;
             return;
         }
 

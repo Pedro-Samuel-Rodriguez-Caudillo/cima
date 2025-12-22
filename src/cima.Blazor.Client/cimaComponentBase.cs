@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Volo.Abp.Http.Client;
 
 namespace cima.Blazor.Client;
 
@@ -103,6 +104,27 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
     /// </summary>
     protected virtual string GetUserFriendlyErrorMessage(Exception exception)
     {
+        if (exception is AbpRemoteCallException remoteCallException)
+        {
+            var remoteMessage = remoteCallException.Error?.Message;
+            var remoteDetails = remoteCallException.Error?.Details;
+
+            if (!string.IsNullOrWhiteSpace(remoteMessage) && !string.IsNullOrWhiteSpace(remoteDetails))
+            {
+                return $"{remoteMessage} {remoteDetails}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteMessage))
+            {
+                return remoteMessage;
+            }
+
+            if (!string.IsNullOrWhiteSpace(remoteDetails))
+            {
+                return remoteDetails;
+            }
+        }
+
         // Try to extract error code from exception message or data
         // ABP exceptions typically include the code in the message or Data dictionary
         
@@ -132,6 +154,11 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
         if (exception.Message.StartsWith("[") && exception.Message.Contains("]"))
         {
             return exception.Message;
+        }
+
+        if (string.IsNullOrWhiteSpace(exception.Message))
+        {
+            return "Ocurrio un error.";
         }
 
         return exception.Message;

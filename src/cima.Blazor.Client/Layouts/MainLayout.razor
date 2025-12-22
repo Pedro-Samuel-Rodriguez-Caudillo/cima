@@ -8,9 +8,9 @@
 @inject ICimaThemeService ThemeService
 
 <MudThemeProvider Theme="@ThemeService.CurrentTheme" IsDarkMode="@ThemeService.IsDarkMode" />
-<MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
+<MudPopoverProvider />
 
 <MustChangePasswordGuard>
     <a href="#main-content"
