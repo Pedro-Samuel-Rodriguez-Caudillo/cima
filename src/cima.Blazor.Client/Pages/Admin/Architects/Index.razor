@@ -10,7 +10,18 @@
 
 <PageTitle>@L["Admin:Architects:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20">
+<ErrorBoundary>
+    <ErrorContent Context="exception">
+        <div class="min-h-screen bg-neutral-50 pt-20">
+            <div class="cima-container py-10">
+                <MudAlert Severity="Severity.Error">
+                    @GetUserFriendlyErrorMessage(exception)
+                </MudAlert>
+            </div>
+        </div>
+    </ErrorContent>
+    <ChildContent>
+        <div class="min-h-screen bg-neutral-50 pt-20">
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -125,7 +136,9 @@
             </MudCard>
         }
     </div>
-</div>
+        </div>
+    </ChildContent>
+</ErrorBoundary>
 
 @* Dialog para mostrar contraseña temporal después de reset *@
 <MudDialog @bind-Visible="ShowResetDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
@@ -168,6 +181,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         await LoadArchitects();
     }
 
@@ -185,7 +199,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add(string.Format(L["Dashboard:Error:LoadingStats"], ex.Message), Severity.Error);
+            Snackbar.Add(string.Format(L["Dashboard:Error:LoadingStats"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
         }
         finally
         {
@@ -210,7 +224,7 @@
             }
             catch (Exception ex)
             {
-                Snackbar.Add(ex.Message, Severity.Error);
+                Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
             }
         }
     }
@@ -225,7 +239,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
         }
     }
 
@@ -250,7 +264,7 @@
             }
             catch (Exception ex)
             {
-                Snackbar.Add(ex.Message, Severity.Error);
+                Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
             }
         }
     }
@@ -272,7 +286,7 @@
             }
             catch (Exception ex)
             {
-                Snackbar.Add(ex.Message, Severity.Error);
+                Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
             }
         }
     }

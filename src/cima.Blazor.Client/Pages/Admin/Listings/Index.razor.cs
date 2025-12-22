@@ -150,7 +150,7 @@ public partial class Index : cimaComponentBase
     private async Task BulkDelete() =>
         await ConfirmAndExecuteBulk(
             "Eliminar propiedades",
-            $"�Eliminar {SelectedIds.Count} propiedades? Esta acci�n no se puede deshacer.",
+            $"�Eliminar {SelectedIds.Count} propiedades? Esta acción no se puede deshacer.",
             id => ListingService.DeleteAsync(id),
             count => $"{count} propiedades eliminadas");
 
@@ -212,7 +212,7 @@ public partial class Index : cimaComponentBase
     {
         var result = await DialogService.ShowMessageBox(
             "Eliminar Propiedad",
-            "�Est�s seguro de eliminar esta propiedad? Esta acci�n no se puede deshacer.",
+            "�Estás seguro de eliminar esta propiedad? Esta acción no se puede deshacer.",
             yesText: "Eliminar", cancelText: "Cancelar");
 
         if (result != true)

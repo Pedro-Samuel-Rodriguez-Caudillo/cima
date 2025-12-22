@@ -1,328 +1,374 @@
 @page "/properties/{Id:guid}"
 @page "/propiedades/{Id:guid}"
+
+@using System.Globalization
 @using cima.Listings
 @using cima.Listings.Outputs
-@using cima.ContactRequests
 @using cima.Blazor.Client.Services
 @using cima.Blazor.Client.Components.Common
+
 @inject IListingAppService ListingService
-@inject IContactRequestAppService ContactRequestService
 @inject EnumLocalizationService EnumLocalizer
 @inject SeoJsonLdService SeoService
 @inject NavigationManager NavManager
+@inject Microsoft.JSInterop.IJSRuntime JS
+
 @inherits cimaComponentBase
 
 <PageTitle>@(Listing?.Title ?? L["Properties:Title"]) - @L["CompanyName"]</PageTitle>
 
-@* SEO Meta Tags *@
-@if (Listing != null)
+@switch (_state)
 {
-    <SeoMetaTags 
-        Title="@Listing.Title"
-        Description="@GetSeoDescription()"
-        Keywords="@GetSeoKeywords()"
-        ImageUrl="@GetCoverImageUrl()"
-        OgType="product"
-        Price="@Listing.Price"
-        JsonLd="@GetPropertyJsonLd()" />
-}
-
-@if (IsLoading)
-{
-    <div class="min-h-screen bg-white">
-        <div class="cima-container py-12">
-            <div class="cima-skeleton-image mb-8"></div>
-            <div class="space-y-4">
-                <div class="cima-skeleton-text w-3/4"></div>
-                <div class="cima-skeleton-text w-1/2"></div>
-                <div class="cima-skeleton-text w-full"></div>
-            </div>
-        </div>
-    </div>
-}
-else if (Listing == null)
-{
-    <div class="min-h-screen bg-white flex items-center justify-center">
-        <div class="text-center">
-            <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-            <h2 class="text-2xl font-semibold text-neutral-900 mb-2">
-                @L["PropertyDetail:NotFound"]
-            </h2>
-            <a href="/properties" class="cima-btn cima-btn-primary mt-4">
-                @L["PropertyDetail:BackToList"]
-            </a>
-        </div>
-    </div>
-}
-else
-{
-    <div class="min-h-screen bg-white">
-        @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
-        <section class="bg-navy-900">
-            <div class="cima-container pt-24 pb-20 md:pt-20 md:pb-20">
-                <div class="max-w-4xl">
-                    @* Breadcrumbs *@
-                    <nav class="flex items-center text-sm text-navy-200 gap-2 mb-6" aria-label="Breadcrumb">
-                        <a href="/" class="hover:text-white transition-colors">@L["Home"]</a>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <a href="/properties" class="hover:text-white transition-colors">@L["Properties:Title"]</a>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                        <span class="text-white font-medium">@Listing.Title</span>
-                    </nav>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 tracking-tight text-white">
-                        @Listing.Title
-                    </h1>
+    case ViewState.Loading:
+        <div class="min-h-screen bg-white">
+            <div class="cima-container py-12">
+                <div class="cima-skeleton-image mb-8"></div>
+                <div class="space-y-4">
+                    <div class="cima-skeleton-text w-3/4"></div>
+                    <div class="cima-skeleton-text w-1/2"></div>
+                    <div class="cima-skeleton-text w-full"></div>
                 </div>
             </div>
-        </section>
+        </div>
+        break;
 
-        @* Galería de Imágenes *@
-        <ImageGallery Images="@GetGalleryImages()" />
+    case ViewState.NotFound:
+        <div class="min-h-screen bg-white flex items-center justify-center">
+            <div class="text-center">
+                <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <h2 class="text-2xl font-semibold text-neutral-900 mb-2">
+                    @L["PropertyDetail:NotFound"]
+                </h2>
+                <a href="/properties" class="cima-btn cima-btn-primary mt-4">
+                    @L["PropertyDetail:BackToList"]
+                </a>
+            </div>
+        </div>
+        break;
 
-        @* Contenido Principal *@
-        <div class="cima-section">
-            <div class="cima-container">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    @* Columna Principal (2/3) *@
-                    <div class="lg:col-span-2 space-y-8">
-                        @* Header *@
-                        <div>
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1">
-                                    <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-2">
-                                        @Listing.Title
+    case ViewState.Ready:
+        @* SEO Meta Tags *@
+        <SeoMetaTags Title="@Listing!.Title"
+                     Description="@GetSeoDescription()"
+                     Keywords="@GetSeoKeywords()"
+                     ImageUrl="@GetCoverImageUrl()"
+                     OgType="product"
+                     Price="@Listing!.Price"
+                     JsonLd="@GetPropertyJsonLd()" />
+
+        <div class="min-h-screen bg-white">
+            @* Header compacto *@
+            <header class="cima-container pt-24 pb-6">
+                <nav class="flex items-center text-sm text-neutral-500 gap-2 mb-3" aria-label="Breadcrumb">
+                    <a href="/" class="hover:text-neutral-900 transition-colors">@L["Home"]</a>
+                    <span>/</span>
+                    <a href="/properties" class="hover:text-neutral-900 transition-colors">@L["Properties:Title"]</a>
+                    <span>/</span>
+                    <span class="text-neutral-900 font-medium">@Listing!.Title</span>
+                </nav>
+            </header>
+
+            <main class="cima-container pb-12">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+
+                    @* LEFT: Gallery sticky *@
+                    <section class="lg:sticky lg:top-24 lg:self-start">
+                        <div class="rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50">
+                            <ImageGallery Images="@GetGalleryImages()" />
+                        </div>
+                    </section>
+
+                    @* RIGHT: Panel sticky con tabs + scroll interno + CTA bar *@
+                    <section class="lg:sticky lg:top-24 lg:self-start">
+                        <div class="rounded-2xl border border-neutral-200 bg-white overflow-hidden
+                                            lg:max-h-[calc(100vh-6rem)] lg:flex lg:flex-col">
+
+                            @* Header del panel *@
+                            <div class="p-6 border-b border-neutral-200">
+                                <div class="space-y-2">
+                                    <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900">
+                                        @Listing!.Title
                                     </h1>
-                                </div>
 
-                                <div class="text-right">
-                                    <div class="text-3xl md:text-4xl font-bold text-navy-600">
-                                        @Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                                    <div class="flex flex-wrap items-end justify-between gap-3">
+                                        <div class="text-3xl font-bold text-navy-600">
+                                            @Listing!.Price.ToString("C0", new CultureInfo("es-MX"))
+                                        </div>
+
+                                        <div class="text-sm text-neutral-600">
+                                            @EnumLocalizer.GetTransactionTypeName(Listing!.TransactionType)
+                                            · @EnumLocalizer.GetListingStatusName(Listing!.Status)
+                                        </div>
                                     </div>
+
                                     <div class="text-sm text-neutral-600">
-                                        @EnumLocalizer.GetTransactionTypeName(Listing.TransactionType)
-                                    </div>
-                                    <div class="mt-3 flex items-center gap-2 text-sm text-neutral-500 justify-end">
-                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <span class="text-right leading-tight">
-                                            @(Listing.Location?.ToString() ?? L["PropertyDetail:LocationNotAvailable"])
-                                        </span>
+                                        @(Listing!.Location?.ToString() ?? L["PropertyDetail:LocationNotAvailable"])
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap gap-6 p-6 bg-navy-50 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-6 h-6 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
-                                    <div>
-                                        <div class="text-sm text-neutral-600">@L["Properties:Bedrooms"]</div>
-                                        <div class="text-xl font-semibold text-neutral-900">@Listing.Bedrooms</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-6 h-6 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                              d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                                    </svg>
-                                    <div>
-                                        <div class="text-sm text-neutral-600">@L["Properties:Bathrooms"]</div>
-                                        <div class="text-xl font-semibold text-neutral-900">@Listing.Bathrooms</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <svg class="w-6 h-6 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                    </svg>
-                                    <div>
-                                        <div class="text-sm text-neutral-600">@L["Properties:Area"]</div>
-                                        <div class="text-xl font-semibold text-neutral-900">@Listing.Area.ToString("N0") m²</div>
-                                    </div>
+                            @* Tabs *@
+                            <div class="px-6 pt-4">
+                                <div class="inline-flex rounded-xl border border-neutral-200 bg-neutral-50 p-1 gap-1">
+                                    <button type="button" class="@GetTabClass(TabKey.Summary)" @onclick="() => SetTab(TabKey.Summary)">
+                                        @L["Common:Summary"]
+                                    </button>
+                                    <button type="button" class="@GetTabClass(TabKey.Description)" @onclick="() => SetTab(TabKey.Description)">
+                                        @L["PropertyDetail:Description"]
+                                    </button>
+                                    <button type="button" class="@GetTabClass(TabKey.Details)" @onclick="() => SetTab(TabKey.Details)">
+                                        @L["PropertyDetail:Features"]
+                                    </button>
                                 </div>
                             </div>
-                        </div>
 
-                        @* Descripción *@
-                        <div>
-                            <h2 class="text-2xl font-display font-semibold text-neutral-900 mb-4">
-                                @L["PropertyDetail:Description"]
-                            </h2>
-                            <div class="prose prose-neutral max-w-none text-neutral-700 leading-relaxed whitespace-pre-line">
-                                @Listing.Description
-                            </div>
-                        </div>
-
-                        @* Detalles adicionales *@
-                        <div>
-                            <h2 class="text-2xl font-display font-semibold text-neutral-900 mb-4">
-                                @L["PropertyDetail:Features"]
-                            </h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <div>
-                                        <div class="font-medium text-neutral-900">@L["Search:PropertyCategory"]</div>
-                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyCategoryName(Listing.Category)</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <div>
-                                        <div class="font-medium text-neutral-900">@L["Search:PropertyType"]</div>
-                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyTypeName(Listing.Type)</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <div>
-                                        <div class="font-medium text-neutral-900">@L["Search:TransactionType"]</div>
-                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetTransactionTypeName(Listing.TransactionType)</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <div>
-                                        <div class="font-medium text-neutral-900">@L["Common:Status"]</div>
-                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetListingStatusName(Listing.Status)</div>
-                                    </div>
-                                </div>
-
-                                @if (Listing.LandArea > 0)
+                            @* Contenido scrolleable *@
+                            <div class="px-6 pb-24 pt-4 lg:flex-1 lg:overflow-y-auto" @ref="_panelScrollRef">
+                                @switch (_activeTab)
                                 {
-                                    <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                        <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                        </svg>
-                                        <div>
-                                            <div class="font-medium text-neutral-900">@L["Properties:LandArea"]</div>
-                                            <div class="text-sm text-neutral-600">@Listing.LandArea.ToString("N0") m²</div>
-                                        </div>
-                                    </div>
-                                }
+                                    case TabKey.Summary:
+                                        <div class="space-y-6">
+                                            <div class="grid grid-cols-3 gap-3">
+                                                <div class="p-4 rounded-xl bg-navy-50">
+                                                    <div class="text-xs text-neutral-600">@L["Properties:Bedrooms"]</div>
+                                                    <div class="text-lg font-semibold text-neutral-900">@Listing!.Bedrooms</div>
+                                                </div>
+                                                <div class="p-4 rounded-xl bg-navy-50">
+                                                    <div class="text-xs text-neutral-600">@L["Properties:Bathrooms"]</div>
+                                                    <div class="text-lg font-semibold text-neutral-900">@Listing!.Bathrooms</div>
+                                                </div>
+                                                <div class="p-4 rounded-xl bg-navy-50">
+                                                    <div class="text-xs text-neutral-600">@L["Properties:Area"]</div>
+                                                    <div class="text-lg font-semibold text-neutral-900">@Listing!.Area.ToString("N0") m²</div>
+                                                </div>
+                                            </div>
 
-                                @if (Listing.ConstructionArea > 0)
-                                {
-                                    <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                        <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m3-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                        </svg>
-                                        <div>
-                                            <div class="font-medium text-neutral-900">@L["Properties:ConstructionArea"]</div>
-                                            <div class="text-sm text-neutral-600">@Listing.ConstructionArea.ToString("N0") m²</div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                    <div class="text-xs text-neutral-600">@L["Search:PropertyCategory"]</div>
+                                                    <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetPropertyCategoryName(Listing!.Category)</div>
+                                                </div>
+
+                                                <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                    <div class="text-xs text-neutral-600">@L["Search:PropertyType"]</div>
+                                                    <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetPropertyTypeName(Listing!.Type)</div>
+                                                </div>
+
+                                                <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                    <div class="text-xs text-neutral-600">@L["Search:TransactionType"]</div>
+                                                    <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetTransactionTypeName(Listing!.TransactionType)</div>
+                                                </div>
+
+                                                <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                    <div class="text-xs text-neutral-600">@L["Common:Status"]</div>
+                                                    <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetListingStatusName(Listing!.Status)</div>
+                                                </div>
+
+                                                @if (Listing!.LandArea > 0)
+                                                {
+                                                    <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                        <div class="text-xs text-neutral-600">@L["Properties:LandArea"]</div>
+                                                        <div class="text-sm font-medium text-neutral-900">@Listing!.LandArea.ToString("N0") m²</div>
+                                                    </div>
+                                                }
+
+                                                @if (Listing!.ConstructionArea > 0)
+                                                {
+                                                    <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                        <div class="text-xs text-neutral-600">@L["Properties:ConstructionArea"]</div>
+                                                        <div class="text-sm font-medium text-neutral-900">@Listing!.ConstructionArea.ToString("N0") m²</div>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <div class="rounded-2xl border border-neutral-200 bg-white p-4" @ref="_contactRef">
+                                                <ContactForm ListingId="@Id" ListingTitle="@Listing!.Title" />
+                                            </div>
                                         </div>
-                                    </div>
+                                        break;
+
+                                    case TabKey.Description:
+                                        <div class="space-y-3">
+                                            <h2 class="text-xl font-display font-semibold text-neutral-900">
+                                                @L["PropertyDetail:Description"]
+                                            </h2>
+                                            <div class="prose prose-neutral max-w-none text-neutral-700 whitespace-pre-line">
+                                                @Listing!.Description
+                                            </div>
+                                        </div>
+                                        break;
+
+                                    case TabKey.Details:
+                                        <div class="space-y-3">
+                                            <h2 class="text-xl font-display font-semibold text-neutral-900">
+                                                @L["PropertyDetail:Features"]
+                                            </h2>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <div>
+                                                        <div class="font-medium text-neutral-900">@L["Search:PropertyCategory"]</div>
+                                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyCategoryName(Listing!.Category)</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <div>
+                                                        <div class="font-medium text-neutral-900">@L["Search:PropertyType"]</div>
+                                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyTypeName(Listing!.Type)</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <div>
+                                                        <div class="font-medium text-neutral-900">@L["Search:TransactionType"]</div>
+                                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetTransactionTypeName(Listing!.TransactionType)</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                    <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    <div>
+                                                        <div class="font-medium text-neutral-900">@L["Common:Status"]</div>
+                                                        <div class="text-sm text-neutral-600">@EnumLocalizer.GetListingStatusName(Listing!.Status)</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        break;
                                 }
                             </div>
-                        </div>
-                    </div>
 
-                    @* Sidebar (1/3) *@
-                    <div class="lg:col-span-1">
-                        <div class="sticky top-6 space-y-4">
-                            @* Botón de WhatsApp prominente *@
-                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                <p class="text-sm text-green-800 mb-3 font-medium">@L["WhatsApp:ImmediateResponse"]</p>
-                                <WhatsAppButton 
-                                    PropertyTitle="@Listing.Title"
-                                    PropertyUrl="@GetPropertyFullUrl()"
-                                    ButtonText="@L["WhatsApp:ConsultAction"]"
-                                    ButtonClass="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-300 justify-center"
-                                    ConfirmButtonClass="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-medium shadow-md" />
+                            @* CTA bar fija dentro del panel *@
+                            <div class="border-t border-neutral-200 bg-white/95 backdrop-blur p-4 lg:mt-auto">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <WhatsAppButton PropertyTitle="@Listing!.Title"
+                                                    PropertyUrl="@GetPropertyFullUrl()"
+                                                    ButtonText="@L["WhatsApp:ConsultAction"]"
+                                                    ButtonClass="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl font-medium shadow-md justify-center"
+                                                    ConfirmButtonClass="w-full bg-green-600 text-white px-4 py-3 rounded-xl font-medium shadow-md" />
+
+                                    <button type="button"
+                                            class="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl font-medium border border-neutral-300 hover:border-neutral-400 text-neutral-900 bg-white transition-colors"
+                                            @onclick="OpenContactAsync">
+                                        @L["Common:Contact"]
+                                    </button>
+                                </div>
                             </div>
-                            
-                            @* Formulario de contacto *@
-                            <ContactForm ListingId="@Id" ListingTitle="@Listing.Title" />
+
                         </div>
-                    </div>
+                    </section>
+
                 </div>
-            </div>
+            </main>
         </div>
-    </div>
+        break;
 }
 
 @code {
-    [Parameter]
-    public Guid Id { get; set; }
+    [Parameter] public Guid Id { get; set; }
 
-    private bool IsLoading { get; set; } = true;
+    private enum ViewState { Loading, NotFound, Ready }
+    private enum TabKey { Summary, Description, Details }
+
+    private ViewState _state = ViewState.Loading;
+    private TabKey _activeTab = TabKey.Summary;
+
     private ListingDetailDto? Listing { get; set; }
+    private Guid _lastLoadedId;
+
+    private ElementReference _panelScrollRef;
+    private ElementReference _contactRef;
+
     private const string PlaceholderImage = "/images/placeholder.jpg";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        await base.OnInitializedAsync();
-        await LoadListing();
+        await base.OnParametersSetAsync();
+
+        if (_lastLoadedId == Id && _state != ViewState.Loading)
+            return;
+
+        _lastLoadedId = Id;
+        await LoadListingAsync();
     }
 
-    private async Task LoadListing()
+    private async Task LoadListingAsync()
     {
+        _state = ViewState.Loading;
+        Listing = null;
+
         try
         {
-            IsLoading = true;
             Listing = await ListingService.GetAsync(Id);
+            _state = Listing is null ? ViewState.NotFound : ViewState.Ready;
+            _activeTab = TabKey.Summary;
         }
         catch (Exception ex)
         {
             await HandleErrorAsync(ex);
-            Listing = null;
+            _state = ViewState.NotFound;
         }
-        finally
-        {
-            IsLoading = false;
-        }
+    }
+
+    private void SetTab(TabKey tab) => _activeTab = tab;
+
+    private string GetTabClass(TabKey tab)
+    {
+        var isActive = _activeTab == tab;
+
+        return isActive
+            ? "px-4 py-2 rounded-lg text-sm font-medium bg-white text-neutral-900 shadow-sm"
+            : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:text-neutral-900";
+    }
+
+    private async Task OpenContactAsync()
+    {
+        _activeTab = TabKey.Summary;
+        await InvokeAsync(StateHasChanged);
+
+        // Requiere el helper JS: window.cimaScrollIntoViewWithin(containerEl, targetEl)
+        await JS.InvokeVoidAsync("cimaScrollIntoViewWithin", _panelScrollRef, _contactRef);
     }
 
     private string GetPropertyFullUrl()
-    {
-        return $"{NavManager.BaseUri.TrimEnd('/')}/properties/{Id}";
-    }
+        => $"{NavManager.BaseUri.TrimEnd('/')}/properties/{Id}";
 
     private string GetSeoDescription()
     {
-        if (Listing == null) return "";
-        
+        if (Listing is null) return "";
+
         var location = Listing.Location?.ToString();
         var desc = string.IsNullOrWhiteSpace(location)
             ? $"{Listing.Title}. "
             : $"{Listing.Title} en {location}. ";
+
         if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} {L["Properties:Bedrooms"]}. ";
         if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} {L["Properties:Bathrooms"]}. ";
-        desc += $"{L["Admin:Listings:TableHeader:Price"]}: {Listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))}";
-        
+
+        desc += $"{L["Admin:Listings:TableHeader:Price"]}: {Listing.Price.ToString("C0", new CultureInfo("es-MX"))}";
+
         return desc.Length > 160 ? desc[..157] + "..." : desc;
     }
 
     private string GetSeoKeywords()
     {
-        if (Listing == null) return "";
-        
+        if (Listing is null) return "";
+
         var keywords = new List<string>
         {
             Listing.Location?.ToString() ?? "",
@@ -333,20 +379,16 @@ else
             L["Common:RealEstate"],
             "4cima"
         };
-        
-        return string.Join(", ", keywords.Where(k => !string.IsNullOrEmpty(k)));
+
+        return string.Join(", ", keywords.Where(k => !string.IsNullOrWhiteSpace(k)));
     }
 
     private string GetPropertyJsonLd()
-    {
-        if (Listing == null) return "";
-        return SeoService.GeneratePropertyJsonLd(Listing, NavManager.BaseUri.TrimEnd('/'));
-    }
+        => Listing is null ? "" : SeoService.GeneratePropertyJsonLd(Listing, NavManager.BaseUri.TrimEnd('/'));
 
-    private string? GetCoverImageUrl()
+    private string GetCoverImageUrl()
     {
         var cover = ImageOrderingHelper.GetCoverUrl(Listing?.Images);
-
         return string.IsNullOrWhiteSpace(cover) ? PlaceholderImage : cover;
     }
 
@@ -354,13 +396,11 @@ else
     {
         var orderedImages = ImageOrderingHelper.OrderImages(Listing?.Images)
             .Where(img => !string.IsNullOrWhiteSpace(img.Url))
-            .Select(img => img.Url)
+            .Select(img => img.Url!)
             .ToList();
 
         if (orderedImages.Count == 0)
-        {
             orderedImages.Add(PlaceholderImage);
-        }
 
         return orderedImages;
     }

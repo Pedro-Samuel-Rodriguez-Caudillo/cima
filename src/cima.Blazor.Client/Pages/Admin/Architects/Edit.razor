@@ -164,6 +164,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
         await LoadArchitect();
     }
 
@@ -182,7 +183,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
         }
         finally
         {
@@ -204,7 +205,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
         }
         finally
         {
@@ -230,7 +231,7 @@
             }
             catch (Exception ex)
             {
-                Snackbar.Add(ex.Message, Severity.Error);
+                Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
             }
         }
     }

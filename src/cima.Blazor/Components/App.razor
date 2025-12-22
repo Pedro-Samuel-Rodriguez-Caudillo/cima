@@ -4,6 +4,7 @@
 @using System.Security.Claims
 @using cima.Blazor.Client.Authentication
 @using Volo.Abp.Localization
+@using MudBlazor
 @inject IHostEnvironment Env
 @inject PersistentComponentState PersistentComponentState
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -66,7 +67,8 @@
     
     <!-- Script de navbar ANTES de Blazor -->
     <script src="/js/navbar-scroll.js"></script>
-    
+    <script src="/js/app.js"></script>
+
     <script src="_content/Volo.Abp.AspNetCore.Components.Web/libs/abp/js/abp.js"></script>
     
     <!-- Script de Blazor -->

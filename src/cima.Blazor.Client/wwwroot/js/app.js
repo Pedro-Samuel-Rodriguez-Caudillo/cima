@@ -449,3 +449,13 @@ window.addEventListener('load', () => {
     }, 2000);
 });
 
+window.cimaScrollIntoViewWithin = (containerEl, targetEl) => {
+    if (!containerEl || !targetEl) return;
+
+    const cRect = containerEl.getBoundingClientRect();
+    const tRect = targetEl.getBoundingClientRect();
+
+    const top = (tRect.top - cRect.top) + containerEl.scrollTop - 12;
+    containerEl.scrollTo({ top, behavior: "smooth" });
+};
+

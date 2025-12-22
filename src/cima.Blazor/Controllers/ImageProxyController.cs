@@ -39,7 +39,7 @@ public class ImageProxyController : ControllerBase
         var publicBaseUrl = _configuration["ImageStorage:Azure:PublicBaseUrl"];
         if (!string.IsNullOrEmpty(publicBaseUrl) && !url.StartsWith(publicBaseUrl, StringComparison.OrdinalIgnoreCase))
         {
-            // Tambi�n permitir URLs de Azure Blob Storage en producci�n
+            // También permitir URLs de Azure Blob Storage en producción
             if (!url.Contains(".blob.core.windows.net"))
             {
                 return BadRequest("Invalid image URL");

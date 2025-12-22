@@ -1644,6 +1644,44 @@
     .auth-spinner {
         animation: auth-spin 1s linear infinite;
     }
+
+    .auth-checking {
+        @apply flex w-full flex-col items-center justify-center text-center min-h-[50vh];
+    }
+
+    .auth-checking-logo {
+        @apply mb-3;
+    }
+
+    .auth-checking-logo img {
+        @apply mx-auto;
+        height: 72px;
+        width: auto;
+    }
+
+    .auth-checking-dots {
+        @apply flex items-center justify-center gap-2;
+    }
+
+    .auth-checking-dots span {
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.35);
+        animation: auth-dot-bounce 1s ease-in-out infinite;
+    }
+
+    .auth-checking-dots span:nth-child(2) {
+        animation-delay: 0.12s;
+    }
+
+    .auth-checking-dots span:nth-child(3) {
+        animation-delay: 0.24s;
+    }
+
+    .auth-checking-dots span:nth-child(4) {
+        animation-delay: 0.36s;
+    }
 }
 
 /* === ANIMACIONES DE AUTENTICACION === */
@@ -1661,6 +1699,18 @@
 @keyframes auth-spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+@keyframes auth-dot-bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
     }
 }
 

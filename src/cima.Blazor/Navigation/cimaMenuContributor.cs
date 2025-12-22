@@ -101,28 +101,40 @@ public class cimaMenuContributor : IMenuContributor
             administration.AddItem(identityMenu);
         }
 
-        if (identityMenu.GetMenuItem("AbpIdentity.Users") == null)
+        var usersItem = identityMenu.GetMenuItem("AbpIdentity.Users");
+        if (usersItem == null)
         {
             identityMenu.AddItem(new ApplicationMenuItem(
                 "AbpIdentity.Users",
                 l["Menu:IdentityManagement:Users"],
-                "/identity/users",
+                "/admin/identity/users",
                 icon: "fa fa-users",
                 order: 1,
                 requiredPermissionName: IdentityPermissions.Users.Default
             ));
         }
+        else
+        {
+            usersItem.Url = "/admin/identity/users";
+            usersItem.RequiredPermissionName = IdentityPermissions.Users.Default;
+        }
 
-        if (identityMenu.GetMenuItem("AbpIdentity.Roles") == null)
+        var rolesItem = identityMenu.GetMenuItem("AbpIdentity.Roles");
+        if (rolesItem == null)
         {
             identityMenu.AddItem(new ApplicationMenuItem(
                 "AbpIdentity.Roles",
                 l["Menu:IdentityManagement:Roles"],
-                "/identity/roles",
+                "/admin/identity/roles",
                 icon: "fa fa-id-badge",
                 order: 2,
                 requiredPermissionName: IdentityPermissions.Roles.Default
             ));
+        }
+        else
+        {
+            rolesItem.Url = "/admin/identity/roles";
+            rolesItem.RequiredPermissionName = IdentityPermissions.Roles.Default;
         }
 
         return Task.CompletedTask;
