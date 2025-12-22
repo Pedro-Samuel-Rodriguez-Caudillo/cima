@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 using Volo.Abp.MultiTenancy;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.TenantManagement;
@@ -84,10 +85,8 @@ public class RolePermissionMigrationAppService : ApplicationService, IRolePermis
                         true);
                 }
 
-                await _permissionGrantRepository.DeleteAsync(grant);
+                await _permissionGrantRepository.DeleteAsync(grant, autoSave: true);
             }
-
-            await CurrentUnitOfWork.SaveChangesAsync();
         }
     }
 }
