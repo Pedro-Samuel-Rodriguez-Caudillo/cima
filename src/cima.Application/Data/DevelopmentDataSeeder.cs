@@ -18,6 +18,8 @@ namespace cima.Application.Data;
 public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
 {
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly IIdentityRoleRepository _roleRepository;
+    private readonly IdentityRoleManager _roleManager;
     private readonly IIdentityUserRepository _userRepository;
     private readonly IdentityUserManager _userManager;
     private readonly IGuidGenerator _guidGenerator;
@@ -25,12 +27,16 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
 
     public DevelopmentDataSeeder(
         IRepository<Architect, Guid> architectRepository,
+        IIdentityRoleRepository roleRepository,
+        IdentityRoleManager roleManager,
         IIdentityUserRepository userRepository,
         IdentityUserManager userManager,
         IGuidGenerator guidGenerator,
         ILogger<DevelopmentDataSeeder> logger)
     {
         _architectRepository = architectRepository;
+        _roleRepository = roleRepository;
+        _roleManager = roleManager;
         _userRepository = userRepository;
         _userManager = userManager;
         _guidGenerator = guidGenerator;
@@ -56,6 +62,8 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         {
             // Crear usuarios fijos
             _logger.LogInformation("[SEEDER] Creando/actualizando usuarios...");
+            await EnsureRoleAsync("admin");
+            await EnsureRoleAsync("architect");
             await SeedUsersAndArchitect();
 
             _logger.LogInformation("========================================");
@@ -76,7 +84,7 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
     private async Task SeedUsersAndArchitect()
     {
         const string defaultPassword = "1q2w3E*";
-        
+
         // Admin user (admin@cima.com)
         var admin = await _userRepository.FindByNormalizedUserNameAsync("ADMIN@CIMA.COM");
         if (admin == null)
@@ -89,7 +97,7 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             var createResult = await _userManager.CreateAsync(admin, defaultPassword);
             if (createResult.Succeeded)
             {
-                await _userManager.AddToRoleAsync(admin, "admin");
+                await EnsureUserInRoleAsync(admin, "admin");
                 _logger.LogInformation("Created admin user: admin@cima.com / {Password}", defaultPassword);
             }
             else
@@ -100,6 +108,7 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
         else
         {
             _logger.LogInformation("Admin user admin@cima.com already exists (password not modified in DbMigrator)");
+            await EnsureUserInRoleAsync(admin, "admin");
         }
 
         // Crear perfil de arquitecto para admin (para que sea tratado como arquitecto)
@@ -134,12 +143,14 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             var createResult = await _userManager.CreateAsync(architectUser, defaultPassword);
             if (createResult.Succeeded)
             {
+                await EnsureUserInRoleAsync(architectUser, "architect");
                 _logger.LogInformation("Created architect user: arq@cima.com / {Password}", defaultPassword);
             }
         }
         else
         {
             _logger.LogInformation("Architect user arq@cima.com already exists");
+            await EnsureUserInRoleAsync(architectUser, "architect");
         }
 
         // Architect profile
@@ -156,6 +167,40 @@ public class DevelopmentDataSeeder : IDataSeedContributor, ITransientDependency
             };
             await _architectRepository.InsertAsync(architectProfile);
             _logger.LogInformation("Created architect profile");
+        }
+    }
+
+    private async Task EnsureRoleAsync(string roleName)
+    {
+        var normalizedName = roleName.ToUpperInvariant();
+        var existingRole = await _roleRepository.FindByNormalizedNameAsync(normalizedName);
+        if (existingRole != null)
+        {
+            return;
+        }
+
+        var role = new IdentityRole(_guidGenerator.Create(), roleName);
+        var result = await _roleManager.CreateAsync(role);
+        if (!result.Succeeded)
+        {
+            _logger.LogWarning("No se pudo crear el rol '{Role}': {Errors}", roleName, string.Join(", ", result.Errors));
+        }
+    }
+
+    private async Task EnsureUserInRoleAsync(IdentityUser user, string roleName)
+    {
+        if (user.Id == Guid.Empty)
+        {
+            return;
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, roleName))
+        {
+            var result = await _userManager.AddToRoleAsync(user, roleName);
+            if (!result.Succeeded)
+            {
+                _logger.LogWarning("No se pudo asignar el rol '{Role}' al usuario '{Email}': {Errors}", roleName, user.Email, string.Join(", ", result.Errors));
+            }
         }
     }
 }

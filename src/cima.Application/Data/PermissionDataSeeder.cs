@@ -5,13 +5,14 @@ using Microsoft.Extensions.Logging;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Identity;
 using Volo.Abp.PermissionManagement;
 using Volo.Abp.MultiTenancy;
 
 namespace cima.Application.Data;
 
 /// <summary>
-/// Seeder de permisos para asignar autom�ticamente permisos a roles
+/// Seeder de permisos para asignar automáticamente permisos a roles
 /// </summary>
 public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
 {
@@ -34,7 +35,7 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
         _logger.LogInformation("========================================");
-        _logger.LogInformation("[PERMISSION SEEDER] Iniciando asignaci�n de permisos...");
+        _logger.LogInformation("[PERMISSION SEEDER] Iniciando asignación de permisos...");
         _logger.LogInformation($"[PERMISSION SEEDER] Entorno: {environment}");
         _logger.LogInformation("========================================");
 
@@ -90,6 +91,18 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
         await GrantPermissionAsync(roleProviderName, adminRoleName, cimaPermissions.Settings.Default);
         await GrantPermissionAsync(roleProviderName, adminRoleName, cimaPermissions.Settings.Manage);
 
+        // Identity (Roles/Users)
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Roles.Default);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Roles.Create);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Roles.Update);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Roles.Delete);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Roles.ManagePermissions);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Users.Default);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Users.Create);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Users.Update);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Users.Delete);
+        await GrantPermissionAsync(roleProviderName, adminRoleName, IdentityPermissions.Users.ManageRoles);
+
         _logger.LogInformation("[PERMISSION SEEDER] Permisos del rol 'admin' asignados correctamente");
     }
 
@@ -97,7 +110,7 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
     {
         try
         {
-            // Verificar si el permiso ya est� otorgado
+            // Verificar si el permiso ya está otorgado
             var existingPermission = await _permissionManager.GetAsync(permissionName, providerName, providerKey);
             
             if (existingPermission?.IsGranted == true)
