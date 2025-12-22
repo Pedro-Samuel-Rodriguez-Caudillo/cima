@@ -69,7 +69,7 @@ jobs:
           --logger "console;verbosity=detailed"
       continue-on-error: false
     
-    # Tests de Application Layer (preparados pero requieren configuraci�n)
+    # Tests de Application Layer (preparados pero requieren configuración)
     # - name: Run Application Tests
     #   run: |
     #     echo "Running Application Layer tests..."

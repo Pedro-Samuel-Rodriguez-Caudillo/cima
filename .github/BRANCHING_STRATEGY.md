@@ -3,15 +3,15 @@
 ## Estructura de Branches
 
 ### Branches Permanentes
-- **`main`** - Producción (protegida)
-- **`staging`** - Pre-producción para QA (protegida)
-- **`develop`** - Integración continua de features (protegida)
+- **`main`** - ProducciÃ³n (protegida)
+- **`staging`** - Pre-producciÃ³n para QA (protegida)
+- **`develop`** - IntegraciÃ³n continua de features (protegida)
 
 ### Branches Temporales
 - **`feature/[nombre]`** - Nuevas funcionalidades
 - **`bugfix/[nombre]`** - Correcciones de bugs en develop
-- **`hotfix/[nombre]`** - Fixes urgentes en producción
-- **`release/v[X.X.X]`** - Preparación de releases
+- **`hotfix/[nombre]`** - Fixes urgentes en producciÃ³n
+- **`release/v[X.X.X]`** - PreparaciÃ³n de releases
 
 ## Flujo de Trabajo
 
@@ -24,12 +24,12 @@
 
 2. Desarrollar y commitear cambios:
    git add .
-   git commit -m "feat: descripción del feature"
+   git commit -m "feat: descripciÃ³n del feature"
 
 3. Push y crear PR a develop:
    git push origin feature/nombre-descriptivo
    
-4. Después de merge, eliminar branch local y remoto:
+4. DespuÃ©s de merge, eliminar branch local y remoto:
    git branch -d feature/nombre-descriptivo
    git push origin --delete feature/nombre-descriptivo
 ```
@@ -43,7 +43,7 @@
 
 2. Desarrollar fix y commitear:
    git add .
-   git commit -m "fix: descripción del fix"
+   git commit -m "fix: descripciÃ³n del fix"
 
 3. Push y crear PR a develop:
    git push origin bugfix/nombre-bug
@@ -51,34 +51,34 @@
 
 ### Deploy a Staging (Testing)
 ```
-1. Cuando develop esté listo para testing:
+1. Cuando develop estÃ¡ listo para testing:
    - Crear PR de develop ? staging
-   - Requiere aprobación de 1 reviewer
+   - Requiere aprobaciÃ³n de 1 reviewer
    - CI/CD debe pasar completamente
    
 2. Al hacer merge:
-   - Railway deploya automáticamente
+   - Railway deploya automÃ¡ticamente
    - Realizar testing manual completo
 ```
 
-### Deploy a Producción
+### Deploy a ProducciÃ³n
 ```
 1. Crear release branch desde staging:
    git checkout staging
    git pull origin staging
    git checkout -b release/v1.2.3
 
-2. Actualizar versión y changelog:
-   - Actualizar versión en archivos .csproj
+2. Actualizar versiÃ³n y changelog:
+   - Actualizar versiÃ³n en archivos .csproj
    - Actualizar CHANGELOG.md
    
 3. Crear PR de release/v1.2.3 ? main:
-   - Requiere aprobación de 1+ reviewers
+   - Requiere aprobaciÃ³n de 1+ reviewers
    - CI/CD completo debe pasar
    
-4. Después del merge:
-   - GitHub Actions deploya a producción
-   - Crear tag de versión:
+4. DespuÃ©s del merge:
+   - GitHub Actions deploya a producciÃ³n
+   - Crear tag de versiÃ³n:
      git tag v1.2.3
      git push origin v1.2.3
    
@@ -97,14 +97,14 @@
 
 2. Desarrollar fix urgente:
    git add .
-   git commit -m "hotfix: descripción del fix crítico"
+   git commit -m "hotfix: descripciÃ³n del fix crÃ­tico"
 
 3. Crear PR a main (fast-track):
-   - Requiere aprobación urgente
+   - Requiere aprobaciÃ³n urgente
    - CI/CD debe pasar
    
-4. Después del merge a main:
-   - Mergear hotfix también a develop y staging:
+4. DespuÃ©s del merge a main:
+   - Mergear hotfix tambiÃ©n a develop y staging:
      git checkout develop
      git merge hotfix/nombre-critico
      git push origin develop
@@ -114,7 +114,7 @@
      git push origin staging
 ```
 
-## Políticas de Protección de Branches
+## PolÃ­ticas de ProtecciÃ³n de Branches
 
 ### Branch: `main`
 - ? Require pull request before merging
@@ -237,25 +237,25 @@ git push origin feature/add-listing-filters
 
 ### Scenario 2: Deploy a Staging
 ```bash
-# Cuando develop está estable
+# Cuando develop estÃ¡ estable
 # Create PR: develop ? staging en GitHub
 # Revisar, aprobar y merge
-# Railway deploya automáticamente
+# Railway deploya automÃ¡ticamente
 ```
 
-### Scenario 3: Deploy a Producción
+### Scenario 3: Deploy a ProducciÃ³n
 ```bash
 # Crear release
 git checkout staging
 git checkout -b release/v1.5.0
 
-# Actualizar versión
+# Actualizar versiÃ³n
 # Update CHANGELOG.md
 
 git push origin release/v1.5.0
 # Create PR: release/v1.5.0 ? main
 # Aprobar y merge
-# GitHub Actions deploya a producción
+# GitHub Actions deploya a producciÃ³n
 # Create tag v1.5.0
 
 # Sync back to develop
@@ -264,7 +264,7 @@ git merge release/v1.5.0
 git push origin develop
 ```
 
-## Comandos Útiles
+## Comandos Ãºtiles
 
 ### Ver branches locales y remotos
 ```bash
@@ -286,18 +286,18 @@ git branch --merged develop
 git branch --merged develop | grep -v "develop" | xargs git branch -d
 ```
 
-## Configurar Protección de Branches en GitHub
+## Configurar ProtecciÃ³n de Branches en GitHub
 
 1. Ve a tu repositorio en GitHub
 2. Settings ? Branches ? Branch protection rules
 3. Add rule para `main`, `staging`, `develop`
-4. Configura según las políticas arriba especificadas
+4. Configura segÃºn las polÃ­ticas arriba especificadas
 
 ## Notas Importantes
 
 - **NUNCA** hacer push directo a `main`, `staging`, o `develop`
 - **SIEMPRE** usar PRs para mergear
 - **SIEMPRE** esperar a que CI/CD pase antes de mergear
-- **ELIMINAR** branches de features después de merge
+- **ELIMINAR** branches de features despuÃ©s de merge
 - **MANTENER** `develop` actualizado regularmente
-- **TESTING** completo en staging antes de producción
+- **TESTING** completo en staging antes de producciÃ³n
