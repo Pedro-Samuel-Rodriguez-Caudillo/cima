@@ -27,17 +27,26 @@
                     }
                 </NotAuthorized>
                 <Authorizing>
-                    <div class="auth-checking">
-                        <div class="auth-checking-logo">
-                            <img src="images/logo/4cima - B&W.png" alt="CIMA logo" />
+                    <div class="container mx-auto px-4 py-8 animate-fade-in">
+                        <div class="flex flex-col items-center justify-center mb-12">
+                            <div class="auth-checking-logo mb-6">
+                                <img src="images/logo/4cima - B&W.png" alt="CIMA logo" class="h-16 w-auto" />
+                            </div>
+                            <div class="flex items-center gap-3 text-lg text-gray-600 font-medium">
+                                <span>@L["Auth:Verifying"]</span>
+                                <div class="auth-checking-dots" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="auth-checking-dots" aria-hidden="true">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
+
+                        @* Skeletons to simulate content while loading permissions *@
+                        <div class="opacity-40 pointer-events-none grayscale">
+                             <cima.Blazor.Client.Components.Common.SkeletonGrid Count="6" />
                         </div>
-                        <p class="mt-4 text-gray-500 text-sm">@L["Auth:Verifying"]</p>
                     </div>
                 </Authorizing>
             </AuthorizeRouteView>
