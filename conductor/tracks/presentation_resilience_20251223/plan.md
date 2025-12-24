@@ -4,8 +4,8 @@
 Implement the foundational structures for catching and displaying errors globally.
 
 - [x] Task: Create custom `MainLayout` error handling logic to differentiate between Public and Admin users. c2afd99
-- [ ] Task: Implement a reusable `ErrorDetail` component that shows friendly messages to all, but an expandable stack trace for Admins.
-- [ ] Task: Configure the Blazor `ErrorBoundary` at the root level to catch unhandled lifecycle exceptions.
+- [x] Task: Implement a reusable `ErrorDetail` component that shows friendly messages to all, but an expandable stack trace for Admins. 3c02826
+- [~] Task: Configure the Blazor `ErrorBoundary` at the root level to catch unhandled lifecycle exceptions.
 - [ ] Task: Conductor - User Manual Verification 'Infrastructure and Global Handling' (Protocol in workflow.md)
 
 ## Phase 2: Component-Level Isolation
