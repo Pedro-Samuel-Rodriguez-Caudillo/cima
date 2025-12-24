@@ -1,16 +1,17 @@
 # Plan - Presentation Layer Resilience
 
-## Phase 1: Infrastructure and Global Handling
+## Phase 1: Infrastructure and Global Handling [checkpoint: a2f907d]
 Implement the foundational structures for catching and displaying errors globally.
 
 - [x] Task: Create custom `MainLayout` error handling logic to differentiate between Public and Admin users. c2afd99
 - [x] Task: Implement a reusable `ErrorDetail` component that shows friendly messages to all, but an expandable stack trace for Admins. 3c02826
 - [x] Task: Configure the Blazor `ErrorBoundary` at the root level to catch unhandled lifecycle exceptions. 59ae14a
-- [~] Task: Conductor - User Manual Verification 'Infrastructure and Global Handling' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Infrastructure and Global Handling' (Protocol in workflow.md) a2f907d
 
 ## Phase 2: Component-Level Isolation
 Isolate UI modules to prevent cascading failures.
 
+- [ ] Task: Fix `MainLayout` top margin to prevent Navbar from obscuring content (User Feedback).
 - [ ] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances.
 - [ ] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state.
 - [ ] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md)
@@ -25,6 +26,7 @@ Improve the robustness of data mutations and API interactions.
 ## Phase 4: Standardized Feedback System
 Finalize the UI elements for user notifications.
 
+- [ ] Task: Implement friendly validation error message parsing for toasts (User Feedback).
 - [ ] Task: Implement a `ToastService` and container for floating notifications using Tailwind CSS.
 - [ ] Task: Create a reusable `Alert` component for inline contextual warnings/info.
 - [ ] Task: Update Admin flows to use `Modal` dialogs for critical session or authorization errors.
