@@ -11,8 +11,8 @@ Implement the foundational structures for catching and displaying errors globall
 ## Phase 2: Component-Level Isolation
 Isolate UI modules to prevent cascading failures.
 
-- [ ] Task: Fix `MainLayout` top margin to prevent Navbar from obscuring content (User Feedback).
-- [ ] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances.
+- [x] Task: Fix `MainLayout` top margin to prevent Navbar from obscuring content (User Feedback). 05c399f
+- [~] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances.
 - [ ] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state.
 - [ ] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md)
 
