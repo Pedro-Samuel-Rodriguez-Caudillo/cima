@@ -16,17 +16,17 @@ Isolate UI modules to prevent cascading failures.
 - [x] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state. 20850c7
 - [x] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md) 034a20e
 
-## Phase 3: API & Form Resilience
+## Phase 3: API & Form Resilience [checkpoint: 2671010]
 Improve the robustness of data mutations and API interactions.
 
 - [x] Task: Create a `LoadingButton` component that manages its own disabled state and spinner during `Task` execution. f5571a4
 - [x] Task: Implement a standard "API Error" handler for Admin forms that prevents data loss on failure and allows retry. dd02e20
-- [~] Task: Conductor - User Manual Verification 'API & Form Resilience' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'API & Form Resilience' (Protocol in workflow.md) 2671010
 
 ## Phase 4: Standardized Feedback System
 Finalize the UI elements for user notifications.
 
-- [ ] Task: Implement friendly validation error message parsing for toasts (User Feedback).
+- [~] Task: Implement friendly validation error message parsing for toasts (User Feedback).
 - [ ] Task: Implement a `ToastService` and container for floating notifications using Tailwind CSS.
 - [ ] Task: Create a reusable `Alert` component for inline contextual warnings/info.
 - [ ] Task: Update Admin flows to use `Modal` dialogs for critical session or authorization errors.
