@@ -20,8 +20,8 @@ Isolate UI modules to prevent cascading failures.
 Improve the robustness of data mutations and API interactions.
 
 - [x] Task: Create a `LoadingButton` component that manages its own disabled state and spinner during `Task` execution. f5571a4
-- [~] Task: Implement a standard "API Error" handler for Admin forms that prevents data loss on failure and allows retry.
-- [ ] Task: Conductor - User Manual Verification 'API & Form Resilience' (Protocol in workflow.md)
+- [x] Task: Implement a standard "API Error" handler for Admin forms that prevents data loss on failure and allows retry. dd02e20
+- [~] Task: Conductor - User Manual Verification 'API & Form Resilience' (Protocol in workflow.md)
 
 ## Phase 4: Standardized Feedback System
 Finalize the UI elements for user notifications.
