@@ -2,61 +2,79 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.Extensions.Localization
 @using cima.Localization
+@using cima.Blazor.Client.Components.Common
 @inject IStringLocalizer<cimaResource> L
 @inject NavigationManager Navigation
 
 <CascadingAuthenticationState>
-    @* ABP modules that expose razor pages (Identity, Permission, Settings) *@
-    <Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="@(new[] {
-        typeof(Volo.Abp.PermissionManagement.Blazor.WebAssembly.AbpPermissionManagementBlazorWebAssemblyModule).Assembly,
-        typeof(Volo.Abp.SettingManagement.Blazor.WebAssembly.AbpSettingManagementBlazorWebAssemblyModule).Assembly,
-        typeof(Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule).Assembly,
-        typeof(Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule).Assembly
-    })">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
-                <NotAuthorized>
-                    @if (!context.User.Identity?.IsAuthenticated ?? false)
-                    {
-                        <RedirectToLogin />
-                    }
-                    else
-                    {
-                        @* Usuario autenticado pero sin permisos *@
-                        <cima.Blazor.Client.Pages.Account.AccessDenied />
-                    }
-                </NotAuthorized>
-                <Authorizing>
-                    <div class="container mx-auto px-4 py-8 animate-fade-in">
-                        <div class="flex flex-col items-center justify-center mb-12">
-                            <div class="auth-checking-logo mb-6">
-                                <img src="images/logo/4cima - B&W.png" alt="CIMA logo" class="h-16 w-auto" />
-                            </div>
-                            <div class="flex items-center gap-3 text-lg text-gray-600 font-medium">
-                                <span>@L["Auth:Verifying"]</span>
-                                <div class="auth-checking-dots" aria-hidden="true">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
+    <ErrorBoundary @ref="_errorBoundary">
+        <ChildContent>
+            @* ABP modules that expose razor pages (Identity, Permission, Settings) *@
+            <Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="@(new[] {
+                typeof(Volo.Abp.PermissionManagement.Blazor.WebAssembly.AbpPermissionManagementBlazorWebAssemblyModule).Assembly,
+                typeof(Volo.Abp.SettingManagement.Blazor.WebAssembly.AbpSettingManagementBlazorWebAssemblyModule).Assembly,
+                typeof(Volo.Abp.PermissionManagement.Blazor.AbpPermissionManagementBlazorModule).Assembly,
+                typeof(Volo.Abp.SettingManagement.Blazor.AbpSettingManagementBlazorModule).Assembly
+            })">
+                <Found Context="routeData">
+                    <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
+                        <NotAuthorized>
+                            @if (!context.User.Identity?.IsAuthenticated ?? false)
+                            {
+                                <RedirectToLogin />
+                            }
+                            else
+                            {
+                                @* Usuario autenticado pero sin permisos *@
+                                <cima.Blazor.Client.Pages.Account.AccessDenied />
+                            }
+                        </NotAuthorized>
+                        <Authorizing>
+                            <div class="container mx-auto px-4 py-8 animate-fade-in">
+                                <div class="flex flex-col items-center justify-center mb-12">
+                                    <div class="auth-checking-logo mb-6">
+                                        <img src="images/logo/4cima - B&W.png" alt="CIMA logo" class="h-16 w-auto" />
+                                    </div>
+                                    <div class="flex items-center gap-3 text-lg text-gray-600 font-medium">
+                                        <span>@L["Auth:Verifying"]</span>
+                                        <div class="auth-checking-dots" aria-hidden="true">
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @* Skeletons to simulate content while loading permissions *@
+                                <div class="opacity-40 pointer-events-none grayscale">
+                                     <cima.Blazor.Client.Components.Common.SkeletonGrid Count="6" />
                                 </div>
                             </div>
-                        </div>
-
-                        @* Skeletons to simulate content while loading permissions *@
-                        <div class="opacity-40 pointer-events-none grayscale">
-                             <cima.Blazor.Client.Components.Common.SkeletonGrid Count="6" />
-                        </div>
-                    </div>
-                </Authorizing>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="@routeData" Selector="#main-content" />
-        </Found>
-        <NotFound>
-            <PageTitle>@L["NotFound:Title"]</PageTitle>
-            <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
-                <cima.Blazor.Client.Pages.Public.Error404 />
-            </LayoutView>
-        </NotFound>
-    </Router>
+                        </Authorizing>
+                    </AuthorizeRouteView>
+                    <FocusOnNavigate RouteData="@routeData" Selector="#main-content" />
+                </Found>
+                <NotFound>
+                    <PageTitle>@L["NotFound:Title"]</PageTitle>
+                    <LayoutView Layout="@typeof(cima.Blazor.Client.Layouts.MainLayout)">
+                        <cima.Blazor.Client.Pages.Public.Error404 />
+                    </LayoutView>
+                </NotFound>
+            </Router>
+        </ChildContent>
+        <ErrorContent Context="exception">
+            <ErrorDetail Exception="exception" OnRecover="Recover" />
+        </ErrorContent>
+    </ErrorBoundary>
 </CascadingAuthenticationState>
+
+@code {
+    private ErrorBoundary? _errorBoundary;
+
+    private void Recover()
+    {
+        _errorBoundary?.Recover();
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}
