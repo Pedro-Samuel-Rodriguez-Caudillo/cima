@@ -1,114 +1,106 @@
-@* Alert/Feedback box con variantes *@
+@using cima.Blazor.Client.Services.Notifications
 
-<div class="@ComputedClass" role="alert">
-    <div class="flex-shrink-0">
-        @if (Variant == AlertVariant.Success)
+<div class="rounded-md p-4 @GetAlertClass()">
+    <div class="flex">
+        <div class="flex-shrink-0">
+            @GetIcon()
+        </div>
+        <div class="ml-3">
+            <h3 class="text-sm font-medium @GetTitleClass()">@Title</h3>
+            @if (ChildContent != null)
+            {
+                <div class="mt-2 text-sm @GetContentClass()">
+                    @ChildContent
+                </div>
+            }
+        </div>
+        @if (OnClose.HasDelegate)
         {
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        }
-        else if (Variant == AlertVariant.Error)
-        {
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-        }
-        else if (Variant == AlertVariant.Warning)
-        {
-            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-        }
-        else
-        {
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+            <div class="ml-auto pl-3">
+                <div class="-mx-1.5 -my-1.5">
+                    <button type="button" @onclick="OnClose" class="inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 @GetCloseButtonClass()">
+                        <span class="sr-only">Dismiss</span>
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
         }
     </div>
-    
-    <div class="flex-1">
-        @if (!string.IsNullOrEmpty(Title))
-        {
-            <h4 class="font-medium @TitleColorClass">@Title</h4>
-        }
-        @if (!string.IsNullOrEmpty(Message))
-        {
-            <p class="@MessageColorClass @(string.IsNullOrEmpty(Title) ? "" : "mt-1")">@Message</p>
-        }
-        @ChildContent
-    </div>
-    
-    @if (Dismissible)
-    {
-        <button class="flex-shrink-0 ml-4 @DismissColorClass hover:opacity-70 transition-opacity" 
-                @onclick="HandleDismiss"
-                aria-label="Cerrar">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-        </button>
-    }
 </div>
 
 @code {
-    [Parameter] public AlertVariant Variant { get; set; } = AlertVariant.Info;
-    [Parameter] public string? Title { get; set; }
-    [Parameter] public string? Message { get; set; }
-    [Parameter] public bool Dismissible { get; set; }
-    [Parameter] public EventCallback OnDismiss { get; set; }
+    [Parameter] public string Title { get; set; } = string.Empty;
     [Parameter] public RenderFragment? ChildContent { get; set; }
-    [Parameter] public string? Class { get; set; }
+    [Parameter] public ToastLevel Level { get; set; } = ToastLevel.Info;
+    [Parameter] public EventCallback OnClose { get; set; }
 
-    private string ComputedClass => $"{BaseClass} {Class}".Trim();
-
-    private string BaseClass => Variant switch
+    private string GetAlertClass() => Level switch
     {
-        AlertVariant.Success => "bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3",
-        AlertVariant.Error => "cima-error-feedback",
-        AlertVariant.Warning => "cima-warning-feedback",
-        AlertVariant.Info => "cima-info-feedback",
-        _ => "cima-info-feedback"
+        ToastLevel.Success => "bg-green-50",
+        ToastLevel.Warning => "bg-yellow-50",
+        ToastLevel.Error => "bg-red-50",
+        _ => "bg-blue-50"
     };
 
-    private string TitleColorClass => Variant switch
+    private string GetTitleClass() => Level switch
     {
-        AlertVariant.Success => "text-green-800",
-        AlertVariant.Error => "text-red-800",
-        AlertVariant.Warning => "text-yellow-800",
-        AlertVariant.Info => "text-blue-800",
-        _ => "text-gray-800"
+        ToastLevel.Success => "text-green-800",
+        ToastLevel.Warning => "text-yellow-800",
+        ToastLevel.Error => "text-red-800",
+        _ => "text-blue-800"
     };
 
-    private string MessageColorClass => Variant switch
+    private string GetContentClass() => Level switch
     {
-        AlertVariant.Success => "text-green-700",
-        AlertVariant.Error => "text-red-700",
-        AlertVariant.Warning => "text-yellow-700",
-        AlertVariant.Info => "text-blue-700",
-        _ => "text-gray-700"
+        ToastLevel.Success => "text-green-700",
+        ToastLevel.Warning => "text-yellow-700",
+        ToastLevel.Error => "text-red-700",
+        _ => "text-blue-700"
     };
 
-    private string DismissColorClass => Variant switch
+    private string GetCloseButtonClass() => Level switch
     {
-        AlertVariant.Success => "text-green-600",
-        AlertVariant.Error => "text-red-600",
-        AlertVariant.Warning => "text-yellow-600",
-        AlertVariant.Info => "text-blue-600",
-        _ => "text-gray-600"
+        ToastLevel.Success => "bg-green-50 text-green-500 hover:bg-green-100 focus:ring-green-600",
+        ToastLevel.Warning => "bg-yellow-50 text-yellow-500 hover:bg-yellow-100 focus:ring-yellow-600",
+        ToastLevel.Error => "bg-red-50 text-red-500 hover:bg-red-100 focus:ring-red-600",
+        _ => "bg-blue-50 text-blue-500 hover:bg-blue-100 focus:ring-blue-600"
     };
 
-    private async Task HandleDismiss()
+    private RenderFragment GetIcon() => builder =>
     {
-        await OnDismiss.InvokeAsync();
-    }
+        builder.OpenElement(0, "svg");
+        builder.AddAttribute(1, "class", $"h-5 w-5 {GetIconColorClass()}");
+        builder.AddAttribute(2, "xmlns", "http://www.w3.org/2000/svg");
+        builder.AddAttribute(3, "viewBox", "0 0 20 20");
+        builder.AddAttribute(4, "fill", "currentColor");
+        builder.AddAttribute(5, "aria-hidden", "true");
 
-    public enum AlertVariant
+        switch (Level)
+        {
+            case ToastLevel.Success:
+                builder.AddContent(6, (MarkupString)"<path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd' />");
+                break;
+            case ToastLevel.Warning:
+                builder.AddContent(6, (MarkupString)"<path fill-rule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' clip-rule='evenodd' />");
+                break;
+            case ToastLevel.Error:
+                builder.AddContent(6, (MarkupString)"<path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clip-rule='evenodd' />");
+                break;
+            default: // Info
+                builder.AddContent(6, (MarkupString)"<path fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z' clip-rule='evenodd' />");
+                break;
+        }
+
+        builder.CloseElement();
+    };
+
+    private string GetIconColorClass() => Level switch
     {
-        Info,
-        Success,
-        Warning,
-        Error
-    }
+        ToastLevel.Success => "text-green-400",
+        ToastLevel.Warning => "text-yellow-400",
+        ToastLevel.Error => "text-red-400",
+        _ => "text-blue-400"
+    };
 }
