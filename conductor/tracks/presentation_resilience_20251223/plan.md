@@ -12,8 +12,8 @@ Implement the foundational structures for catching and displaying errors globall
 Isolate UI modules to prevent cascading failures.
 
 - [x] Task: Fix `MainLayout` top margin to prevent Navbar from obscuring content (User Feedback). 05c399f
-- [~] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances.
-- [ ] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state.
+- [x] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances. 860438e
+- [~] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state.
 - [ ] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md)
 
 ## Phase 3: API & Form Resilience
