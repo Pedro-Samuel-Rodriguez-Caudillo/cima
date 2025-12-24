@@ -1,0 +1,21 @@
+@using cima.Blazor.Client.Components.Common
+
+<ErrorBoundary @ref="_errorBoundary">
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+    <ErrorContent Context="exception">
+        <ErrorDetail Exception="exception" OnRecover="Recover" />
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private ErrorBoundary? _errorBoundary;
+
+    public void Recover()
+    {
+        _errorBoundary?.Recover();
+    }
+}
