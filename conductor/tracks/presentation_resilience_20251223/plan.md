@@ -8,18 +8,18 @@ Implement the foundational structures for catching and displaying errors globall
 - [x] Task: Configure the Blazor `ErrorBoundary` at the root level to catch unhandled lifecycle exceptions. 59ae14a
 - [x] Task: Conductor - User Manual Verification 'Infrastructure and Global Handling' (Protocol in workflow.md) a2f907d
 
-## Phase 2: Component-Level Isolation
+## Phase 2: Component-Level Isolation [checkpoint: 034a20e]
 Isolate UI modules to prevent cascading failures.
 
 - [x] Task: Fix `MainLayout` top margin to prevent Navbar from obscuring content (User Feedback). 05c399f
 - [x] Task: Wrap `PropertyList` and `PropertyDetail` components in specific `ErrorBoundary` instances. 860438e
 - [x] Task: Create a `RetryBoundary` component that provides a "Reload" button to reset the ErrorBoundary state. 20850c7
-- [~] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Component-Level Isolation' (Protocol in workflow.md) 034a20e
 
 ## Phase 3: API & Form Resilience
 Improve the robustness of data mutations and API interactions.
 
-- [ ] Task: Create a `LoadingButton` component that manages its own disabled state and spinner during `Task` execution.
+- [~] Task: Create a `LoadingButton` component that manages its own disabled state and spinner during `Task` execution.
 - [ ] Task: Implement a standard "API Error" handler for Admin forms that prevents data loss on failure and allows retry.
 - [ ] Task: Conductor - User Manual Verification 'API & Form Resilience' (Protocol in workflow.md)
 
