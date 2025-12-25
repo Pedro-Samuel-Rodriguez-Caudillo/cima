@@ -29,5 +29,5 @@ Finalize the UI elements for user notifications.
 - [x] Task: Implement friendly validation error message parsing for toasts (User Feedback). 4f9e10f
 - [x] Task: Implement a `ToastService` and container for floating notifications using Tailwind CSS. 87aeaba
 - [x] Task: Create a reusable `Alert` component for inline contextual warnings/info. 672d1f7
-- [~] Task: Update Admin flows to use `Modal` dialogs for critical session or authorization errors.
-- [ ] Task: Conductor - User Manual Verification 'Standardized Feedback System' (Protocol in workflow.md)
+- [x] Task: Update Admin flows to use `Modal` dialogs for critical session or authorization errors. fb0809e
+- [~] Task: Conductor - User Manual Verification 'Standardized Feedback System' (Protocol in workflow.md)
