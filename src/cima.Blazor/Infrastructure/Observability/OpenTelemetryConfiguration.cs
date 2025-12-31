@@ -7,13 +7,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace cima.Blazor.Infrastructure.Observability;
 
 /// <summary>
-/// Configuración de OpenTelemetry para distributed tracing y métricas
-/// Nota: Requiere paquetes OpenTelemetry.* para funcionalidad completa
-/// Por ahora solo registra las métricas de negocio
+/// Configuracion de OpenTelemetry para distributed tracing y metricas
 /// </summary>
 public static class OpenTelemetryConfiguration
 {
@@ -25,20 +26,84 @@ public static class OpenTelemetryConfiguration
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
-        var otelOptions = configuration
+        var options = configuration
             .GetSection("OpenTelemetry")
             .Get<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
 
-        if (!otelOptions.Enabled)
+        if (!options.Enabled)
         {
             return services;
         }
 
-        // Registrar métricas de negocio (siempre disponibles)
+        // Registrar servicios de metricas de negocio
         services.AddSingleton<CimaMetrics>();
 
-        // TODO: Agregar OpenTelemetry completo cuando se instalen los paquetes
-        // services.AddOpenTelemetry()...
+        // Configurar OpenTelemetry
+        services.AddOpenTelemetry()
+            .ConfigureResource(resource => resource
+                .AddService(
+                    serviceName: ServiceName,
+                    serviceVersion: ServiceVersion,
+                    serviceInstanceId: Environment.MachineName))
+            .WithTracing(tracing =>
+            {
+                tracing
+                    .AddAspNetCoreInstrumentation(opts =>
+                    {
+                        // Filtrar health checks y assets estaticos
+                        opts.Filter = httpContext =>
+                        {
+                            var path = httpContext.Request.Path.Value ?? "";
+                            return !path.StartsWith("/health") &&
+                                   !path.StartsWith("/_framework") &&
+                                   !path.StartsWith("/_blazor") &&
+                                   !path.EndsWith(".js") &&
+                                   !path.EndsWith(".css") &&
+                                   !path.EndsWith(".wasm");
+                        };
+                    })
+                    .AddHttpClientInstrumentation()
+                    .AddSource(CimaActivitySource.Name);
+
+                // Exportar a consola en desarrollo
+                if (environment.IsDevelopment())
+                {
+                    tracing.AddConsoleExporter();
+                }
+
+                // Exportar a OTLP si esta configurado
+                if (!string.IsNullOrEmpty(options.OtlpEndpoint))
+                {
+                    tracing.AddOtlpExporter(otlp =>
+                    {
+                        otlp.Endpoint = new Uri(options.OtlpEndpoint);
+                    });
+                }
+            })
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation()
+                    .AddProcessInstrumentation()
+                    .AddMeter(CimaMetrics.MeterName);
+
+                // Exportar a consola en desarrollo
+                if (environment.IsDevelopment())
+                {
+                    metrics.AddConsoleExporter();
+                }
+
+                // Exportar a OTLP si esta configurado
+                if (!string.IsNullOrEmpty(options.OtlpEndpoint))
+                {
+                    metrics.AddOtlpExporter(otlp =>
+                    {
+                        otlp.Endpoint = new Uri(options.OtlpEndpoint);
+                    });
+                }
+            });
 
         return services;
     }
@@ -47,33 +112,25 @@ public static class OpenTelemetryConfiguration
         this IApplicationBuilder app,
         IConfiguration configuration)
     {
-        var otelOptions = configuration
-            .GetSection("OpenTelemetry")
-            .Get<OpenTelemetryOptions>() ?? new OpenTelemetryOptions();
-
-        // TODO: Habilitar Prometheus endpoint cuando se instale el paquete
-        // if (otelOptions.EnablePrometheus)
-        // {
-        //     app.UseOpenTelemetryPrometheusScrapingEndpoint();
-        // }
-
+        // Middleware adicional si es necesario
+        // Por ahora, OpenTelemetry se auto-configura via DI
         return app;
     }
 }
 
 public class OpenTelemetryOptions
 {
-    public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; } = false;
     public string? OtlpEndpoint { get; set; }
-    public string? OtlpHeaders { get; set; }
-    public bool UseConsoleExporter { get; set; } = false;
-    public bool EnablePrometheus { get; set; } = true;
-    public string? DeploymentRegion { get; set; }
 }
 
+/// <summary>
+/// ActivitySource para tracing distribuido de operaciones de CIMA
+/// </summary>
 public static class CimaActivitySource
 {
-    public const string Name = "cima.Application";
+    public const string Name = "cima.Blazor";
+    
     public static readonly ActivitySource Instance = new(Name, OpenTelemetryConfiguration.ServiceVersion);
 
     public static Activity? StartListingActivity(string operation, Guid? listingId = null)
@@ -86,39 +143,27 @@ public static class CimaActivitySource
         return activity;
     }
 
-    public static Activity? StartArchitectActivity(string operation, Guid? architectId = null)
+    public static Activity? StartContactRequestActivity(string operation, Guid? requestId = null)
     {
-        var activity = Instance.StartActivity($"Architect.{operation}");
-        if (activity != null && architectId.HasValue)
+        var activity = Instance.StartActivity($"ContactRequest.{operation}");
+        if (activity != null && requestId.HasValue)
         {
-            activity.SetTag("architect.id", architectId.Value.ToString());
+            activity.SetTag("contact_request.id", requestId.Value.ToString());
         }
-        return activity;
-    }
-
-    public static Activity? StartCacheActivity(string operation, string key)
-    {
-        var activity = Instance.StartActivity($"Cache.{operation}");
-        activity?.SetTag("cache.key", key);
         return activity;
     }
 }
 
 /// <summary>
-/// Métricas personalizadas de negocio para CIMA
+/// Metricas de negocio personalizadas para CIMA
 /// </summary>
 public class CimaMetrics
 {
     public const string MeterName = "cima.Business";
-    
-    private readonly Counter<long> _listingsCreated;
-    private readonly Counter<long> _listingsPublished;
-    private readonly Counter<long> _contactRequestsReceived;
-    private readonly Counter<long> _searchesPerformed;
-    private readonly Histogram<double> _searchDuration;
-    private readonly ObservableGauge<int> _activeListings;
-    private readonly ObservableGauge<int> _activeArchitects;
 
+    private readonly Counter<long> _listingsCreated;
+    private readonly Counter<long> _contactRequestsReceived;
+    private readonly Counter<long> _propertyViews;
     private int _activeListingsCount;
     private int _activeArchitectsCount;
 
@@ -128,61 +173,37 @@ public class CimaMetrics
 
         _listingsCreated = meter.CreateCounter<long>(
             "cima.listings.created",
-            description: "Número total de listings creados");
-
-        _listingsPublished = meter.CreateCounter<long>(
-            "cima.listings.published",
-            description: "Número total de listings publicados");
+            description: "Total de propiedades creadas");
 
         _contactRequestsReceived = meter.CreateCounter<long>(
             "cima.contact_requests.received",
-            description: "Número total de solicitudes de contacto recibidas");
+            description: "Total de solicitudes de contacto recibidas");
 
-        _searchesPerformed = meter.CreateCounter<long>(
-            "cima.searches.performed",
-            description: "Número total de búsquedas realizadas");
+        _propertyViews = meter.CreateCounter<long>(
+            "cima.property.views",
+            description: "Total de visualizaciones de propiedades");
 
-        _searchDuration = meter.CreateHistogram<double>(
-            "cima.searches.duration",
-            unit: "ms",
-            description: "Duración de las búsquedas en milisegundos");
-
-        _activeListings = meter.CreateObservableGauge(
+        meter.CreateObservableGauge(
             "cima.listings.active",
             () => _activeListingsCount,
-            description: "Número de listings activos actualmente");
+            description: "Numero de propiedades activas (publicadas)");
 
-        _activeArchitects = meter.CreateObservableGauge(
+        meter.CreateObservableGauge(
             "cima.architects.active",
             () => _activeArchitectsCount,
-            description: "Número de arquitectos activos actualmente");
+            description: "Numero de arquitectos activos");
     }
 
-    public void RecordListingCreated(string category = "unknown")
+    public void IncrementListingsCreated() => _listingsCreated.Add(1);
+    
+    public void IncrementContactRequests() => _contactRequestsReceived.Add(1);
+    
+    public void IncrementPropertyViews(Guid listingId)
     {
-        _listingsCreated.Add(1, new KeyValuePair<string, object?>("category", category));
-    }
-
-    public void RecordListingPublished(string transactionType = "unknown")
-    {
-        _listingsPublished.Add(1, new KeyValuePair<string, object?>("transaction_type", transactionType));
-    }
-
-    public void RecordContactRequest(string source = "website")
-    {
-        _contactRequestsReceived.Add(1, new KeyValuePair<string, object?>("source", source));
-    }
-
-    public void RecordSearch(double durationMs, string? searchType = null, int resultsCount = 0)
-    {
-        _searchesPerformed.Add(1, 
-            new KeyValuePair<string, object?>("type", searchType ?? "general"),
-            new KeyValuePair<string, object?>("has_results", resultsCount > 0));
-        
-        _searchDuration.Record(durationMs,
-            new KeyValuePair<string, object?>("type", searchType ?? "general"));
+        _propertyViews.Add(1, new KeyValuePair<string, object?>("listing.id", listingId.ToString()));
     }
 
     public void SetActiveListingsCount(int count) => _activeListingsCount = count;
+    
     public void SetActiveArchitectsCount(int count) => _activeArchitectsCount = count;
 }

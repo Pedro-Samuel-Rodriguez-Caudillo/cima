@@ -9,26 +9,26 @@ using cima.Blazor.Infrastructure.RateLimiting;
 namespace cima.Blazor.Infrastructure;
 
 /// <summary>
-/// Clase de extensión para integrar todas las mejoras en el módulo Blazor
+/// Clase de extensiï¿½n para integrar todas las mejoras en el mï¿½dulo Blazor
 /// </summary>
 public static class ImprovementsIntegration
 {
     /// <summary>
     /// Configura todos los servicios de las mejoras implementadas
-    /// Llamar en ConfigureServices del módulo Blazor
+    /// Llamar en ConfigureServices del mï¿½dulo Blazor
     /// </summary>
     public static IServiceCollection AddCimaImprovements(
         this IServiceCollection services,
         IConfiguration configuration,
         IWebHostEnvironment environment)
     {
-        // 2. Rate Limiting - Protección contra abusos
+        // 2. Rate Limiting - ProtecciÃ³n contra abusos
         services.AddCimaRateLimiting(configuration);
 
-        // 3. Redis Cache - Caché distribuido
+        // 3. Redis Cache - CachÃ© distribuido
         services.AddCimaRedisCache(configuration);
 
-        // 17 & 18. OpenTelemetry - Distributed tracing y métricas de negocio
+        // 17 & 18. OpenTelemetry - Distributed tracing y mï¿½tricas de negocio
         services.AddCimaOpenTelemetry(configuration, environment);
 
         return services;
@@ -36,7 +36,7 @@ public static class ImprovementsIntegration
 
     /// <summary>
     /// Configura el middleware de las mejoras implementadas
-    /// Llamar en OnApplicationInitialization del módulo Blazor (después de UseRouting)
+    /// Llamar en OnApplicationInitialization del mï¿½dulo Blazor (despuï¿½s de UseRouting)
     /// </summary>
     public static IApplicationBuilder UseCimaImprovements(
         this IApplicationBuilder app,

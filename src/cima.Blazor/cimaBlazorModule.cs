@@ -6,6 +6,7 @@ using cima.Blazor.Services;
 using cima.Blazor.Infrastructure.Security;
 using MudBlazor.Services;
 using cima.Blazor.Infrastructure;
+using cima.Blazor.Infrastructure.Performance;
 using cima.Data;
 using cima.EntityFrameworkCore;
 using cima.Localization;
@@ -189,6 +190,7 @@ public class cimaBlazorModule : AbpModule
         context.Services.AddHttpClient();
 
         context.Services.AddCimaImprovements(configuration, hostingEnvironment);
+        context.Services.AddCimaResponseCompression();
 
         // ========================================
         // CONFIGURACIÓN DE MANEJO DE EXCEPCIONES
@@ -627,6 +629,9 @@ public class cimaBlazorModule : AbpModule
         app.UseCorrelationId();
         app.UseCors();
         app.UseRouting();
+        
+        // Response Compression (Gzip/Brotli) para optimizar carga
+        app.UseCimaResponseCompression();
         
         // Mejoras: Rate Limiting, OpenTelemetry
         app.UseCimaImprovements(configuration);
