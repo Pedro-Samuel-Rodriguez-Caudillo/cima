@@ -1,5 +1,6 @@
 @using cima.Listings
 @using MudBlazor
+@using Volo.Abp
 @attribute [Authorize]
 @inherits cimaComponentBase
 
@@ -35,7 +36,7 @@
         {
             <MudStack Spacing="3">
                 <MudDatePicker Label="@L["Sales:Field:Date"]" @bind-Date="SoldAt" MaxDate="DateTime.Today" />
-                <MudNumericField T="decimal" Label="@L["Sales:Field:Amount"]" @bind-Value="Amount" Min="0" />
+                <MudNumericField T="decimal" Label="@L["Sales:Field:Amount"]" @bind-Value="Amount" Min="0" Immediate="true" />
                 <MudTextField Label="@L["Sales:Field:Currency"]" @bind-Value="Currency" />
                 <MudTextField Label="@L["Sales:Field:Notes"]" @bind-Value="Notes" Lines="3" />
             </MudStack>
@@ -106,6 +107,10 @@
                 Notes = string.Empty;
             }
         }
+        catch (BusinessException ex)
+        {
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Warning);
+        }
         catch (Exception ex)
         {
             Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
@@ -113,6 +118,7 @@
         finally
         {
             IsLoading = false;
+            StateHasChanged();
         }
     }
 

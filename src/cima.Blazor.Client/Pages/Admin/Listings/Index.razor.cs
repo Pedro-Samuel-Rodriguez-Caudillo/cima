@@ -326,6 +326,12 @@ public partial class Index : cimaComponentBase
 
     private async Task OpenSaleDialog(ListingSummaryDto listing)
     {
+        if (listing.Status != ListingStatus.Published && listing.Status != ListingStatus.Portfolio)
+        {
+            Snackbar.Add(L["Sales:Validation:StatusNotAllowed"], Severity.Warning);
+            return;
+        }
+
         var parameters = new DialogParameters
         {
             { nameof(ListingSaleDialog.ListingId), listing.Id },

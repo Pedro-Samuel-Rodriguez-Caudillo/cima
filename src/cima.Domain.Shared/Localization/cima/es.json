@@ -912,6 +912,7 @@
     "Sales:Validation:DateRequired": "Selecciona una fecha de venta.",
     "Sales:Validation:AmountRequired": "Ingresa un monto válido.",
     "Sales:Validation:CurrencyRequired": "Ingresa la moneda.",
+    "Sales:Validation:StatusNotAllowed": "Solo se pueden registrar ventas para propiedades publicadas o en portafolio.",
     "Sales:Summary:TotalSales": "Ventas totales",
     "Sales:Summary:TotalAmount": "Monto total",
     "Sales:Summary:LastSale": "Última venta: {0}",

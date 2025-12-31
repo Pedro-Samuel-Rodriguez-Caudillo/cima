@@ -888,6 +888,7 @@
     "Sales:Validation:DateRequired": "Select a sale date.",
     "Sales:Validation:AmountRequired": "Enter a valid amount.",
     "Sales:Validation:CurrencyRequired": "Enter the currency.",
+    "Sales:Validation:StatusNotAllowed": "Sales can only be registered for published or portfolio listings.",
     "Sales:Summary:TotalSales": "Total sales",
     "Sales:Summary:TotalAmount": "Total amount",
     "Sales:Summary:LastSale": "Last sale: {0}",
