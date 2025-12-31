@@ -263,6 +263,12 @@
                                                    title="@GetFeaturedActionLabel(listing)"
                                                    aria-label="@GetFeaturedActionLabel(listing)" />
 
+                                    @* Sale *@
+                                    <MudIconButton Icon="@Icons.Material.Filled.Payments" Size="Size.Small"
+                                                   Color="Color.Primary" OnClick="@(() => OpenSaleDialog(listing))"
+                                                   title="@L["Sales:Dialog:Open"]"
+                                                   aria-label="@L["Sales:Dialog:Open"]" />
+
                                     @if (listing.Status == ListingStatus.Draft || listing.Status == ListingStatus.Portfolio)
                                     {
                                         <MudIconButton Icon="@Icons.Material.Filled.Publish" Size="Size.Small" 

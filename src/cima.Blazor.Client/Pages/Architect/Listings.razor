@@ -4,6 +4,7 @@
 @using cima.Listings.Outputs
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Services
+@using cima.Blazor.Client.Components.Common
 @using MudBlazor
 @attribute [Authorize]
 @inject IArchitectAppService ArchitectService
@@ -98,10 +99,18 @@
                                     <div class="flex gap-2">
                                         @if (listing.Status == ListingStatus.Published)
                                         {
-                                            <MudButton Variant="Variant.Outlined" Size="Size.Small" 
+                                            <MudButton Variant="Variant.Outlined" Size="Size.Small"
                                                 Href="@($"/properties/{listing.Id}")" Target="_blank"
                                                 StartIcon="@Icons.Material.Filled.Visibility">
                                                 Ver Publicacón
+                                            </MudButton>
+                                        }
+                                        @if (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Primary"
+                                                OnClick="@(() => OpenSaleDialog(listing))"
+                                                StartIcon="@Icons.Material.Filled.Payments">
+                                                @L["Sales:Dialog:Open"]
                                             </MudButton>
                                         }
                                     </div>
@@ -212,6 +221,32 @@
     {
         CurrentPage = page;
         await LoadListings();
+    }
+
+    private async Task OpenSaleDialog(ListingSummaryDto listing)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ListingSaleDialog.ListingId), listing.Id },
+            { nameof(ListingSaleDialog.ListingTitle), listing.Title },
+            { nameof(ListingSaleDialog.DefaultAmount), listing.Price },
+            { nameof(ListingSaleDialog.DefaultCurrency), "MXN" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ListingSaleDialog>(
+            L["Sales:Dialog:Open"],
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var result = await dialog.Result;
+        if (result?.Data is ListingSaleDto)
+        {
+            Snackbar.Add(L["Sales:Dialog:Saved"], Severity.Success);
+        }
+        else if (result?.Data is bool)
+        {
+            Snackbar.Add(L["Sales:Dialog:Deleted"], Severity.Success);
+        }
     }
 
     private Color GetStatusColor(ListingStatus status) => status switch

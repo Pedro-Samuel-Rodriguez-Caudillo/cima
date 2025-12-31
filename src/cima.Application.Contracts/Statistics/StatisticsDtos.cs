@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace cima.Statistics;
 
+public class DashboardStatsRequestDto
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}
+
 public class DashboardStatsDto
 {
     public int TotalListings { get; set; }
@@ -10,6 +16,9 @@ public class DashboardStatsDto
     public int DraftListings { get; set; }
     public int ArchivedListings { get; set; }
     public int PortfolioListings { get; set; }
+    public int TotalSales { get; set; }
+    public decimal TotalSalesAmount { get; set; }
+    public Dictionary<string, decimal> SalesByMonth { get; set; } = new();
     public int TotalArchitects { get; set; }
     public int ActiveArchitects { get; set; }
     public int TotalContactRequests { get; set; }

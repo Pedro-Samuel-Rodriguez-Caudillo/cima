@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using cima.Domain.Entities;
+using cima.Domain.Entities.Listings;
 using cima.Domain.Shared;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
@@ -20,15 +22,18 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
+    private readonly IRepository<ListingSale, Guid> _listingSaleRepository;
 
     public StatisticsAppService(
         IRepository<Listing, Guid> listingRepository,
         IRepository<Architect, Guid> architectRepository,
-        IRepository<ContactRequest, Guid> contactRequestRepository)
+        IRepository<ContactRequest, Guid> contactRequestRepository,
+        IRepository<ListingSale, Guid> listingSaleRepository)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _contactRequestRepository = contactRequestRepository;
+        _listingSaleRepository = listingSaleRepository;
     }
 
     /// <summary>
@@ -36,29 +41,40 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
     /// </summary>
     public async Task<DashboardStatsDto> GetDashboardAsync()
     {
-        var listingsQuery = await _listingRepository.GetQueryableAsync();
-        var architectsQuery = await _architectRepository.GetQueryableAsync();
+        return await GetDashboardByRangeAsync(new DashboardStatsRequestDto());
+    }
+
+    /// <summary>
+    /// Obtiene estadísticas del dashboard por rango de fechas
+    /// </summary>
+    public async Task<DashboardStatsDto> GetDashboardByRangeAsync(DashboardStatsRequestDto input)
+    {
+        var (rangeStart, rangeEnd) = NormalizeSalesRange(input);
+        var listingsQuery = await _listingRepository.GetQueryableAsync();       
+        var architectsQuery = await _architectRepository.GetQueryableAsync();   
         var contactRequestsQuery = await _contactRequestRepository.GetQueryableAsync();
+        var salesQuery = await _listingSaleRepository.GetQueryableAsync();
+        salesQuery = salesQuery.Where(sale => sale.SoldAt >= rangeStart && sale.SoldAt <= rangeEnd);
 
         // Estadísticas de Listings
-        var totalListings = await AsyncExecuter.CountAsync(listingsQuery);
+        var totalListings = await AsyncExecuter.CountAsync(listingsQuery);      
         var publishedListings = await AsyncExecuter.CountAsync(
-            listingsQuery.Where(l => l.Status == ListingStatus.Published)
+            listingsQuery.Where(l => l.Status == ListingStatus.Published)       
         );
         var draftListings = await AsyncExecuter.CountAsync(
             listingsQuery.Where(l => l.Status == ListingStatus.Draft)
         );
         var archivedListings = await AsyncExecuter.CountAsync(
-            listingsQuery.Where(l => l.Status == ListingStatus.Archived)
+            listingsQuery.Where(l => l.Status == ListingStatus.Archived)        
         );
         var portfolioListings = await AsyncExecuter.CountAsync(
-            listingsQuery.Where(l => l.Status == ListingStatus.Portfolio)
+            listingsQuery.Where(l => l.Status == ListingStatus.Portfolio)       
         );
 
         // Estadísticas de Arquitectos
-        var totalArchitects = await AsyncExecuter.CountAsync(architectsQuery);
+        var totalArchitects = await AsyncExecuter.CountAsync(architectsQuery);  
         var activeArchitects = await AsyncExecuter.CountAsync(
-            architectsQuery.Where(a => 
+            architectsQuery.Where(a =>
                 listingsQuery.Any(l => l.ArchitectId == a.Id)
             )
         );
@@ -72,6 +88,11 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             contactRequestsQuery.Where(cr => cr.Status == ContactRequestStatus.Closed)
         );
 
+        var salesList = await AsyncExecuter.ToListAsync(salesQuery);
+        var totalSales = salesList.Count;
+        var totalSalesAmount = salesList.Sum(sale => sale.Amount);
+        var salesByMonth = BuildSalesByMonth(salesList, rangeStart, rangeEnd);
+
         return new DashboardStatsDto
         {
             TotalListings = totalListings,
@@ -79,6 +100,9 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             DraftListings = draftListings,
             ArchivedListings = archivedListings,
             PortfolioListings = portfolioListings,
+            TotalSales = totalSales,
+            TotalSalesAmount = totalSalesAmount,
+            SalesByMonth = salesByMonth,
             TotalArchitects = totalArchitects,
             ActiveArchitects = activeArchitects,
             TotalContactRequests = totalContactRequests,
@@ -87,7 +111,6 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             LastUpdated = DateTime.UtcNow
         };
     }
-
     /// <summary>
     /// Obtiene estadísticas detalladas de propiedades
     /// </summary>
@@ -169,5 +192,41 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
         stats.UnrepliedCount = contactRequests.Count(cr => cr.Status == ContactRequestStatus.New);
 
         return stats;
+    }
+
+    private (DateTime Start, DateTime End) NormalizeSalesRange(DashboardStatsRequestDto input)
+    {
+        var now = Clock.Now;
+        var start = input.StartDate?.Date ?? new DateTime(now.Year, now.Month, 1);
+        var end = input.EndDate?.Date ?? now.Date;
+
+        if (end < start)
+        {
+            end = start;
+        }
+
+        end = end.Date.AddDays(1).AddTicks(-1);
+        return (start, end);
+    }
+
+    private static Dictionary<string, decimal> BuildSalesByMonth(
+        IReadOnlyCollection<ListingSale> sales,
+        DateTime rangeStart,
+        DateTime rangeEnd)
+    {
+        var startMonth = new DateTime(rangeStart.Year, rangeStart.Month, 1);
+        var endMonth = new DateTime(rangeEnd.Year, rangeEnd.Month, 1);
+
+        var grouped = sales
+            .GroupBy(sale => new DateTime(sale.SoldAt.Year, sale.SoldAt.Month, 1))
+            .ToDictionary(group => group.Key, group => group.Sum(sale => sale.Amount));
+
+        var result = new Dictionary<string, decimal>();
+        for (var month = startMonth; month <= endMonth; month = month.AddMonths(1))
+        {
+            result[month.ToString("yyyy-MM")] = grouped.TryGetValue(month, out var value) ? value : 0m;
+        }
+
+        return result;
     }
 }

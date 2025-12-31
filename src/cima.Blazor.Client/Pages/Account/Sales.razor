@@ -1,0 +1,159 @@
+@page "/account/sales"
+@attribute [Authorize]
+@using cima.Listings
+@using Volo.Abp.Application.Dtos
+@using MudBlazor
+@inherits cimaComponentBase
+@inject IListingSaleAppService ListingSaleService
+
+<PageTitle>@L["AccountSales:Title"] - @L["CompanyName"]</PageTitle>
+
+<PageShell Variant="PageShellVariant.ContainerPadded" ContainerClass="cima-container max-w-5xl" Class="pb-12">
+    <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-2">
+            @L["AccountSales:Title"]
+        </h1>
+        <p class="text-neutral-600">
+            @(IsAdmin ? L["AccountSales:SubtitleAdmin"] : L["AccountSales:Subtitle"])
+        </p>
+    </div>
+
+    <div class="cima-card p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-neutral-50 rounded-lg p-4">
+                <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">@L["Sales:Summary:TotalSales"]</p>
+                <p class="text-2xl font-bold text-neutral-900 mt-1">@SalesSummary.TotalSales</p>
+            </div>
+            <div class="bg-neutral-50 rounded-lg p-4">
+                <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">@L["Sales:Summary:TotalAmount"]</p>
+                <p class="text-2xl font-bold text-neutral-900 mt-1">@FormatAmount(SalesSummary.TotalAmount)</p>
+            </div>
+            <div class="bg-neutral-50 rounded-lg p-4">
+                <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">@L["Sales:Summary:LastSaleShort"]</p>
+                <p class="text-sm text-neutral-600 mt-2">@GetLastSaleLabel()</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+        @if (IsLoading)
+        {
+            <div class="p-10 flex justify-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else if (!Sales.Any())
+        {
+            <div class="p-12 text-center text-neutral-500">
+                <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Large" Class="text-neutral-300 mb-3" />
+                <p class="text-lg font-medium">@L["AccountSales:Empty"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="w-full">
+                <div class="bg-neutral-50 px-6 py-3 border-b border-neutral-200 hidden lg:grid lg:grid-cols-12 gap-4 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                    <div class="col-span-4">@L["AccountSales:Table:Listing"]</div>
+                    @if (IsAdmin)
+                    {
+                        <div class="col-span-3">@L["AccountSales:Table:Architect"]</div>
+                    }
+                    <div class="col-span-2">@L["AccountSales:Table:Date"]</div>
+                    <div class="col-span-2">@L["AccountSales:Table:Amount"]</div>
+                    <div class="col-span-1">@L["AccountSales:Table:Notes"]</div>
+                </div>
+
+                <div class="divide-y divide-neutral-200">
+                    @foreach (var sale in Sales)
+                    {
+                        <div class="p-4 lg:px-6 lg:py-4 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                            <div class="col-span-4">
+                                <div class="font-medium text-neutral-900">@sale.ListingTitle</div>
+                            </div>
+                            @if (IsAdmin)
+                            {
+                                <div class="col-span-3 text-sm text-neutral-600">@sale.ArchitectName</div>
+                            }
+                            <div class="col-span-2 text-sm text-neutral-600">@sale.SoldAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                            <div class="col-span-2 text-sm font-semibold text-neutral-900">@FormatAmount(sale.Amount) @sale.Currency</div>
+                            <div class="col-span-1 text-xs text-neutral-500 truncate">@sale.Notes</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
+                    <div class="text-sm text-neutral-500">
+                        @string.Format(L["AccountSales:Pagination"], (CurrentPage - 1) * PageSize + 1, Math.Min(CurrentPage * PageSize, TotalCount), TotalCount)
+                    </div>
+                    @if (TotalPages > 1)
+                    {
+                        <MudPagination Count="@TotalPages" Selected="@CurrentPage" SelectedChanged="GoToPage" Color="Color.Primary" Variant="Variant.Filled" />
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</PageShell>
+
+@code {
+    private List<ListingSaleDto> Sales { get; set; } = new();
+    private bool IsLoading { get; set; } = true;
+    private int CurrentPage { get; set; } = 1;
+    private const int PageSize = 10;
+    private int TotalCount { get; set; }
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+    private ArchitectSalesSummaryDto SalesSummary { get; set; } = new();
+
+    private bool IsAdmin => CurrentUser.IsInRole("admin");
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadSalesAsync();
+    }
+
+    private async Task LoadSalesAsync()
+    {
+        try
+        {
+            IsLoading = true;
+
+            var salesTask = ListingSaleService.GetMySalesAsync(new PagedAndSortedResultRequestDto
+            {
+                SkipCount = (CurrentPage - 1) * PageSize,
+                MaxResultCount = PageSize,
+                Sorting = "SoldAt DESC"
+            });
+            var summaryTask = ListingSaleService.GetMySalesSummaryAsync();
+
+            await Task.WhenAll(salesTask, summaryTask);
+
+            var salesResult = await salesTask;
+            Sales = salesResult.Items.ToList();
+            TotalCount = (int)salesResult.TotalCount;
+            SalesSummary = summaryTask.Result;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task GoToPage(int page)
+    {
+        CurrentPage = page;
+        await LoadSalesAsync();
+    }
+
+    private string GetLastSaleLabel() =>
+        SalesSummary.LastSaleAt.HasValue
+            ? SalesSummary.LastSaleAt.Value.ToLocalTime().ToString("dd MMM yyyy")
+            : L["AccountSales:NoLastSale"];
+
+    private static string FormatAmount(decimal amount) =>
+        amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-MX"));
+}

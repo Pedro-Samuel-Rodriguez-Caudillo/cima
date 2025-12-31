@@ -22,6 +22,11 @@ public partial class StatisticsClientProxy : ClientProxyBase<IStatisticsAppServi
         return await RequestAsync<DashboardStatsDto>(nameof(GetDashboardAsync));
     }
 
+    public virtual async Task<DashboardStatsDto> GetDashboardByRangeAsync(DashboardStatsRequestDto input)
+    {
+        return await RequestAsync<DashboardStatsDto>(nameof(GetDashboardByRangeAsync), input);
+    }
+
     public virtual async Task<ListingStatsDto> GetListingStatsAsync()
     {
         return await RequestAsync<ListingStatsDto>(nameof(GetListingStatsAsync));

@@ -1,0 +1,189 @@
+@using cima.Listings
+@using MudBlazor
+@attribute [Authorize]
+@inherits cimaComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Payments" Class="mr-2" />
+            @string.Format(L["Sales:Dialog:Title"], ListingTitle)
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (IsLoading)
+        {
+            <div class="flex items-center justify-center py-6">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else if (ExistingSale != null)
+        {
+            <MudAlert Severity="Severity.Success" Class="mb-4">
+                @L["Sales:Dialog:Existing"]
+            </MudAlert>
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.body2"><strong>@L["Sales:Field:Date"]:</strong> @ExistingSale.SoldAt.ToLocalTime().ToString("dd MMM yyyy")</MudText>
+                <MudText Typo="Typo.body2"><strong>@L["Sales:Field:Amount"]:</strong> @FormatAmount(ExistingSale.Amount) @ExistingSale.Currency</MudText>
+                @if (!string.IsNullOrWhiteSpace(ExistingSale.Notes))
+                {
+                    <MudText Typo="Typo.body2"><strong>@L["Sales:Field:Notes"]:</strong> @ExistingSale.Notes</MudText>
+                }
+            </MudStack>
+        }
+        else
+        {
+            <MudStack Spacing="3">
+                <MudDatePicker Label="@L["Sales:Field:Date"]" @bind-Date="SoldAt" MaxDate="DateTime.Today" />
+                <MudNumericField T="decimal" Label="@L["Sales:Field:Amount"]" @bind-Value="Amount" Min="0" />
+                <MudTextField Label="@L["Sales:Field:Currency"]" @bind-Value="Currency" />
+                <MudTextField Label="@L["Sales:Field:Notes"]" @bind-Value="Notes" Lines="3" />
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">@L["Common:Cancel"]</MudButton>
+        @if (ExistingSale != null)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteAsync">
+                @L["Sales:Dialog:Delete"]
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">
+                @L["Sales:Dialog:Save"]
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public Guid ListingId { get; set; }
+    [Parameter] public string ListingTitle { get; set; } = string.Empty;
+    [Parameter] public decimal? DefaultAmount { get; set; }
+    [Parameter] public string DefaultCurrency { get; set; } = "MXN";
+
+    [Inject] private IListingSaleAppService ListingSaleService { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    private bool IsLoading { get; set; } = true;
+    private ListingSaleDto? ExistingSale { get; set; }
+    private DateTime? SoldAt { get; set; }
+    private decimal Amount { get; set; }
+    private string Currency { get; set; } = "MXN";
+    private string? Notes { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadSaleAsync();
+    }
+
+    private async Task LoadSaleAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            ExistingSale = await ListingSaleService.GetByListingIdAsync(ListingId);
+
+            if (ExistingSale != null)
+            {
+                SoldAt = ExistingSale.SoldAt;
+                Amount = ExistingSale.Amount;
+                Currency = ExistingSale.Currency;
+                Notes = ExistingSale.Notes;
+            }
+            else
+            {
+                SoldAt = DateTime.Today;
+                Amount = DefaultAmount ?? 0m;
+                Currency = string.IsNullOrWhiteSpace(DefaultCurrency) ? "MXN" : DefaultCurrency;
+                Notes = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!SoldAt.HasValue)
+        {
+            Snackbar.Add(L["Sales:Validation:DateRequired"], Severity.Warning);
+            return;
+        }
+
+        if (Amount <= 0)
+        {
+            Snackbar.Add(L["Sales:Validation:AmountRequired"], Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Currency))
+        {
+            Snackbar.Add(L["Sales:Validation:CurrencyRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var created = await ListingSaleService.CreateAsync(new CreateListingSaleDto
+            {
+                ListingId = ListingId,
+                SoldAt = SoldAt.Value,
+                Amount = Amount,
+                Currency = Currency.Trim(),
+                Notes = Notes?.Trim()
+            });
+
+            MudDialog?.Close(DialogResult.Ok(created));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (ExistingSale == null)
+        {
+            return;
+        }
+
+        var confirmed = await DialogService.ShowMessageBox(
+            L["Sales:Dialog:DeleteTitle"],
+            L["Sales:Dialog:DeleteConfirm"],
+            yesText: L["Common:Delete"],
+            cancelText: L["Common:Cancel"]);
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await ListingSaleService.DeleteAsync(ExistingSale.Id);
+            MudDialog?.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+
+    private static string FormatAmount(decimal amount) =>
+        amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-MX"));
+}

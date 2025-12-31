@@ -220,6 +220,15 @@
                                     @L["Menu:Settings:Profile"]
                                 </div>
                             </a>
+                            <a href="/account/sales" class="block px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                               @onclick="CloseUserMenu">
+                                <div class="flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v-4.5m0 0V8.25m0 4.5h4.5m-4.5 0h-4.5m-3 6a2.25 2.25 0 01-2.25-2.25V7.5A2.25 2.25 0 015.25 5.25h7.5a2.25 2.25 0 012.25 2.25v9.75a2.25 2.25 0 01-2.25 2.25h-7.5z" />
+                                    </svg>
+                                    @L["Menu:Settings:Sales"]
+                                </div>
+                            </a>
                             <a href="/account/change-password" class="block px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                                @onclick="CloseUserMenu">
                                 <div class="flex items-center gap-3">
@@ -340,6 +349,9 @@
                     <p class="text-sm text-white/60 uppercase tracking-wider mb-3">@L["Menu:Settings:MyAccount"]</p>
                     <a href="/account/profile" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
                         @L["Menu:Settings:Profile"]
+                    </a>
+                    <a href="/account/sales" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
+                        @L["Menu:Settings:Sales"]
                     </a>
                     <a href="/account/change-password" class="block text-xl font-display font-medium text-white/80 hover:text-white transition-colors mb-3" @onclick="ToggleMobileMenu">
                         @L["Menu:User:ChangePassword"]

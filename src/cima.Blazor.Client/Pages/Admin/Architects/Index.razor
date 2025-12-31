@@ -1,8 +1,10 @@
 @page "/admin/architects"
 @using cima.Architects
 @using cima.Permissions
+@using cima.Listings
 @attribute [Authorize(cimaPermissions.Architects.Default)]
 @inject IArchitectAppService ArchitectService
+@inject IListingSaleAppService ListingSaleService
 @inject IJSRuntime JS
 @inject IDialogService DialogService
 @inherits cimaComponentBase
@@ -54,7 +56,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach (var architect in Architects)
                 {
-                    <MudCard Class="cima-card h-full flex flex-col">
+                    <MudCard Class="cima-card h-full flex flex-col cursor-pointer"
+                             @ondblclick="@(() => OpenArchitectDetails(architect))">
                         <MudCardHeader>
                             <CardHeaderAvatar>
                                 <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
@@ -87,7 +90,7 @@
                         </MudCardContent>
                         <MudCardActions Class="border-t border-neutral-100 flex justify-between px-4">
                             <div class="flex gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                     Href="@($"/admin/architects/edit/{architect.Id}")" />
                                 
                                 @if (architect.IsActive)
@@ -170,6 +173,76 @@
     </DialogActions>
 </MudDialog>
 
+@* Dialog detalle arquitecto *@
+<MudDialog @bind-Visible="ShowDetailDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+            @SelectedArchitectName
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (SelectedArchitect is null)
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@L["Common:NotSet"]</MudText>
+        }
+        else
+        {
+            <MudStack Spacing="2">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Admin:Architects:Username"]</MudText>
+                    <MudText Typo="Typo.body2">@SelectedArchitect.UserName</MudText>
+                </MudStack>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Common:Email"]</MudText>
+                    <MudText Typo="Typo.body2">@SelectedArchitect.Email</MudText>
+                </MudStack>
+                <MudStack Row="true" Spacing="2" Class="flex-wrap">
+                    <MudPaper Class="p-3" Elevation="0">
+                        <MudText Typo="Typo.h6" Color="Color.Primary">@SelectedArchitect.ActiveListings</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Admin:Architects:ActiveListingsCount"]</MudText>
+                    </MudPaper>
+                    <MudPaper Class="p-3" Elevation="0">
+                        <MudText Typo="Typo.h6">@SelectedArchitect.TotalListingsPublished</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Admin:Architects:TotalPublishedCount"]</MudText>
+                    </MudPaper>
+                    <MudPaper Class="p-3" Elevation="0">
+                        <MudText Typo="Typo.h6">@SelectedSalesSummary?.TotalSales ?? 0</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Sales:Summary:TotalSales"]</MudText>
+                    </MudPaper>
+                    <MudPaper Class="p-3" Elevation="0">
+                        <MudText Typo="Typo.h6">@FormatAmount(SelectedSalesSummary?.TotalAmount ?? 0m)</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Sales:Summary:TotalAmount"]</MudText>
+                    </MudPaper>
+                </MudStack>
+                @if (IsSalesSummaryLoading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mt-2" />
+                }
+                else if (SelectedSalesSummary?.LastSaleAt != null)
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        @string.Format(L["Sales:Summary:LastSale"], SelectedSalesSummary.LastSaleAt.Value.ToLocalTime().ToString("dd MMM yyyy"))
+                    </MudText>
+                }
+                <MudChip T="string" Size="Size.Small"
+                         Color="@(SelectedArchitect.IsActive ? Color.Success : Color.Default)">
+                    @(SelectedArchitect.IsActive ? L["Admin:Architects:Active"] : L["Admin:Architects:Inactive"])
+                </MudChip>
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="@(() => ShowDetailDialog = false)">@L["Common:Close"]</MudButton>
+        @if (SelectedArchitect is not null)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/admin/architects/edit/{SelectedArchitect.Id}")">
+                @L["Admin:Architects:Edit"]
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
 @code {
     private bool IsLoading { get; set; } = true;
     private List<ArchitectDto>? Architects { get; set; }
@@ -177,6 +250,23 @@
     private bool ShowResetDialog { get; set; }
     private string ResetArchitectName { get; set; } = "";
     private string NewTempPassword { get; set; } = "";
+    private bool ShowDetailDialog { get; set; }
+    private ArchitectDto? SelectedArchitect { get; set; }
+    private ArchitectSalesSummaryDto? SelectedSalesSummary { get; set; }
+    private bool IsSalesSummaryLoading { get; set; }
+
+    private string SelectedArchitectName =>
+        SelectedArchitect == null
+            ? L["Common:NotSet"]
+            : $"{SelectedArchitect.Name} {SelectedArchitect.Surname}".Trim();
+
+    private void OpenArchitectDetails(ArchitectDto architect)
+    {
+        SelectedArchitect = architect;
+        SelectedSalesSummary = null;
+        ShowDetailDialog = true;
+        _ = LoadSalesSummaryAsync(architect.Id);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -309,4 +399,26 @@
         var last = !string.IsNullOrWhiteSpace(surname) ? surname[0].ToString().ToUpper() : "";
         return $"{first}{last}";
     }
+
+    private async Task LoadSalesSummaryAsync(Guid architectId)
+    {
+        try
+        {
+            IsSalesSummaryLoading = true;
+            SelectedSalesSummary = await ListingSaleService.GetSummaryByArchitectIdAsync(architectId);
+        }
+        catch (Exception ex)
+        {
+            SelectedSalesSummary = null;
+            Snackbar.Add(GetUserFriendlyErrorMessage(ex), Severity.Error);
+        }
+        finally
+        {
+            IsSalesSummaryLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatAmount(decimal amount) =>
+        amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-MX"));
 }

@@ -15,6 +15,11 @@ public interface IStatisticsAppService : IApplicationService
     Task<DashboardStatsDto> GetDashboardAsync();
 
     /// <summary>
+    /// Obtiene estadísticas del dashboard por rango de fechas
+    /// </summary>
+    Task<DashboardStatsDto> GetDashboardByRangeAsync(DashboardStatsRequestDto input);
+
+    /// <summary>
     /// Obtiene estadísticas detalladas de propiedades
     /// </summary>
     Task<ListingStatsDto> GetListingStatsAsync();

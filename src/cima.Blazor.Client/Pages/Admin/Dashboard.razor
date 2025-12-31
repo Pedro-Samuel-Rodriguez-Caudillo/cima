@@ -110,6 +110,78 @@
                 </div>
             </div>
 
+            @* Sales Section *@
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">@L["Dashboard:Sales:Title"]</h3>
+                        <p class="text-sm text-gray-500">@L["Dashboard:Sales:Subtitle"]</p>
+                    </div>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                @L["Dashboard:Sales:From"]
+                            </label>
+                            <input type="date"
+                                   @bind-value="SalesRangeStart"
+                                   @bind-value:format="yyyy-MM-dd"
+                                   class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-navy-500 focus:border-navy-500" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                @L["Dashboard:Sales:To"]
+                            </label>
+                            <input type="date"
+                                   @bind-value="SalesRangeEnd"
+                                   @bind-value:format="yyyy-MM-dd"
+                                   class="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-navy-500 focus:border-navy-500" />
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplySalesRange">
+                            @L["Dashboard:Sales:ApplyRange"]
+                        </MudButton>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">@L["Dashboard:Sales:TotalSales"]</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">@Stats.TotalSales</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">@L["Dashboard:Sales:TotalAmount"]</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">@FormatSalesAmount(Stats.TotalSalesAmount)</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">@L["Dashboard:Sales:Updated"]</p>
+                        <p class="text-sm text-gray-600 mt-2">@Stats.LastUpdated.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    @if (!SalesChartPoints.Any())
+                    {
+                        <div class="text-center py-8 text-gray-500">
+                            @L["Dashboard:Sales:NoData"]
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="h-48 flex items-end gap-3">
+                            @foreach (var point in SalesChartPoints)
+                            {
+                                var heightPct = MaxSalesAmount == 0 ? 0 : (double)(point.Amount / MaxSalesAmount) * 100;
+                                <div class="flex-1 flex flex-col items-center gap-2">
+                                    <div class="w-full bg-navy-600/80 rounded-t-md transition-all duration-500"
+                                         style="@($"height: {Math.Max(4, heightPct)}%")">
+                                    </div>
+                                    <span class="text-[11px] text-gray-500">@FormatSalesMonthLabel(point.Label)</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
             @* Charts Row *@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 @* Listings by Status *@
@@ -325,9 +397,19 @@
     private DashboardStatsDto? Stats { get; set; }
     private List<ContactRequestDto>? RecentRequests { get; set; }
     private bool _hasLoaded;
+    private DateTime SalesRangeStart { get; set; }
+    private DateTime SalesRangeEnd { get; set; }
+
+    private List<SalesChartPoint> SalesChartPoints => BuildSalesChartPoints();
+    private decimal MaxSalesAmount => SalesChartPoints.Count == 0
+        ? 0
+        : SalesChartPoints.Max(point => point.Amount);
 
     protected override async Task OnInitializedAsync()
     {
+        var today = DateTime.Today;
+        SalesRangeStart = new DateTime(today.Year, today.Month, 1);
+        SalesRangeEnd = today;
         await base.OnInitializedAsync();
     }
 
@@ -349,8 +431,12 @@
             IsLoading = true;
             
             // Cargar stats y solicitudes en paralelo
-            var statsTask = StatisticsService.GetDashboardAsync();
-            var requestsTask = ContactRequestService.GetListAsync(0, 5);
+            var statsTask = StatisticsService.GetDashboardByRangeAsync(new DashboardStatsRequestDto
+            {
+                StartDate = SalesRangeStart,
+                EndDate = SalesRangeEnd
+            });
+            var requestsTask = ContactRequestService.GetListAsync(0, 5);        
             
             await Task.WhenAll(statsTask, requestsTask);
             
@@ -370,4 +456,48 @@
     }
 
     private void NavTo(string url) => Navigation.NavigateTo(url);
+
+    private async Task ApplySalesRange()
+    {
+        if (SalesRangeEnd < SalesRangeStart)
+        {
+            Snackbar.Add(L["Dashboard:Sales:InvalidRange"], Severity.Warning);
+            return;
+        }
+
+        await LoadStats();
+    }
+
+    private List<SalesChartPoint> BuildSalesChartPoints()
+    {
+        if (Stats?.SalesByMonth == null || Stats.SalesByMonth.Count == 0)
+        {
+            return new List<SalesChartPoint>();
+        }
+
+        if (Stats.SalesByMonth.Values.All(value => value <= 0))
+        {
+            return new List<SalesChartPoint>();
+        }
+
+        return Stats.SalesByMonth
+            .Select(kv => new SalesChartPoint(kv.Key, kv.Value))
+            .OrderBy(point => point.Label)
+            .ToList();
+    }
+
+    private static string FormatSalesMonthLabel(string key)
+    {
+        if (DateTime.TryParseExact(key, "yyyy-MM", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var value))
+        {
+            return value.ToString("MMM yy");
+        }
+
+        return key;
+    }
+
+    private static string FormatSalesAmount(decimal amount) =>
+        amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("es-MX"));
+
+    private sealed record SalesChartPoint(string Label, decimal Amount);
 }

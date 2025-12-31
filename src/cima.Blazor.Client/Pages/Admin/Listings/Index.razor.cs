@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using cima.Blazor.Client;
+using cima.Blazor.Client.Components.Common;
 using cima.Blazor.Client.Services;
 using cima.Domain.Shared;
 using cima.Listings;
@@ -303,6 +304,34 @@ public partial class Index : cimaComponentBase
 
     private async Task DuplicateListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.DuplicateAsync(id), "Propiedad duplicada exitosamente");
+
+    private async Task OpenSaleDialog(ListingSummaryDto listing)
+    {
+        var parameters = new DialogParameters
+        {
+            { nameof(ListingSaleDialog.ListingId), listing.Id },
+            { nameof(ListingSaleDialog.ListingTitle), listing.Title },
+            { nameof(ListingSaleDialog.DefaultAmount), listing.Price },
+            { nameof(ListingSaleDialog.DefaultCurrency), "MXN" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ListingSaleDialog>(
+            L["Sales:Dialog:Open"],
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var result = await dialog.Result;
+        if (result?.Data is ListingSaleDto)
+        {
+            Snackbar.Add(L["Sales:Dialog:Saved"], Severity.Success);
+            await LoadListings();
+        }
+        else if (result?.Data is bool)
+        {
+            Snackbar.Add(L["Sales:Dialog:Deleted"], Severity.Success);
+            await LoadListings();
+        }
+    }
 
     private async Task DeleteListing(Guid id)
     {
