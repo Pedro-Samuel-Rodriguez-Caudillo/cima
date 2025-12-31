@@ -279,7 +279,7 @@
                                         <MudIconButton Icon="@Icons.Material.Filled.Unpublished" Size="Size.Small"
                                             Color="Color.Default" OnClick="@(() => UnpublishListing(listing.Id))" title="Mover a borrador" aria-label="Mover a borrador" />
                                         <MudIconButton Icon="@Icons.Material.Filled.Style" Size="Size.Small"
-                                            Color="Color.Info" OnClick="@(() => MoveListingToPortfolio(listing.Id))" title="Mover a portafolio" aria-label="Mover a portafolio" />
+                                            Color="Color.Info" OnClick="@(() => MoveListingToPortfolio(listing))" title="Mover a portafolio" aria-label="Mover a portafolio" />
                                     }
                                     @if (listing.Status == ListingStatus.Archived)
                                     {

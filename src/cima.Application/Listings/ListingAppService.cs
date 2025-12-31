@@ -14,6 +14,7 @@ using cima.Events;
 using cima.Images;
 using cima.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
@@ -347,7 +348,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         var clientIp = httpContext?.Connection?.RemoteIpAddress?.ToString();
         var userAgent = httpContext?.Request?.Headers["User-Agent"].ToString();
         var correlationId = httpContext?.TraceIdentifier;
-        var sessionId = httpContext?.Session?.Id;
+        var session = httpContext?.Features.Get<ISessionFeature>()?.Session;
+        var sessionId = session?.Id;
         var authMethod = httpContext?.User?.Identity?.AuthenticationType;
         
         var priceHistory = new Domain.Entities.Listings.ListingPriceHistory(

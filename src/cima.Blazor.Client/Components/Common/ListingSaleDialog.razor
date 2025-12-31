@@ -99,7 +99,9 @@
             else
             {
                 SoldAt = DateTime.Today;
-                Amount = DefaultAmount ?? 0m;
+                Amount = DefaultAmount.HasValue && DefaultAmount.Value > 0
+                    ? DefaultAmount.Value
+                    : (await ListingSaleService.GetSuggestedAmountAsync(ListingId)) ?? 0m;
                 Currency = string.IsNullOrWhiteSpace(DefaultCurrency) ? "MXN" : DefaultCurrency;
                 Notes = string.Empty;
             }

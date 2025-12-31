@@ -903,6 +903,8 @@
     "Sales:Dialog:Open": "Registrar venta",
     "Sales:Dialog:Saved": "Venta registrada",
     "Sales:Dialog:Deleted": "Venta eliminada",
+    "Sales:Dialog:SuggestTitle": "Registrar venta",
+    "Sales:Dialog:SuggestPortfolio": "La propiedad pasó a portafolio. ¿Deseas registrar la venta ahora?",
     "Sales:Field:Date": "Fecha de venta",
     "Sales:Field:Amount": "Monto",
     "Sales:Field:Currency": "Moneda",

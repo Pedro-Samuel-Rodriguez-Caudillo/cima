@@ -879,6 +879,8 @@
     "Sales:Dialog:Open": "Register sale",
     "Sales:Dialog:Saved": "Sale saved",
     "Sales:Dialog:Deleted": "Sale deleted",
+    "Sales:Dialog:SuggestTitle": "Register sale",
+    "Sales:Dialog:SuggestPortfolio": "The listing is now in portfolio. Do you want to register the sale now?",
     "Sales:Field:Date": "Sale date",
     "Sales:Field:Amount": "Amount",
     "Sales:Field:Currency": "Currency",

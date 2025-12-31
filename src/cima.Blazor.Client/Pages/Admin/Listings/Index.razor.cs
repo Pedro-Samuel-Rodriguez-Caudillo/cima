@@ -299,8 +299,27 @@ public partial class Index : cimaComponentBase
     private async Task UnarchiveListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.UnarchiveAsync(id), "Propiedad desarchivada");
 
-    private async Task MoveListingToPortfolio(Guid id) =>
-        await ExecuteWithReload(() => ListingService.MoveToPortfolioAsync(id), "Propiedad movida al portafolio");
+    private async Task MoveListingToPortfolio(ListingSummaryDto listing) =>
+        await ExecuteWithReload(async () =>
+            {
+                await ListingService.MoveToPortfolioAsync(listing.Id);
+                await SuggestSaleRegistrationAsync(listing);
+            },
+            "Propiedad movida al portafolio");
+
+    private async Task SuggestSaleRegistrationAsync(ListingSummaryDto listing)
+    {
+        var confirm = await DialogService.ShowMessageBox(
+            L["Sales:Dialog:SuggestTitle"],
+            L["Sales:Dialog:SuggestPortfolio"],
+            yesText: L["Sales:Dialog:Open"],
+            cancelText: L["Common:Cancel"]);
+
+        if (confirm == true)
+        {
+            await OpenSaleDialog(listing);
+        }
+    }
 
     private async Task DuplicateListing(Guid id) =>
         await ExecuteWithReload(() => ListingService.DuplicateAsync(id), "Propiedad duplicada exitosamente");

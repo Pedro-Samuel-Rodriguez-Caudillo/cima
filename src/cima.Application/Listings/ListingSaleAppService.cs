@@ -13,6 +13,7 @@ using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
+using cima.Domain.Listings;
 
 namespace cima.Listings;
 
@@ -21,18 +22,21 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
     private readonly IRepository<ListingSale, Guid> _listingSaleRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
-    private readonly IIdentityUserRepository _userRepository;
+    private readonly IRepository<IdentityUser, Guid> _userRepository;
+    private readonly IListingPriceHistoryRepository _priceHistoryRepository;
 
     public ListingSaleAppService(
         IRepository<ListingSale, Guid> listingSaleRepository,
         IRepository<Listing, Guid> listingRepository,
         IRepository<Architect, Guid> architectRepository,
-        IIdentityUserRepository userRepository)
+        IRepository<IdentityUser, Guid> userRepository,
+        IListingPriceHistoryRepository priceHistoryRepository)
     {
         _listingSaleRepository = listingSaleRepository;
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _userRepository = userRepository;
+        _priceHistoryRepository = priceHistoryRepository;
     }
 
     [Authorize(cimaPermissions.Listings.Edit)]
@@ -53,6 +57,24 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
 
         var nameLookup = await BuildArchitectNameLookupAsync(new[] { sale });
         return MapToDto(sale, nameLookup);
+    }
+
+    [Authorize(cimaPermissions.Listings.Edit)]
+    public async Task<decimal?> GetSuggestedAmountAsync(Guid listingId)
+    {
+        var listing = await _listingRepository.GetAsync(listingId);
+        await EnsureCanManageSaleAsync(listing);
+
+        if (listing.Price > 0)
+        {
+            return listing.Price;
+        }
+
+        var history = await _priceHistoryRepository.GetByListingIdAsync(listingId);
+        var candidate = history.FirstOrDefault(h => h.NewPrice > 0)?.NewPrice
+            ?? history.FirstOrDefault(h => h.OldPrice > 0)?.OldPrice;
+
+        return candidate;
     }
 
     [Authorize(cimaPermissions.Listings.Edit)]
