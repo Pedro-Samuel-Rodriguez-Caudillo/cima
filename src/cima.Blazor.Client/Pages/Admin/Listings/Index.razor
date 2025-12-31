@@ -100,7 +100,7 @@
                     </div>
                 </div>
                 <div>
-                     <select @bind="StatusFilter" @onchange="HandleFilterChanged" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                     <select @bind="StatusFilter" @bind:after="HandleFilterChanged" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:AllStatuses"]</option>
                         @foreach (ListingStatus status in Enum.GetValues(typeof(ListingStatus)))
                         {
@@ -109,7 +109,7 @@
                     </select>
                 </div>
                 <div>
-                    <select @bind="CategoryFilter" @onchange="HandleFilterChanged" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                    <select @bind="CategoryFilter" @bind:after="HandleFilterChanged" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:AllCategories"]</option>
                         @foreach (PropertyCategory category in Enum.GetValues(typeof(PropertyCategory)))
                         {
@@ -118,7 +118,7 @@
                     </select>
                 </div>
                 <div>
-                    <select @bind="FeaturedFilter" @onchange="HandleFilterChanged" aria-label="@L["Admin:Listings:Featured:FilterLabel"]" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                    <select @bind="FeaturedFilter" @bind:after="HandleFilterChanged" aria-label="@L["Admin:Listings:Featured:FilterLabel"]" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:Featured:FilterAll"]</option>
                         <option value="featured">@L["Admin:Listings:Featured:FilterOnly"]</option>
                     </select>

@@ -12,6 +12,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace cima.Listings;
 
@@ -20,15 +21,18 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
     private readonly IRepository<ListingSale, Guid> _listingSaleRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly IIdentityUserRepository _userRepository;
 
     public ListingSaleAppService(
         IRepository<ListingSale, Guid> listingSaleRepository,
         IRepository<Listing, Guid> listingRepository,
-        IRepository<Architect, Guid> architectRepository)
+        IRepository<Architect, Guid> architectRepository,
+        IIdentityUserRepository userRepository)
     {
         _listingSaleRepository = listingSaleRepository;
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
+        _userRepository = userRepository;
     }
 
     [Authorize(cimaPermissions.Listings.Edit)]
@@ -42,7 +46,13 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
             sale => sale.Architect!);
         var sale = await AsyncExecuter.FirstOrDefaultAsync(
             queryable.Where(s => s.ListingId == listingId));
-        return sale == null ? null : MapToDto(sale);
+        if (sale == null)
+        {
+            return null;
+        }
+
+        var nameLookup = await BuildArchitectNameLookupAsync(new[] { sale });
+        return MapToDto(sale, nameLookup);
     }
 
     [Authorize(cimaPermissions.Listings.Edit)]
@@ -80,7 +90,8 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
             s => s.Listing!,
             s => s.Architect!);
         var created = await AsyncExecuter.FirstAsync(queryable.Where(s => s.Id == sale.Id));
-        return MapToDto(created);
+        var nameLookup = await BuildArchitectNameLookupAsync(new[] { created });
+        return MapToDto(created, nameLookup);
     }
 
     [Authorize(cimaPermissions.Listings.Edit)]
@@ -107,7 +118,7 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
             sale => sale.Architect!);
         if (!CurrentUser.IsInRole("admin"))
         {
-            queryable = queryable.Where(sale => sale.ArchitectId == architect.Id);
+            queryable = queryable.Where(sale => sale.ArchitectId == architect!.Id);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
@@ -117,7 +128,8 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount));
 
-        return new PagedResultDto<ListingSaleDto>(totalCount, items.Select(MapToDto).ToList());
+        var nameLookup = await BuildArchitectNameLookupAsync(items);
+        return new PagedResultDto<ListingSaleDto>(totalCount, items.Select(sale => MapToDto(sale, nameLookup)).ToList());
     }
 
     [Authorize]
@@ -208,12 +220,14 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
         };
     }
 
-    private ListingSaleDto MapToDto(ListingSale sale)
+    private ListingSaleDto MapToDto(ListingSale sale, IReadOnlyDictionary<Guid, string> architectNameLookup)
     {
         var listingTitle = sale.Listing?.Title ?? string.Empty;
-        var architectName = sale.Architect == null
-            ? string.Empty
-            : $"{sale.Architect.Name} {sale.Architect.Surname}".Trim();
+        var architectName = string.Empty;
+        if (sale.Architect != null && architectNameLookup.TryGetValue(sale.Architect.UserId, out var resolvedName))
+        {
+            architectName = resolvedName;
+        }
 
         return new ListingSaleDto
         {
@@ -227,6 +241,33 @@ public class ListingSaleAppService : ApplicationService, IListingSaleAppService
             Currency = sale.Currency,
             Notes = sale.Notes
         };
+    }
+
+    private async Task<Dictionary<Guid, string>> BuildArchitectNameLookupAsync(IEnumerable<ListingSale> sales)
+    {
+        var userIds = sales
+            .Select(sale => sale.Architect?.UserId)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var queryable = await _userRepository.GetQueryableAsync();
+        var users = await AsyncExecuter.ToListAsync(queryable.Where(user => userIds.Contains(user.Id)));
+        return users.ToDictionary(user => user.Id, GetUserDisplayName);
+    }
+
+    private static string GetUserDisplayName(IdentityUser user)
+    {
+        var fullName = $"{user.Name} {user.Surname}".Trim();
+        return string.IsNullOrWhiteSpace(fullName)
+            ? user.UserName ?? user.Email ?? string.Empty
+            : fullName;
     }
 
     private async Task<Architect?> GetCurrentArchitectAsync()

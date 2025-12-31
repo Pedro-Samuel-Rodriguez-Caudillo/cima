@@ -10,13 +10,12 @@
 
     <InputFile id="fileInput" OnChange="OnInputFileChange" multiple accept=".jpg, .jpeg, .png, .webp" hidden />
     
-    <MudButton HtmlTag="label"
-               Variant="Variant.Filled"
-               Color="Color.Primary"
-               StartIcon="@Icons.Material.Filled.CloudUpload"
-               for="fileInput">
+    <label for="fileInput" class="cima-btn cima-btn-primary inline-flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4-4m0 0l-4 4m4-4v12"/>
+        </svg>
         @L["ImageUploader:Upload"]
-    </MudButton>
+    </label>
 
     @if (uploadedImages.Any())
     {

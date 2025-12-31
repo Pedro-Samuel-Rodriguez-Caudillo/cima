@@ -27,7 +27,7 @@ public class SessionGuardService(
     public async Task<bool> ValidateSessionAsync()
     {
         var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        
+
         if (authState.User.Identity?.IsAuthenticated != true)
         {
             await ShowSessionExpiredDialogAsync();
