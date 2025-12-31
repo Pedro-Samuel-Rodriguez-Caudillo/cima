@@ -14,7 +14,7 @@ using Volo.Abp.EventBus;
 using Volo.Abp.Emailing;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Azure;
-using Volo.Abp.TextTemplating;
+using Volo.Abp.TextTemplating.Scriban;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -39,7 +39,7 @@ namespace cima;
     typeof(AbpEventBusModule),
     typeof(AbpEmailingModule),
     typeof(AbpBlobStoringAzureModule),
-    typeof(AbpTextTemplatingModule)
+    typeof(AbpTextTemplatingScribanModule)
     )]
 public class cimaApplicationModule : AbpModule
 {
@@ -81,7 +81,7 @@ public class cimaApplicationModule : AbpModule
             {
                 container.UseAzure(azure =>
                 {
-                    azure.ConnectionString = configuration["ImageStorage:Azure:ConnectionString"];
+                    azure.ConnectionString = configuration["ImageStorage:Azure:ConnectionString"] ?? string.Empty;
                     azure.ContainerName = configuration["ImageStorage:Azure:ContainerName"] ?? "listing-images";
                 });
             });
