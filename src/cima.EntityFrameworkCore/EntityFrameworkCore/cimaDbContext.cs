@@ -32,6 +32,7 @@ public class cimaDbContext :
     public DbSet<ContactRequest> ContactRequests { get; set; }
     public DbSet<FeaturedListing> FeaturedListings { get; set; }
     public DbSet<ListingPriceHistory> ListingPriceHistories { get; set; }
+    public DbSet<ListingSale> ListingSales { get; set; }
     public DbSet<PropertyCategoryEntity> PropertyCategories { get; set; }
     public DbSet<PropertyTypeEntity> PropertyTypes { get; set; }
     public DbSet<TransactionTypeEntity> TransactionTypes { get; set; }
@@ -180,6 +181,26 @@ public class cimaDbContext :
                 .WithMany()
                 .HasForeignKey(x => x.ListingId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ListingSale>(b =>
+        {
+            b.ToTable("ListingSales");
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.ListingId).IsUnique();
+            b.HasIndex(x => x.ArchitectId);
+            b.HasIndex(x => x.SoldAt);
+            b.Property(x => x.Amount).HasPrecision(18, 2);
+            b.Property(x => x.Currency).IsRequired().HasMaxLength(3);
+            b.Property(x => x.Notes).HasMaxLength(1000);
+            b.HasOne(x => x.Listing)
+                .WithMany()
+                .HasForeignKey(x => x.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+            b.HasOne(x => x.Architect)
+                .WithMany()
+                .HasForeignKey(x => x.ArchitectId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ListingPriceHistory>(b =>
