@@ -54,7 +54,7 @@ public sealed class ListingImageTests
             imageId: Guid.NewGuid(),
             url: url,
             sortOrder: 0,
-            thumbnailUrl: null,
+            thumbnailUrl: null!,
             altText: "Test",
             fileSize: 1000,
             contentType: "image/jpeg"
@@ -107,5 +107,26 @@ public sealed class ListingImageTests
 
         // Assert
         img1.SortOrder.ShouldNotBe(img2.SortOrder);
+    }
+
+    [Fact]
+    public void Should_Create_New_Instance_With_Updated_SortOrder()
+    {
+        // Arrange
+        var original = new ListingImage(Guid.NewGuid(), "url", 1, "thumb", "alt", 100, "image/jpeg");
+        var newSortOrder = 5;
+
+        // Act
+        var updated = original.WithSortOrder(newSortOrder);
+
+        // Assert
+        updated.ShouldNotBe(original); // Should be different instance
+        updated.SortOrder.ShouldBe(newSortOrder);
+        updated.ImageId.ShouldBe(original.ImageId);
+        updated.Url.ShouldBe(original.Url);
+        updated.ThumbnailUrl.ShouldBe(original.ThumbnailUrl);
+        updated.AltText.ShouldBe(original.AltText);
+        updated.FileSize.ShouldBe(original.FileSize);
+        updated.ContentType.ShouldBe(original.ContentType);
     }
 }

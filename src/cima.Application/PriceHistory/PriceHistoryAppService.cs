@@ -49,7 +49,7 @@ public class PriceHistoryAppService : ApplicationService, IPriceHistoryAppServic
             .WhereIf(input.ListingId.HasValue, x => x.ListingId == input.ListingId)
             .WhereIf(input.UserId.HasValue, x => x.ChangedByUserId == input.UserId)
             .WhereIf(!string.IsNullOrWhiteSpace(input.UserName),
-                x => x.ChangedByUserName != null && x.ChangedByUserName.Contains(input.UserName))
+                x => x.ChangedByUserName != null && x.ChangedByUserName.Contains(input.UserName!))
             .WhereIf(!string.IsNullOrEmpty(input.IpAddress), x => x.ClientIpAddress == input.IpAddress)
             .WhereIf(input.FromDate.HasValue, x => x.ChangedAt >= input.FromDate)
             .WhereIf(input.ToDate.HasValue, x => x.ChangedAt <= input.ToDate);

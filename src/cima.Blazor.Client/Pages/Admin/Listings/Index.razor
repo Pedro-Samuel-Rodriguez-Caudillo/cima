@@ -6,7 +6,7 @@
 
 <PageTitle>@L["Admin:Listings:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20">
+<PageShell>
     @* Header *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
@@ -192,9 +192,18 @@
                                         }
                                     </div>
                                     <div class="overflow-hidden">
-                                        <h3 class="font-medium text-neutral-900 truncate" title="@listing.Title">
-                                            @listing.Title
-                                        </h3>
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-medium text-neutral-900 truncate" title="@listing.Title">
+                                                @listing.Title
+                                            </h3>
+                                            @if (IsFeatured(listing.Id))
+                                            {
+                                                <span class="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" />
+                                                    @L["Admin:Listings:Featured:Label"]
+                                                </span>
+                                            }
+                                        </div>
                                         <p class="text-sm text-neutral-500 truncate">
                                             @listing.Location?.State, @listing.Location?.City
                                         </p>
@@ -211,7 +220,7 @@
                                 @* Price *@
                                 <div class="col-span-1 lg:col-span-2 flex items-center">
                                     <span class="text-sm font-semibold text-neutral-900">
-                                        @listing.Price.ToString("C0", MexicoCulture)
+                                        @FormatPrice(listing)
                                     </span>
                                 </div>
 
@@ -233,8 +242,17 @@
                                         Href="@($"/admin/listings/edit/{listing.Id}")" title="@L["Admin:Listings:Action:Edit"]" aria-label="@L["Admin:Listings:Action:Edit"]" />
 
                                     @* Duplicate *@
-                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small" 
+                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
                                         Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" title="@L["Admin:Listings:Action:Duplicate"]" aria-label="@L["Admin:Listings:Action:Duplicate"]" />
+
+                                    @* Featured *@
+                                    <MudIconButton Icon="@(IsFeatured(listing.Id) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                                                   Size="Size.Small"
+                                                   Color="@(IsFeatured(listing.Id) ? Color.Warning : Color.Default)"
+                                                   Disabled="@(!CanToggleFeatured(listing))"
+                                                   OnClick="@(() => ToggleFeaturedAsync(listing))"
+                                                   title="@GetFeaturedActionLabel(listing)"
+                                                   aria-label="@GetFeaturedActionLabel(listing)" />
 
                                     @if (listing.Status == ListingStatus.Draft || listing.Status == ListingStatus.Portfolio)
                                     {
@@ -300,4 +318,4 @@
             }
         </div>
     </div>
-</div>
+</PageShell>

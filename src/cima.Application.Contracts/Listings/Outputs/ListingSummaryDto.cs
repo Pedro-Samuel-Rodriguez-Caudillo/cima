@@ -12,7 +12,8 @@ public class ListingSummaryDto
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public LocationDto? Location { get; set; }
-    public decimal Price { get; set; }
+    public bool IsPriceOnRequest { get; set; }
+    public decimal? Price { get; set; }
     public ListingStatus Status { get; set; }
     public PropertyCategory Category { get; set; }
     public PropertyType Type { get; set; }

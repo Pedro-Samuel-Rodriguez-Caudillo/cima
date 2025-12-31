@@ -13,8 +13,7 @@
 
 <PageTitle>Mis Propiedades - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-24 pb-12">
-    <div class="cima-container">
+<PageShell Variant="PageShellVariant.ContainerPadded" Class="pb-12">
         <div class="mb-8">
             <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-2">
                 Mis Propiedades
@@ -83,7 +82,7 @@
                             
                             <div class="flex items-center justify-between mb-4">
                                 <span class="text-xl font-bold text-navy-600">
-                                    @listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                                    @FormatPrice(listing)
                                 </span>
                                 <span class="text-sm text-neutral-600">
                                     @EnumLocalizer.GetPropertyCategoryName(listing.Category)
@@ -125,8 +124,7 @@
                 </p>
             </div>
         }
-    </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;
@@ -174,5 +172,15 @@
             ListingStatus.Portfolio => "px-3 py-1 text-xs font-medium rounded-full bg-navy-500 text-white shadow-md",
             _ => "px-3 py-1 text-xs font-medium rounded-full bg-neutral-400 text-white shadow-md"
         };
+    }
+
+    private string FormatPrice(ListingSummaryDto listing)
+    {
+        if (listing.IsPriceOnRequest || !listing.Price.HasValue)
+        {
+            return L["Common:PriceOnRequest"];
+        }
+
+        return listing.Price.Value.ToString("C0", new System.Globalization.CultureInfo("es-MX"));
     }
 }

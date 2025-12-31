@@ -8,7 +8,7 @@
 
 <PageTitle>@L["Properties:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50">
+<PageShell>
     @* Header Section - Clean Design (diseñado para ir detrás del navbar transparente) *@
     <section class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-700 text-white pt-20 md:pt-24">
         <div class="cima-container py-10 md:py-14">
@@ -196,7 +196,7 @@
             </ErrorBoundary>
         </div>
     </section>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;

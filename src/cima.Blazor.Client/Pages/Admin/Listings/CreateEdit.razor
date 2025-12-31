@@ -11,18 +11,19 @@
 @using cima.Permissions
 @using MudBlazor
 @using System.Globalization
+@using System.Collections.Generic
 @attribute [Authorize(cimaPermissions.Listings.Default)]
 @inject IListingAppService ListingService
+@inject IFeaturedListingAppService FeaturedListingService
 @inject IArchitectAppService ArchitectService
 @inject EnumLocalizationService EnumLocalizer
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inherits cimaComponentBase
 
 <PageTitle>@PageTitle - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
+<PageShell> @* offset global aplicado en layout *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex items-center gap-4 mb-2">
@@ -230,6 +231,22 @@
                                         }
                                     </div>
                                 </MudCard>
+
+                                <MudCard Class="p-6">
+                                    <h3 class="font-semibold mb-4">@L["Admin:Listings:Featured:Title"]</h3>
+                                    <MudStack Spacing="2">
+                                        <MudText Typo="Typo.body2">@string.Format(L["Admin:Listings:Featured:CountHint"], FeaturedListingCount, MaxFeaturedListings)</MudText>
+                                        <MudButton Variant="Variant.Filled"
+                                                   Color="@(IsFeatured ? Color.Warning : Color.Primary)"
+                                                   FullWidth="true"
+                                                   Size="Size.Small"
+                                                   Disabled="@(!CanToggleFeatured())"
+                                                   OnClick="ToggleFeaturedFromDetail">
+                                            @(IsFeatured ? L["Admin:Listings:Featured:Remove"] : L["Admin:Listings:Featured:Add"])
+                                        </MudButton>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@GetFeaturedActionHint()</MudText>
+                                    </MudStack>
+                                </MudCard>
                             }
                         </div>
                     </div>
@@ -237,7 +254,7 @@
             </EditForm>
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     [Parameter] public Guid? Id { get; set; }
@@ -262,6 +279,10 @@
     private List<ArchitectDto>? Architects { get; set; }
     private ArchitectDto? CurrentArchitect { get; set; }
     private ListingDetailDto? ExistingListing { get; set; }
+    private bool IsFeatured { get; set; }
+    private int FeaturedListingCount { get; set; }
+    private bool IsFeaturedBusy { get; set; }
+    private const int MaxFeaturedListings = 12;
     
     // ID actual del listing (para modo edición o después de crear)
     private Guid? CurrentListingId => ExistingListing?.Id ?? (IsEditMode ? Id : null);
@@ -351,8 +372,8 @@
                 Title = ExistingListing.Title,
                 Description = ExistingListing.Description,
                 Location = ExistingListing.Location?.Address ?? "", // Map from LocationDto
-                Price = ExistingListing.Price == -1 ? 0 : ExistingListing.Price,
-                IsPriceOnRequest = ExistingListing.Price == -1,
+                Price = ExistingListing.Price,
+                IsPriceOnRequest = ExistingListing.IsPriceOnRequest,
                 LandArea = ExistingListing.LandArea,
                 ConstructionArea = ExistingListing.ConstructionArea,
                 Bedrooms = ExistingListing.Bedrooms,
@@ -362,6 +383,8 @@
                 TransactionType = ExistingListing.TransactionType,
                 ArchitectId = ExistingListing.ArchitectId
             };
+
+            await LoadFeaturedStatusAsync();
         }
         catch (OperationCanceledException)
         {
@@ -371,6 +394,115 @@
         {
             Snackbar.Add(L["Admin:Listings:Form:LoadError", ex.Message], Severity.Error);
             NavManager.NavigateTo("/admin/listings");
+        }
+    }
+
+    private async Task LoadFeaturedStatusAsync()
+    {
+        if (CurrentListingId is not { } listingId)
+        {
+            return;
+        }
+
+        try
+        {
+            var isFeaturedTask = FeaturedListingService.IsListingFeaturedAsync(listingId);
+            var countTask = FeaturedListingService.GetCountAsync();
+            await Task.WhenAll(isFeaturedTask, countTask);
+            IsFeatured = await isFeaturedTask;
+            FeaturedListingCount = await countTask;
+        }
+        catch
+        {
+            IsFeatured = false;
+            FeaturedListingCount = 0;
+        }
+    }
+
+    private bool CanToggleFeatured()
+    {
+        if (ExistingListing == null)
+        {
+            return false;
+        }
+
+        if (IsFeatured)
+        {
+            return true;
+        }
+
+        var status = ExistingListing.Status;
+        if (status != ListingStatus.Published && status != ListingStatus.Portfolio)
+        {
+            return false;
+        }
+
+        return FeaturedListingCount < MaxFeaturedListings;
+    }
+
+    private string GetFeaturedActionHint()
+    {
+        if (ExistingListing == null)
+        {
+            return string.Empty;
+        }
+
+        if (IsFeatured)
+        {
+            return L["Admin:Listings:Featured:Remove"];
+        }
+
+        if (ExistingListing.Status != ListingStatus.Published && ExistingListing.Status != ListingStatus.Portfolio)
+        {
+            return L["Admin:Listings:Featured:RequiresPublished"];
+        }
+
+        if (FeaturedListingCount >= MaxFeaturedListings)
+        {
+            return string.Format(L["Admin:Listings:Featured:LimitReached"], MaxFeaturedListings);
+        }
+
+        return L["Admin:Listings:Featured:Add"];
+    }
+
+    private async Task ToggleFeaturedFromDetail()
+    {
+        if (ExistingListing == null || CurrentListingId is not { } listingId || IsFeaturedBusy)
+        {
+            return;
+        }
+
+        if (!CanToggleFeatured())
+        {
+            Snackbar.Add(GetFeaturedActionHint(), Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            IsFeaturedBusy = true;
+            if (IsFeatured)
+            {
+                await FeaturedListingService.RemoveByListingIdAsync(listingId);
+                IsFeatured = false;
+                FeaturedListingCount = Math.Max(0, FeaturedListingCount - 1);
+                Snackbar.Add(L["Admin:Listings:Featured:Removed"], Severity.Success);
+            }
+            else
+            {
+                await FeaturedListingService.AddAsync(new CreateFeaturedListingDto { ListingId = listingId });
+                IsFeatured = true;
+                FeaturedListingCount++;
+                Snackbar.Add(L["Admin:Listings:Featured:Added"], Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            IsFeaturedBusy = false;
         }
     }
 
@@ -413,13 +545,15 @@
 
             if (IsEditMode && Id.HasValue)
             {
+                var price = Model.IsPriceOnRequest ? null : Model.Price;
                 var input = new UpdateListingDto
                 {
                     Id = Id.Value,
                     Title = Model.Title,
                     Description = Model.Description,
                     Address = new AddressDto { Value = Model.Location },
-                    Price = Model.IsPriceOnRequest ? -1 : Model.Price,
+                    IsPriceOnRequest = Model.IsPriceOnRequest,
+                    Price = price,
                     LandArea = Model.LandArea,
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
@@ -435,12 +569,14 @@
             }
             else
             {
+                var price = Model.IsPriceOnRequest ? null : Model.Price;
                 var input = new CreateListingDto
                 {
                     Title = Model.Title,
                     Description = Model.Description,
                     Address = new AddressDto { Value = Model.Location },
-                    Price = Model.IsPriceOnRequest ? -1 : Model.Price,
+                    IsPriceOnRequest = Model.IsPriceOnRequest,
+                    Price = price,
                     LandArea = Model.LandArea,
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
@@ -564,14 +700,14 @@
         _ => Color.Default
     };
 
-    public class ListingViewModel
+    public class ListingViewModel : IValidatableObject
     {
         [Required]
         public string Title { get; set; } = string.Empty;
         [Required]
         public string Description { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
-        public decimal Price { get; set; }
+        public decimal? Price { get; set; }
         public bool IsPriceOnRequest { get; set; }
         public decimal LandArea { get; set; }
         public decimal ConstructionArea { get; set; }
@@ -581,5 +717,15 @@
         public PropertyType Type { get; set; } = PropertyType.House;
         public TransactionType TransactionType { get; set; } = TransactionType.Sale;
         public Guid ArchitectId { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!IsPriceOnRequest && !Price.HasValue)
+            {
+                yield return new ValidationResult(
+                    "Price es requerido cuando IsPriceOnRequest es false.",
+                    new[] { nameof(Price) });
+            }
+        }
     }
 }

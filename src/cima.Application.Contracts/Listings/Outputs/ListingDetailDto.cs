@@ -11,7 +11,8 @@ public class ListingDetailDto
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public LocationDto? Location { get; set; }
-    public decimal Price { get; set; }
+    public bool IsPriceOnRequest { get; set; }
+    public decimal? Price { get; set; }
     public decimal LandArea { get; set; }
     public decimal ConstructionArea { get; set; }
     

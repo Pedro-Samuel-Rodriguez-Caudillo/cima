@@ -12,7 +12,10 @@ public class Address : ValueObject
 {
     public string Value { get; private set; }
 
-    private Address() { } // Para ORM
+    private Address() 
+    { 
+        Value = default!;
+    } // Para ORM
 
     public Address(string value)
     {

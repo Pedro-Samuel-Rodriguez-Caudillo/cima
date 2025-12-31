@@ -245,14 +245,13 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
         // Validar que sean los mismos IDs
         if (orderedIds.Count != Images.Count || !Images.All(i => orderedIds.Contains(i.ImageId)))
         {
-            // Opcional: Lanzar error o ignorar
             return;
         }
 
-        for (int i = 0; i < orderedIds.Count; i++)
+        foreach (var img in Images)
         {
-            var img = Images.First(x => x.ImageId == orderedIds[i]);
-            img.SortOrder = i;
+            var newOrder = orderedIds.IndexOf(img.ImageId);
+            img.SortOrder = newOrder;
         }
     }
 

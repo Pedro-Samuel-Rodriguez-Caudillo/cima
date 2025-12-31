@@ -20,7 +20,7 @@
 @switch (_state)
 {
     case ViewState.Loading:
-        <div class="min-h-screen bg-white">
+        <PageShell BackgroundClass="bg-white">
             <div class="cima-container py-12">
                 <div class="cima-skeleton-image mb-8"></div>
                 <div class="space-y-4">
@@ -29,11 +29,11 @@
                     <div class="cima-skeleton-text w-full"></div>
                 </div>
             </div>
-        </div>
+        </PageShell>
         break;
 
     case ViewState.NotFound:
-        <div class="min-h-screen bg-white flex items-center justify-center">
+        <PageShell BackgroundClass="bg-white" Variant="PageShellVariant.Centered">    
             <div class="text-center">
                 <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -46,7 +46,7 @@
                     @L["PropertyDetail:BackToList"]
                 </a>
             </div>
-        </div>
+        </PageShell>
         break;
 
     case ViewState.Ready:
@@ -59,9 +59,9 @@
                      Price="@Listing!.Price"
                      JsonLd="@GetPropertyJsonLd()" />
 
-        <div class="min-h-screen bg-white">
+        <PageShell BackgroundClass="bg-white">
             @* Header compacto *@
-            <header class="cima-container pt-24 pb-6">
+            <header class="cima-container pt-6 pb-6">
                 <nav class="flex items-center text-sm text-neutral-500 gap-2 mb-3" aria-label="Breadcrumb">
                     <a href="/" class="hover:text-neutral-900 transition-colors">@L["Home"]</a>
                     <span>/</span>
@@ -77,14 +77,14 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
 
                             @* LEFT: Gallery sticky *@
-                            <section class="lg:sticky lg:top-24 lg:self-start">
+                            <section class="lg:sticky lg:top-[var(--cima-navbar-height)] lg:self-start">
                                 <div class="rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50">
                                     <ImageGallery Images="@GetGalleryImages()" />
                                 </div>
                             </section>
 
                             @* RIGHT: Panel sticky con tabs + scroll interno + CTA bar *@
-                            <section class="lg:sticky lg:top-24 lg:self-start">
+                            <section class="lg:sticky lg:top-[var(--cima-navbar-height)] lg:self-start">
                                 <div class="rounded-2xl border border-neutral-200 bg-white overflow-hidden
                                                     lg:max-h-[calc(100vh-6rem)] lg:flex lg:flex-col">
 
@@ -97,7 +97,7 @@
 
                                             <div class="flex flex-wrap items-end justify-between gap-3">
                                                 <div class="text-3xl font-bold text-navy-600">
-                                                    @Listing!.Price.ToString("C0", new CultureInfo("es-MX"))
+                                                    @GetPriceDisplay()
                                                 </div>
 
                                                 <div class="text-sm text-neutral-600">
@@ -282,7 +282,7 @@
                     </ErrorContent>
                 </ErrorBoundary>
             </main>
-        </div>
+        </PageShell>
         break;
 }
 
@@ -369,9 +369,24 @@
         if (Listing.Bedrooms > 0) desc += $"{Listing.Bedrooms} {L["Properties:Bedrooms"]}. ";
         if (Listing.Bathrooms > 0) desc += $"{Listing.Bathrooms} {L["Properties:Bathrooms"]}. ";
 
-        desc += $"{L["Admin:Listings:TableHeader:Price"]}: {Listing.Price.ToString("C0", new CultureInfo("es-MX"))}";
+        desc += $"{L["Admin:Listings:TableHeader:Price"]}: {GetPriceDisplay()}";
 
         return desc.Length > 160 ? desc[..157] + "..." : desc;
+    }
+
+    private string GetPriceDisplay()
+    {
+        if (Listing is null)
+        {
+            return "";
+        }
+
+        if (Listing.IsPriceOnRequest || !Listing.Price.HasValue)
+        {
+            return L["Common:PriceOnRequest"];
+        }
+
+        return Listing.Price.Value.ToString("C0", new CultureInfo("es-MX"));
     }
 
     private string GetSeoKeywords()

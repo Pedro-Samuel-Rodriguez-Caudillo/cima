@@ -46,6 +46,22 @@ public class ListingImage : ValueObject
         ContentType = string.IsNullOrWhiteSpace(contentType) ? "image/jpeg" : contentType;
     }
 
+    /// <summary>
+    /// Returns a new instance of ListingImage with the specified sort order.
+    /// </summary>
+    public ListingImage WithSortOrder(int newSortOrder)
+    {
+        return new ListingImage(
+            ImageId,
+            Url,
+            newSortOrder,
+            ThumbnailUrl,
+            AltText,
+            FileSize,
+            ContentType
+        );
+    }
+
     protected override IEnumerable<object> GetAtomicValues()
     {
         yield return ImageId;

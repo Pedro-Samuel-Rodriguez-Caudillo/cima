@@ -5,6 +5,7 @@ using cima.Domain.Entities;
 using cima.Listings;
 using System.Linq;
 using System.Text.Json;
+using Volo.Abp;
 
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
@@ -19,6 +20,21 @@ public class cimaApplicationAutoMapperProfile : Profile
         var locDto = new LocationDto { Address = input.Value };
         return JsonSerializer.Serialize(locDto);
     }
+
+    private static decimal ResolvePrice(bool isPriceOnRequest, decimal? price)
+    {
+        if (isPriceOnRequest)
+        {
+            return -1;
+        }
+
+        if (!price.HasValue)
+        {
+            throw new BusinessException(cimaDomainErrorCodes.ListingInvalidPrice);
+        }
+
+        return price.Value;
+    }
     public cimaApplicationAutoMapperProfile()
     {
         // Listings con relaciones completas
@@ -27,24 +43,30 @@ public class cimaApplicationAutoMapperProfile : Profile
             .ForMember(dest => dest.Architect, opt => opt.MapFrom(src => src.Architect))
             .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.OrderBy(i => i.SortOrder)))
             .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src.LandArea)) // Map Area
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)));
-            
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)))
+            .ForMember(dest => dest.IsPriceOnRequest, opt => opt.MapFrom(src => src.Price == -1))
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price == -1 ? (decimal?)null : src.Price));
+
         CreateMap<Listing, ListingSummaryDto>()
-            .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src => 
-                src.Images != null && src.Images.Any() 
+            .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src =>
+                src.Images != null && src.Images.Any()
                     ? src.Images.OrderBy(i => i.SortOrder).FirstOrDefault()
                     : null))
             .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)))
-            .ForMember(dest => dest.ImageCount, opt => opt.MapFrom(src => src.Images != null ? src.Images.Count : 0));
+            .ForMember(dest => dest.ImageCount, opt => opt.MapFrom(src => src.Images != null ? src.Images.Count : 0))
+            .ForMember(dest => dest.IsPriceOnRequest, opt => opt.MapFrom(src => src.Price == -1))
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price == -1 ? (decimal?)null : src.Price));
 
         // Listings - Input Maps
         CreateMap<CreateListingDto, Listing>()
             .ForMember(dest => dest.Images, opt => opt.Ignore())
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null));
-            
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null))
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => ResolvePrice(src.IsPriceOnRequest, src.Price)));
+
         CreateMap<UpdateListingDto, Listing>()
             .ForMember(dest => dest.Images, opt => opt.Ignore())
-            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null));
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Address != null ? new Domain.Entities.Listings.Address(SerializeLocation(src.Address)) : null))
+            .ForMember(dest => dest.Price, opt => opt.MapFrom(src => ResolvePrice(src.IsPriceOnRequest, src.Price)));
             
         // ListingImage
         CreateMap<ListingImage, ListingImageDto>()

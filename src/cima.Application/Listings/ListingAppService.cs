@@ -225,8 +225,8 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new EntityNotFoundException(typeof(Listing), id);
         }
 
-        // Si no está publicada, validar permisos (solo dueño o admin)
-        if (listing.Status != ListingStatus.Published)
+        // Si no está publicada ni en portafolio, validar permisos (solo dueño o admin)
+        if (listing.Status != ListingStatus.Published && listing.Status != ListingStatus.Portfolio)
         {
             if (!CurrentUser.IsAuthenticated)
             {
@@ -251,12 +251,14 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Create)]
     public async Task<ListingDetailDto> CreateAsync(CreateListingDto input)
     {
+        var resolvedPrice = ResolvePrice(input.IsPriceOnRequest, input.Price);
+
         // Usar ListingManager para crear con validaciones y eventos de dominio
         var listing = await _listingManager.CreateAsync(
             title: input.Title.Trim(),
             description: input.Description.Trim(),
             location: input.Address?.Value.Trim(),
-            price: input.Price,
+            price: resolvedPrice,
             landArea: input.LandArea,
             constructionArea: input.ConstructionArea,
             bedrooms: input.Bedrooms,
@@ -280,9 +282,10 @@ public class ListingAppService : cimaAppService, IListingAppService
         if (id != input.Id) throw new UserFriendlyException("ID mismatch");
 
         var listing = await _listingRepository.GetAsync(id);
-        
+
         // Capturar precio anterior para detectar cambios
         var oldPrice = listing.Price;
+        var resolvedPrice = ResolvePrice(input.IsPriceOnRequest, input.Price);
 
         // Validacion: Solo el dueno o admin puede editar
         var architect = await ValidateListingOwnershipAsync(listing.ArchitectId, "editar");
@@ -296,7 +299,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             input.Title.Trim(),
             input.Description.Trim(),
             input.Address?.Value.Trim(),
-            input.Price,
+            resolvedPrice,
             input.LandArea,
             input.ConstructionArea,
             input.Bedrooms,
@@ -308,11 +311,11 @@ public class ListingAppService : cimaAppService, IListingAppService
         );
 
         await _listingRepository.UpdateAsync(listing);
-        
+
         // Si el precio cambió, registrar en historial con hash chain anti-tampering
-        if (oldPrice != input.Price)
+        if (oldPrice != resolvedPrice)
         {
-            await RecordPriceChangeAsync(listing.Id, oldPrice, input.Price);
+            await RecordPriceChangeAsync(listing.Id, oldPrice, resolvedPrice);
         }
         
         return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
@@ -949,6 +952,21 @@ public class ListingAppService : cimaAppService, IListingAppService
         return suggestions;
     }
 
+    private static decimal ResolvePrice(bool isPriceOnRequest, decimal? price)
+    {
+        if (isPriceOnRequest)
+        {
+            return -1;
+        }
+
+        if (!price.HasValue)
+        {
+            throw new BusinessException(cimaDomainErrorCodes.ListingInvalidPrice);
+        }
+
+        return price.Value;
+    }
+
     private async Task<Listing> GetListingWithImagesAsync(Guid listingId)
     {
         var queryable = await _listingRepository.WithDetailsAsync(l => l.Images);
@@ -1456,5 +1474,3 @@ public class ListingAppService : cimaAppService, IListingAppService
         };
     }
 }
-
-

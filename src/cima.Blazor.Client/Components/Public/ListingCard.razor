@@ -124,7 +124,7 @@
             <div>
                 <p class="text-xs text-neutral-500 uppercase tracking-wide mb-0.5">@L["ListingCard:Price"]</p>
                 <p class="text-xl font-display font-bold text-navy-900">
-                    @FormatPrice(Listing.Price)
+                    @FormatPrice(Listing)
                 </p>
             </div>
             
@@ -147,16 +147,24 @@
         Navigation.NavigateTo($"/properties/{Listing.Id}");
     }
 
-    private string FormatPrice(decimal price)
+    private string FormatPrice(ListingSummaryDto listing)
     {
+        if (listing.IsPriceOnRequest || !listing.Price.HasValue)
+        {
+            return L["Common:PriceOnRequest"];
+        }
+
+        var price = listing.Price.Value;
         if (price >= 1_000_000)
         {
             return $"${price / 1_000_000:N2}M MXN";
         }
-        else if (price >= 1_000)
+
+        if (price >= 1_000)
         {
             return $"${price / 1_000:N0}K MXN";
         }
+
         return price.ToString("C0") + " MXN";
     }
 

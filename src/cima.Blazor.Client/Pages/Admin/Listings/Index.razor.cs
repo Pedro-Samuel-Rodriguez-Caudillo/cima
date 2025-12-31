@@ -7,7 +7,6 @@ using System.Timers;
 using cima.Blazor.Client;
 using cima.Blazor.Client.Services;
 using cima.Domain.Shared;
-using cima.Domain.Shared;
 using cima.Listings;
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
@@ -30,13 +29,16 @@ public partial class Index : cimaComponentBase
     private string? StatusFilter { get; set; }
     private string? CategoryFilter { get; set; }
     private string? TransactionFilter { get; set; }
+    private HashSet<Guid> FeaturedListingIds { get; set; } = new();
+    private int FeaturedListingCount { get; set; }
+    private const int MaxFeaturedListings = 12;
 
     private bool IsAllSelected => Listings.Any() && Listings.All(l => SelectedIds.Contains(l.Id));
     private static readonly CultureInfo MexicoCulture = new("es-MX");
 
     [Inject] private IListingAppService ListingService { get; set; } = default!;
+    [Inject] private IFeaturedListingAppService FeaturedListingService { get; set; } = default!;
     [Inject] protected EnumLocalizationService EnumLocalizer { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
@@ -63,7 +65,10 @@ public partial class Index : cimaComponentBase
         {
             IsLoading = true;
             var input = BuildFilterInput();
-            var result = await ListingService.GetListAsync(input);
+            var resultTask = ListingService.GetListAsync(input);
+            var featuredTask = LoadFeaturedListingsAsync();
+            await Task.WhenAll(resultTask, featuredTask);
+            var result = await resultTask;
             Listings = result.Items.ToList();
             TotalCount = (int)result.TotalCount;
 
@@ -77,6 +82,89 @@ public partial class Index : cimaComponentBase
         {
             IsLoading = false;
         }
+    }
+
+    private async Task LoadFeaturedListingsAsync()
+    {
+        try
+        {
+            var featuredListings = await FeaturedListingService.GetAllAsync();
+            FeaturedListingIds = featuredListings
+                .Select(featured => featured.ListingId)
+                .ToHashSet();
+            FeaturedListingCount = FeaturedListingIds.Count;
+        }
+        catch
+        {
+            FeaturedListingIds = new HashSet<Guid>();
+            FeaturedListingCount = 0;
+        }
+    }
+
+    private bool IsFeatured(Guid listingId) => FeaturedListingIds.Contains(listingId);
+
+    private bool CanToggleFeatured(ListingSummaryDto listing)
+    {
+        if (IsFeatured(listing.Id))
+        {
+            return true;
+        }
+
+        if (listing.Status != ListingStatus.Published && listing.Status != ListingStatus.Portfolio)
+        {
+            return false;
+        }
+
+        return FeaturedListingCount < MaxFeaturedListings;
+    }
+
+    private string GetFeaturedActionLabel(ListingSummaryDto listing)
+    {
+        if (IsFeatured(listing.Id))
+        {
+            return L["Admin:Listings:Featured:Remove"];
+        }
+
+        if (listing.Status != ListingStatus.Published && listing.Status != ListingStatus.Portfolio)
+        {
+            return L["Admin:Listings:Featured:RequiresPublished"];
+        }
+
+        if (FeaturedListingCount >= MaxFeaturedListings)
+        {
+            return string.Format(L["Admin:Listings:Featured:LimitReached"], MaxFeaturedListings);
+        }
+
+        return L["Admin:Listings:Featured:Add"];
+    }
+
+    private async Task ToggleFeaturedAsync(ListingSummaryDto listing)
+    {
+        if (IsFeatured(listing.Id))
+        {
+            await ExecuteWithReload(async () =>
+                {
+                    await FeaturedListingService.RemoveByListingIdAsync(listing.Id);
+                    FeaturedListingIds.Remove(listing.Id);
+                    FeaturedListingCount = Math.Max(0, FeaturedListingCount - 1);
+                },
+                L["Admin:Listings:Featured:Removed"]);
+            return;
+        }
+
+        if (!CanToggleFeatured(listing))
+        {
+            Snackbar.Add(GetFeaturedActionLabel(listing), Severity.Warning);
+            return;
+        }
+
+        await ExecuteWithReload(async () =>
+            {
+                await FeaturedListingService.AddAsync(new CreateFeaturedListingDto { ListingId = listing.Id });
+                FeaturedListingIds.Add(listing.Id);
+                FeaturedListingCount++;
+            },
+            L["Admin:Listings:Featured:Added"]);
     }
 
     private GetListingsInput BuildFilterInput() =>
@@ -252,6 +340,16 @@ public partial class Index : cimaComponentBase
         _ => Color.Default
     };
 
+    private string FormatPrice(ListingSummaryDto listing)
+    {
+        if (listing.IsPriceOnRequest || !listing.Price.HasValue)
+        {
+            return L["Common:PriceOnRequest"];
+        }
+
+        return listing.Price.Value.ToString("C0", MexicoCulture);
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
@@ -260,5 +358,7 @@ public partial class Index : cimaComponentBase
         _searchTimer.Dispose();
     }
 }
+
+
 
 
