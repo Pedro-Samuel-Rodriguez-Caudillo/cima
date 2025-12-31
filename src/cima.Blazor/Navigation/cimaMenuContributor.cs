@@ -62,27 +62,24 @@ public class cimaMenuContributor : IMenuContributor
             l["Menu:AdminListings"],
             "/admin/listings",
             icon: "fas fa-list",
-            order: 3,
-            requiredPermissionName: cimaPermissions.Listings.Default
-        ));
+            order: 3
+        ).RequirePermissions(cimaPermissions.Listings.Default));
 
         context.Menu.AddItem(new ApplicationMenuItem(
             cimaMenus.Architects,
             l["Menu:Architects"],
             "/admin/architects",
             icon: "fas fa-user-tie",
-            order: 4,
-            requiredPermissionName: cimaPermissions.Architects.Default
-        ));
+            order: 4
+        ).RequirePermissions(cimaPermissions.Architects.Default));
 
         context.Menu.AddItem(new ApplicationMenuItem(
             cimaMenus.ContactRequests,
             l["Menu:ContactRequests"],
             "/admin/contact-requests",
             icon: "fas fa-envelope",
-            order: 5,
-            requiredPermissionName: cimaPermissions.ContactRequests.Default
-        ));
+            order: 5
+        ).RequirePermissions(cimaPermissions.ContactRequests.Default));
         
         // Administration menu
         var administration = context.Menu.GetAdministration();
@@ -109,14 +106,13 @@ public class cimaMenuContributor : IMenuContributor
                 l["Menu:IdentityManagement:Users"],
                 "/admin/identity/users",
                 icon: "fa fa-users",
-                order: 1,
-                requiredPermissionName: IdentityPermissions.Users.Default
-            ));
+                order: 1
+            ).RequirePermissions(IdentityPermissions.Users.Default));
         }
         else
         {
             usersItem.Url = "/admin/identity/users";
-            usersItem.RequiredPermissionName = IdentityPermissions.Users.Default;
+            usersItem.RequirePermissions(IdentityPermissions.Users.Default);
         }
 
         var rolesItem = identityMenu.GetMenuItem("AbpIdentity.Roles");
@@ -127,14 +123,13 @@ public class cimaMenuContributor : IMenuContributor
                 l["Menu:IdentityManagement:Roles"],
                 "/admin/identity/roles",
                 icon: "fa fa-id-badge",
-                order: 2,
-                requiredPermissionName: IdentityPermissions.Roles.Default
-            ));
+                order: 2
+            ).RequirePermissions(IdentityPermissions.Roles.Default));
         }
         else
         {
             rolesItem.Url = "/admin/identity/roles";
-            rolesItem.RequiredPermissionName = IdentityPermissions.Roles.Default;
+            rolesItem.RequirePermissions(IdentityPermissions.Roles.Default);
         }
 
         return Task.CompletedTask;

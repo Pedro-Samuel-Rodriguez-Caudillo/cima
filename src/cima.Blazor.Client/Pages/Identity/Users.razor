@@ -6,9 +6,8 @@
 
 <PageTitle>@L["Identity:Users:Title"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20">
+<PageShell Variant="PageShellVariant.ContainerWide" Class="py-6 md:py-8">
     @* Contenedor de p�gina: controla el ancho m�ximo y elimina el �vac�o� lateral *@
-    <div class="cima-container mx-auto w-full !max-w-screen-2xl px-4 sm:px-6 lg:px-8 py-6 md:py-8">
 
         @* Encabezado: t�tulo + acciones (wrap en m�vil) *@
         <MudPaper Class="p-4 mb-4 w-full" Elevation="1">
@@ -54,7 +53,7 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Secondary"
                                StartIcon="@Icons.Material.Filled.PersonAdd"
-                               OnClick="OpenCreateDialog"
+                               OnClick="OpenCreateUserDialog"
                                Disabled="_loading">
                         @L["Identity:Users:Create"]
                     </MudButton>
@@ -131,14 +130,13 @@
 
         @* Contenido principal: tabla (m�s ancha) + panel derecho *@
         <MudGrid Spacing="4" Class="items-start">
-            <MudItem xs="12" md="7" lg="8">
+            <MudItem xs="12">
                 <MudPaper Class="p-0 w-full" Elevation="1" Style="min-width:0;">
                     <MudTable T="IdentityUserDto" Items="FilteredUsers"
                               Dense="true"
                               Hover="true"
                               Striped="true"
-                              SelectOnRowClick="true"
-                              SelectedItemChanged="OnSelectedUserChanged"
+                              RowClick="OnUserRowClick"
                               Loading="_loading"
                               Class="w-full">
                         <ToolBarContent>
@@ -164,12 +162,15 @@
                         </HeaderContent>
 
                         <RowTemplate>
-                            <MudTd DataLabel="@L["Identity:Users:Table:UserName"]">
+                            
+                            <MudTd DataLabel="@L["Identity:Users:Table:UserName"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 <MudText Typo="Typo.subtitle2">@context.UserName</MudText>
                                 <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Id</MudText>
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Identity:Users:Table:Email"]">
+                            <MudTd DataLabel="@L["Identity:Users:Table:Email"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 @if (!string.IsNullOrWhiteSpace(context.Email))
                                 {
                                     <MudText>@context.Email</MudText>
@@ -180,7 +181,8 @@
                                 }
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Identity:Users:Table:Phone"]">
+                            <MudTd DataLabel="@L["Identity:Users:Table:Phone"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 @if (!string.IsNullOrWhiteSpace(context.PhoneNumber))
                                 {
                                     <MudText>@context.PhoneNumber</MudText>
@@ -191,20 +193,23 @@
                                 }
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Identity:Users:Table:Active"]">
+                            <MudTd DataLabel="@L["Identity:Users:Table:Active"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 <MudChip T="string" Color="@(context.IsActive? Color.Success: Color.Error)" Size="Size.Small">
                                     @(context.IsActive? L["Common:Yes"] : L["Common:No"])
                                 </MudChip>
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Identity:Users:Table:Created"]">
+                            <MudTd DataLabel="@L["Identity:Users:Table:Created"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 @context.CreationTime.ToLocalTime().ToString("g")
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Identity:Users:Table:Roles"]">
+                            <MudTd DataLabel="@L["Identity:Users:Table:Roles"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
                                 @if (_userRolesById.TryGetValue(context.Id, out var roles) && roles.Any())
                                 {
-                                    <MudChipSet T="string" MultiSelection="true" ReadOnly="true" Class="flex flex-wrap gap-1">
+                                    <MudChipSet T="string" SelectionMode="SelectionMode.MultiSelection" ReadOnly="true" Class="flex flex-wrap gap-1">
                                         @foreach (var role in roles)
                                         {
                                             <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
@@ -219,8 +224,16 @@
                                 }
                             </MudTd>
 
-                            <MudTd DataLabel="@L["Common:Actions"]">
-                                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Color="Color.Default">
+                            <MudTd DataLabel="@L["Common:Actions"]"
+                                   @ondblclick="() => OpenUserDialog(context)">
+                                <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                                         Dense="true"
+                                         Color="Color.Default"
+                                         @onclick:stopPropagation="true">
+                                    <MudMenuItem Icon="@Icons.Material.Filled.ManageAccounts"
+                                                 OnClick="@(() => OpenUserDialog(context))">
+                                        @L["Identity:Users:Dialog:Open"]
+                                    </MudMenuItem>
                                     <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy" OnClick="@(() => CopyUserIdAsync(context))">
                                         @L["Common:CopyId"]
                                     </MudMenuItem>
@@ -229,6 +242,7 @@
                                     </MudMenuItem>
                                 </MudMenu>
                             </MudTd>
+                            
                         </RowTemplate>
 
                         <NoRecordsContent>
@@ -238,109 +252,21 @@
                 </MudPaper>
             </MudItem>
 
-            <MudItem xs="12" md="5" lg="4">
-                @if (_selectedUser is not null)
-                {
-                    var selectedUser = _selectedUser;
-
-                    <MudPaper Class="p-4 w-full" Elevation="1" Style="min-width:0;">
-                        @if (_loadingUserDetail)
-                        {
-                            <MudStack Spacing="1" AlignItems="AlignItems.Center" Class="py-6">
-                                <MudProgressCircular Indeterminate="true" />
-                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                    @L["Common:Loading"]
-                                </MudText>
-                            </MudStack>
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2">
-                            <MudText Typo="Typo.h6">@selectedUser.UserName</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@L["Common:Id"] @selectedUser.Id</MudText>
-
-                            <MudTextField @bind-Value="_userForm.UserName" Label="@L["Identity:Users:Form:UserName"]" Required="true" />
-                            <MudTextField @bind-Value="_userForm.Name" Label="@L["Identity:Users:Form:Name"]" />
-                            <MudTextField @bind-Value="_userForm.Surname" Label="@L["Identity:Users:Form:Surname"]" />
-                            <MudTextField @bind-Value="_userForm.Email" Label="@L["Identity:Users:Form:Email"]" Required="true" />
-                            <MudTextField @bind-Value="_userForm.PhoneNumber" Label="@L["Identity:Users:Form:Phone"]" />
-
-                            <MudSwitch T="bool" @bind-Checked="_userForm.IsActive" Color="Color.Success" Label="@L["Identity:Users:Form:Active"]" />
-
-                            <MudSelect T="string"
-                                       Label="@L["Identity:Users:Form:AssignedRoles"]"
-                                       MultiSelection="true"
-                                       SelectedValues="@_selectedRoleNames"
-                                       SelectedValuesChanged="OnRolesSelectionChanged">
-                                @foreach (var role in _allRoles)
-                                {
-                                    <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-
-                            <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="flex-wrap">
-                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ResetSelection">
-                                    @L["Common:Cancel"]
-                                </MudButton>
-
-                                <MudButton Color="Color.Primary"
-                                           Variant="Variant.Filled"
-                                           Disabled="_savingUser"
-                                           OnClick="SaveUserAsync">
-                                    @if (_savingUser)
-                                    {
-                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                    }
-                                    @L["Common:Save"]
-                                </MudButton>
-                            </MudStack>
-                        </MudStack>
-                        }
-                    </MudPaper>
-                }
-                else
-                {
-                    <MudPaper Class="p-6 text-center mud-text-secondary w-full" Elevation="1" Style="min-width:0;">
-                        @L["Identity:Users:EmptySelection"]
-                    </MudPaper>
-                }
-            </MudItem>
         </MudGrid>
-    </div>
-</div>
+</PageShell>
 
 
 @code {
     [Inject] public IIdentityUserAppService UserAppService { get; set; } = default!;
-    [Inject] public IIdentityRoleAppService RoleAppService { get; set; } = default!;
-    [Inject] public IAdminIdentityAppService AdminIdentityAppService { get; set; } = default!;
     [Inject] public IJSRuntime JS { get; set; } = default!;
-    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+    [Inject] public IDialogService DialogService { get; set; } = default!;
 
     private IReadOnlyList<IdentityUserDto> _users = Array.Empty<IdentityUserDto>();
-    private IReadOnlyList<IdentityRoleDto> _allRoles = Array.Empty<IdentityRoleDto>();
     private Dictionary<Guid, IReadOnlyList<IdentityRoleDto>> _userRolesById = new();
-    private IdentityUserDto? _selectedUser;
-    private bool _loadingUserDetail;
-    private int _userSelectionVersion;
-    private readonly UserFormModel _userForm = new();
-    private HashSet<string> _selectedRoleNames = new(StringComparer.OrdinalIgnoreCase);
     private string? _filter;
     private bool _loading;
-    private bool _savingUser;
     private string _statusFilter = StatusAll;
-    private bool _resettingPassword;
-    private bool ShowCreateDialog { get; set; }
-    private bool ShowResetDialog { get; set; }
-    private string ResetUserName { get; set; } = "";
-    private Guid ResetUserId { get; set; }
-    private string? NewTempPassword { get; set; }
-    private string? CreatedPassword { get; set; }
-    private bool UseCustomPassword { get; set; }
-    private bool UseCustomResetPassword { get; set; }
-    private string? CustomResetPassword { get; set; }
-    private readonly CreateUserModel _createUser = new();
-    private HashSet<string> _createRoleNames = new(StringComparer.OrdinalIgnoreCase);
+    private bool _openingDialog;
 
     private const string StatusAll = "all";
     private const string StatusActive = "active";
@@ -360,7 +286,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await LoadRolesAsync();
         await LoadUsers();
     }
 
@@ -390,95 +315,88 @@
         }
     }
 
-    private async Task LoadRolesAsync()
-    {
-        var result = await RoleAppService.GetListAsync(new GetIdentityRolesInput
-        {
-            MaxResultCount = 128,
-            Sorting = "Name"
-        });
-
-        _allRoles = result.Items;
-    }
-
     private async Task OnFilterChanged(string value)
     {
         _filter = value;
         await LoadUsers();
     }
 
-    private void OpenCreateDialog()
+    private async Task OnUserRowClick(TableRowClickEventArgs<IdentityUserDto> args)
     {
-        _createUser.Reset();
-        _createRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        UseCustomPassword = false;
-        CreatedPassword = null;
-        ShowCreateDialog = true;
-    }
-
-    private Task OnCreateRolesSelectionChanged(IEnumerable<string> values)
-    {
-        _createRoleNames = values.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return Task.CompletedTask;
-    }
-
-    private async Task CreateUserAsync()
-    {
-        if (string.IsNullOrWhiteSpace(_createUser.UserName) || string.IsNullOrWhiteSpace(_createUser.Email))
+        if (args?.Item is null)
         {
-            Snackbar.Add(L["Identity:Users:Validation:UserEmailRequired"], Severity.Warning);
             return;
         }
 
-        var password = _createUser.Password;
-        if (!UseCustomPassword)
-        {
-            password = GenerateTemporaryPassword();
-        }
+        await OpenUserDialog(args.Item);
+    }
 
-        if (string.IsNullOrWhiteSpace(password))
+    private async Task OpenUserDialog(IdentityUserDto user, string? initialTab = null)
+    {
+        if (_openingDialog)
         {
-            Snackbar.Add(L["Identity:Users:Validation:TempPasswordRequired"], Severity.Warning);
             return;
         }
 
+        _openingDialog = true;
         try
         {
-            _savingUser = true;
-            CreatedPassword = null;
-
-            var createDto = new IdentityUserCreateDto
+            var parameters = new DialogParameters
             {
-                UserName = _createUser.UserName,
-                Email = _createUser.Email,
-                Name = _createUser.Name,
-                Surname = _createUser.Surname,
-                PhoneNumber = _createUser.PhoneNumber,
-                IsActive = _createUser.IsActive,
-                Password = password
+                ["UserId"] = user.Id,
+                ["InitialTab"] = initialTab
+            };
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = false,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
             };
 
-            var created = await UserAppService.CreateAsync(createDto);
-            if (_createRoleNames.Any())
+            var dialog = await DialogService.ShowAsync<UserDetailsDialog>(string.Empty, parameters, options);
+            var result = await dialog.Result;
+            if (!result.Canceled)
             {
-                await UserAppService.UpdateRolesAsync(created.Id, new IdentityUserUpdateRolesDto
-                {
-                    RoleNames = _createRoleNames.ToArray()
-                });
+                await LoadUsers();
             }
-
-            CreatedPassword = password;
-            Snackbar.Add(L["Identity:Users:Success:Created"], Severity.Success);
-            await LoadUsers();
-            await BeginUserSelectionAsync(created);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format(L["Identity:Users:Error:Create"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
         }
         finally
         {
-            _savingUser = false;
+            _openingDialog = false;
+        }
+    }
+
+    private async Task OpenCreateUserDialog()
+    {
+        if (_openingDialog)
+        {
+            return;
+        }
+
+        _openingDialog = true;
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                ["IsCreate"] = true
+            };
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = false,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
+            };
+
+            var dialog = await DialogService.ShowAsync<UserDetailsDialog>(string.Empty, parameters, options);
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                await LoadUsers();
+            }
+        }
+        finally
+        {
+            _openingDialog = false;
         }
     }
 
@@ -488,69 +406,9 @@
         Snackbar.Add(L["Common:Copied"], Severity.Success);
     }
 
-    private async Task CopyCreatedPasswordAsync()
+    private Task OpenResetDialog(IdentityUserDto user)
     {
-        if (string.IsNullOrWhiteSpace(CreatedPassword))
-        {
-            return;
-        }
-
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", CreatedPassword);
-            Snackbar.Add(L["Common:PasswordCopied"], Severity.Success);
-    }
-
-    private void OpenResetDialog(IdentityUserDto user)
-    {
-        ResetUserId = user.Id;
-        ResetUserName = user.UserName;
-        NewTempPassword = null;
-        CustomResetPassword = null;
-        UseCustomResetPassword = false;
-        ShowResetDialog = true;
-    }
-
-    private async Task ResetPasswordAsync()
-    {
-        if (ResetUserId == Guid.Empty)
-        {
-            return;
-        }
-
-        if (UseCustomResetPassword && string.IsNullOrWhiteSpace(CustomResetPassword))
-        {
-            Snackbar.Add(L["Identity:Users:Validation:TempPasswordRequired"], Severity.Warning);
-            return;
-        }
-
-        try
-        {
-            _resettingPassword = true;
-            var result = await AdminIdentityAppService.ResetPasswordAsync(ResetUserId, new ResetIdentityUserPasswordDto
-            {
-                NewTemporaryPassword = UseCustomResetPassword ? CustomResetPassword : null
-            });
-            NewTempPassword = result;
-            Snackbar.Add(L["Identity:Users:Success:PasswordReset"], Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format(L["Identity:Users:Error:ResetPassword"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
-        }
-        finally
-        {
-            _resettingPassword = false;
-        }
-    }
-
-    private async Task CopyResetPasswordAsync()
-    {
-        if (string.IsNullOrWhiteSpace(NewTempPassword))
-        {
-            return;
-        }
-
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", NewTempPassword);
-        Snackbar.Add(L["Common:PasswordCopied"], Severity.Success);
+        return OpenUserDialog(user, "security");
     }
 
     private async Task ExportUsersAsync()
@@ -598,13 +456,6 @@
         return $"\"{escaped}\"";
     }
 
-    private static string GenerateTemporaryPassword()
-    {
-        var random = new Random();
-        var digits = random.Next(1000, 9999);
-        return $"Cima{digits}!";
-    }
-
     private void SetStatusFilter(string status)
     {
         _statusFilter = status;
@@ -616,147 +467,6 @@
         _statusFilter = StatusAll;
         await LoadUsers();
     }
-
-    private Task OnRolesSelectionChanged(IEnumerable<string> values)
-    {
-        _selectedRoleNames = values.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return Task.CompletedTask;
-    }
-
-    private async Task OnSelectedUserChanged(IdentityUserDto? user)
-    {
-        if (user is null)
-        {
-            return;
-        }
-
-        await BeginUserSelectionAsync(user);
-    }
-
-    private async Task BeginUserSelectionAsync(IdentityUserDto user)
-    {
-        var requestId = ++_userSelectionVersion;
-        _selectedUser = user;
-        _loadingUserDetail = true;
-        _selectedRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _userForm.Reset();
-        await InvokeAsync(StateHasChanged);
-        await SelectUserAsync(user.Id, requestId);
-    }
-
-    private async Task SelectUserAsync(Guid userId, int requestId)
-    {
-        try
-        {
-            var detailTask = UserAppService.GetAsync(userId);
-            var rolesTask = UserAppService.GetRolesAsync(userId);
-
-            await Task.WhenAll(detailTask, rolesTask);
-
-            if (requestId != _userSelectionVersion)
-            {
-                return;
-            }
-
-            var detail = detailTask.Result;
-            ApplyUserDetail(detail);
-
-            _selectedRoleNames = rolesTask.Result.Items
-                .Select(r => r.Name)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        }
-        catch (Exception ex)
-        {
-            if (requestId != _userSelectionVersion)
-            {
-                return;
-            }
-
-            Snackbar.Add($"Error al obtener detalle del usuario: {GetUserFriendlyErrorMessage(ex)}", Severity.Error);
-        }
-        finally
-        {
-            if (requestId == _userSelectionVersion)
-            {
-                _loadingUserDetail = false;
-            }
-        }
-    }
-
-    private void ApplyUserDetail(IdentityUserDto detail)
-    {
-        _selectedUser = detail;
-        _userForm.UserName = detail.UserName;
-        _userForm.Name = detail.Name;
-        _userForm.Surname = detail.Surname;
-        _userForm.Email = detail.Email;
-        _userForm.PhoneNumber = detail.PhoneNumber;
-        _userForm.IsActive = detail.IsActive;
-
-        if (_users.Count == 0)
-        {
-            return;
-        }
-
-        var users = _users.ToList();
-        var index = users.FindIndex(item => item.Id == detail.Id);
-        if (index >= 0)
-        {
-            users[index] = detail;
-            _users = users;
-        }
-    }
-
-    private async Task SaveUserAsync()
-    {
-        if (_selectedUser == null)
-        {
-            return;
-        }
-
-        try
-        {
-            _savingUser = true;
-            var updateDto = new IdentityUserUpdateDto
-            {
-                UserName = _userForm.UserName,
-                Name = _userForm.Name,
-                Surname = _userForm.Surname,
-                Email = _userForm.Email,
-                PhoneNumber = _userForm.PhoneNumber,
-                IsActive = _userForm.IsActive
-            };
-
-            await UserAppService.UpdateAsync(_selectedUser.Id, updateDto);
-            await UserAppService.UpdateRolesAsync(_selectedUser.Id, new IdentityUserUpdateRolesDto
-            {
-                RoleNames = _selectedRoleNames.ToArray()
-            });
-
-            Snackbar.Add(L["Identity:Users:Success:Updated"], Severity.Success);
-            await LoadUsers();
-            var refreshed = _users.FirstOrDefault(user => user.Id == _selectedUser.Id) ?? _selectedUser;
-            await BeginUserSelectionAsync(refreshed);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add(string.Format(L["Identity:Users:Error:Save"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
-        }
-        finally
-        {
-            _savingUser = false;
-        }
-    }
-
-    private void ResetSelection()
-    {
-        _userSelectionVersion++;
-        _selectedUser = null;
-        _loadingUserDetail = false;
-        _selectedRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        _userForm.Reset();
-    }
-
 
     private async Task<Dictionary<Guid, IReadOnlyList<IdentityRoleDto>>> LoadUserRolesAsync(
         IReadOnlyList<IdentityUserDto> users)
@@ -776,38 +486,6 @@
         return roleResults.ToDictionary(result => result.Id, result => (IReadOnlyList<IdentityRoleDto>)result.Items);
     }
 
-    private sealed class UserFormModel
-    {
-        public string? UserName { get; set; }
-        public string? Name { get; set; }
-        public string? Surname { get; set; }
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public bool IsActive { get; set; }
-
-        public void Reset()
-        {
-            UserName = Name = Surname = Email = PhoneNumber = null;
-            IsActive = false;
-        }
-    }
-
-    private sealed class CreateUserModel
-    {
-        public string? UserName { get; set; }
-        public string? Name { get; set; }
-        public string? Surname { get; set; }
-        public string? Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public bool IsActive { get; set; } = true;
-        public string? Password { get; set; }
-
-        public void Reset()
-        {
-            UserName = Name = Surname = Email = PhoneNumber = Password = null;
-            IsActive = true;
-        }
-    }
 }
 
 

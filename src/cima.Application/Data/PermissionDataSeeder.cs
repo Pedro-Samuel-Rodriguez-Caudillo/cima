@@ -43,6 +43,7 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
         {
             // Asignar permisos al rol admin
             await SeedAdminPermissionsAsync();
+            await SeedArchitectPermissionsAsync();
 
             _logger.LogInformation("========================================");
             _logger.LogInformation("[PERMISSION SEEDER] Permisos asignados exitosamente");
@@ -106,6 +107,30 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
         _logger.LogInformation("[PERMISSION SEEDER] Permisos del rol 'admin' asignados correctamente");
     }
 
+    private async Task SeedArchitectPermissionsAsync()
+    {
+        _logger.LogInformation("[PERMISSION SEEDER] Asignando permisos al rol 'architect'...");
+
+        const string roleProviderName = "R";
+        const string architectRoleName = "architect";
+
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Listings.Default);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Listings.Create);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Listings.Edit);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Listings.Publish);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Listings.Archive);
+
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.ContactRequests.Default);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.ContactRequests.View);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.ContactRequests.Reply);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.ContactRequests.Close);
+
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Dashboard.Default);
+        await GrantPermissionAsync(roleProviderName, architectRoleName, cimaPermissions.Dashboard.ViewStats);
+
+        _logger.LogInformation("[PERMISSION SEEDER] Permisos del rol 'architect' asignados correctamente");
+    }
+
     private async Task GrantPermissionAsync(string providerName, string providerKey, string permissionName)
     {
         try
@@ -129,5 +154,7 @@ public class PermissionDataSeeder : IDataSeedContributor, ITransientDependency
         }
     }
 }
+
+
 
 

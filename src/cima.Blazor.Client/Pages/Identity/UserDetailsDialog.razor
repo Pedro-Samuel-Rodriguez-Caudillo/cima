@@ -1,0 +1,754 @@
+@using cima.Identity
+@using MudBlazor
+@inherits cimaComponentBase
+
+<MudDialog Class="w-full">
+    <DialogContent>
+        <div tabindex="0" @onkeydown="HandleKeyDown" @onkeydown:stopPropagation="true">
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h6">@_dialogTitle</MudText>
+                    @if (_userDetail is not null)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Common:Id"] @_userDetail.Id
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Identity:Users:Dialog:CreateSubtitle"]
+                        </MudText>
+                    }
+                </MudStack>
+
+                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                    <MudChip T="string" Variant="Variant.Outlined" Color="@(_userForm.IsActive ? Color.Success : Color.Error)" Size="Size.Small">
+                        @(_userForm.IsActive ? L["Common:Yes"] : L["Common:No"])
+                    </MudChip>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
+                        @L["Identity:Users:Dialog:RolesCount", _selectedRoleNames.Count]
+                    </MudChip>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="@(HasPendingChanges ? Color.Warning : Color.Default)" Size="Size.Small">
+                        @L["Identity:Users:Dialog:Changes", ChangeCount]
+                    </MudChip>
+                </MudStack>
+            </MudStack>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                <MudText Typo="Typo.subtitle2">@L["Identity:Users:Dialog:Preview:Title"]</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Disabled="!HasPendingChanges"
+                           OnClick="ToggleChangePreview">
+                    @L["Identity:Users:Dialog:Preview"]
+                </MudButton>
+            </MudStack>
+
+            <MudCollapse Expanded="_showChangePreview">
+                <MudPaper Class="p-3" Elevation="0">
+                    @if (!HasPendingChanges)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Identity:Users:Dialog:Preview:Empty"]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Users:Dialog:Preview:Fields"]</MudText>
+                                @if (FieldChanges.Any())
+                                {
+                                    <MudList T="string" Dense="true">
+                                        @foreach (var change in FieldChanges)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText>@change</MudText>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Users:Dialog:Preview:RolesAdded"]</MudText>
+                                @if (AddedRoles.Any())
+                                {
+                                    <MudList T="string" Dense="true">
+                                        @foreach (var role in AddedRoles)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText>@role</MudText>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Users:Dialog:Preview:RolesRemoved"]</MudText>
+                                @if (RemovedRoles.Any())
+                                {
+                                    <MudList T="string" Dense="true">
+                                        @foreach (var role in RemovedRoles)
+                                        {
+                                            <MudListItem T="string">
+                                                <MudText>@role</MudText>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    }
+                </MudPaper>
+            </MudCollapse>
+
+            <MudTabs Rounded="true" Class="w-full" @bind-ActivePanelIndex="_activeTabIndex">
+                <MudTabPanel Text="@L["Identity:Users:Dialog:Tab:Details"]">
+                    @if (_loadingUserDetail)
+                    {
+                        <MudStack Spacing="1" AlignItems="AlignItems.Center" Class="py-6">
+                            <MudProgressCircular Indeterminate="true" />
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @L["Common:Loading"]
+                            </MudText>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2">
+                            <MudTextField @bind-Value="_userForm.UserName" Label="@L["Identity:Users:Form:UserName"]" Required="true" />
+                            <MudTextField @bind-Value="_userForm.Name" Label="@L["Identity:Users:Form:Name"]" />
+                            <MudTextField @bind-Value="_userForm.Surname" Label="@L["Identity:Users:Form:Surname"]" />
+                            <MudTextField @bind-Value="_userForm.Email" Label="@L["Identity:Users:Form:Email"]" Required="true" />
+                            <MudTextField @bind-Value="_userForm.PhoneNumber" Label="@L["Identity:Users:Form:Phone"]" />
+                            <MudSwitch T="bool" @bind-Value="_userForm.IsActive" Color="Color.Success" Label="@L["Identity:Users:Form:Active"]" />
+
+                            @if (_isCreate)
+                            {
+                                <MudDivider Class="my-2" />
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Users:ResetPassword"]</MudText>
+                                <MudSwitch T="bool" @bind-Value="_useCustomPassword" Label="@L["Identity:Users:Form:CustomPassword"]" />
+
+                                @if (_useCustomPassword)
+                                {
+                                    <MudTextField @bind-Value="_customPassword" Label="@L["Identity:Users:Form:TempPassword"]" />
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @L["Identity:Users:Form:TempPasswordAuto"]
+                                    </MudText>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(_createdPassword))
+                                {
+                                    <MudPaper Class="p-3" Elevation="0">
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                            @L["Identity:Users:Form:TempPasswordLabel"]
+                                        </MudText>
+                                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                            <MudTextField Value="@_createdPassword" ReadOnly="true" Class="flex-1" />
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CopyCreatedPasswordAsync">
+                                                @L["Common:Copy"]
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudPaper>
+                                }
+                            }
+                        </MudStack>
+                    }
+                </MudTabPanel>
+
+                <MudTabPanel Text="@L["Identity:Users:Dialog:Tab:Roles"]">
+                    @if (_loadingRoles)
+                    {
+                        <MudText Class="mud-text-secondary">@L["Common:Loading"]</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="string"
+                                   Label="@L["Identity:Users:Form:AssignedRoles"]"
+                                   MultiSelection="true"
+                                   SelectedValues="@_selectedRoleNames"
+                                   SelectedValuesChanged="OnRolesSelectionChanged">
+                            @foreach (var role in _allRoles)
+                            {
+                                <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                </MudTabPanel>
+
+                @if (_userDetail is not null)
+                {
+                    <MudTabPanel Text="@L["Identity:Users:Dialog:Tab:Security"]">
+                        <MudStack Spacing="2">
+                            <MudText Typo="Typo.subtitle2">@L["Identity:Users:ResetPassword"]</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @L["Identity:Users:ResetPasswordHint", _userDetail.UserName]
+                            </MudText>
+                            <MudSwitch T="bool" @bind-Value="_useCustomResetPassword" Label="@L["Identity:Users:Form:CustomPassword"]" />
+
+                            @if (_useCustomResetPassword)
+                            {
+                                <MudTextField @bind-Value="_customResetPassword" Label="@L["Identity:Users:Form:TempPassword"]" />
+                            }
+
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Disabled="_resettingPassword"
+                                       OnClick="ResetPasswordAsync">
+                                @if (_resettingPassword)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                @L["Identity:Users:ResetPassword"]
+                            </MudButton>
+
+                            @if (!string.IsNullOrWhiteSpace(_newTempPassword))
+                            {
+                                <MudPaper Class="p-3" Elevation="0">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                        @L["Identity:Users:ResetPassword:TempPassword"]
+                                    </MudText>
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                        <MudTextField Value="@_newTempPassword" ReadOnly="true" Class="flex-1" />
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CopyResetPasswordAsync">
+                                            @L["Common:Copy"]
+                                        </MudButton>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudTabPanel>
+                }
+            </MudTabs>
+        </MudStack>
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <div class="sticky bottom-0 z-10 bg-white/95 backdrop-blur border-t border-neutral-200 px-4 py-3 w-full">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @(HasPendingChanges ? L["Identity:Users:Dialog:PendingChanges"] : L["Identity:Users:Dialog:NoChanges"])
+                </MudText>
+                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CloseDialogAsync">
+                        @L["Common:Cancel"]
+                    </MudButton>
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               Disabled="_savingUser"
+                               OnClick="SaveAsync">
+                        @if (_savingUser)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        }
+                        @_saveButtonLabel
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Guid? UserId { get; set; }
+    [Parameter] public bool IsCreate { get; set; }
+    [Parameter] public string? InitialTab { get; set; }
+
+    [Inject] public IIdentityUserAppService UserAppService { get; set; } = default!;
+    [Inject] public IIdentityRoleAppService RoleAppService { get; set; } = default!;
+    [Inject] public IAdminIdentityAppService AdminIdentityAppService { get; set; } = default!;
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+    [Inject] public IJSRuntime JS { get; set; } = default!;
+
+    private IdentityUserDto? _userDetail;
+    private readonly UserFormModel _userForm = new();
+    private IReadOnlyList<IdentityRoleDto> _allRoles = Array.Empty<IdentityRoleDto>();
+    private HashSet<string> _selectedRoleNames = new(StringComparer.OrdinalIgnoreCase);
+    private bool _loadingUserDetail;
+    private bool _loadingRoles;
+    private bool _savingUser;
+    private bool _resettingPassword;
+    private bool _isCreate;
+    private int _activeTabIndex;
+    private bool _useCustomPassword;
+    private string? _customPassword;
+    private string? _createdPassword;
+    private bool _useCustomResetPassword;
+    private string? _customResetPassword;
+    private string? _newTempPassword;
+    private UserFormSnapshot? _formSnapshot;
+    private HashSet<string> _rolesSnapshot = new(StringComparer.OrdinalIgnoreCase);
+    private bool _showChangePreview;
+
+    private string _dialogTitle => _userDetail?.UserName ?? L["Identity:Users:Dialog:CreateTitle"];
+    private string _saveButtonLabel => _isCreate ? L["Common:Create"] : L["Common:Save"];
+    private bool HasPendingChanges => ChangeCount > 0;
+    private int ChangeCount => CountChanges();
+    private IReadOnlyList<string> FieldChanges => GetFieldChanges();
+    private IReadOnlyList<string> AddedRoles => GetAddedRoles();
+    private IReadOnlyList<string> RemovedRoles => GetRemovedRoles();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _isCreate = IsCreate && !UserId.HasValue;
+        _activeTabIndex = 0;
+        if (_isCreate)
+        {
+            _userForm.IsActive = true;
+            _formSnapshot = new UserFormSnapshot(_userForm);
+            _rolesSnapshot = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+        await LoadRolesAsync();
+
+        if (UserId is { } userId)
+        {
+            await LoadUserAsync(userId);
+            _isCreate = false;
+        }
+    }
+
+    private int ResolveInitialTabIndex()
+    {
+        if (string.Equals(InitialTab, "security", StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+
+        if (string.Equals(InitialTab, "roles", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        try
+        {
+            _loadingRoles = true;
+            var result = await RoleAppService.GetListAsync(new GetIdentityRolesInput
+            {
+                MaxResultCount = 128,
+                Sorting = "Name"
+            });
+            _allRoles = result.Items;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Users:Error:Load"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _loadingRoles = false;
+        }
+    }
+
+    private async Task LoadUserAsync(Guid userId)
+    {
+        try
+        {
+            _loadingUserDetail = true;
+            var detailTask = UserAppService.GetAsync(userId);
+            var rolesTask = UserAppService.GetRolesAsync(userId);
+            await Task.WhenAll(detailTask, rolesTask);
+
+            ApplyUserDetail(detailTask.Result);
+            _selectedRoleNames = rolesTask.Result.Items
+                .Select(r => r.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            _userForm.IsActive = detailTask.Result.IsActive;
+            _formSnapshot = new UserFormSnapshot(_userForm);
+            _rolesSnapshot = new HashSet<string>(_selectedRoleNames, StringComparer.OrdinalIgnoreCase);
+            _activeTabIndex = ResolveInitialTabIndex();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Users:Error:Detail"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _loadingUserDetail = false;
+        }
+    }
+
+    private void ApplyUserDetail(IdentityUserDto detail)
+    {
+        _userDetail = detail;
+        _userForm.UserName = detail.UserName;
+        _userForm.Name = detail.Name;
+        _userForm.Surname = detail.Surname;
+        _userForm.Email = detail.Email;
+        _userForm.PhoneNumber = detail.PhoneNumber;
+        _userForm.IsActive = detail.IsActive;
+    }
+
+    private Task OnRolesSelectionChanged(IEnumerable<string> values)
+    {
+        _selectedRoleNames = values.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_savingUser)
+        {
+            return;
+        }
+
+        if (_isCreate)
+        {
+            await CreateUserAsync();
+            return;
+        }
+
+        await SaveUserAsync();
+    }
+
+    private async Task CreateUserAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_userForm.UserName) || string.IsNullOrWhiteSpace(_userForm.Email))
+        {
+            Snackbar.Add(L["Identity:Users:Validation:UserEmailRequired"], Severity.Warning);
+            return;
+        }
+
+        var password = _useCustomPassword ? _customPassword : GenerateTemporaryPassword();
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            Snackbar.Add(L["Identity:Users:Validation:TempPasswordRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _savingUser = true;
+            _createdPassword = null;
+
+            var createDto = new IdentityUserCreateDto
+            {
+                UserName = _userForm.UserName,
+                Email = _userForm.Email,
+                Name = _userForm.Name,
+                Surname = _userForm.Surname,
+                PhoneNumber = _userForm.PhoneNumber,
+                IsActive = _userForm.IsActive,
+                Password = password
+            };
+
+            var created = await UserAppService.CreateAsync(createDto);
+            if (_selectedRoleNames.Any())
+            {
+                await UserAppService.UpdateRolesAsync(created.Id, new IdentityUserUpdateRolesDto
+                {
+                    RoleNames = _selectedRoleNames.ToArray()
+                });
+            }
+
+            _createdPassword = password;
+            Snackbar.Add(L["Identity:Users:Success:Created"], Severity.Success);
+            await LoadUserAsync(created.Id);
+            _isCreate = false;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Users:Error:Create"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _savingUser = false;
+        }
+    }
+
+    private async Task SaveUserAsync()
+    {
+        if (_userDetail == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_userForm.UserName) || string.IsNullOrWhiteSpace(_userForm.Email))
+        {
+            Snackbar.Add(L["Identity:Users:Validation:UserEmailRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _savingUser = true;
+            var updateDto = new IdentityUserUpdateDto
+            {
+                UserName = _userForm.UserName,
+                Name = _userForm.Name,
+                Surname = _userForm.Surname,
+                Email = _userForm.Email,
+                PhoneNumber = _userForm.PhoneNumber,
+                IsActive = _userForm.IsActive
+            };
+
+            await UserAppService.UpdateAsync(_userDetail.Id, updateDto);
+            await UserAppService.UpdateRolesAsync(_userDetail.Id, new IdentityUserUpdateRolesDto
+            {
+                RoleNames = _selectedRoleNames.ToArray()
+            });
+
+            Snackbar.Add(L["Identity:Users:Success:Updated"], Severity.Success);
+            await LoadUserAsync(_userDetail.Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Users:Error:Save"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _savingUser = false;
+        }
+    }
+
+    private async Task ResetPasswordAsync()
+    {
+        if (_userDetail is null)
+        {
+            return;
+        }
+
+        if (_useCustomResetPassword && string.IsNullOrWhiteSpace(_customResetPassword))
+        {
+            Snackbar.Add(L["Identity:Users:Validation:TempPasswordRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _resettingPassword = true;
+            var result = await AdminIdentityAppService.ResetPasswordAsync(_userDetail.Id, new ResetIdentityUserPasswordDto
+            {
+                NewTemporaryPassword = _useCustomResetPassword ? _customResetPassword : null
+            });
+            _newTempPassword = result;
+            Snackbar.Add(L["Identity:Users:Success:PasswordReset"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Users:Error:ResetPassword"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _resettingPassword = false;
+        }
+    }
+
+    private async Task CopyCreatedPasswordAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_createdPassword))
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _createdPassword);
+        Snackbar.Add(L["Common:PasswordCopied"], Severity.Success);
+    }
+
+    private async Task CopyResetPasswordAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newTempPassword))
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _newTempPassword);
+        Snackbar.Add(L["Common:PasswordCopied"], Severity.Success);
+    }
+
+    private async Task CloseDialogAsync()
+    {
+        if (HasPendingChanges)
+        {
+            var confirmed = await DialogService.ShowMessageBox(
+                L["Identity:Users:Dialog:UnsavedTitle"],
+                L["Identity:Users:Dialog:UnsavedMessage"],
+                yesText: L["Common:Close"],
+                cancelText: L["Common:Cancel"]);
+
+            if (confirmed != true)
+            {
+                return;
+            }
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private int CountChanges()
+    {
+        if (_formSnapshot == null)
+        {
+            return 0;
+        }
+
+        var changes = 0;
+        changes += _formSnapshot.CountChanges(_userForm);
+
+        if (!_rolesSnapshot.SetEquals(_selectedRoleNames))
+        {
+            changes++;
+        }
+
+        if (_isCreate)
+        {
+            if (_useCustomPassword || !string.IsNullOrWhiteSpace(_customPassword))
+            {
+                changes++;
+            }
+        }
+
+        return changes;
+    }
+
+    private void ToggleChangePreview()
+    {
+        _showChangePreview = !_showChangePreview;
+    }
+
+    private IReadOnlyList<string> GetFieldChanges()
+    {
+        if (_formSnapshot == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var changes = new List<string>();
+        AddFieldChange(changes, L["Identity:Users:Form:UserName"], _formSnapshot.UserName, _userForm.UserName);
+        AddFieldChange(changes, L["Identity:Users:Form:Name"], _formSnapshot.Name, _userForm.Name);
+        AddFieldChange(changes, L["Identity:Users:Form:Surname"], _formSnapshot.Surname, _userForm.Surname);
+        AddFieldChange(changes, L["Identity:Users:Form:Email"], _formSnapshot.Email, _userForm.Email);
+        AddFieldChange(changes, L["Identity:Users:Form:Phone"], _formSnapshot.PhoneNumber, _userForm.PhoneNumber);
+
+        if (_formSnapshot.IsActive != _userForm.IsActive)
+        {
+            var from = _formSnapshot.IsActive ? L["Common:Yes"] : L["Common:No"];
+            var to = _userForm.IsActive ? L["Common:Yes"] : L["Common:No"];
+            changes.Add(string.Format(L["Identity:Users:Dialog:Preview:ChangeFormat"], L["Identity:Users:Form:Active"], from, to));
+        }
+
+        return changes;
+    }
+
+    private void AddFieldChange(List<string> changes, string label, string? from, string? to)
+    {
+        if (string.Equals(from?.Trim() ?? string.Empty, to?.Trim() ?? string.Empty, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        changes.Add(string.Format(L["Identity:Users:Dialog:Preview:ChangeFormat"], label, FormatValue(from), FormatValue(to)));
+    }
+
+    private string FormatValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? L["Common:NotSet"] : value.Trim();
+    }
+
+    private IReadOnlyList<string> GetAddedRoles()
+    {
+        if (_rolesSnapshot.Count == 0 && _selectedRoleNames.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return _selectedRoleNames.Except(_rolesSnapshot, StringComparer.OrdinalIgnoreCase).OrderBy(role => role).ToList();
+    }
+
+    private IReadOnlyList<string> GetRemovedRoles()
+    {
+        if (_rolesSnapshot.Count == 0 && _selectedRoleNames.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return _rolesSnapshot.Except(_selectedRoleNames, StringComparer.OrdinalIgnoreCase).OrderBy(role => role).ToList();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+        {
+            await CloseDialogAsync();
+        }
+    }
+
+    private static string GenerateTemporaryPassword()
+    {
+        var random = new Random();
+        var digits = random.Next(1000, 9999);
+        return $"Cima{digits}!";
+    }
+
+    private sealed class UserFormModel
+    {
+        public string? UserName { get; set; }
+        public string? Name { get; set; }
+        public string? Surname { get; set; }
+        public string? Email { get; set; }
+        public string? PhoneNumber { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    private sealed class UserFormSnapshot
+    {
+        public UserFormSnapshot(UserFormModel model)
+        {
+            UserName = model.UserName?.Trim();
+            Name = model.Name?.Trim();
+            Surname = model.Surname?.Trim();
+            Email = model.Email?.Trim();
+            PhoneNumber = model.PhoneNumber?.Trim();
+            IsActive = model.IsActive;
+        }
+
+        public string? UserName { get; }
+        public string? Name { get; }
+        public string? Surname { get; }
+        public string? Email { get; }
+        public string? PhoneNumber { get; }
+        public bool IsActive { get; }
+
+        public int CountChanges(UserFormModel model)
+        {
+            var changes = 0;
+            changes += HasChanged(UserName, model.UserName) ? 1 : 0;
+            changes += HasChanged(Name, model.Name) ? 1 : 0;
+            changes += HasChanged(Surname, model.Surname) ? 1 : 0;
+            changes += HasChanged(Email, model.Email) ? 1 : 0;
+            changes += HasChanged(PhoneNumber, model.PhoneNumber) ? 1 : 0;
+            changes += IsActive != model.IsActive ? 1 : 0;
+            return changes;
+        }
+
+        private static bool HasChanged(string? previous, string? current)
+        {
+            return !string.Equals(previous?.Trim() ?? string.Empty, current?.Trim() ?? string.Empty, StringComparison.Ordinal);
+        }
+    }
+}

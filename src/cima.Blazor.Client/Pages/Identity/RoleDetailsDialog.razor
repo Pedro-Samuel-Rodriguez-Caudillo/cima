@@ -1,0 +1,1264 @@
+@using cima.Identity
+@using MudBlazor
+@using Volo.Abp.Authorization.Permissions
+@using Volo.Abp.PermissionManagement
+@inherits cimaComponentBase
+
+<MudDialog Class="w-full">
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h6">
+                        @_roleTitle
+                    </MudText>
+                    @if (_roleDetail is not null)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Common:Id"] @_roleDetail.Id - @L["Identity:Roles:MembersCount", _roleMembersCount]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @L["Identity:Roles:Dialog:CreateSubtitle"]
+                        </MudText>
+                    }
+                </MudStack>
+
+                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small">
+                        @L["Identity:Roles:Permissions:Summary:Total", PermissionTotalCount]
+                    </MudChip>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small">
+                        @L["Identity:Roles:Permissions:Summary:Granted", PermissionGrantedCount]
+                    </MudChip>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small">
+                        @L["Identity:Roles:Permissions:Summary:Groups", PermissionGroupCount]
+                    </MudChip>
+                    <MudChip T="string" Variant="Variant.Outlined" Color="@(HasPermissionChanges ? Color.Warning : Color.Default)" Size="Size.Small">
+                        @L["Identity:Roles:Permissions:Summary:Changes", PermissionChangeCount]
+                    </MudChip>
+                </MudStack>
+            </MudStack>
+
+            <MudTabs Rounded="true" Class="w-full">
+                <MudTabPanel Text="@L["Identity:Roles:Dialog:Tab:Details"]">
+                    @if (_loadingRoleDetail)
+                    {
+                        <MudStack Spacing="1" AlignItems="AlignItems.Center" Class="py-6">
+                            <MudProgressCircular Indeterminate="true" />
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @L["Common:Loading"]
+                            </MudText>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Roles:Dialog:Preview:Title"]</MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Disabled="!HasRoleChanges"
+                                           OnClick="ToggleRolePreview">
+                                    @L["Identity:Roles:Dialog:Preview"]
+                                </MudButton>
+                            </MudStack>
+
+                            <MudCollapse Expanded="_showRolePreview">
+                                <MudPaper Class="p-3" Elevation="0">
+                                    @if (!HasRoleChanges)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                            @L["Identity:Roles:Dialog:Preview:Empty"]
+                                        </MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudList T="string" Dense="true">
+                                            @foreach (var change in RoleFieldChanges)
+                                            {
+                                                <MudListItem T="string">
+                                                    <MudText>@change</MudText>
+                                                </MudListItem>
+                                            }
+                                        </MudList>
+                                    }
+                                </MudPaper>
+                            </MudCollapse>
+
+                            <MudTextField @bind-Value="_roleForm.Name"
+                                          Label="@L["Identity:Roles:Form:Name"]"
+                                          Required="true"
+                                          Immediate="true"
+                                          Disabled="_savingRole" />
+
+                            <MudTooltip Text="@L["Identity:Roles:Tooltip:Default"]">
+                                <MudSwitch T="bool"
+                                           @bind-Value="_roleForm.IsDefault"
+                                           Label="@L["Identity:Roles:Form:Default"]"
+                                           Color="Color.Primary"
+                                           Disabled="_savingRole" />
+                            </MudTooltip>
+                            <MudTooltip Text="@L["Identity:Roles:Tooltip:Public"]">
+                                <MudSwitch T="bool"
+                                           @bind-Value="_roleForm.IsPublic"
+                                           Label="@L["Identity:Roles:Form:Public"]"
+                                           Color="Color.Success"
+                                           Disabled="_savingRole" />
+                            </MudTooltip>
+
+                            @if (_roleDetail is not null)
+                            {
+                                <MudDivider Class="my-2" />
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Roles:RecentMembers"]</MudText>
+
+                                @if (_roleMembers.Any())
+                                {
+                                    <MudList T="IdentityUserDto" Dense="true" Class="w-full">
+                                        @foreach (var member in _roleMembers)
+                                        {
+                                            <MudListItem T="IdentityUserDto" @ondblclick="() => OpenUserDetailsAsync(member.Id)">
+                                                <MudStack>
+                                                    <MudText>@member.UserName</MudText>
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@member.Email</MudText>
+                                                </MudStack>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                else
+                                {
+                                    <MudText Class="mud-text-secondary">@L["Identity:Roles:MembersEmpty"]</MudText>
+                                }
+                            }
+                        </MudStack>
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text="@L["Identity:Roles:Dialog:Tab:Permissions"]">
+                    @if (_roleDetail is null)
+                    {
+                        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                            @L["Identity:Roles:Permissions:CreateHint"]
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2">
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Value="@_permissionSearch"
+                                                  ValueChanged="OnPermissionSearchChanged"
+                                                  Placeholder="@L["Identity:Roles:Permissions:SearchPlaceholder"]"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                                  Immediate="true"
+                                                  DebounceInterval="250"
+                                                  Class="w-full" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Class="flex-wrap">
+                                        <MudSelect T="Guid?" Label="@L["Identity:Roles:Permissions:Copy:SourceRole"]"
+                                                   @bind-Value="_copyFromRoleId"
+                                                   Dense="true"
+                                                   Disabled="_loadingAvailableRoles || _copyingPermissions"
+                                                   Clearable="true"
+                                                   Class="min-w-[220px]">
+                                            @foreach (var role in _availableRoles)
+                                            {
+                                                <MudSelectItem T="Guid?" Value="@(role.Id)">
+                                                    @role.Name
+                                                </MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="Color.Secondary"
+                                                   Disabled="_copyingPermissions || !_copyFromRoleId.HasValue"
+                                                   OnClick="ApplyPermissionsFromRoleAsync">
+                                            @if (_copyingPermissions)
+                                            {
+                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            }
+                                            @L["Identity:Roles:Permissions:Copy:Apply"]
+                                        </MudButton>
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                                <MudText Typo="Typo.subtitle2">@L["Identity:Roles:Permissions:Title"]</MudText>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Primary"
+                                           Disabled="!HasPermissionChanges"
+                                           OnClick="ToggleChangePreview">
+                                    @L["Identity:Roles:Permissions:Preview"]
+                                </MudButton>
+                            </MudStack>
+
+                            <MudCollapse Expanded="_showChangePreview">
+                                <MudPaper Class="p-3" Elevation="0">
+                                    @if (!HasPermissionChanges)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                            @L["Identity:Roles:Permissions:Preview:Empty"]
+                                        </MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudGrid Spacing="2">
+                                            <MudItem xs="12" md="6">
+                                                <MudText Typo="Typo.subtitle2">@L["Identity:Roles:Permissions:Preview:Added"]</MudText>
+                                                @if (AddedPermissionChanges.Any())
+                                                {
+                                                    <MudList T="PermissionChange" Dense="true">
+                                                        @foreach (var change in AddedPermissionChanges)
+                                                        {
+                                                            <MudListItem T="PermissionChange">
+                                                                <MudText>@change.DisplayName</MudText>
+                                                            </MudListItem>
+                                                        }
+                                                    </MudList>
+                                                }
+                                                else
+                                                {
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
+                                                }
+                                            </MudItem>
+                                            <MudItem xs="12" md="6">
+                                                <MudText Typo="Typo.subtitle2">@L["Identity:Roles:Permissions:Preview:Removed"]</MudText>
+                                                @if (RemovedPermissionChanges.Any())
+                                                {
+                                                    <MudList T="PermissionChange" Dense="true">
+                                                        @foreach (var change in RemovedPermissionChanges)
+                                                        {
+                                                            <MudListItem T="PermissionChange">
+                                                                <MudText>@change.DisplayName</MudText>
+                                                            </MudListItem>
+                                                        }
+                                                    </MudList>
+                                                }
+                                                else
+                                                {
+                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">-</MudText>
+                                                }
+                                            </MudItem>
+                                        </MudGrid>
+                                    }
+                                </MudPaper>
+                            </MudCollapse>
+
+                            @if (_loadingPermissions)
+                            {
+                                <MudText Class="mud-text-secondary">@L["Common:Loading"]</MudText>
+                            }
+                            else if (_permissionGroups.Any())
+                            {
+                                <MudExpansionPanels Dense="true" MultiExpansion="true">
+                                    @foreach (var group in _permissionGroups)
+                                    {
+                                        var filteredPermissions = GetFilteredPermissions(group);
+                                        if (filteredPermissions.Count == 0)
+                                        {
+                                            continue;
+                                        }
+
+                                        <MudExpansionPanel>
+                                            <TitleContent>
+                                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                                                    <MudStack Spacing="0">
+                                                        <MudText Typo="Typo.subtitle2">@GetPermissionGroupTitle(group)</MudText>
+                                                        @if (IsGroupDetailsVisible(group))
+                                                        {
+                                                            var groupDescription = GetPermissionGroupDescription(group);
+                                                            if (!string.IsNullOrWhiteSpace(groupDescription))
+                                                            {
+                                                                <MudText Typo="Typo.caption" Class="mud-text-secondary">@groupDescription</MudText>
+                                                            }
+                                                        }
+                                                    </MudStack>
+                                                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                                                        <MudTooltip Text="@GetGroupDetailsTooltip(group)">
+                                                            <MudIconButton Icon="@(IsGroupDetailsVisible(group)
+                                                                    ? Icons.Material.Filled.VisibilityOff
+                                                                    : Icons.Material.Filled.Visibility)"
+                                                                           Color="Color.Secondary"
+                                                                           OnClick="@(() => ToggleGroupDetails(group))" />
+                                                        </MudTooltip>
+                                                        <MudTooltip Text="@GetSelectAllTooltip()">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.DoneAll"
+                                                                           Color="Color.Primary"
+                                                                           OnClick="@(() => SetGroupPermissions(group, true))" />
+                                                        </MudTooltip>
+                                                        <MudTooltip Text="@GetSelectNoneTooltip()">
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Clear"
+                                                                           Color="Color.Secondary"
+                                                                           OnClick="@(() => SetGroupPermissions(group, false))" />
+                                                        </MudTooltip>
+                                                    </MudStack>
+                                                </MudStack>
+                                            </TitleContent>
+                                            <ChildContent>
+                                                @if (IsCimaGroup(group))
+                                                {
+                                                    var categories = GetCimaPermissionCategories(filteredPermissions);
+                                                    <MudStack Spacing="2">
+                                                        @foreach (var category in categories)
+                                                        {
+                                                            <MudStack Spacing="1">
+                                                                <MudText Typo="Typo.subtitle2">@category.Title</MudText>
+                                                                @if (!string.IsNullOrWhiteSpace(category.Description))
+                                                                {
+                                                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@category.Description</MudText>
+                                                                }
+                                                                <MudStack Spacing="1">
+                                                                    @foreach (var permission in category.Permissions)
+                                                                    {
+                                                                        <MudStack Row="true"
+                                                                                  AlignItems="AlignItems.Center"
+                                                                                  Justify="Justify.SpaceBetween"
+                                                                                  Class="py-1"
+                                                                                  @ondblclick="() => OpenPermissionDetailsAsync(permission)">
+                                                                            <MudStack Spacing="0">
+                                                                                <MudText Typo="Typo.body2">@GetPermissionDisplayName(permission)</MudText>
+                                                                                @if (IsGroupDetailsVisible(group))
+                                                                                {
+                                                                                    var description = GetPermissionDescription(permission);
+                                                                                    if (!string.IsNullOrWhiteSpace(description))
+                                                                                    {
+                                                                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@description</MudText>
+                                                                                    }
+                                                                                    if (!string.IsNullOrWhiteSpace(permission.Name))
+                                                                                    {
+                                                                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                                                            @L["Identity:Roles:Permissions:KeyLabel"] @permission.Name
+                                                                                        </MudText>
+                                                                                    }
+                                                                                }
+                                                                            </MudStack>
+                                                                            <MudSwitch T="bool"
+                                                                                        @bind-Value="permission.IsGranted"
+                                                                                        AriaLabel="@GetPermissionDisplayName(permission)"
+                                                                                        Disabled="@(!CanManagePermission(permission))"
+                                                                                        Color="Color.Primary"
+                                                                                        Class="ml-auto" />
+                                                                        </MudStack>
+                                                                    }
+                                                                </MudStack>
+                                                            </MudStack>
+                                                        }
+                                                    </MudStack>
+                                                }
+                                                else
+                                                {
+                                                    <MudStack Spacing="1">
+                                                        @foreach (var permission in filteredPermissions)
+                                                        {
+                                                            <MudStack Row="true"
+                                                                      AlignItems="AlignItems.Center"
+                                                                      Justify="Justify.SpaceBetween"
+                                                                      Class="py-1"
+                                                                      @ondblclick="() => OpenPermissionDetailsAsync(permission)">
+                                                                <MudStack Spacing="0">
+                                                                    <MudText Typo="Typo.body2">@GetPermissionDisplayName(permission)</MudText>
+                                                                    @if (IsGroupDetailsVisible(group))
+                                                                    {
+                                                                        var description = GetPermissionDescription(permission);
+                                                                        if (!string.IsNullOrWhiteSpace(description))
+                                                                        {
+                                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@description</MudText>
+                                                                        }
+                                                                        if (!string.IsNullOrWhiteSpace(permission.Name))
+                                                                        {
+                                                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                                                @L["Identity:Roles:Permissions:KeyLabel"] @permission.Name
+                                                                            </MudText>
+                                                                        }
+                                                                    }
+                                                                </MudStack>
+                                                                <MudSwitch T="bool"
+                                                                            @bind-Value="permission.IsGranted"
+                                                                            AriaLabel="@GetPermissionDisplayName(permission)"
+                                                                            Disabled="@(!CanManagePermission(permission))"
+                                                                            Color="Color.Primary"
+                                                                            Class="ml-auto" />
+                                                            </MudStack>
+                                                        }
+                                                    </MudStack>
+                                                }
+                                            </ChildContent>
+                                        </MudExpansionPanel>
+                                    }
+                                </MudExpansionPanels>
+                            }
+                            else
+                            {
+                                <MudText Class="mud-text-secondary">@L["Identity:Roles:Permissions:Empty"]</MudText>
+                            }
+                        </MudStack>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        </MudStack>
+    </DialogContent>
+
+    <DialogActions>
+        <div class="sticky bottom-0 z-10 bg-white/95 backdrop-blur border-t border-neutral-200 px-4 py-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap">
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                    @(HasPendingChanges ? L["Identity:Roles:Permissions:PendingChanges"] : L["Identity:Roles:Permissions:NoChanges"])
+                </MudText>
+                <MudStack Row="true" Spacing="1" Class="flex-wrap">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               Disabled="_savingRole || _savingPermissions"
+                               OnClick="RequestCloseAsync">
+                        @L["Common:Cancel"]
+                    </MudButton>
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               Disabled="_savingRole || _savingPermissions"
+                               OnClick="SaveAsync">
+                        @if (_savingRole || _savingPermissions)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        }
+                        @L["Common:Save"]
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Guid? RoleId { get; set; }
+    [Parameter] public bool IsCreate { get; set; }
+
+    [Inject] public IIdentityRoleAppService RoleAppService { get; set; } = default!;
+    [Inject] public IRoleMembersAppService RoleMembersAppService { get; set; } = default!;
+    [Inject] public IPermissionAppService PermissionAppService { get; set; } = default!;
+    [Inject] public IRolePermissionMigrationAppService RolePermissionMigrationAppService { get; set; } = default!;
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+
+    private IdentityRoleDto? _roleDetail;
+    private readonly RoleFormModel _roleForm = new();
+    private RoleFormSnapshot? _roleSnapshot;
+    private IReadOnlyList<IdentityUserDto> _roleMembers = Array.Empty<IdentityUserDto>();
+    private long _roleMembersCount;
+    private List<PermissionGroupDto> _permissionGroups = new();
+    private Dictionary<string, bool> _permissionSnapshot = new(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyList<IdentityRoleDto> _availableRoles = Array.Empty<IdentityRoleDto>();
+    private Guid? _copyFromRoleId;
+    private string? _permissionSearch;
+    private bool _openingUserDialog;
+    private bool _loadingRoleDetail;
+    private bool _loadingPermissions;
+    private bool _loadingAvailableRoles;
+    private bool _savingRole;
+    private bool _savingPermissions;
+    private bool _copyingPermissions;
+    private bool _showChangePreview;
+    private bool _showRolePreview;
+    private readonly HashSet<string> _groupDetailsVisible = new(StringComparer.OrdinalIgnoreCase);
+
+    private string _roleTitle => _roleDetail?.Name ?? L["Identity:Roles:Dialog:CreateTitle"];
+    private bool HasRoleChanges => _roleSnapshot != null && _roleForm.HasChanges(_roleSnapshot);
+    private bool HasPermissionChanges => PermissionChangeCount > 0;
+    private bool HasPendingChanges => HasRoleChanges || HasPermissionChanges;
+    private int PermissionGroupCount => _permissionGroups.Count;
+    private int PermissionTotalCount => _permissionGroups.SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>()).Count();
+    private int PermissionGrantedCount => _permissionGroups.SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>()).Count(permission => permission.IsGranted);
+    private int PermissionChangeCount => GetPermissionChanges().Count;
+    private IReadOnlyList<PermissionChange> AddedPermissionChanges => GetPermissionChanges().Where(change => change.IsGranted).ToList();
+    private IReadOnlyList<PermissionChange> RemovedPermissionChanges => GetPermissionChanges().Where(change => !change.IsGranted).ToList();
+    private IReadOnlyList<string> RoleFieldChanges => GetRoleFieldChanges();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadAvailableRolesAsync();
+
+        if (RoleId is { } roleId)
+        {
+            await LoadRoleAsync(roleId);
+        }
+        else if (IsCreate)
+        {
+            _roleSnapshot = new RoleFormSnapshot();
+        }
+    }
+
+    private async Task LoadAvailableRolesAsync()
+    {
+        try
+        {
+            _loadingAvailableRoles = true;
+            var result = await RoleAppService.GetListAsync(new GetIdentityRolesInput
+            {
+                MaxResultCount = 256,
+                Sorting = "Name"
+            });
+
+            _availableRoles = result.Items;
+            if (_roleDetail is not null)
+            {
+                _availableRoles = _availableRoles.Where(role => role.Id != _roleDetail.Id).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Error:Load"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _loadingAvailableRoles = false;
+        }
+    }
+
+    private async Task LoadRoleAsync(Guid roleId)
+    {
+        _loadingRoleDetail = true;
+        _loadingPermissions = true;
+
+        try
+        {
+            var detail = await RoleAppService.GetAsync(roleId);
+            ApplyRoleDetail(detail);
+            await LoadAvailableRolesAsync();
+            await LoadRoleMembersAsync(roleId);
+            await LoadRolePermissionsAsync(detail.Name);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Error:Detail"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _loadingRoleDetail = false;
+        }
+    }
+
+    private void ApplyRoleDetail(IdentityRoleDto role)
+    {
+        _roleDetail = role;
+        _roleForm.Name = role.Name;
+        _roleForm.IsDefault = role.IsDefault;
+        _roleForm.IsPublic = role.IsPublic;
+        _roleSnapshot = new RoleFormSnapshot(role.Name, role.IsDefault, role.IsPublic);
+    }
+
+    private async Task LoadRoleMembersAsync(Guid roleId)
+    {
+        try
+        {
+            var usersResult = await RoleMembersAppService.GetListAsync(new GetRoleMembersInput
+            {
+                RoleId = roleId,
+                MaxResultCount = 5,
+                Sorting = "CreationTime DESC"
+            });
+
+            _roleMembersCount = usersResult.TotalCount;
+            _roleMembers = usersResult.Items;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Error:Detail"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+    }
+
+    private async Task LoadRolePermissionsAsync(string roleName)
+    {
+        if (string.IsNullOrWhiteSpace(roleName))
+        {
+            _permissionGroups = new List<PermissionGroupDto>();
+            _loadingPermissions = false;
+            return;
+        }
+
+        try
+        {
+            _loadingPermissions = true;
+            var result = await PermissionAppService.GetAsync(
+                RolePermissionValueProvider.ProviderName,
+                roleName);
+
+            var groups = result.Groups?.ToList() ?? new List<PermissionGroupDto>();
+            _permissionGroups = groups
+                .OrderBy(group => IsCimaGroup(group) ? 0 : 1)
+                .ThenBy(GetPermissionGroupTitle)
+                .ToList();
+            _permissionSnapshot = _permissionGroups
+                .SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>())
+                .Where(permission => !string.IsNullOrWhiteSpace(permission.Name))
+                .ToDictionary(permission => permission.Name!, permission => permission.IsGranted, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            _permissionGroups = new List<PermissionGroupDto>();
+            Snackbar.Add(string.Format(L["Identity:Roles:Permissions:Error:Load"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _loadingPermissions = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_savingRole || _savingPermissions)
+        {
+            return;
+        }
+
+        if (_roleDetail is null)
+        {
+            await CreateRoleAsync();
+            return;
+        }
+
+        if (!HasPendingChanges)
+        {
+            return;
+        }
+
+        if (HasRoleChanges)
+        {
+            await SaveRoleAsync();
+        }
+
+        if (HasPermissionChanges)
+        {
+            await SaveRolePermissionsAsync();
+        }
+    }
+    private async Task CreateRoleAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_roleForm.Name))
+        {
+            Snackbar.Add(L["Identity:Roles:Validation:NameRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _savingRole = true;
+            var createDto = new IdentityRoleCreateDto
+            {
+                Name = _roleForm.Name.Trim(),
+                IsDefault = _roleForm.IsDefault,
+                IsPublic = _roleForm.IsPublic
+            };
+
+            var created = await RoleAppService.CreateAsync(createDto);
+            Snackbar.Add(L["Identity:Roles:Success:Created"], Severity.Success);
+            ApplyRoleDetail(created);
+            await LoadAvailableRolesAsync();
+            await LoadRoleMembersAsync(created.Id);
+            await LoadRolePermissionsAsync(created.Name);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Error:Create"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _savingRole = false;
+        }
+    }
+
+    private async Task SaveRoleAsync()
+    {
+        if (_roleDetail == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_roleForm.Name))
+        {
+            Snackbar.Add(L["Identity:Roles:Validation:NameRequired"], Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _savingRole = true;
+            var previousName = _roleDetail.Name;
+            var nextName = _roleForm.Name.Trim();
+            _roleForm.Name = nextName;
+            var updateDto = new IdentityRoleUpdateDto
+            {
+                Name = nextName,
+                IsDefault = _roleForm.IsDefault,
+                IsPublic = _roleForm.IsPublic
+            };
+
+            await RoleAppService.UpdateAsync(_roleDetail.Id, updateDto);
+            Snackbar.Add(L["Identity:Roles:Success:Updated"], Severity.Success);
+            _roleSnapshot = new RoleFormSnapshot(nextName, _roleForm.IsDefault, _roleForm.IsPublic);
+
+            if (!string.Equals(previousName, nextName, StringComparison.Ordinal))
+            {
+                try
+                {
+                    await RolePermissionMigrationAppService.MigrateAsync(new RolePermissionMigrationInput
+                    {
+                        OldName = previousName,
+                        NewName = nextName
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add(string.Format(L["Identity:Roles:Permissions:Error:Save"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+                }
+            }
+
+            var refreshed = await RoleAppService.GetAsync(_roleDetail.Id);
+            ApplyRoleDetail(refreshed);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Error:Save"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _savingRole = false;
+        }
+    }
+
+    private async Task SaveRolePermissionsAsync()
+    {
+        if (_roleDetail is null || string.IsNullOrWhiteSpace(_roleDetail.Name))
+        {
+            return;
+        }
+
+        var roleName = _roleDetail.Name;
+        var permissions = _permissionGroups
+            .SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>())
+            .Where(permission => !string.IsNullOrWhiteSpace(permission.Name))
+            .Where(CanManagePermission)
+            .Select(permission => new UpdatePermissionDto
+            {
+                Name = permission.Name,
+                IsGranted = permission.IsGranted
+            })
+            .ToArray();
+
+        try
+        {
+            _savingPermissions = true;
+            await PermissionAppService.UpdateAsync(
+                RolePermissionValueProvider.ProviderName,
+                roleName,
+                new UpdatePermissionsDto
+                {
+                    Permissions = permissions
+                });
+
+            Snackbar.Add(L["Identity:Roles:Permissions:Success:Updated"], Severity.Success);
+            await LoadRolePermissionsAsync(roleName);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Permissions:Error:Save"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _savingPermissions = false;
+        }
+    }
+
+    private async Task ApplyPermissionsFromRoleAsync()
+    {
+        if (_roleDetail is null || _copyFromRoleId is not { } sourceRoleId)
+        {
+            return;
+        }
+
+        var sourceRole = _availableRoles.FirstOrDefault(role => role.Id == sourceRoleId);
+        if (sourceRole == null)
+        {
+            return;
+        }
+
+        var confirmed = await DialogService.ShowMessageBox(
+            L["Identity:Roles:Permissions:Copy:Title"],
+            string.Format(L["Identity:Roles:Permissions:Copy:Confirm"], sourceRole.Name),
+            yesText: L["Identity:Roles:Permissions:Copy:Apply"],
+            cancelText: L["Common:Cancel"]);
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            _copyingPermissions = true;
+            var sourcePermissions = await PermissionAppService.GetAsync(
+                RolePermissionValueProvider.ProviderName,
+                sourceRole.Name);
+
+            var sourceMap = sourcePermissions.Groups?
+                .SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>())
+                .Where(permission => !string.IsNullOrWhiteSpace(permission.Name))
+                .ToDictionary(permission => permission.Name!, permission => permission.IsGranted, StringComparer.OrdinalIgnoreCase)
+                ?? new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var group in _permissionGroups)
+            {
+                foreach (var permission in group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>())
+                {
+                    if (string.IsNullOrWhiteSpace(permission.Name))
+                    {
+                        continue;
+                    }
+
+                    if (sourceMap.TryGetValue(permission.Name, out var isGranted))
+                    {
+                        permission.IsGranted = isGranted;
+                    }
+                }
+            }
+
+            Snackbar.Add(L["Identity:Roles:Permissions:Copy:Success"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(L["Identity:Roles:Permissions:Copy:Error"], GetUserFriendlyErrorMessage(ex)), Severity.Error);
+        }
+        finally
+        {
+            _copyingPermissions = false;
+        }
+    }
+
+    private void ToggleChangePreview()
+    {
+        _showChangePreview = !_showChangePreview;
+    }
+
+    private void ToggleRolePreview()
+    {
+        _showRolePreview = !_showRolePreview;
+    }
+
+    private IReadOnlyList<string> GetRoleFieldChanges()
+    {
+        if (_roleSnapshot == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var changes = new List<string>();
+        AddRoleFieldChange(changes, L["Identity:Roles:Form:Name"], _roleSnapshot.Name, _roleForm.Name);
+
+        if (_roleSnapshot.IsDefault != _roleForm.IsDefault)
+        {
+            var from = _roleSnapshot.IsDefault ? L["Common:Yes"] : L["Common:No"];
+            var to = _roleForm.IsDefault ? L["Common:Yes"] : L["Common:No"];
+            changes.Add(string.Format(L["Identity:Roles:Dialog:Preview:ChangeFormat"], L["Identity:Roles:Form:Default"], from, to));
+        }
+
+        if (_roleSnapshot.IsPublic != _roleForm.IsPublic)
+        {
+            var from = _roleSnapshot.IsPublic ? L["Common:Yes"] : L["Common:No"];
+            var to = _roleForm.IsPublic ? L["Common:Yes"] : L["Common:No"];
+            changes.Add(string.Format(L["Identity:Roles:Dialog:Preview:ChangeFormat"], L["Identity:Roles:Form:Public"], from, to));
+        }
+
+        return changes;
+    }
+
+    private void AddRoleFieldChange(List<string> changes, string label, string? from, string? to)
+    {
+        if (string.Equals(from?.Trim() ?? string.Empty, to?.Trim() ?? string.Empty, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        changes.Add(string.Format(L["Identity:Roles:Dialog:Preview:ChangeFormat"], label, FormatRoleValue(from), FormatRoleValue(to)));
+    }
+
+    private string FormatRoleValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? L["Common:NotSet"] : value.Trim();
+    }
+
+    private void ToggleGroupDetails(PermissionGroupDto group)
+    {
+        if (string.IsNullOrWhiteSpace(group.Name))
+        {
+            return;
+        }
+
+        if (!_groupDetailsVisible.Add(group.Name))
+        {
+            _groupDetailsVisible.Remove(group.Name);
+        }
+    }
+
+    private bool IsGroupDetailsVisible(PermissionGroupDto group)
+    {
+        if (string.IsNullOrWhiteSpace(group.Name))
+        {
+            return false;
+        }
+
+        return _groupDetailsVisible.Contains(group.Name);
+    }
+
+    private void SetGroupPermissions(PermissionGroupDto group, bool isGranted)
+    {
+        foreach (var permission in group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>())
+        {
+            if (!CanManagePermission(permission))
+            {
+                continue;
+            }
+
+            permission.IsGranted = isGranted;
+        }
+    }
+
+    private void OnPermissionSearchChanged(string value)
+    {
+        _permissionSearch = value;
+    }
+
+    private IReadOnlyList<PermissionGrantInfoDto> GetFilteredPermissions(PermissionGroupDto group)
+    {
+        var permissions = group.Permissions?.ToList() ?? new List<PermissionGrantInfoDto>();
+        if (string.IsNullOrWhiteSpace(_permissionSearch))
+        {
+            return permissions;
+        }
+
+        var term = _permissionSearch.Trim();
+        return permissions
+            .Where(permission => PermissionMatches(permission, term))
+            .ToList();
+    }
+
+    private bool PermissionMatches(PermissionGrantInfoDto permission, string term)
+    {
+        if (!string.IsNullOrWhiteSpace(permission.Name) &&
+            permission.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var displayName = GetPermissionDisplayName(permission);
+        return !string.IsNullOrWhiteSpace(displayName) &&
+               displayName.Contains(term, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private IReadOnlyList<PermissionChange> GetPermissionChanges()
+    {
+        if (_permissionSnapshot.Count == 0)
+        {
+            return Array.Empty<PermissionChange>();
+        }
+
+        var changes = new List<PermissionChange>();
+        foreach (var permission in _permissionGroups.SelectMany(group => group.Permissions ?? Enumerable.Empty<PermissionGrantInfoDto>()))
+        {
+            if (string.IsNullOrWhiteSpace(permission.Name) || !CanManagePermission(permission))
+            {
+                continue;
+            }
+
+            var previousValue = _permissionSnapshot.TryGetValue(permission.Name, out var stored)
+                ? stored
+                : false;
+
+            if (permission.IsGranted != previousValue)
+            {
+                changes.Add(new PermissionChange(permission.Name, GetPermissionDisplayName(permission), permission.IsGranted));
+            }
+        }
+
+        return changes;
+    }
+
+    private async Task RequestCloseAsync()
+    {
+        if (HasPendingChanges)
+        {
+            var confirmed = await DialogService.ShowMessageBox(
+                L["Identity:Roles:Dialog:UnsavedTitle"],
+                L["Identity:Roles:Dialog:UnsavedMessage"],
+                yesText: L["Common:Close"],
+                cancelText: L["Common:Cancel"]);
+
+            if (confirmed != true)
+            {
+                return;
+            }
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private static bool CanManagePermission(PermissionGrantInfoDto permission)
+    {
+        if (permission.AllowedProviders == null || permission.AllowedProviders.Count == 0)
+        {
+            return true;
+        }
+
+        return permission.AllowedProviders.Any(provider =>
+            string.Equals(provider, RolePermissionValueProvider.ProviderName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsCimaGroup(PermissionGroupDto group)
+    {
+        return string.Equals(group.Name, "cima", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private IReadOnlyList<PermissionCategory> GetCimaPermissionCategories(IReadOnlyList<PermissionGrantInfoDto> permissions)
+    {
+        var categories = permissions
+            .GroupBy(permission => GetPermissionCategoryKey(permission.Name))
+            .Select(group => new PermissionCategory(
+                group.Key,
+                GetPermissionCategoryTitle(group.Key),
+                GetPermissionCategoryDescription(group.Key),
+                group.OrderBy(item => GetPermissionDisplayName(item)).ToList()))
+            .OrderBy(category => GetPermissionCategoryOrder(category.Key))
+            .ThenBy(category => category.Title)
+            .ToList();
+
+        return categories;
+    }
+
+    private static string GetPermissionCategoryKey(string? permissionName)
+    {
+        if (string.IsNullOrWhiteSpace(permissionName))
+        {
+            return "Other";
+        }
+
+        const string prefix = "cima.";
+        if (!permissionName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Other";
+        }
+
+        var remainder = permissionName[prefix.Length..];
+        var separatorIndex = remainder.IndexOf('.');
+        return separatorIndex < 0 ? remainder : remainder[..separatorIndex];
+    }
+
+    private string GetPermissionCategoryTitle(string categoryKey)
+    {
+        if (string.Equals(categoryKey, "Other", StringComparison.OrdinalIgnoreCase))
+        {
+            return L["Common:Other"];
+        }
+
+        return L[$"Permission:{categoryKey}"];
+    }
+
+    private string GetPermissionCategoryDescription(string categoryKey)
+    {
+        if (string.Equals(categoryKey, "Other", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        var localized = L[$"Permission:{categoryKey}:Description"];
+        return localized.ResourceNotFound ? string.Empty : localized.Value;
+    }
+
+    private static int GetPermissionCategoryOrder(string categoryKey)
+    {
+        return categoryKey switch
+        {
+            "Listings" => 0,
+            "Architects" => 1,
+            "ContactRequests" => 2,
+            "Dashboard" => 3,
+            "Settings" => 4,
+            _ => 99
+        };
+    }
+
+    private string GetGroupDetailsTooltip(PermissionGroupDto group)
+    {
+        return IsGroupDetailsVisible(group)
+            ? L["Identity:Roles:Permissions:HideDetails"]
+            : L["Identity:Roles:Permissions:ShowDetails"];
+    }
+
+    private string GetSelectAllTooltip()
+    {
+        return L["Identity:Roles:Permissions:SelectAll"];
+    }
+
+    private string GetSelectNoneTooltip()
+    {
+        return L["Identity:Roles:Permissions:SelectNone"];
+    }
+
+    private string GetPermissionGroupTitle(PermissionGroupDto group)
+    {
+        var groupName = group.Name ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(groupName))
+        {
+            var localized = L[$"PermissionGroup:{groupName}"];
+            if (!localized.ResourceNotFound && !string.IsNullOrWhiteSpace(localized.Value))
+            {
+                return localized.Value;
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(group.DisplayName) ? groupName : group.DisplayName;
+    }
+
+    private string GetPermissionGroupDescription(PermissionGroupDto group)
+    {
+        var groupName = group.Name ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            return string.Empty;
+        }
+
+        var localized = L[$"PermissionGroup:{groupName}:Description"];
+        return localized.ResourceNotFound ? string.Empty : localized.Value;
+    }
+
+    private string GetPermissionDisplayName(PermissionGrantInfoDto permission)
+    {
+        if (!string.IsNullOrWhiteSpace(permission.Name))
+        {
+            var localized = L[$"Permission:{permission.Name}"];
+            if (!localized.ResourceNotFound && !string.IsNullOrWhiteSpace(localized.Value))
+            {
+                return localized.Value;
+            }
+        }
+
+        return string.IsNullOrWhiteSpace(permission.DisplayName) ? permission.Name ?? string.Empty : permission.DisplayName;
+    }
+
+    private string GetPermissionDescription(PermissionGrantInfoDto permission)
+    {
+        if (string.IsNullOrWhiteSpace(permission.Name))
+        {
+            return string.Empty;
+        }
+
+        var key = GetPermissionDescriptionKey(permission.Name);
+        var localized = L[key];
+        return localized.ResourceNotFound ? string.Empty : localized.Value;
+    }
+
+    private static string GetPermissionDescriptionKey(string permissionName)
+    {
+        const string prefix = "cima.";
+        if (permissionName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var shortName = permissionName[prefix.Length..];
+            return $"Permission:{shortName}:Description";
+        }
+
+        return $"Permission:{permissionName}:Description";
+    }
+
+    private sealed record PermissionCategory(
+        string Key,
+        string Title,
+        string Description,
+        IReadOnlyList<PermissionGrantInfoDto> Permissions);
+
+    private async Task OpenUserDetailsAsync(Guid userId)
+    {
+        if (_openingUserDialog)
+        {
+            return;
+        }
+
+        _openingUserDialog = true;
+        try
+        {
+            var parameters = new DialogParameters
+            {
+                ["UserId"] = userId,
+                ["InitialTab"] = "details"
+            };
+            var options = new DialogOptions
+            {
+                CloseOnEscapeKey = false,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
+            };
+
+            var dialog = await DialogService.ShowAsync<UserDetailsDialog>(string.Empty, parameters, options);
+            await dialog.Result;
+        }
+        finally
+        {
+            _openingUserDialog = false;
+        }
+    }
+
+    private async Task OpenPermissionDetailsAsync(PermissionGrantInfoDto permission)
+    {
+        var description = GetPermissionDescription(permission);
+        var lines = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            lines.Add(description);
+        }
+
+        if (!string.IsNullOrWhiteSpace(permission.Name))
+        {
+            lines.Add($"{L["Identity:Roles:Permissions:KeyLabel"]} {permission.Name}");
+        }
+
+        var message = lines.Count == 0 ? string.Empty : string.Join(Environment.NewLine, lines);
+        await DialogService.ShowMessageBox(GetPermissionDisplayName(permission), message);
+    }
+
+    private sealed record PermissionChange(string Name, string DisplayName, bool IsGranted);
+
+    private sealed class RoleFormSnapshot
+    {
+        public RoleFormSnapshot()
+        {
+        }
+
+        public RoleFormSnapshot(string name, bool isDefault, bool isPublic)
+        {
+            Name = name;
+            IsDefault = isDefault;
+            IsPublic = isPublic;
+        }
+
+        public string? Name { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsPublic { get; set; }
+    }
+
+    private sealed class RoleFormModel
+    {
+        public string? Name { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsPublic { get; set; }
+
+        public bool HasChanges(RoleFormSnapshot snapshot)
+        {
+            var normalizedName = Name?.Trim() ?? string.Empty;
+            var snapshotName = snapshot.Name?.Trim() ?? string.Empty;
+            return !string.Equals(normalizedName, snapshotName, StringComparison.Ordinal)
+                   || IsDefault != snapshot.IsDefault
+                   || IsPublic != snapshot.IsPublic;
+        }
+    }
+}
