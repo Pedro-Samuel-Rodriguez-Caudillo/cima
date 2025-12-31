@@ -39,6 +39,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly IListingRepository _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IDistributedCache _distributedCache;
+    private readonly IRepository<FeaturedListing, Guid> _featuredListingRepository;
     private readonly IListingManager _listingManager;
     private readonly Images.IImageStorageService _imageStorageService;
     private readonly IUnitOfWorkManager _unitOfWorkManager;
@@ -52,6 +53,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     public ListingAppService(
         IListingRepository listingRepository,
         IRepository<Architect, Guid> architectRepository,
+        IRepository<FeaturedListing, Guid> featuredListingRepository,
         IDistributedCache distributedCache,
         IListingManager listingManager,
         Images.IImageStorageService imageStorageService,
@@ -64,6 +66,7 @@ public class ListingAppService : cimaAppService, IListingAppService
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
+        _featuredListingRepository = featuredListingRepository;
         _distributedCache = distributedCache;
         _listingManager = listingManager;
         _imageStorageService = imageStorageService;
@@ -83,6 +86,14 @@ public class ListingAppService : cimaAppService, IListingAppService
         var queryable = await _listingRepository.WithDetailsAsync(
             listing => listing.Architect!,  // ? null-forgiving (WithDetailsAsync garantiza carga)
             listing => listing.Images!);    // ? null-forgiving
+
+        if (input.FeaturedOnly == true)
+        {
+            var featuredQueryable = await _featuredListingRepository.GetQueryableAsync();
+            queryable = from listing in queryable
+                join featured in featuredQueryable on listing.Id equals featured.ListingId
+                select listing;
+        }
 
         // Aplicar filtro de status
         if (input.Status.HasValue)

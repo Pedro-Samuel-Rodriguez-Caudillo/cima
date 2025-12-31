@@ -29,6 +29,7 @@ public partial class Index : cimaComponentBase
     private string? StatusFilter { get; set; }
     private string? CategoryFilter { get; set; }
     private string? TransactionFilter { get; set; }
+    private string? FeaturedFilter { get; set; }
     private HashSet<Guid> FeaturedListingIds { get; set; } = new();
     private int FeaturedListingCount { get; set; }
     private const int MaxFeaturedListings = 12;
@@ -176,11 +177,18 @@ public partial class Index : cimaComponentBase
             SearchTerm = SearchTerm,
             Status = ParseNullable(StatusFilter),
             PropertyCategory = ParseNullable(CategoryFilter),
-            TransactionType = ParseNullable(TransactionFilter)
+            TransactionType = ParseNullable(TransactionFilter),
+            FeaturedOnly = string.Equals(FeaturedFilter, "featured", StringComparison.OrdinalIgnoreCase)
         };
 
     private static int? ParseNullable(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : int.Parse(value);
+
+    private async Task HandleFilterChanged()
+    {
+        CurrentPage = 1;
+        await LoadListings();
+    }
 
     private void ToggleSelection(Guid id)
     {

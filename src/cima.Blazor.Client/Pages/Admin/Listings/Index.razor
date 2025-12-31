@@ -18,6 +18,9 @@
                     <p class="text-neutral-600 mt-1">
                         @L["Admin:Listings:Subtitle"]
                     </p>
+                    <p class="text-sm text-neutral-500 mt-2">
+                        @string.Format(L["Admin:Listings:Featured:CountHint"], FeaturedListingCount, MaxFeaturedListings)
+                    </p>
                 </div>
                 <a href="/admin/listings/create" class="cima-btn cima-btn-primary">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +85,7 @@
     <div class="cima-container py-8">
         @* Filters *@
         <div class="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div class="col-span-1 md:col-span-2">
                     <div class="relative">
                         <input type="text" 
@@ -97,7 +100,7 @@
                     </div>
                 </div>
                 <div>
-                     <select @bind="StatusFilter" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                     <select @bind="StatusFilter" @onchange="HandleFilterChanged" aria-label="Filtrar por estado" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:AllStatuses"]</option>
                         @foreach (ListingStatus status in Enum.GetValues(typeof(ListingStatus)))
                         {
@@ -106,12 +109,18 @@
                     </select>
                 </div>
                 <div>
-                    <select @bind="CategoryFilter" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                    <select @bind="CategoryFilter" @onchange="HandleFilterChanged" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:AllCategories"]</option>
                         @foreach (PropertyCategory category in Enum.GetValues(typeof(PropertyCategory)))
                         {
                             <option value="@((int)category)">@EnumLocalizer.GetPropertyCategoryName(category)</option>
                         }
+                    </select>
+                </div>
+                <div>
+                    <select @bind="FeaturedFilter" @onchange="HandleFilterChanged" aria-label="@L["Admin:Listings:Featured:FilterLabel"]" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
+                        <option value="">@L["Admin:Listings:Featured:FilterAll"]</option>
+                        <option value="featured">@L["Admin:Listings:Featured:FilterOnly"]</option>
                     </select>
                 </div>
             </div>

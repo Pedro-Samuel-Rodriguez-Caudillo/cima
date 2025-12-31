@@ -135,4 +135,5 @@ public class GetListingsInput : PagedAndSortedResultRequestDto
     public int? PropertyType { get; set; }
     public int? PropertyCategory { get; set; }
     public int? TransactionType { get; set; }
+    public bool? FeaturedOnly { get; set; }
 }
