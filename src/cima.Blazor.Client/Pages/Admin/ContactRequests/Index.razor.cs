@@ -14,7 +14,6 @@ namespace cima.Blazor.Client.Pages.Admin.ContactRequests;
 public partial class Index : cimaComponentBase
 {
     [Inject] private IContactRequestAppService ContactRequestService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
     private IReadOnlyList<ContactRequestDto> Requests { get; set; } = new List<ContactRequestDto>();
@@ -71,25 +70,35 @@ public partial class Index : cimaComponentBase
         _ => Color.Default
     };
 
-    private async Task MarkAsReplied(ContactRequestDto request)
+    private async Task HandleMarkAsRead(ContactRequestDto request)
     {
-        var parameters = new DialogParameters
+        try
         {
-            { "ContentText", L["Admin:ContactRequests:MarkAsRepliedConfirm"].Value },
-            { "ButtonText", L["Common:Confirm"].Value },
-            { "Color", Color.Success }
-        };
-
-        // TODO: Create a specialized dialog for replying with notes if needed.
-        // For now, using a simple prompt or just marking it.
-        // The MarkAsRepliedDto requires ReplyNotes. Let's ask for them.
-        
-        // Simple input dialog using MudBlazor
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+            // Marcar como leído = marcar como respondido con nota vacía
+            await ContactRequestService.MarkAsRepliedAsync(request.Id, new MarkAsRepliedDto { ReplyNotes = "Leído" });
+            Snackbar.Add(L["Admin:ContactRequests:MarkedAsRead"], Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{L["Common:Error"]}: {ex.Message}", Severity.Error);
+        }
     }
-    
-    // Implement Full View / Reply logic in a separate method or Dialog later
-    // For MVP, just list and show details.
+
+    private async Task HandleMarkAsReplied(ContactRequestDto request)
+    {
+        try
+        {
+            // Por ahora, una nota simple. TODO: Implementar diálogo para notas personalizadas.
+            await ContactRequestService.MarkAsRepliedAsync(request.Id, new MarkAsRepliedDto { ReplyNotes = "Respondido por email" });
+            Snackbar.Add(L["Admin:ContactRequests:MarkedAsReplied"], Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{L["Common:Error"]}: {ex.Message}", Severity.Error);
+        }
+    }
 
     private int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 1;
 
@@ -111,11 +120,16 @@ public partial class Index : cimaComponentBase
         }
     }
 
-    private async Task HandleStatusChange(ContactRequestDto request)
+    private async Task HandleStatusChange(ContactRequestDto request, string action)
     {
-        // TODO: Implement status change logic using IContactRequestAppService
-        // For now, just reload data
-        await LoadData();
-        Snackbar.Add(L["Common:Success"], Severity.Success);
+        if (action == "read")
+        {
+            await HandleMarkAsRead(request);
+        }
+        else if (action == "replied")
+        {
+            await HandleMarkAsReplied(request);
+        }
     }
 }
+

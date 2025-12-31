@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\cima.Domain\cima.Domain.csproj" />
     <ProjectReference Include="..\cima.TestBase\cima.TestBase.csproj" />
+    <ProjectReference Include="..\..\src\cima.Application.Contracts\cima.Application.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

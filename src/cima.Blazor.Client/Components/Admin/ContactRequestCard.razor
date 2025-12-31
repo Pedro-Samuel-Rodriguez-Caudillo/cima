@@ -82,7 +82,7 @@
 
 @code {
     [Parameter] public ContactRequestDto Request { get; set; } = default!;
-    [Parameter] public EventCallback<ContactRequestDto> OnStatusChanged { get; set; }
+    [Parameter] public EventCallback<(ContactRequestDto Request, string Action)> OnStatusChanged { get; set; }
 
     private string GetInitials()
     {
@@ -115,11 +115,12 @@
 
     private async Task OnMarkAsRead()
     {
-        await OnStatusChanged.InvokeAsync(Request);
+        await OnStatusChanged.InvokeAsync((Request, "read"));
     }
 
     private async Task OnMarkAsReplied()
     {
-        await OnStatusChanged.InvokeAsync(Request);
+        await OnStatusChanged.InvokeAsync((Request, "replied"));
     }
 }
+
