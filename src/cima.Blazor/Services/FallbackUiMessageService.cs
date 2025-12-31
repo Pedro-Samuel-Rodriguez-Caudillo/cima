@@ -18,33 +18,33 @@ public class FallbackUiMessageService : IUiMessageService
         _logger = logger;
     }
 
-    public Task Info(string title, string message, Action<UiMessageOptions>? options = null)
-        => LogAsync(nameof(Info), title, message, options);
+    public Task Info(string message, string? title = null, Action<UiMessageOptions>? options = null)
+        => LogAsync(nameof(Info), message, title, options);
 
-    public Task Success(string title, string message, Action<UiMessageOptions>? options = null)
-        => LogAsync(nameof(Success), title, message, options);
+    public Task Success(string message, string? title = null, Action<UiMessageOptions>? options = null)
+        => LogAsync(nameof(Success), message, title, options);
 
-    public Task Warn(string title, string message, Action<UiMessageOptions>? options = null)
-        => LogAsync(nameof(Warn), title, message, options);
+    public Task Warn(string message, string? title = null, Action<UiMessageOptions>? options = null)
+        => LogAsync(nameof(Warn), message, title, options);
 
-    public Task Error(string title, string message, Action<UiMessageOptions>? options = null)
-        => LogAsync(nameof(Error), title, message, options);
+    public Task Error(string message, string? title = null, Action<UiMessageOptions>? options = null)
+        => LogAsync(nameof(Error), message, title, options);
 
-    public Task<bool> Confirm(string title, string message, Action<UiMessageOptions>? options = null)
+    public Task<bool> Confirm(string message, string? title = null, Action<UiMessageOptions>? options = null)
     {
-        Log(nameof(Confirm), title, message, options);
+        Log(nameof(Confirm), message, title, options);
         return Task.FromResult(false);
     }
 
-    private Task LogAsync(string level, string title, string message, Action<UiMessageOptions>? options)
+    private Task LogAsync(string level, string message, string? title, Action<UiMessageOptions>? options)
     {
-        Log(level, title, message, options);
+        Log(level, message, title, options);
         return Task.CompletedTask;
     }
 
-    private void Log(string level, string title, string message, Action<UiMessageOptions>? options)
+    private void Log(string level, string message, string? title, Action<UiMessageOptions>? options)
     {
-        _logger.LogInformation("UI message ({Level}) {Title}: {Message}", level, title, message);
+        _logger.LogInformation("UI message ({Level}) {Title}: {Message}", level, title ?? "(No Title)", message);
 
         if (options is not null)
         {

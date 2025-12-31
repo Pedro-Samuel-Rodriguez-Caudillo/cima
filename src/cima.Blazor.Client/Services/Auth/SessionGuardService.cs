@@ -13,24 +13,16 @@ namespace cima.Blazor.Client.Services.Auth;
 /// Intercepts navigation or API calls to check for session/auth issues
 /// and shows a modal dialog instead of just redirecting.
 /// </summary>
-public class SessionGuardService
+public class SessionGuardService(
+    IDialogService dialogService,
+    NavigationManager navigationManager,
+    AuthenticationStateProvider authenticationStateProvider,
+    IStringLocalizer<cimaResource> l)
 {
-    private readonly IDialogService _dialogService;
-    private readonly NavigationManager _navigationManager;
-    private readonly AuthenticationStateProvider _authenticationStateProvider;
-    private readonly IStringLocalizer<cimaResource> _l;
-
-    public SessionGuardService(
-        IDialogService dialogService,
-        NavigationManager navigationManager,
-        AuthenticationStateProvider authenticationStateProvider,
-        IStringLocalizer<cimaResource> l)
-    {
-        _dialogService = dialogService;
-        _navigationManager = navigationManager;
-        _authenticationStateProvider = authenticationStateProvider;
-        _l = l;
-    }
+    private readonly IDialogService _dialogService = dialogService;
+    private readonly NavigationManager _navigationManager = navigationManager;
+    private readonly AuthenticationStateProvider _authenticationStateProvider = authenticationStateProvider;
+    private readonly IStringLocalizer<cimaResource> _l = l;
 
     public async Task<bool> ValidateSessionAsync()
     {
@@ -54,12 +46,12 @@ public class SessionGuardService
             { "Color", Color.Primary }
         };
 
-        var options = new DialogOptions() { CloseButton = false, DisableBackdropClick = true };
+        DialogOptions options = new() { CloseButton = false, BackdropClick = false };
 
         var dialog = await _dialogService.ShowAsync<SessionExpiredDialog>(_l["Auth:SessionExpiredTitle"], parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled)
+        if (result?.Canceled == false)
         {
             _navigationManager.NavigateTo("authentication/login", forceLoad: true);
         }
