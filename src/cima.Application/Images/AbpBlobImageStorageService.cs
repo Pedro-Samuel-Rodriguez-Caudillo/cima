@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using Volo.Abp;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.DependencyInjection;
 
@@ -21,7 +22,6 @@ public class AbpBlobImageStorageService : IImageStorageService, ITransientDepend
     private const int ThumbnailMaxWidth = 400;
     private const int ThumbnailMaxHeight = 300;
     private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
-    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
 
     public AbpBlobImageStorageService(
         IBlobContainer<ListingImageBlobContainer> blobContainer,
@@ -36,22 +36,29 @@ public class AbpBlobImageStorageService : IImageStorageService, ITransientDepend
         string fileName,
         string folder = "listings")
     {
-        ArgumentNullException.ThrowIfNull(imageStream);
-        ArgumentException.ThrowIfNullOrWhiteSpace(fileName);
+        ImageStorageHelper.ValidateFileName(fileName);
+        ImageStorageHelper.ValidateReadable(imageStream);
 
-        var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(fileName)}";
-        var blobName = string.IsNullOrEmpty(folder) 
-            ? uniqueFileName 
+        await using var buffer = new MemoryStream();
+        await imageStream.CopyToAsync(buffer);
+        ImageStorageHelper.ValidateFileSize(buffer.Length, MaxFileSize);
+
+        var extension = ImageStorageHelper.GetExtensionOrThrow(fileName);
+        ImageStorageHelper.ValidateImageMagicBytes(buffer, extension);
+
+        var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+        var blobName = string.IsNullOrEmpty(folder)
+            ? uniqueFileName
             : $"{folder}/{uniqueFileName}";
 
         // Guardar imagen original
-        imageStream.Position = 0;
-        await _blobContainer.SaveAsync(blobName, imageStream, overrideExisting: true);
+        buffer.Position = 0;
+        await _blobContainer.SaveAsync(blobName, buffer, overrideExisting: true);
 
         // Generar y guardar thumbnail
-        var thumbnailBlobName = blobName.Replace(Path.GetExtension(blobName), "_thumb" + Path.GetExtension(blobName));
-        imageStream.Position = 0;
-        using var thumbnailStream = await GenerateThumbnailAsync(imageStream);
+        var thumbnailBlobName = blobName.Replace(extension, "_thumb" + extension);
+        buffer.Position = 0;
+        using var thumbnailStream = await GenerateThumbnailAsync(buffer);
         await _blobContainer.SaveAsync(thumbnailBlobName, thumbnailStream, overrideExisting: true);
 
         _logger.LogInformation("Imagen subida: {BlobName} con thumbnail {ThumbnailBlobName}", blobName, thumbnailBlobName);
@@ -88,15 +95,12 @@ public class AbpBlobImageStorageService : IImageStorageService, ITransientDepend
 
     public ImageValidationResult ValidateImage(string fileName, long fileSize)
     {
-        if (string.IsNullOrWhiteSpace(fileName))
+        if (!ImageStorageHelper.IsExtensionAllowed(Path.GetExtension(fileName)))
         {
-            return ImageValidationResult.Invalid("EMPTY_FILENAME", "El nombre del archivo es requerido", ImageValidationSeverity.Error);
-        }
-
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-        if (string.IsNullOrEmpty(extension) || !Array.Exists(AllowedExtensions, e => e == extension))
-        {
-            return ImageValidationResult.Invalid("INVALID_EXTENSION", $"Extensión no permitida: {extension}", ImageValidationSeverity.Error);
+            return ImageValidationResult.Invalid(
+                "INVALID_EXTENSION",
+                $"Extension no permitida. Extensiones aceptadas: {string.Join(", ", ImageStorageHelper.AllowedExtensions)}",
+                ImageValidationSeverity.Error);
         }
 
         if (fileSize <= 0)
@@ -111,6 +115,35 @@ public class AbpBlobImageStorageService : IImageStorageService, ITransientDepend
 
         return ImageValidationResult.Valid();
     }
+
+    public async Task<Stream> GetImageStreamAsync(string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+        {
+            throw new UserFriendlyException("La URL de la imagen es requerida");
+        }
+
+        try
+        {
+            var bytes = await _blobContainer.GetAllBytesOrNullAsync(imageUrl);
+            if (bytes == null)
+            {
+                throw new UserFriendlyException($"La imagen no existe: {imageUrl}");
+            }
+
+            return new MemoryStream(bytes);
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener imagen {ImageUrl}", imageUrl);
+            throw new UserFriendlyException("Error al obtener la imagen");
+        }
+    }
+
 
     private async Task<Stream> GenerateThumbnailAsync(Stream originalImage)
     {

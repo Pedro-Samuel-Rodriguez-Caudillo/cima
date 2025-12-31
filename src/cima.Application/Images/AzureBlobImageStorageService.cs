@@ -6,12 +6,6 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 
@@ -26,8 +20,8 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
     private readonly ImageStorageOptions _options;
     private readonly ILogger<AzureBlobImageStorageService> _logger;
 
-    private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
-    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+    private const long MaxFileSize = ImageStorageHelper.DefaultMaxFileSize;
+    private const int ThumbnailWidth = 480;
 
     public AzureBlobImageStorageService(
         IOptions<ImageStorageOptions> options,
@@ -40,37 +34,42 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
 
     public async Task<UploadImageResult> UploadImageAsync(Stream imageStream, string fileName, string folder = "listings")
     {
-        ValidateInput(fileName, imageStream);
-
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        var supportsThumbnails = extension is ".jpg" or ".jpeg" or ".png" or ".webp";
+        ImageStorageHelper.ValidateFileName(fileName);
+        ImageStorageHelper.ValidateReadable(imageStream);
+        var extension = ImageStorageHelper.GetExtensionOrThrow(fileName);
+        var supportsThumbnails = ImageStorageHelper.SupportsThumbnails(extension);
 
         var uniqueName = $"{Guid.NewGuid()}{extension}";
         var thumbnailName = $"{Path.GetFileNameWithoutExtension(uniqueName)}_thumb{extension}";
 
         await using var buffer = new MemoryStream();
         await imageStream.CopyToAsync(buffer);
-        if (buffer.Length > MaxFileSize)
-        {
-            throw new UserFriendlyException($"El archivo excede el tamaño máximo de {MaxFileSize / (1024 * 1024)}MB");
-        }
-
-        buffer.Position = 0;
-        ValidateImageMagicBytes(buffer, extension);
+        ImageStorageHelper.ValidateFileSize(buffer.Length, MaxFileSize);
+        ImageStorageHelper.ValidateImageMagicBytes(buffer, extension);
 
         var containerClient = await GetContainerClientAsync(folder);
 
         var originalUrl = await UploadBlobAsync(containerClient, uniqueName, buffer, extension);
 
-        string thumbnailUrl;
+        var thumbnailUrl = originalUrl;
         if (supportsThumbnails)
         {
-            thumbnailUrl = await GenerateThumbnailAsync(containerClient, thumbnailName, buffer, extension)
-                           ?? originalUrl;
-        }
-        else
-        {
-            thumbnailUrl = originalUrl;
+            try
+            {
+                var thumbnailStream = await ImageStorageHelper.TryGenerateThumbnailAsync(
+                    buffer,
+                    extension,
+                    ThumbnailWidth);
+
+                if (thumbnailStream != null)
+                {
+                    thumbnailUrl = await UploadBlobAsync(containerClient, thumbnailName, thumbnailStream, extension);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo generar thumbnail para {Blob}", thumbnailName);
+            }
         }
 
         return new UploadImageResult
@@ -109,17 +108,50 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
                 ImageValidationSeverity.Error);
         }
 
-        var ext = Path.GetExtension(fileName)?.ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(ext) || !AllowedExtensions.Contains(ext))
+        var ext = Path.GetExtension(fileName);
+        if (!ImageStorageHelper.IsExtensionAllowed(ext))
         {
             return ImageValidationResult.Invalid(
                 "UnsupportedExtension",
-                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}",
+                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", ImageStorageHelper.AllowedExtensions)}",
                 ImageValidationSeverity.Warning);
         }
 
         return ImageValidationResult.Valid();
     }
+
+    public async Task<Stream> GetImageStreamAsync(string imageUrl)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrl))
+        {
+            throw new UserFriendlyException("La URL de la imagen es requerida");
+        }
+
+        try
+        {
+            var (containerName, blobName) = ParseUrl(imageUrl);
+            var containerClient = _blobServiceClient.GetBlobContainerClient(containerName ?? _options.Azure.ContainerName);
+            var blobClient = containerClient.GetBlobClient(blobName);
+
+            if (!await blobClient.ExistsAsync())
+            {
+                throw new UserFriendlyException($"La imagen no existe: {imageUrl}");
+            }
+
+            var response = await blobClient.DownloadAsync();
+            return response.Value.Content;
+        }
+        catch (UserFriendlyException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener imagen {ImageUrl}", imageUrl);
+            throw new UserFriendlyException("Error al obtener la imagen");
+        }
+    }
+
 
     private async Task<BlobContainerClient> GetContainerClientAsync(string folder)
     {
@@ -150,94 +182,6 @@ public class AzureBlobImageStorageService : IImageStorageService, ITransientDepe
         return BuildPublicUrl(container.Name, blobName, blob.Uri);
     }
 
-    private async Task<string?> GenerateThumbnailAsync(BlobContainerClient container, string blobName, Stream source, string extension)
-    {
-        try
-        {
-            source.Position = 0;
-            using var image = await Image.LoadAsync(source);
-
-            const int targetWidth = 480;
-            if (image.Width <= targetWidth)
-            {
-                return null;
-            }
-
-            var targetHeight = (int)Math.Max(1, Math.Round(image.Height * (targetWidth / (double)image.Width)));
-            using var thumb = image.Clone(ctx => ctx.Resize(targetWidth, targetHeight));
-
-            IImageEncoder encoder = extension switch
-            {
-                ".png" => new PngEncoder { CompressionLevel = PngCompressionLevel.BestSpeed },
-                ".webp" => new WebpEncoder { Quality = 80 },
-                _ => new JpegEncoder { Quality = 80 }
-            };
-
-            await using var ms = new MemoryStream();
-            await thumb.SaveAsync(ms, encoder);
-            return await UploadBlobAsync(container, blobName, ms, extension);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "No se pudo generar thumbnail para {Blob}", blobName);
-            return null;
-        }
-    }
-
-    private void ValidateInput(string fileName, Stream imageStream)
-    {
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            throw new UserFriendlyException("El nombre del archivo es requerido");
-        }
-
-        if (imageStream == null || !imageStream.CanRead)
-        {
-            throw new UserFriendlyException("El stream de la imagen no es válido");
-        }
-
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (!AllowedExtensions.Contains(extension))
-        {
-            throw new UserFriendlyException(
-                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}");
-        }
-    }
-
-    private void ValidateImageMagicBytes(Stream stream, string expectedExtension)
-    {
-        if (stream.Length < 12)
-        {
-            throw new UserFriendlyException("El archivo es demasiado pequeño para ser una imagen válida");
-        }
-
-        var buffer = new byte[12];
-        stream.Position = 0;
-        var bytesRead = stream.Read(buffer, 0, 12);
-        stream.Position = 0;
-
-        if (bytesRead < 4)
-        {
-            throw new UserFriendlyException("No se pudo leer el archivo correctamente");
-        }
-
-        var isValid = expectedExtension switch
-        {
-            ".jpg" or ".jpeg" => buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF,
-            ".png" => buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47,
-            ".gif" => buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x38,
-            ".webp" => bytesRead >= 12 &&
-                       buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46 &&
-                       buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50,
-            _ => false
-        };
-
-        if (!isValid)
-        {
-            throw new UserFriendlyException(
-                $"El archivo no es una imagen {expectedExtension} válida. Por favor, suba un archivo de imagen real.");
-        }
-    }
 
     private (string? container, string blobName) ParseUrl(string url)
     {

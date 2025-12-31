@@ -23,6 +23,13 @@ public interface IImageStorageService
     /// </summary>
     /// <param name="imageUrl">URL relativa de la imagen</param>
     Task DeleteImageAsync(string imageUrl);
+
+    /// <summary>
+    /// Obtiene el stream de una imagen almacenada.
+    /// </summary>
+    /// <param name="imageUrl">URL o nombre del blob</param>
+    /// <returns>Stream del archivo</returns>
+    Task<Stream> GetImageStreamAsync(string imageUrl);
     
     /// <summary>
     /// Valida que el archivo sea una imagen válida y describe la causa y gravedad en caso de error.

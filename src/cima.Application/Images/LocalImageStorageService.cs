@@ -1,14 +1,8 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
+using Microsoft.Extensions.Logging;
 using Volo.Abp;
 using Volo.Abp.DependencyInjection;
 
@@ -22,31 +16,24 @@ namespace cima.Images;
 public class LocalImageStorageService : IImageStorageService, ITransientDependency
 {
     private readonly IHostEnvironment _hostEnvironment;
-    private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
-    private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+    private readonly ILogger<LocalImageStorageService> _logger;
+    private const long MaxFileSize = ImageStorageHelper.DefaultMaxFileSize;
+    private const int ThumbnailWidth = 480;
 
-    public LocalImageStorageService(IHostEnvironment hostEnvironment)
+    public LocalImageStorageService(
+        IHostEnvironment hostEnvironment,
+        ILogger<LocalImageStorageService> logger)
     {
         _hostEnvironment = hostEnvironment;
+        _logger = logger;
     }
 
     public async Task<UploadImageResult> UploadImageAsync(Stream imageStream, string fileName, string folder = "listings")
     {
-        // Validar nombre de archivo
-        if (string.IsNullOrWhiteSpace(fileName))
-        {
-            throw new UserFriendlyException("El nombre del archivo es requerido");
-        }
-
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (!AllowedExtensions.Contains(extension))
-        {
-            throw new UserFriendlyException(
-                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}"
-            );
-        }
-
-        var supportsThumbnails = extension is ".jpg" or ".jpeg" or ".png" or ".webp";
+        ImageStorageHelper.ValidateFileName(fileName);
+        ImageStorageHelper.ValidateReadable(imageStream);
+        var extension = ImageStorageHelper.GetExtensionOrThrow(fileName);
+        var supportsThumbnails = ImageStorageHelper.SupportsThumbnails(extension);
 
         // Generar nombre único
         var uniqueFileName = $"{Guid.NewGuid()}{extension}";
@@ -68,15 +55,8 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         await using var buffer = new MemoryStream();
         await imageStream.CopyToAsync(buffer);
 
-        // Validar tamaño en servidor
-        if (buffer.Length > MaxFileSize)
-        {
-            throw new UserFriendlyException($"El archivo excede el tamaño máximo de {MaxFileSize / (1024 * 1024)}MB");
-        }
-
-        // Validar formato de imagen mediante magic bytes
-        buffer.Position = 0;
-        ValidateImageMagicBytes(buffer, extension);
+        ImageStorageHelper.ValidateFileSize(buffer.Length, MaxFileSize);
+        ImageStorageHelper.ValidateImageMagicBytes(buffer, extension);
 
         // Guardar archivo original
         try
@@ -89,7 +69,8 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         }
         catch (Exception ex)
         {
-            throw new UserFriendlyException($"Error al guardar la imagen: {ex.Message}");
+            _logger.LogError(ex, "Error al guardar imagen {FileName}", fileName);
+            throw new UserFriendlyException("Error al guardar la imagen");
         }
 
         // Crear thumbnail si el formato es soportado; de lo contrario usar la misma URL
@@ -98,35 +79,25 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         {
             try
             {
-                buffer.Position = 0;
-                using var image = await SixLabors.ImageSharp.Image.LoadAsync(buffer);
+                var thumbnailStream = await ImageStorageHelper.TryGenerateThumbnailAsync(
+                    buffer,
+                    extension,
+                    ThumbnailWidth);
 
-                const int targetWidth = 480;
-                if (image.Width <= targetWidth)
+                if (thumbnailStream == null)
                 {
                     thumbnailUrl = $"/images/{folder}/{uniqueFileName}";
                 }
                 else
                 {
-                    var targetHeight = (int)Math.Max(1, Math.Round(image.Height * (targetWidth / (double)image.Width)));
-
-                    using var thumb = image.Clone(ctx => ctx.Resize(targetWidth, targetHeight));
-
-                    IImageEncoder encoder = extension switch
-                    {
-                        ".png" => new PngEncoder { CompressionLevel = PngCompressionLevel.BestSpeed },
-                        ".webp" => new WebpEncoder { Quality = 80 },
-                        _ => new JpegEncoder { Quality = 80 }
-                    };
-
                     await using var thumbStream = new FileStream(thumbPath, FileMode.Create);
-                    await thumb.SaveAsync(thumbStream, encoder);
+                    await thumbnailStream.CopyToAsync(thumbStream);
                     thumbnailUrl = $"/images/{folder}/{thumbnailFileName}";
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // En caso de error al generar thumbnail, usar la imagen original
+                _logger.LogWarning(ex, "Error al generar thumbnail para {FileName}", fileName);
                 thumbnailUrl = $"/images/{folder}/{uniqueFileName}";
             }
         }
@@ -161,10 +132,9 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
             {
                 File.Delete(filePath);
             }
-            catch
+            catch (Exception ex)
             {
-                // Log error pero no fallar
-                // En producción usar ILogger
+                _logger.LogWarning(ex, "No se pudo eliminar imagen {ImageUrl}", imageUrl);
             }
         }
 
@@ -183,54 +153,37 @@ public class LocalImageStorageService : IImageStorageService, ITransientDependen
         }
 
         // Validar extensión
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(extension) || !AllowedExtensions.Contains(extension))
+        var extension = Path.GetExtension(fileName);
+        if (!ImageStorageHelper.IsExtensionAllowed(extension))
         {
             return ImageValidationResult.Invalid(
                 "UnsupportedExtension",
-                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", AllowedExtensions)}",
+                $"Formato de imagen no permitido. Formatos aceptados: {string.Join(", ", ImageStorageHelper.AllowedExtensions)}",
                 ImageValidationSeverity.Warning);
         }
 
         return ImageValidationResult.Valid();
     }
 
-    /// <summary>
-    /// Valida que el archivo sea realmente una imagen verificando los magic bytes
-    /// </summary>
-    private void ValidateImageMagicBytes(Stream stream, string expectedExtension)
+    public Task<Stream> GetImageStreamAsync(string imageUrl)
     {
-        if (stream.Length < 12)
+        if (string.IsNullOrWhiteSpace(imageUrl))
         {
-            throw new UserFriendlyException("El archivo es demasiado pequeño para ser una imagen válida");
+            throw new UserFriendlyException("La URL de la imagen es requerida");
         }
 
-        var buffer = new byte[12];
-        stream.Position = 0;
-        var bytesRead = stream.Read(buffer, 0, 12);
-        stream.Position = 0; // Resetear posición para uso posterior
+        // Construir ruta física
+        var relativePath = imageUrl.TrimStart('/');
+        var filePath = Path.Combine(_hostEnvironment.ContentRootPath, "wwwroot", relativePath);
 
-        if (bytesRead < 4)
+        if (!File.Exists(filePath))
         {
-            throw new UserFriendlyException("No se pudo leer el archivo correctamente");
+            throw new UserFriendlyException($"La imagen no existe: {imageUrl}");
         }
 
-        // Validar magic bytes según el formato esperado
-        var isValid = expectedExtension switch
-        {
-            ".jpg" or ".jpeg" => buffer[0] == 0xFF && buffer[1] == 0xD8 && buffer[2] == 0xFF,
-            ".png" => buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4E && buffer[3] == 0x47,
-            ".gif" => buffer[0] == 0x47 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x38,
-            ".webp" => bytesRead >= 12 && 
-                      buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46 && // RIFF
-                      buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50, // WEBP
-            _ => false
-        };
-
-        if (!isValid)
-        {
-            throw new UserFriendlyException(
-                $"El archivo no es una imagen {expectedExtension} válida. Por favor, suba un archivo de imagen real.");
-        }
+        Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Task.FromResult(stream);
     }
+
+
 }
