@@ -13,13 +13,13 @@
              ImageUrl="@HeroImageUrl"
              JsonLd="@JsonLd" />
 
-<HeroSection />
-
-<!-- Featured Properties -->
-<FeaturedProperties OnListingsLoaded="OnFeaturedLoaded" />
-
-<!-- Contact Section -->
-<ContactSection />
+<PageShell BackgroundClass="bg-gray-50">
+    <HeroSection />
+    <!-- Featured Properties -->
+    <FeaturedProperties OnListingsLoaded="OnFeaturedLoaded" />
+    <!-- Contact Section -->
+    <ContactSection />
+</PageShell>
 
 @code {
     private const string HomeDescription = "Desarrollos y propiedades de alto valor diseñadas por arquitectos.";

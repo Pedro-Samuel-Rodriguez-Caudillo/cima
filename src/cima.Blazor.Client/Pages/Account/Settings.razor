@@ -1,14 +1,15 @@
 @page "/account/settings"
 @attribute [Authorize]
 @using Volo.Abp.Users
+@using Microsoft.JSInterop
 
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @inherits cimaComponentBase
 
 <PageTitle>@L["AccountSettings:Subtitle"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-24 pb-12">
-    <div class="cima-container max-w-4xl">
+<PageShell Variant="PageShellVariant.ContainerPadded" ContainerClass="cima-container max-w-4xl" Class="pb-12">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-2">
@@ -52,14 +53,13 @@
                             <p class="font-medium text-neutral-900">@L["AccountSettings:EmailNotifications"]</p>
                             <p class="text-sm text-neutral-600">@L["AccountSettings:EmailNotificationsDesc"]</p>
                         </div>
-                        <button class="relative inline-flex h-6 w-11 items-center rounded-full bg-neutral-300" disabled>
-                            <span class="inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1"></span>
+                        <button class="@EmailNotificationsToggleClass"
+                                type="button"
+                                aria-pressed="@_emailNotificationsEnabled"
+                                @onclick="ToggleEmailNotificationsAsync">
+                            <span class="@EmailNotificationsToggleKnobClass"></span>
                         </button>
                     </div>
-                    
-                    <p class="text-neutral-500 italic text-[10px]">
-                        @L["AccountSettings:ComingSoon"]
-                    </p>
                 </div>
             </div>
 
@@ -80,9 +80,6 @@
                         <p class="text-sm text-neutral-600">@L["AccountSettings:ChangePasswordDesc"]</p>
                     </a>
                     
-                    <p class="text-neutral-500 italic text-[10px] px-4">
-                        @L["AccountSettings:ComingSoon"]
-                    </p>
                 </div>
             </div>
 
@@ -114,8 +111,44 @@
                 @L["Profile:BackToHome"]
             </a>
         </div>
-    </div>
-</div>
+</PageShell>
 
 @code {
+    private const string EmailNotificationsStorageKey = "account.emailNotifications";
+    private bool _emailNotificationsEnabled = true;
+    private bool _preferencesLoaded;
+
+    private string EmailNotificationsToggleClass =>
+        _emailNotificationsEnabled
+            ? "relative inline-flex h-6 w-11 items-center rounded-full bg-emerald-500"
+            : "relative inline-flex h-6 w-11 items-center rounded-full bg-neutral-300";
+
+    private string EmailNotificationsToggleKnobClass =>
+        _emailNotificationsEnabled
+            ? "inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-6"
+            : "inline-block h-4 w-4 transform rounded-full bg-white transition translate-x-1";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (!firstRender || _preferencesLoaded)
+        {
+            return;
+        }
+
+        var stored = await JS.InvokeAsync<string?>("localStorage.getItem", EmailNotificationsStorageKey);
+        if (bool.TryParse(stored, out var enabled))
+        {
+            _emailNotificationsEnabled = enabled;
+        }
+
+        _preferencesLoaded = true;
+        StateHasChanged();
+    }
+
+    private async Task ToggleEmailNotificationsAsync()
+    {
+        _emailNotificationsEnabled = !_emailNotificationsEnabled;
+        await JS.InvokeVoidAsync("localStorage.setItem", EmailNotificationsStorageKey, _emailNotificationsEnabled.ToString().ToLowerInvariant());
+    }
 }

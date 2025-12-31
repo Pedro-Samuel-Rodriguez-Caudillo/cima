@@ -1,0 +1,78 @@
+@* Reusable page wrapper for consistent height/background and optional container *@
+<div class="@RootClass">
+    @if (EffectiveUseContainer)
+    {
+        <div class="@EffectiveContainerClass">
+            @ChildContent
+        </div>
+    }
+    else
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string BackgroundClass { get; set; } = "bg-neutral-50";
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public bool FullHeight { get; set; } = true;
+
+    [Parameter]
+    public PageShellVariant Variant { get; set; } = PageShellVariant.Default;
+
+    [Parameter]
+    public bool UseContainer { get; set; } = false;
+
+    [Parameter]
+    public string ContainerClass { get; set; } = "cima-container";
+
+    private string RootClass => BuildClass();
+
+    private bool EffectiveUseContainer => UseContainer
+        || Variant == PageShellVariant.Container
+        || Variant == PageShellVariant.ContainerPadded
+        || Variant == PageShellVariant.ContainerWide;
+
+    private string EffectiveContainerClass
+        => Variant switch
+        {
+            PageShellVariant.ContainerPadded => $"{ContainerClass} py-8",
+            PageShellVariant.ContainerWide => $"{ContainerClass} mx-auto w-full !max-w-screen-2xl px-4 sm:px-6 lg:px-8",
+            _ => ContainerClass
+        };
+
+    private string BuildClass()
+    {
+        var parts = new List<string>(3);
+
+        if (FullHeight)
+        {
+            parts.Add("min-h-screen");
+        }
+
+        if (!string.IsNullOrWhiteSpace(BackgroundClass))
+        {
+            parts.Add(BackgroundClass);
+        }
+
+        if (Variant == PageShellVariant.Centered)
+        {
+            parts.Add("flex items-center justify-center");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Class))
+        {
+            parts.Add(Class);
+        }
+
+        return string.Join(" ", parts);
+    }
+}

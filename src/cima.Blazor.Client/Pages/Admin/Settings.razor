@@ -5,12 +5,11 @@
 @using cima.Permissions
 @attribute [Authorize(cimaPermissions.Settings.Manage)]
 @inject ISiteSettingsAppService SettingsService
-@inject ISnackbar Snackbar
 @inherits cimaComponentBase
 
 <PageTitle>@L["Admin:Settings:PageTitle"]</PageTitle>
 
-<div class="min-h-screen bg-gray-50 pt-20">
+<PageShell BackgroundClass="bg-gray-50">
     <div class="cima-container py-8">
         <div class="mb-8">
             <h1 class="text-3xl font-display font-bold text-gray-900">@L["Admin:Settings:Title"]</h1>
@@ -348,7 +347,7 @@
             </div>
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;
@@ -408,7 +407,7 @@
 
             BusinessInfo = new UpdateBusinessInfoDto
             {
-                BusinessName = CurrentSettings.BusinessName,
+                BusinessName = CurrentSettings.BusinessName ?? "4cima",
                 ContactPhone = CurrentSettings.ContactPhone,
                 ContactEmail = CurrentSettings.ContactEmail,
                 Address = CurrentSettings.Address,

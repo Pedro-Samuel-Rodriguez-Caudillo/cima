@@ -9,7 +9,7 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    private string _animationClass = "page-enter";
+    private string _animationClass = "";
     private string _previousUri = "";
 
     protected override void OnInitialized()
@@ -20,25 +20,32 @@
 
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        // Solo animar si cambiÛ la p·gina (no el hash/anchor)
-        var newPath = new Uri(e.Location).AbsolutePath;
-        var oldPath = new Uri(_previousUri).AbsolutePath;
-        
-        if (newPath != oldPath)
+        try
         {
-            // Trigger exit animation
-            _animationClass = "page-exit";
-            await InvokeAsync(StateHasChanged);
-            
-            // Wait for exit animation
-            await Task.Delay(150);
-            
-            // Trigger enter animation
-            _animationClass = "page-enter";
-            await InvokeAsync(StateHasChanged);
+            // Solo animar si cambi√≥ la p√°gina (no el hash/anchor)
+            var newPath = new Uri(e.Location).AbsolutePath;
+            var oldPath = new Uri(_previousUri).AbsolutePath;
+
+            if (newPath != oldPath)
+            {
+                // Trigger exit animation
+                _animationClass = "page-exit";
+                await InvokeAsync(StateHasChanged);
+
+                // Wait for exit animation
+                await Task.Delay(150);
+
+                // Trigger enter animation
+                _animationClass = "page-enter";
+                await InvokeAsync(StateHasChanged);
+            }
+
+            _previousUri = e.Location;
         }
-        
-        _previousUri = e.Location;
+        catch (Exception)
+        {
+            // Ignore errors during navigation transitions
+        }
     }
 
     public void Dispose()

@@ -9,7 +9,7 @@
 
 <PageTitle>@L["Examples:ListingCard:PageTitle"]</PageTitle>
 
-<div class="container mx-auto px-4 py-8">
+<PageShell Variant="PageShellVariant.ContainerPadded">
     <h1 class="text-3xl font-bold mb-8">@L["Examples:ListingCard:Heading"]</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -26,7 +26,7 @@
             <ListingCard Listing="@Listing3" />
         </div>
     </div>
-</div>
+</PageShell>
 
 @code {
     private ListingSummaryDto Listing1 = new()
@@ -35,6 +35,7 @@
         Title = "Casa Moderna en Santa Fe",
         Location = new LocationDto { City = "Santa Fe", State = "CDMX" },
         Price = 12500000,
+        IsPriceOnRequest = false,
         ConstructionArea = 380,
         Bedrooms = 4,
         Bathrooms = 3,
@@ -51,6 +52,7 @@
         Title = "Terreno Comercial",
         Location = new LocationDto { City = "Juriquilla", State = "Querétaro" },
         Price = 4500000,
+        IsPriceOnRequest = false,
         Category = PropertyCategory.Commercial,
         TransactionType = TransactionType.Sale,
         Status = ListingStatus.Published,
@@ -63,7 +65,8 @@
         Id = Guid.NewGuid(),
         Title = "Departamento de Lujo",
         Location = new LocationDto { City = "Polanco", State = "CDMX" },
-        Price = 0, 
+        Price = null,
+        IsPriceOnRequest = true,
         Category = PropertyCategory.Residential,
         Status = ListingStatus.Portfolio,
         MainImage = new ListingImageDto { Url = "/images/listing-3.jpg", IsCover = true },

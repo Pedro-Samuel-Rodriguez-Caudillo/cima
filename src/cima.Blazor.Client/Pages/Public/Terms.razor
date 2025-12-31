@@ -7,8 +7,7 @@
 
 <PageTitle>@L["Legal:Terms:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-24 pb-12">
-    <div class="cima-container max-w-4xl">
+<PageShell Variant="PageShellVariant.ContainerPadded" ContainerClass="cima-container max-w-4xl" Class="pb-12">
         @if (IsLoading)
         {
             <div class="flex justify-center py-12">
@@ -30,8 +29,7 @@
                 @L["Profile:BackToHome"]
             </a>
         </div>
-    </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;

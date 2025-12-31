@@ -10,13 +10,12 @@
 @inject IListingAppService ListingService
 @inject EnumLocalizationService EnumLocalizer
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthStateProvider
 @inherits cimaComponentBase
 
 <PageTitle>Mi Panel - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20">
+<PageShell>
     <div class="cima-container py-8">
         <div class="flex justify-between items-center mb-8">
             <div>
@@ -44,10 +43,11 @@
                     <div class="text-3xl font-bold text-success">@Stats.PublishedListings</div>
                 </MudCard>
                 <MudCard Class="p-6">
-                    <div class="text-neutral-600 mb-1">Vistas Totales</div>
-                    <div class="text-3xl font-bold text-info">@Stats.TotalViews</div>
+                    <div class="text-neutral-600 mb-1">En Borrador</div>
+                    <div class="text-3xl font-bold text-warning">@Stats.DraftListings</div>
                 </MudCard>
             </div>
+
 
             <h2 class="text-2xl font-bold mb-4">Propiedades Recientes</h2>
             @if (RecentListings?.Any() == true)
@@ -68,35 +68,66 @@
             }
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;
     private string? ArchitectName { get; set; }
     private ArchitectStatsDto Stats { get; set; } = new();
     private List<ListingSummaryDto> RecentListings { get; set; } = new();
+    private Guid? CurrentArchitectId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             IsLoading = true;
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            ArchitectName = user.Identity?.Name;
-
-             var input = new GetListingsInput
-            {
-                MaxResultCount = 3,
-                Sorting = "CreatedAt DESC"
-            };
             
-             // Dummy data for now as per plan
-             Stats = new ArchitectStatsDto { TotalListings = 0, PublishedListings = 0, TotalViews = 0 };
+            // 1. Obtener el perfil del arquitecto actual
+            var currentArchitect = await ArchitectService.GetCurrentAsync();
+            
+            if (currentArchitect != null)
+            {
+                CurrentArchitectId = currentArchitect.Id;
+                ArchitectName = !string.IsNullOrEmpty(currentArchitect.Name) 
+                    ? $"{currentArchitect.Name} {currentArchitect.Surname}".Trim()
+                    : currentArchitect.Email;
+
+                
+                // 2. Obtener las propiedades del arquitecto
+                var listingsResult = await ListingService.GetByArchitectAsync(
+                    currentArchitect.Id, 
+                    skipCount: 0, 
+                    maxResultCount: 100 // Traemos suficientes para calcular stats
+                );
+                
+                // 3. Calcular estadísticas reales
+                var allListings = listingsResult.Items.ToList();
+                Stats = new ArchitectStatsDto
+                {
+                    TotalListings = (int)listingsResult.TotalCount,
+                    PublishedListings = allListings.Count(l => l.Status == ListingStatus.Published),
+                    DraftListings = allListings.Count(l => l.Status == ListingStatus.Draft)
+                };
+                
+                // 4. Obtener solo las 3 más recientes para mostrar
+                RecentListings = allListings
+                    .OrderByDescending(l => l.CreatedAt)
+                    .Take(3)
+                    .ToList();
+            }
+            else
+            {
+                // Usuario autenticado pero sin perfil de arquitecto
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                ArchitectName = authState.User.Identity?.Name ?? "Usuario";
+                Stats = new ArchitectStatsDto();
+            }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error al cargar el dashboard: {ex.Message}", Severity.Error);
+            Console.WriteLine($"Dashboard error: {ex}");
         }
         finally
         {
@@ -108,6 +139,6 @@
     {
         public int TotalListings { get; set; }
         public int PublishedListings { get; set; }
-        public int TotalViews { get; set; }
+        public int DraftListings { get; set; }
     }
 }

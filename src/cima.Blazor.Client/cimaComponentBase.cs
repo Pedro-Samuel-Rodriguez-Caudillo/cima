@@ -30,7 +30,7 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
     protected IJSRuntime JSRuntime { get; set; } = default!;
 
     [Inject]
-    protected ISnackbar? Snackbar { get; set; }
+    protected ISnackbar Snackbar { get; set; } = default!;
 
     private CurrentUserWrapper? _currentUser;
     protected ICurrentUser CurrentUser => _currentUser ??= new CurrentUserWrapper(AuthenticationStateProvider);

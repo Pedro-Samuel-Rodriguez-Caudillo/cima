@@ -3,25 +3,24 @@
 @using cima.Permissions
 @attribute [Authorize(cimaPermissions.Architects.Default)]
 @inject IArchitectAppService ArchitectService
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 @inject IJSRuntime JS
+@inject IDialogService DialogService
 @inherits cimaComponentBase
 
 <PageTitle>@L["Admin:Architects:Title"] - @L["CompanyName"]</PageTitle>
 
 <ErrorBoundary>
     <ErrorContent Context="exception">
-        <div class="min-h-screen bg-neutral-50 pt-20">
+        <PageShell>
             <div class="cima-container py-10">
                 <MudAlert Severity="Severity.Error">
                     @GetUserFriendlyErrorMessage(exception)
                 </MudAlert>
             </div>
-        </div>
+        </PageShell>
     </ErrorContent>
     <ChildContent>
-        <div class="min-h-screen bg-neutral-50 pt-20">
+        <PageShell>
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -136,7 +135,7 @@
             </MudCard>
         }
     </div>
-        </div>
+        </PageShell>
     </ChildContent>
 </ErrorBoundary>
 

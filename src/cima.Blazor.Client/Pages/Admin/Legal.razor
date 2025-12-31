@@ -4,13 +4,13 @@
 @using cima.Permissions
 @attribute [Authorize(cimaPermissions.Settings.Manage)]
 @inject ISiteSettingsAppService SettingsService
-@inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject NavigationManager NavManager
 @inherits cimaComponentBase
 
 <PageTitle>@L["Admin:Settings:Legal:PageTitle"]</PageTitle>
 
-<div class="min-h-screen bg-gray-50 pt-20">
+<PageShell BackgroundClass="bg-gray-50">
     <div class="cima-container py-8">
         <div class="flex items-center gap-4 mb-8">
             <button @onclick="GoBack" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
@@ -83,7 +83,7 @@
             </div>
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;
@@ -141,7 +141,7 @@
         }
     }
 
-    private void GoBack() => Navigation.NavigateTo("/admin/settings");
+    private void GoBack() => NavManager.NavigateTo("/admin/settings");
 
     private class LegalContentModel
     {

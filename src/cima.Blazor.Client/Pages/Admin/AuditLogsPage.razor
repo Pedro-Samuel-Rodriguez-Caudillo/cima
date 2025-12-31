@@ -11,14 +11,13 @@
 @attribute [Authorize(Roles = "admin")]
 @inject IAuditLogAppService AuditLogService
 @inject IPriceHistoryAppService PriceHistoryService
-@inject IStringLocalizer<cimaResource> L
 @inject IDialogService DialogService
-@inject ISnackbar Snackbar
+@inherits cimaComponentBase
 @inject IJSRuntime JS
 
 <PageTitle>@L["AuditLogs:PageTitle"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20">
+<PageShell>
     @* Header *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
@@ -282,7 +281,7 @@
         </MudTabs>
 
         @* Dialog Template for Log Details *@
-        <MudDialog @bind-IsVisible="IsLogDialogVisible" Options="DialogOptions">
+        <MudDialog @bind-Visible="IsLogDialogVisible" Options="DialogOptions">
             <TitleContent>
                 <MudText Typo="Typo.h6">
                     <MudIcon Icon="@Icons.Material.Outlined.Description" Class="mr-2"/> @L["AuditLogs:Details:Title"]
@@ -309,7 +308,7 @@
                             </MudField>
                         </MudItem>
                         <MudItem xs="12">
-                            <MudField Label="Browser / User Agent" Variant="Variant.Outlined" Lines="2">@SelectedLog.BrowserInfo</MudField>
+                            <MudField Label="Browser / User Agent" Variant="Variant.Outlined">@SelectedLog.BrowserInfo</MudField>
                         </MudItem>
 
                         @if (SelectedLog.EntityChanges.Any())
@@ -364,7 +363,7 @@
         </MudDialog>
 
         @* Dialog Template for Price Details *@
-        <MudDialog @bind-IsVisible="IsPriceDialogVisible" Options="DialogOptions">
+        <MudDialog @bind-Visible="IsPriceDialogVisible" Options="DialogOptions">
             <TitleContent>
                 <MudText Typo="Typo.h6">
                      <MudIcon Icon="@Icons.Material.Outlined.PriceCheck" Class="mr-2"/> Price Change Details
@@ -399,7 +398,7 @@
                             <MudField Label="IP Address" Variant="Variant.Outlined">@SelectedPriceLog.ClientIpAddress</MudField>
                         </MudItem>
                          <MudItem xs="12">
-                            <MudField Label="User Agent" Variant="Variant.Outlined" Lines="2">@SelectedPriceLog.UserAgent</MudField>
+                            <MudField Label="User Agent" Variant="Variant.Outlined">@SelectedPriceLog.UserAgent</MudField>
                         </MudItem>
                         @if (!string.IsNullOrEmpty(SelectedPriceLog.ChangeReason))
                         {
@@ -415,7 +414,7 @@
             </DialogActions>
         </MudDialog>
     </div>
-</div>
+</PageShell>
 
 @code {
     private enum LogType { HttpRequests = 0, PriceChanges = 1 }

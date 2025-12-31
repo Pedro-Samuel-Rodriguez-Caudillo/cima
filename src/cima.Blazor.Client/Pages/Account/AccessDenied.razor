@@ -8,7 +8,7 @@
 
 <PageTitle>@L["AccessDenied:PageTitle"]</PageTitle>
 
-<div class="min-h-[70vh] flex items-center justify-center px-4">
+<PageShell Variant="PageShellVariant.Centered" Class="px-4">
     <div class="max-w-md w-full text-center animate-fade-in">
         @* Icon *@
         <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
@@ -51,7 +51,7 @@
             <a href="/contact" class="text-navy-600 hover:underline">@L["AccessDenied:ContactUs"]</a>
         </p>
     </div>
-</div>
+</PageShell>
 
 @code {
     private void GoBack()

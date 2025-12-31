@@ -18,11 +18,11 @@
         Saltar al contenido principal
     </a>
     <div class="flex flex-col min-h-screen bg-gray-50">
-        <header class="sticky top-0 z-40 w-full">
+        <div class="w-full">
             <Navbar />
-        </header>
+        </div>
 
-        <main id="main-content" class="flex-grow pt-20" tabindex="-1">
+        <main id="main-content" class="flex-grow @(_useTransparentNavbar ? "" : "app-main")" tabindex="-1">
             <ErrorBoundary @ref="_errorBoundary">
                 <ChildContent>
                     <PageTransition>
@@ -76,10 +76,13 @@
     
     private ErrorBoundary? _errorBoundary;
     private bool _isAdmin = false;
+    private bool _useTransparentNavbar = false;
 
     protected override async Task OnInitializedAsync()
     {
         ThemeService.ThemeChanged += OnThemeChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        UpdateNavbarMode();
         
         try 
         {
@@ -107,5 +110,23 @@
     public void Dispose()
     {
         ThemeService.ThemeChanged -= OnThemeChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        UpdateNavbarMode(e.Location);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateNavbarMode(string? absoluteUri = null)
+    {
+        var relative = Navigation.ToBaseRelativePath(absoluteUri ?? Navigation.Uri);
+        var path = relative.Split('?', '#')[0].Trim('/').ToLowerInvariant();
+
+        _useTransparentNavbar = string.IsNullOrEmpty(path)
+            || path == "properties"
+            || path == "propiedades"
+            || path == "portfolio";
     }
 }

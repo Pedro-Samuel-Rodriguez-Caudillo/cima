@@ -13,7 +13,7 @@
 @implements IAsyncDisposable
 @rendermode InteractiveAuto
 
-<header id="main-navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(GetNavbarBackgroundClass())">
+<header id="main-navbar" data-nav-mode="@(_useTransparentNavbar ? "transparent" : "solid")" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 @(GetNavbarBackgroundClass())">
     <div class="cima-container h-20 flex items-center justify-between">
         <!-- Brand -->
         <a href="/"
@@ -448,9 +448,9 @@
 
         // Navbar transparente solo en Home (hero), listados públicos y portafolio; sólido en el resto
         _useTransparentNavbar = string.IsNullOrEmpty(path)
-            || path.StartsWith("properties")
-            || path.StartsWith("propiedades")
-            || path.StartsWith("portfolio");
+            || path == "properties"
+            || path == "propiedades"
+            || path == "portfolio";
     }
 
     private void OnAuthenticationStateChanged(Task<AuthenticationState> task)

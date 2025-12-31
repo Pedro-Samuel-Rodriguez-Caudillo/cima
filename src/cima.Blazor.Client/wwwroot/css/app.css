@@ -13,10 +13,12 @@
         --cima-surface-alt: #f1f3f5;
         --cima-text: #0f172a;
         --cima-muted: #475569;
+        --cima-navbar-height: 5rem;
     }
 
     html {
         scroll-behavior: smooth;
+        scroll-padding-top: var(--cima-navbar-height);
     }
 
     body {
@@ -1004,6 +1006,9 @@
         @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-500 focus-visible:ring-offset-2;
     }
 
+    .app-main {
+        padding-top: var(--cima-navbar-height);
+    }
 }
 
 /* Reduced motion preference */

@@ -5,13 +5,11 @@
 @attribute [Authorize(cimaPermissions.Architects.Create)]
 @inject IArchitectAppService ArchitectService
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
 @inherits cimaComponentBase
 
 <PageTitle>Nuevo Arquitecto - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50">
+<PageShell>
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex items-center gap-4 mb-2">
@@ -32,13 +30,13 @@
 
                     <div class="space-y-6">
                         <MudAlert Severity="Severity.Info" Class="mb-4">
-                            Se creará una cuenta de usuario con contraseña temporal. 
-                            El arquitecto deberá cambiar su contraseña en el primer inicio de sesión.
+                            Se crearï¿½ una cuenta de usuario con contraseï¿½a temporal. 
+                            El arquitecto deberï¿½ cambiar su contraseï¿½a en el primer inicio de sesiï¿½n.
                         </MudAlert>
 
                         <MudTextField @bind-Value="Model.Email" Label="Email" Required="true"
                             Variant="Variant.Outlined" InputType="InputType.Email"
-                            HelperText="Este será el nombre de usuario para iniciar sesión" />
+                            HelperText="Este serï¿½ el nombre de usuario para iniciar sesiï¿½n" />
                         <ValidationMessage For="@(() => Model.Email)" class="text-red-500 text-sm" />
 
                         <div class="grid grid-cols-2 gap-4">
@@ -51,21 +49,21 @@
 
                         <MudDivider Class="my-4" />
 
-                        <MudSwitch @bind-Value="UseCustomPassword" Label="Definir contraseña manual" Color="Color.Primary" />
+                        <MudSwitch @bind-Value="UseCustomPassword" Label="Definir contraseï¿½a manual" Color="Color.Primary" />
 
                         @if (UseCustomPassword)
                         {
-                            <MudTextField @bind-Value="Model.TemporaryPassword" Label="Contraseña Temporal"
+                            <MudTextField @bind-Value="Model.TemporaryPassword" Label="Contraseï¿½a Temporal"
                                 Variant="Variant.Outlined" InputType="@PasswordInputType"
                                 Adornment="Adornment.End" AdornmentIcon="@PasswordIcon"
                                 OnAdornmentClick="TogglePasswordVisibility"
-                                HelperText="Mínimo 6 caracteres, debe incluir mayúscula, minúscula, número y símbolo" />
+                                HelperText="Mï¿½nimo 6 caracteres, debe incluir mayï¿½scula, minï¿½scula, nï¿½mero y sï¿½mbolo" />
                         }
                         else
                         {
                             <MudAlert Severity="Severity.Normal">
                                 <MudIcon Icon="@Icons.Material.Filled.Key" Class="mr-2" />
-                                Se generará automáticamente una contraseña temporal segura
+                                Se generarï¿½ automï¿½ticamente una contraseï¿½a temporal segura
                             </MudAlert>
                         }
 
@@ -91,9 +89,9 @@
             </MudCard>
         </div>
     </div>
-</div>
+</PageShell>
 
-@* Dialog para mostrar la contraseña temporal *@
+@* Dialog para mostrar la contraseï¿½a temporal *@
 <MudDialog @bind-Visible="ShowPasswordDialog" Options="@(new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true })">
     <TitleContent>
         <MudText Typo="Typo.h6">
@@ -103,18 +101,18 @@
     </TitleContent>
     <DialogContent>
         <MudAlert Severity="Severity.Warning" Class="mb-4">
-            <strong>¡Importante!</strong> Guarda esta contraseña. El arquitecto deberá usarla para su primer inicio de sesión.
+            <strong>ï¿½Importante!</strong> Guarda esta contraseï¿½a. El arquitecto deberï¿½ usarla para su primer inicio de sesiï¿½n.
         </MudAlert>
         
         <MudText Typo="Typo.body1" Class="mb-2">Email: <strong>@CreatedEmail</strong></MudText>
         
-        <MudTextField Value="@CreatedPassword" Label="Contraseña Temporal" ReadOnly="true"
+        <MudTextField Value="@CreatedPassword" Label="Contraseï¿½a Temporal" ReadOnly="true"
             Variant="Variant.Outlined" Adornment="Adornment.End" 
             AdornmentIcon="@Icons.Material.Filled.ContentCopy"
             OnAdornmentClick="CopyPassword" />
         
         <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
-            El arquitecto deberá cambiar esta contraseña en su primer inicio de sesión.
+            El arquitecto deberï¿½ cambiar esta contraseï¿½a en su primer inicio de sesiï¿½n.
         </MudText>
     </DialogContent>
     <DialogActions>
@@ -153,7 +151,7 @@
         {
             IsSubmitting = true;
             
-            // Si no usa contraseña personalizada, limpiar el campo
+            // Si no usa contraseï¿½a personalizada, limpiar el campo
             if (!UseCustomPassword)
             {
                 Model.TemporaryPassword = null;
@@ -184,7 +182,7 @@
         try
         {
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", CreatedPassword);
-            Snackbar.Add("Contraseña copiada al portapapeles", Severity.Success);
+            Snackbar.Add("Contraseï¿½a copiada al portapapeles", Severity.Success);
         }
         catch
         {

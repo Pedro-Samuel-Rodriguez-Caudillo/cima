@@ -4,7 +4,7 @@ window.cima = {
         let lastKnownScrollPosition = 0;
         let ticking = false;
 
-        window.addEventListener('scroll', () => {
+        const handler = () => {
             lastKnownScrollPosition = window.scrollY;
 
             if (!ticking) {
@@ -16,7 +16,15 @@ window.cima = {
 
                 ticking = true;
             }
-        });
+        };
+
+        window.addEventListener('scroll', handler, { passive: true });
+
+        return {
+            dispose: function () {
+                window.removeEventListener('scroll', handler);
+            }
+        };
     }
 };
 

@@ -8,15 +8,15 @@
 @attribute [Authorize]
 @inject IArchitectAppService ArchitectService
 @inject IListingAppService ListingService
-@inject EnumLocalizationService EnumLocalizer
+@inject IDialogService DialogService
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject EnumLocalizationService EnumLocalizer
 @inject AuthenticationStateProvider AuthStateProvider
 @inherits cimaComponentBase
 
 <PageTitle>Mis Propiedades - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-20"> @* pt-20 para compensar el navbar fixed *@
+<PageShell> @* offset global aplicado en layout *@
     <div class="bg-white border-b border-neutral-200">
         <div class="cima-container py-6">
             <div class="flex items-center gap-4 mb-2">
@@ -93,7 +93,7 @@
 
                                 <div class="flex items-center justify-between mt-4">
                                     <div class="text-xl font-bold text-primary">
-                                        @listing.Price.ToString("C0", new System.Globalization.CultureInfo("es-MX"))
+                                        @FormatPrice(listing)
                                     </div>
                                     <div class="flex gap-2">
                                         @if (listing.Status == ListingStatus.Published)
@@ -129,7 +129,7 @@
             </MudCard>
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     private bool IsLoading { get; set; } = true;
@@ -222,4 +222,14 @@
         ListingStatus.Portfolio => Color.Info,
         _ => Color.Default
     };
+
+    private string FormatPrice(ListingSummaryDto listing)
+    {
+        if (listing.IsPriceOnRequest || !listing.Price.HasValue)
+        {
+            return L["Common:PriceOnRequest"];
+        }
+
+        return listing.Price.Value.ToString("C0", new System.Globalization.CultureInfo("es-MX"));
+    }
 }

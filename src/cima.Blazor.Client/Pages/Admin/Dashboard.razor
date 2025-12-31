@@ -11,12 +11,11 @@
 @inject IContactRequestAppService ContactRequestService
 @inject IExportAppService ExportService
 @inject IJSRuntime JS
-@inject ISnackbar Snackbar
 @inherits cimaComponentBase
 
 <PageTitle>@L["Dashboard:Title"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-12">
+<PageShell>
     <div class="bg-gradient-to-r from-navy-900 via-navy-800 to-navy-700 text-white shadow-md">
         <div class="cima-container py-10 md:py-14">
             <h1 class="text-2xl md:text-3xl font-display font-bold text-white drop-shadow-lg">
@@ -130,7 +129,7 @@
                                 <span class="font-medium">@Stats.PublishedListings (@publishedPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: @publishedPct%"></div>
+                                <div class="bg-green-500 h-2 rounded-full transition-all duration-500" style="@($"width: {publishedPct}%")"></div>
                             </div>
                         </div>
                         <div>
@@ -139,7 +138,7 @@
                                 <span class="font-medium">@Stats.DraftListings (@draftPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: @draftPct%"></div>
+                                <div class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="@($"width: {draftPct}%")"></div>
                             </div>
                         </div>
                         <div>
@@ -148,7 +147,7 @@
                                 <span class="font-medium">@Stats.PortfolioListings (@portfolioPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="width: @portfolioPct%"></div>
+                                <div class="bg-blue-500 h-2 rounded-full transition-all duration-500" style="@($"width: {portfolioPct}%")"></div>
                             </div>
                         </div>
                         <div>
@@ -157,7 +156,7 @@
                                 <span class="font-medium">@Stats.ArchivedListings (@archivedPct%)</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-gray-400 h-2 rounded-full transition-all duration-500" style="width: @archivedPct%"></div>
+                                <div class="bg-gray-400 h-2 rounded-full transition-all duration-500" style="@($"width: {archivedPct}%")"></div>
                             </div>
                         </div>
                     </div>
@@ -317,7 +316,7 @@
             </div>
         }
     </div>
-</div>
+</PageShell>
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; } = null!;
@@ -325,10 +324,21 @@
     private bool IsLoading { get; set; } = true;
     private DashboardStatsDto? Stats { get; set; }
     private List<ContactRequestDto>? RecentRequests { get; set; }
+    private bool _hasLoaded;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _hasLoaded)
+        {
+            return;
+        }
+
+        _hasLoaded = true;
         await LoadStats();
     }
 
@@ -355,6 +365,7 @@
         finally
         {
             IsLoading = false;
+            StateHasChanged();
         }
     }
 

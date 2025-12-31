@@ -2,9 +2,8 @@
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @using cima.ContactRequests
-@inject IStringLocalizer<cimaResource> L
 @inject IContactRequestAppService ContactRequestService
-@inject ISnackbar Snackbar
+@inherits cimaComponentBase
 
 <EditForm Model="@_model" OnValidSubmit="HandleSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="space-y-6">
     <DataAnnotationsValidator />

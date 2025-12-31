@@ -12,7 +12,7 @@
 
 <PageTitle>@L["PostLogin:PageTitle"]</PageTitle>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50">
+<PageShell BackgroundClass="bg-gray-50" Variant="PageShellVariant.Centered">
     <div class="text-center animate-fade-in">
         @* Logo *@
         <div class="mb-6">
@@ -28,7 +28,7 @@
         
         <p class="text-gray-600">@_message</p>
     </div>
-</div>
+</PageShell>
 
 @code {
     [SupplyParameterFromQuery]

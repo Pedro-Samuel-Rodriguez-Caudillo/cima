@@ -7,8 +7,7 @@
 
 <PageTitle>@L["Profile:PageTitle"] - @L["CompanyName"]</PageTitle>
 
-<div class="min-h-screen bg-neutral-50 pt-24 pb-12">
-    <div class="cima-container max-w-4xl">
+<PageShell Variant="PageShellVariant.ContainerPadded" ContainerClass="cima-container max-w-4xl" Class="pb-12">
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-2">
@@ -119,8 +118,7 @@
                 </a>
             </div>
         </div>
-    </div>
-</div>
+</PageShell>
 
 @code {
     private string GetInitials()

@@ -3,6 +3,8 @@
 @using cima.Listings.Outputs
 @using cima.Blazor.Client.Components.Public
 @using cima.Blazor.Client.Services
+@using cima.Blazor.Client.Components.Common
+@using System.Linq
 @inject IListingAppService ListingService
 @inject EnumLocalizationService EnumLocalizer
 @inject NavigationManager NavManager
@@ -12,7 +14,7 @@
 
 @if (IsLoading)
 {
-    <div class="min-h-screen bg-neutral-50 pt-24">
+    <PageShell>
         <div class="cima-container">
             <div class="cima-skeleton-image mb-8"></div>
             <div class="space-y-4">
@@ -20,11 +22,11 @@
                 <div class="cima-skeleton-text w-1/2"></div>
             </div>
         </div>
-    </div>
+    </PageShell>
 }
 else if (Listing == null)
 {
-    <div class="min-h-screen bg-neutral-50 flex items-center justify-center">
+    <PageShell Variant="PageShellVariant.Centered">
         <div class="text-center">
             <svg class="w-20 h-20 mx-auto text-neutral-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -33,13 +35,19 @@ else if (Listing == null)
             <h2 class="text-2xl font-semibold text-neutral-900 mb-2">@L["Portfolio:ProjectNotFound"]</h2>
             <a href="/portfolio" class="cima-btn cima-btn-primary mt-4">@L["Portfolio:BackToList"]</a>
         </div>
-    </div>
+    </PageShell>
 }
 else
 {
-    <div class="min-h-screen bg-neutral-50">
+    <PageShell>
+        <SeoMetaTags Title="@Listing!.Title"
+                     Description="@GetSeoDescription()"
+                     Keywords="@GetSeoKeywords()"
+                     ImageUrl="@GetCoverImageUrl()"
+                     OgType="article"
+                     JsonLd="@GetProjectJsonLd()" />
         @* Header *@
-        <section class="bg-navy-900 pt-20 pb-8">
+        <section class="bg-navy-900 pt-6 pb-8">
             <div class="cima-container">
                 <nav class="flex items-center text-sm text-navy-200 gap-2 mb-6">
                     <a href="/" class="hover:text-white transition-colors">@L["Home"]</a>
@@ -176,7 +184,7 @@ else
                 </div>
             </div>
         </section>
-    </div>
+    </PageShell>
 }
 
 @code {
@@ -223,5 +231,77 @@ else
         }
 
         return orderedImages;
+    }
+
+    private string GetSeoDescription()
+    {
+        if (Listing == null) return "";
+        
+        var desc = Listing.Description ?? "";
+        // Limitar a 160 caracteres para meta description
+        if (desc.Length > 160)
+        {
+            desc = desc.Substring(0, 157) + "...";
+        }
+        return desc;
+    }
+
+    private string GetSeoKeywords()
+    {
+        if (Listing == null) return "";
+        
+        var parts = new[] {
+            "portafolio",
+            "proyecto",
+            "arquitectura",
+            Listing.Location?.ToString() ?? "",
+            EnumLocalizer.GetPropertyTypeName(Listing.Type)
+        };
+        
+        return string.Join(", ", parts.Where(p => !string.IsNullOrEmpty(p)));
+    }
+
+    private string GetCoverImageUrl()
+    {
+        if (Listing?.Images == null || !Listing.Images.Any())
+            return "/images/placeholder.jpg";
+        
+        var coverImage = Listing.Images
+            .OrderByDescending(i => i.IsCover)
+            .ThenBy(i => i.SortOrder)
+            .FirstOrDefault();
+        
+        return coverImage?.Url ?? "/images/placeholder.jpg";
+    }
+
+    private string GetProjectJsonLd()
+    {
+        if (Listing == null) return "";
+        
+        var imageUrl = GetCoverImageUrl();
+        var absoluteUrl = NavManager.ToAbsoluteUri(NavManager.Uri).ToString();
+        
+        return $@"{{
+            ""@context"": ""https://schema.org"",
+            ""@type"": ""CreativeWork"",
+            ""name"": ""{EscapeJsonString(Listing.Title)}"",
+            ""description"": ""{EscapeJsonString(Listing.Description ?? "")}"",
+            ""image"": ""{imageUrl}"",
+            ""url"": ""{absoluteUrl}"",
+            ""author"": {{
+                ""@type"": ""Organization"",
+                ""name"": ""4cima""
+            }}
+        }}";
+    }
+
+    private string EscapeJsonString(string input)
+    {
+        return input
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\n", "\\n")
+            .Replace("\r", "\\r")
+            .Replace("\t", "\\t");
     }
 }
