@@ -1,0 +1,178 @@
+@page "/admin/portfolio"
+@using cima.Portfolio
+@using cima.Categories
+@inject IPortfolioAppService PortfolioService
+@inject ICategoryAppService CategoryService
+@inject NavigationManager NavManager
+@inherits cimaComponentBase
+
+<PageTitle>@L["Menu:Portfolio"] - @L["CompanyName"]</PageTitle>
+
+<div class="bg-neutral-900 text-white pt-24 pb-12">
+    <div class="cima-container">
+        <h1 class="text-4xl md:text-5xl font-display font-bold mb-4">@L["Portfolio:LegacyTitle"]</h1>
+        <p class="text-neutral-400 text-lg max-w-2xl">
+            @L["Portfolio:LegacySubtitle"]
+        </p>
+    </div>
+</div>
+
+<div class="cima-container py-12">
+    <!-- Filtros de Categoría -->
+    <div class="flex flex-wrap gap-2 mb-10 justify-center md:justify-start">
+        <MudChip T="Guid?"
+                 Variant="@(SelectedCategoryId == null ? Variant.Filled : Variant.Outlined)"
+                 Color="Color.Primary"
+                 OnClick="@(() => FilterByCategory(null))"
+                 Class="cursor-pointer">
+            @L["Portfolio:Filter:All"]
+        </MudChip>
+
+        @foreach (var category in Categories)
+        {
+            <MudChip T="Guid?"
+                     Variant="@(SelectedCategoryId == category.Id ? Variant.Filled : Variant.Outlined)"
+                     Color="Color.Primary"
+                     OnClick="@(() => FilterByCategory(category.Id))"
+                     Class="cursor-pointer">
+                @category.Name
+            </MudChip>
+        }
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @for (int i = 0; i < 6; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="300px" Class="rounded-lg" />
+            }
+        </div>
+    }
+    else if (Projects.Any())
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @foreach (var project in Projects)
+            {
+                <div class="group cursor-pointer relative overflow-hidden rounded-lg shadow-lg aspect-[4/3]" @onclick="() => NavigateToProject(project.Id)">
+                    @if (!string.IsNullOrEmpty(project.CoverImage))
+                    {
+                        <img src="@project.CoverImage" alt="@project.Title" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    }
+                    else
+                    {
+                        <div class="w-full h-full bg-neutral-200 flex items-center justify-center text-neutral-400">
+                            <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" />
+                        </div>
+                    }
+
+                    <!-- Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <div class="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                            <span class="text-primary-400 text-sm font-bold uppercase tracking-wider mb-1 block">
+                                @project.CategoryName
+                            </span>
+                            <h3 class="text-2xl font-bold text-white mb-1">@project.Title</h3>
+                            <p class="text-neutral-300 text-sm flex items-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                                @project.Location
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        @if (TotalCount > Projects.Count)
+        {
+             <div class="flex justify-center mt-12">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="LoadMore" Disabled="IsLoadingMore">
+                    @(IsLoadingMore ? L["Portfolio:LoadingMore"] : L["Portfolio:LoadMore"])
+                </MudButton>
+             </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-20 text-neutral-500">
+            <MudIcon Icon="@Icons.Material.Outlined.PhotoLibrary" Size="Size.Large" Class="mb-4 text-6xl" />
+            <p class="text-xl">@L["Portfolio:EmptyCategory"]</p>
+        </div>
+    }
+</div>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private bool IsLoadingMore { get; set; }
+    private List<PortfolioProjectDto> Projects { get; set; } = new();
+    private List<PropertyCategoryDto> Categories { get; set; } = new();
+    private Guid? SelectedCategoryId { get; set; }
+    private int CurrentPage { get; set; } = 0;
+    private int PageSize { get; set; } = 9;
+    private long TotalCount { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAsync();
+        await LoadProjects();
+    }
+
+    private async Task FilterByCategory(Guid? categoryId)
+    {
+        SelectedCategoryId = categoryId;
+        CurrentPage = 0;
+        Projects.Clear();
+        IsLoading = true;
+        await LoadProjects();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            var categories = await CategoryService.GetCategoriesAsync();
+            Categories = categories
+                .Where(category => category.IsActive)
+                .OrderBy(category => category.SortOrder)
+                .ToList();
+        }
+        catch
+        {
+            Categories = new List<PropertyCategoryDto>();
+        }
+    }
+
+    private async Task LoadProjects()
+    {
+        try
+        {
+            var result = await PortfolioService.GetListAsync(new GetPortfolioListDto
+            {
+                SkipCount = CurrentPage * PageSize,
+                MaxResultCount = PageSize,
+                CategoryId = SelectedCategoryId
+            });
+
+            Projects.AddRange(result.Items);
+            TotalCount = result.TotalCount;
+        }
+        finally
+        {
+            IsLoading = false;
+            IsLoadingMore = false;
+        }
+    }
+
+    private async Task LoadMore()
+    {
+        IsLoadingMore = true;
+        CurrentPage++;
+        await LoadProjects();
+    }
+
+    private void NavigateToProject(Guid id)
+    {
+        NavManager.NavigateTo($"/admin/portfolio/{id}");
+    }
+}

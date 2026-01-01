@@ -1,7 +1,7 @@
 @using cima.Listings
+@using cima.Categories
 @using cima.Domain.Shared
-@using cima.Blazor.Client.Services
-@inject EnumLocalizationService EnumLocalizer
+@inject ICategoryAppService CategoryService
 @inherits cimaComponentBase
 
 @*
@@ -63,15 +63,16 @@
                         <label for="category" class="block text-sm font-medium text-neutral-700 mb-2">
                             @L["Search:PropertyCategory"]
                         </label>
-                        <select 
+                        <select
                             id="category"
                             class="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all"
-                            @bind="SearchModel.Category">
+                            @bind="SearchModel.CategoryId"
+                            @bind:after="HandleCategoryChanged">
                             <option value="">@L["Common:All"]</option>
-                            <option value="@PropertyCategory.Residential">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</option>
-                            <option value="@PropertyCategory.Commercial">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</option>
-                            <option value="@PropertyCategory.Mixed">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Mixed)</option>
-                            <option value="@PropertyCategory.Land">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Land)</option>
+                            @foreach (var category in Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
                         </select>
                     </div>
 
@@ -80,19 +81,15 @@
                         <label for="property-type" class="block text-sm font-medium text-neutral-700 mb-2">
                             @L["Search:PropertyType"]
                         </label>
-                        <select 
+                        <select
                             id="property-type"
                             class="w-full px-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-all"
-                            @bind="SearchModel.Type">
+                            @bind="SearchModel.TypeId">
                             <option value="">@L["Common:All"]</option>
-                            <option value="@PropertyType.House">@EnumLocalizer.GetPropertyTypeName(PropertyType.House)</option>
-                            <option value="@PropertyType.Apartment">@EnumLocalizer.GetPropertyTypeName(PropertyType.Apartment)</option>
-                            <option value="@PropertyType.Condo">@EnumLocalizer.GetPropertyTypeName(PropertyType.Condo)</option>
-                            <option value="@PropertyType.Townhouse">@EnumLocalizer.GetPropertyTypeName(PropertyType.Townhouse)</option>
-                            <option value="@PropertyType.Villa">@EnumLocalizer.GetPropertyTypeName(PropertyType.Villa)</option>
-                            <option value="@PropertyType.Office">@EnumLocalizer.GetPropertyTypeName(PropertyType.Office)</option>
-                            <option value="@PropertyType.Warehouse">@EnumLocalizer.GetPropertyTypeName(PropertyType.Warehouse)</option>
-                            <option value="@PropertyType.RetailSpace">@EnumLocalizer.GetPropertyTypeName(PropertyType.RetailSpace)</option>
+                            @foreach (var type in Types)
+                            {
+                                <option value="@type.Id">@type.Name</option>
+                            }
                         </select>
                     </div>
 
@@ -185,6 +182,58 @@
 
     private PropertySearchDto SearchModel { get; set; } = new();
     private bool ShowAdvanced { get; set; }
+    private List<PropertyCategoryDto> Categories { get; set; } = new();
+    private List<PropertyTypeDto> Types { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAsync();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            var categories = await CategoryService.GetCategoriesAsync();
+            Categories = categories
+                .Where(category => category.IsActive)
+                .OrderBy(category => category.SortOrder)
+                .ToList();
+
+            await LoadTypesAsync(SearchModel.CategoryId);
+        }
+        catch
+        {
+            Categories = new List<PropertyCategoryDto>();
+            Types = new List<PropertyTypeDto>();
+        }
+    }
+
+    private async Task LoadTypesAsync(Guid? categoryId)
+    {
+        try
+        {
+            var types = await CategoryService.GetTypesAsync(categoryId, includeInactive: false);
+            Types = types
+                .Where(type => type.IsActive)
+                .OrderBy(type => type.SortOrder)
+                .ToList();
+
+            if (SearchModel.TypeId.HasValue && !Types.Any(t => t.Id == SearchModel.TypeId.Value))
+            {
+                SearchModel.TypeId = null;
+            }
+        }
+        catch
+        {
+            Types = new List<PropertyTypeDto>();
+        }
+    }
+
+    private async Task HandleCategoryChanged()
+    {
+        await LoadTypesAsync(SearchModel.CategoryId);
+    }
 
     private void ToggleAdvancedFilters()
     {
@@ -206,7 +255,8 @@
     {
         SearchModel = new();
         ShowAdvanced = false;
-        
+        await LoadTypesAsync(null);
+
         if (OnClear.HasDelegate)
         {
             await OnClear.InvokeAsync();

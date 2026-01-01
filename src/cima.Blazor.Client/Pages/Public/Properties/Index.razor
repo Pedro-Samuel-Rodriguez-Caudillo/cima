@@ -247,8 +247,8 @@
                 MaxPrice = SearchFilters.MaxPrice,
                 MinBedrooms = SearchFilters.MinBedrooms,
                 MinBathrooms = SearchFilters.MinBathrooms,
-                PropertyType = SearchFilters.Type.HasValue ? (int)SearchFilters.Type.Value : null,
-                PropertyCategory = SearchFilters.Category.HasValue ? (int)SearchFilters.Category.Value : null,
+                TypeId = SearchFilters.TypeId,
+                CategoryId = SearchFilters.CategoryId,
                 TransactionType = SearchFilters.TransactionType.HasValue ? (int)SearchFilters.TransactionType.Value : null
             };
 

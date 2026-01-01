@@ -95,4 +95,19 @@ public class EnumLocalizationService
             _ => status.ToString()
         };
     }
+
+    public string GetPortfolioCategoryName(PortfolioCategory category)
+    {
+        return category switch
+        {
+            PortfolioCategory.ResidentialConstruction => _localizer["PortfolioCategory:ResidentialConstruction"],
+            PortfolioCategory.CommercialConstruction => _localizer["PortfolioCategory:CommercialConstruction"],
+            PortfolioCategory.Renovation => _localizer["PortfolioCategory:Renovation"],
+            PortfolioCategory.InteriorDesign => _localizer["PortfolioCategory:InteriorDesign"],
+            PortfolioCategory.ArchitecturalDesign => _localizer["PortfolioCategory:ArchitecturalDesign"],
+            PortfolioCategory.Landscaping => _localizer["PortfolioCategory:Landscaping"],
+            PortfolioCategory.Other => _localizer["PortfolioCategory:Other"],
+            _ => category.ToString()
+        };
+    }
 }

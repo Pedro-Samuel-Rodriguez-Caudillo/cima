@@ -47,7 +47,7 @@
                         <span class="font-medium">@string.Format(L["Admin:Listings:SelectedCount"], SelectedIds.Count)</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button @onclick="BulkPublish" 
+                        <button @onclick="BulkPublish"
                                 class="px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
@@ -68,8 +68,22 @@
                             </svg>
                             @L["Admin:Listings:BulkPortfolio"]
                         </button>
+                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Size="Size.Small" Class="text-white">
+                            <MudMenuItem Icon="@Icons.Material.Filled.Unpublished" OnClick="BulkUnpublish">
+                                @L["Admin:Listings:Action:MoveToDraft"]
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Unarchive" OnClick="BulkUnarchive">
+                                @L["Admin:Listings:Action:Unarchive"]
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Filled.Star" OnClick="BulkFeature">
+                                @L["Admin:Listings:Featured:Add"]
+                            </MudMenuItem>
+                            <MudMenuItem Icon="@Icons.Material.Outlined.StarBorder" OnClick="BulkUnfeature">
+                                @L["Admin:Listings:Featured:Remove"]
+                            </MudMenuItem>
+                        </MudMenu>
                         <div class="w-px h-6 bg-white/20 mx-1"></div>
-                        <button @onclick="BulkDelete" 
+                        <button @onclick="BulkDelete"
                                 class="px-3 py-1.5 bg-red-500 hover:bg-red-600 rounded text-sm font-medium transition-colors flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -111,9 +125,9 @@
                 <div>
                     <select @bind="CategoryFilter" @bind:after="HandleFilterChanged" aria-label="Filtrar por categoría" class="w-full px-4 py-2 rounded-lg border border-neutral-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all bg-white">
                         <option value="">@L["Admin:Listings:AllCategories"]</option>
-                        @foreach (PropertyCategory category in Enum.GetValues(typeof(PropertyCategory)))
+                        @foreach (var category in Categories)
                         {
-                            <option value="@((int)category)">@EnumLocalizer.GetPropertyCategoryName(category)</option>
+                            <option value="@category.Id">@category.Name</option>
                         }
                     </select>
                 </div>
@@ -221,9 +235,7 @@
 
                                 @* Category *@
                                 <div class="col-span-1 lg:col-span-2 flex items-center">
-                                    <span class="text-sm text-neutral-700">
-                                        @EnumLocalizer.GetPropertyCategoryName(listing.Category)
-                                    </span>
+                                    <span class="text-sm text-neutral-700">@listing.CategoryName</span>
                                 </div>
 
                                 @* Price *@
@@ -243,25 +255,12 @@
                                 @* Actions *@
                                 <div class="col-span-1 lg:col-span-1 flex items-center justify-start lg:justify-end flex-wrap gap-1.5">
                                     @* Preview *@
-                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" 
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small"
                                         Href="@($"/properties/{listing.Id}")" Target="_blank" title="@L["Admin:Listings:Action:Preview"]" aria-label="@L["Admin:Listings:Action:Preview"]" />
 
                                     @* Edit *@
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"
                                         Href="@($"/admin/listings/edit/{listing.Id}")" title="@L["Admin:Listings:Action:Edit"]" aria-label="@L["Admin:Listings:Action:Edit"]" />
-
-                                    @* Duplicate *@
-                                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Size="Size.Small"
-                                        Color="Color.Info" OnClick="@(() => DuplicateListing(listing.Id))" title="@L["Admin:Listings:Action:Duplicate"]" aria-label="@L["Admin:Listings:Action:Duplicate"]" />
-
-                                    @* Featured *@
-                                    <MudIconButton Icon="@(IsFeatured(listing.Id) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
-                                                   Size="Size.Small"
-                                                   Color="@(IsFeatured(listing.Id) ? Color.Warning : Color.Default)"
-                                                   Disabled="@(!CanToggleFeatured(listing))"
-                                                   OnClick="@(() => ToggleFeaturedAsync(listing))"
-                                                   title="@GetFeaturedActionLabel(listing)"
-                                                   aria-label="@GetFeaturedActionLabel(listing)" />
 
                                     @* Sale *@
                                     @if (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio)
@@ -272,31 +271,62 @@
                                                        aria-label="@L["Sales:Dialog:Open"]" />
                                     }
 
-                                    @if (listing.Status == ListingStatus.Draft || listing.Status == ListingStatus.Portfolio)
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.Publish" Size="Size.Small" 
-                                            Color="Color.Success" OnClick="@(() => PublishListing(listing.Id))" title="Publicar" aria-label="Publicar" />
-                                    }
-                                    @if (listing.Status == ListingStatus.Published)
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.Unpublished" Size="Size.Small"
-                                            Color="Color.Default" OnClick="@(() => UnpublishListing(listing.Id))" title="Mover a borrador" aria-label="Mover a borrador" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Style" Size="Size.Small"
-                                            Color="Color.Info" OnClick="@(() => MoveListingToPortfolio(listing))" title="Mover a portafolio" aria-label="Mover a portafolio" />
-                                    }
-                                    @if (listing.Status == ListingStatus.Archived)
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.Unarchive" Size="Size.Small"
-                                            Color="Color.Primary" OnClick="@(() => UnarchiveListing(listing.Id))" title="Desarchivar" aria-label="Desarchivar" />
-                                    }
-                                    @if (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio)
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.Archive" Size="Size.Small" 
-                                            Color="Color.Warning" OnClick="@(() => ArchiveListing(listing.Id))" title="Archivar" aria-label="Archivar" />
-                                    }
-
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                        Color="Color.Error" OnClick="@(() => DeleteListing(listing.Id))" title="@L["Admin:Listings:Action:Delete"]" aria-label="@L["Admin:Listings:Action:Delete"]" />
+                                    <MudMenu Icon="@Icons.Material.Filled.MoreVert" Dense="true" Size="Size.Small">
+                                        <MudMenuItem Icon="@Icons.Material.Filled.ContentCopy"
+                                                     OnClick="@(() => DuplicateListing(listing.Id))">
+                                            @L["Admin:Listings:Action:Duplicate"]
+                                        </MudMenuItem>
+                                        @if (listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio || IsFeatured(listing.Id))
+                                        {
+                                            <MudMenuItem Icon="@(IsFeatured(listing.Id) ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarBorder)"
+                                                         Disabled="@(!CanToggleFeatured(listing))"
+                                                         OnClick="@(() => ToggleFeaturedAsync(listing))">
+                                                @GetFeaturedActionLabel(listing)
+                                            </MudMenuItem>
+                                        }
+                                        @if (listing.Status != ListingStatus.Published)
+                                        {
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Publish"
+                                                         Disabled="@(!CanPublish(listing))"
+                                                         OnClick="@(() => PublishListing(listing.Id))">
+                                                @L["Admin:Listings:Publish"]
+                                            </MudMenuItem>
+                                        }
+                                        @if (CanMoveToDraft(listing))
+                                        {
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Unpublished"
+                                                         OnClick="@(() => UnpublishListing(listing.Id))">
+                                                @L["Admin:Listings:Action:MoveToDraft"]
+                                            </MudMenuItem>
+                                        }
+                                        @if (listing.Status != ListingStatus.Portfolio)
+                                        {
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Style"
+                                                         Disabled="@(!CanMoveToPortfolio(listing))"
+                                                         OnClick="@(() => MoveListingToPortfolio(listing))">
+                                                @L["Admin:Listings:Action:MoveToPortfolio"]
+                                            </MudMenuItem>
+                                        }
+                                        @if (listing.Status != ListingStatus.Archived)
+                                        {
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Archive"
+                                                         OnClick="@(() => ArchiveListing(listing.Id))">
+                                                @L["Admin:Listings:Action:Archive"]
+                                            </MudMenuItem>
+                                        }
+                                        @if (listing.Status == ListingStatus.Archived)
+                                        {
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Unarchive"
+                                                         OnClick="@(() => UnarchiveListing(listing.Id))">
+                                                @L["Admin:Listings:Action:Unarchive"]
+                                            </MudMenuItem>
+                                        }
+                                        <MudDivider />
+                                        <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error"
+                                                     OnClick="@(() => DeleteListing(listing.Id))">
+                                            @L["Admin:Listings:Action:Delete"]
+                                        </MudMenuItem>
+                                    </MudMenu>
                                 </div>
                             </div>
                         }

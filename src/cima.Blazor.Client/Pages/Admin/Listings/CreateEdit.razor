@@ -4,7 +4,9 @@
 @using cima.Listings
 @using cima.Listings.Inputs
 @using cima.Listings.Outputs
+@using cima.Portfolio
 @using cima.Architects
+@using cima.Categories
 @using cima.Domain.Shared
 @using cima.Blazor.Client.Services
 @using cima.Blazor.Client.Components.Admin
@@ -14,8 +16,10 @@
 @using System.Collections.Generic
 @attribute [Authorize(cimaPermissions.Listings.Default)]
 @inject IListingAppService ListingService
+@inject IPortfolioAppService PortfolioService
 @inject IFeaturedListingAppService FeaturedListingService
 @inject IArchitectAppService ArchitectService
+@inject ICategoryAppService CategoryService
 @inject EnumLocalizationService EnumLocalizer
 @inject NavigationManager NavManager
 @inject IDialogService DialogService
@@ -117,29 +121,31 @@
                                     Variant="Variant.Outlined"
                                     For="@(() => Model.Bathrooms)" />
                                 
-                                <MudSelect T="PropertyCategory" @bind-Value="Model.Category" Label="@L["Admin:Listings:Form:Category"]" 
-                                    Variant="Variant.Outlined" Required="true"
-                                    For="@(() => Model.Category)">
-                                    <MudSelectItem Value="PropertyCategory.Residential">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Residential)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Commercial">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Commercial)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Mixed">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Mixed)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyCategory.Land">@EnumLocalizer.GetPropertyCategoryName(PropertyCategory.Land)</MudSelectItem>
+                                <MudSelect T="Guid"
+                                           Value="Model.CategoryId"
+                                           ValueChanged="OnCategoryChanged"
+                                           Label="@L["Admin:Listings:Form:Category"]"
+                                           Variant="Variant.Outlined"
+                                           Required="true"
+                                           For="@(() => Model.CategoryId)">
+                                    @foreach (var category in Categories)
+                                    {
+                                        <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+                                    }
                                 </MudSelect>
 
-                                <MudSelect T="PropertyType" @bind-Value="Model.Type" Label="@L["Admin:Listings:Form:Type"]" 
+                                <MudSelect T="Guid" @bind-Value="Model.TypeId" Label="@L["Admin:Listings:Form:Type"]"
                                     Variant="Variant.Outlined" Required="true"
-                                    For="@(() => Model.Type)">
-                                    <MudSelectItem Value="PropertyType.House">@EnumLocalizer.GetPropertyTypeName(PropertyType.House)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Apartment">@EnumLocalizer.GetPropertyTypeName(PropertyType.Apartment)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Condo">@EnumLocalizer.GetPropertyTypeName(PropertyType.Condo)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Townhouse">@EnumLocalizer.GetPropertyTypeName(PropertyType.Townhouse)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Villa">@EnumLocalizer.GetPropertyTypeName(PropertyType.Villa)</MudSelectItem>
-                                    <MudSelectItem Value="PropertyType.Office">@EnumLocalizer.GetPropertyTypeName(PropertyType.Office)</MudSelectItem>
+                                    For="@(() => Model.TypeId)">
+                                    @foreach (var type in Types)
+                                    {
+                                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                                    }
                                 </MudSelect>
                             </div>
                         </MudCard>
 
-                        @* Galería de imágenes - disponible siempre que tengamos un ID *@
+                        @* Galería de imágenes - usar staging antes de crear *@
                         @if (CurrentListingId.HasValue)
                         {
                             <MudCard Class="p-6">
@@ -151,11 +157,11 @@
                         else
                         {
                             <MudCard Class="p-6">
-                                <div class="text-center py-8 text-neutral-500">
-                                    <MudIcon Icon="@Icons.Material.Filled.PhotoLibrary" Size="Size.Large" Class="mb-4" />
-                                    <p class="font-medium">@L["Admin:Listings:Form:GalleryPlaceholderTitle"]</p>
-                                    <p class="text-sm mt-1">@L["Admin:Listings:Form:GalleryPlaceholderDescription"]</p>
-                                </div>
+                                <ImageUploader InitialImages="PendingImages"
+                                               OnImagesChanged="HandlePendingImagesChanged" />
+                                <p class="text-sm text-neutral-500 mt-3">
+                                    @L["Admin:Listings:Form:GalleryPlaceholderDescription"]
+                                </p>
                             </MudCard>
                         }
                     </div>
@@ -194,40 +200,55 @@
                                     </MudChip>
 
                                     <div class="space-y-2">
-                                        @if (ExistingListing.Status == ListingStatus.Draft)
+                                        @if (ExistingListing.Status == ListingStatus.Portfolio)
                                         {
-                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
-                                                Size="Size.Small" OnClick="PublishListing">
+                                            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                                                @L["Admin:Listings:Form:PortfolioInfo"]
+                                            </MudAlert>
+                                        }
+
+                                        @if (ExistingListing.Status != ListingStatus.Published)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
+                                                Size="Size.Small" OnClick="PublishListing"
+                                                Disabled="@(!CanPublishFromDetail)">
                                                 @L["Admin:Listings:Publish"]
                                             </MudButton>
                                         }
-                                        @if (ExistingListing.Status == ListingStatus.Published)
+                                        @if (ExistingListing.Status == ListingStatus.Published || ExistingListing.Status == ListingStatus.Portfolio)
                                         {
-                                            <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true" 
-                                                Size="Size.Small" OnClick="MoveToPortfolio">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true"
+                                                Size="Size.Small" OnClick="UnpublishListing">
+                                                @L["Admin:Listings:Action:MoveToDraft"]
+                                            </MudButton>
+                                        }
+                                        @if (ExistingListing.Status != ListingStatus.Portfolio)
+                                        {
+                                            <MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true"
+                                                Size="Size.Small" OnClick="MoveToPortfolio"
+                                                Disabled="@(!CanMoveToPortfolioFromDetail)">
                                                 @L["Admin:Listings:Form:MoveToPortfolioAction"]
                                             </MudButton>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
+                                        }
+                                        @if (ExistingListing.Status != ListingStatus.Archived)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true"
                                                 Size="Size.Small" OnClick="ArchiveListing">
                                                 @L["Admin:Listings:Archive"]
                                             </MudButton>
                                         }
                                         @if (ExistingListing.Status == ListingStatus.Archived)
                                         {
-                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" 
+                                            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true"
                                                 Size="Size.Small" OnClick="UnarchiveListing">
                                                 @L["Admin:Listings:Form:Reactivate"]
                                             </MudButton>
                                         }
-                                        @if (ExistingListing.Status == ListingStatus.Portfolio)
+                                        @if (!HasImages)
                                         {
-                                            <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
-                                                @L["Admin:Listings:Form:PortfolioInfo"]
-                                            </MudAlert>
-                                            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" 
-                                                Size="Size.Small" OnClick="ArchiveListing">
-                                                @L["Admin:Listings:Archive"]
-                                            </MudButton>
+                                            <MudText Typo="Typo.caption" Class="text-neutral-500">
+                                                @L["Listing:NoImages"]
+                                            </MudText>
                                         }
                                     </div>
                                 </MudCard>
@@ -275,14 +296,22 @@
     private bool CanCreateListings => CurrentArchitect != null || (IsAdmin && Architects?.Any() == true);
     
     private ListingViewModel Model { get; set; } = new();
-    
+
+    private List<PropertyCategoryDto> Categories { get; set; } = new();
+    private List<PropertyTypeDto> Types { get; set; } = new();
+
     private List<ArchitectDto>? Architects { get; set; }
     private ArchitectDto? CurrentArchitect { get; set; }
     private ListingDetailDto? ExistingListing { get; set; }
+    private List<AddListingImageDto> PendingImages { get; set; } = new();
     private bool IsFeatured { get; set; }
     private int FeaturedListingCount { get; set; }
     private bool IsFeaturedBusy { get; set; }
     private const int MaxFeaturedListings = 12;
+
+    private bool HasImages => ExistingListing?.Images?.Any() == true;
+    private bool CanPublishFromDetail => ExistingListing != null && ExistingListing.Status != ListingStatus.Published && HasImages;
+    private bool CanMoveToPortfolioFromDetail => ExistingListing != null && ExistingListing.Status != ListingStatus.Portfolio && HasImages;
     
     // ID actual del listing (para modo edición o después de crear)
     private Guid? CurrentListingId => ExistingListing?.Id ?? (IsEditMode ? Id : null);
@@ -293,6 +322,8 @@
         {
             // Verificar si es admin
             IsAdmin = CurrentUser.IsInRole("admin");
+
+            await LoadCategoriesAsync();
             
             // Siempre intentar obtener el arquitecto actual (puede ser null para admin puro)
             try
@@ -360,6 +391,70 @@
         }
     }
 
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            var categories = await CategoryService.GetCategoriesAsync();
+            Categories = categories
+                .Where(category => category.IsActive)
+                .OrderBy(category => category.SortOrder)
+                .ToList();
+
+            if (Model.CategoryId == Guid.Empty && Categories.Any())
+            {
+                Model.CategoryId = Categories[0].Id;
+            }
+
+            await LoadTypesAsync(Model.CategoryId);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(L["Admin:Listings:Form:InitError", ex.Message], Severity.Error);
+        }
+    }
+
+    private async Task LoadTypesAsync(Guid categoryId)
+    {
+        try
+        {
+            var types = await CategoryService.GetTypesAsync(categoryId, includeInactive: false);
+            Types = types
+                .Where(type => type.IsActive)
+                .OrderBy(type => type.SortOrder)
+                .ToList();
+
+            if (Types.Count == 0)
+            {
+                Model.TypeId = Guid.Empty;
+                return;
+            }
+
+            if (Model.TypeId == Guid.Empty || !Types.Any(type => type.Id == Model.TypeId))
+            {
+                Model.TypeId = Types[0].Id;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignorar - navegación en progreso
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(L["Admin:Listings:Form:InitError", ex.Message], Severity.Error);
+        }
+    }
+
+    private async Task OnCategoryChanged(Guid categoryId)
+    {
+        Model.CategoryId = categoryId;
+        await LoadTypesAsync(categoryId);
+    }
+
     private async Task LoadListing()
     {
         try
@@ -378,11 +473,13 @@
                 ConstructionArea = ExistingListing.ConstructionArea,
                 Bedrooms = ExistingListing.Bedrooms,
                 Bathrooms = ExistingListing.Bathrooms,
-                Category = ExistingListing.Category,
-                Type = ExistingListing.Type,
+                CategoryId = ExistingListing.CategoryId,
+                TypeId = ExistingListing.TypeId,
                 TransactionType = ExistingListing.TransactionType,
                 ArchitectId = ExistingListing.ArchitectId
             };
+
+            await LoadTypesAsync(Model.CategoryId);
 
             await LoadFeaturedStatusAsync();
         }
@@ -558,8 +655,8 @@
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
                     Bathrooms = Model.Bathrooms,
-                    Category = Model.Category,
-                    Type = Model.Type,
+                    CategoryId = Model.CategoryId,
+                    TypeId = Model.TypeId,
                     TransactionType = Model.TransactionType,
                 };
 
@@ -581,8 +678,8 @@
                     ConstructionArea = Model.ConstructionArea,
                     Bedrooms = Model.Bedrooms,
                     Bathrooms = Model.Bathrooms,
-                    Category = Model.Category,
-                    Type = Model.Type,
+                    CategoryId = Model.CategoryId,
+                    TypeId = Model.TypeId,
                     TransactionType = Model.TransactionType,
                     ArchitectId = Model.ArchitectId
                 };
@@ -590,7 +687,9 @@
                 var created = await ListingService.CreateAsync(input);
                 ExistingListing = created; // ListingDetailDto
                 Snackbar.Add(L["Admin:Listings:Form:CreateSuccess"], Severity.Success);
-                
+
+                await UploadPendingImagesAsync(created.Id);
+
                 // Redirigir a modo edición para poder agregar imágenes
                 NavManager.NavigateTo($"/admin/listings/edit/{created.Id}", replace: true);
             }
@@ -615,10 +714,60 @@
         }
     }
 
+    private void HandlePendingImagesChanged(List<AddListingImageDto> images)
+    {
+        PendingImages = images;
+    }
+
+    private async Task UploadPendingImagesAsync(Guid listingId)
+    {
+        if (!PendingImages.Any())
+        {
+            return;
+        }
+
+        var success = 0;
+        var failed = 0;
+
+        foreach (var image in PendingImages.ToList())
+        {
+            var input = new AddListingImageDto
+            {
+                ListingId = listingId,
+                Url = image.Url,
+                AltText = image.AltText,
+                FileSize = image.FileSize,
+                ContentType = image.ContentType
+            };
+
+            try
+            {
+                await ListingService.AddImageAsync(input);
+                success++;
+            }
+            catch
+            {
+                failed++;
+            }
+        }
+
+        PendingImages.Clear();
+
+        if (success > 0)
+        {
+            Snackbar.Add(L["GalleryManager:UploadSuccess"], Severity.Success);
+        }
+
+        if (failed > 0)
+        {
+            Snackbar.Add($"Se encontraron {failed} errores al subir imagenes.", Severity.Warning);
+        }
+    }
+
     private async Task PublishListing()
     {
         if (!Id.HasValue) return;
-        
+
         try
         {
             ExistingListing = await ListingService.PublishAsync(new PublishListingDto { ListingId = Id.Value });
@@ -631,10 +780,26 @@
         }
     }
 
+    private async Task UnpublishListing()
+    {
+        if (!Id.HasValue) return;
+
+        try
+        {
+            ExistingListing = await ListingService.UnpublishAsync(Id.Value);
+            Snackbar.Add(L["Admin:Listings:Form:UnpublishSuccess"], Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(L["Admin:Listings:Form:UnpublishError", ex.Message], Severity.Error);
+        }
+    }
+
     private async Task ArchiveListing()
     {
         var result = await DialogService.ShowMessageBox(
-            L["Admin:Listings:Form:ArchiveTitle"], 
+            L["Admin:Listings:Form:ArchiveTitle"],
             L["Admin:Listings:Form:ArchiveConfirm"],
             yesText: L["Admin:Listings:Archive"], cancelText: L["Common:Cancel"]);
         
@@ -680,7 +845,8 @@
         {
             try
             {
-                ExistingListing = await ListingService.MoveToPortfolioAsync(Id.Value);
+                await PortfolioService.CreateFromListingAsync(Id.Value);
+                ExistingListing = await ListingService.GetAsync(Id.Value);
                 Snackbar.Add(L["Admin:Listings:Form:MoveToPortfolioSuccess"], Severity.Success);
                 StateHasChanged();
             }
@@ -713,8 +879,8 @@
         public decimal ConstructionArea { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
-        public PropertyCategory Category { get; set; } = PropertyCategory.Residential;
-        public PropertyType Type { get; set; } = PropertyType.House;
+        public Guid CategoryId { get; set; }
+        public Guid TypeId { get; set; }
         public TransactionType TransactionType { get; set; } = TransactionType.Sale;
         public Guid ArchitectId { get; set; }
 

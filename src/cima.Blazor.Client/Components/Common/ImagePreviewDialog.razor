@@ -1,0 +1,19 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <div class="flex justify-center items-center bg-black min-h-[50vh]">
+            <img src="@ImageUrl" class="max-w-full max-h-[80vh] object-contain" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Surface">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public string ImageUrl { get; set; }
+
+    private void Cancel() => MudDialog?.Cancel();
+}

@@ -1,11 +1,9 @@
 @using cima.Listings
 @using cima.Listings.Outputs
-@using cima.Blazor.Client.Services
 @using System.Linq
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @inject NavigationManager Navigation
-@inject EnumLocalizationService EnumLocalizer
 @inject IStringLocalizer<cimaResource> L
 
 <article class="group cima-card shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1 border border-neutral-100" 
@@ -57,7 +55,7 @@
         @* Property type badge *@
         <div class="absolute bottom-3 left-3">
             <span class="px-3 py-1.5 bg-white/95 backdrop-blur-sm text-navy-800 text-xs font-semibold rounded-lg shadow-sm">
-                @EnumLocalizer.GetPropertyTypeName(Listing.Type)
+                @Listing.TypeName
             </span>
         </div>
     </div>

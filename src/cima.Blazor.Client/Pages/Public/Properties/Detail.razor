@@ -78,25 +78,25 @@
 
                             @* LEFT: Gallery sticky *@
                             <section class="lg:sticky lg:top-[var(--cima-navbar-height)] lg:self-start">
-                                <div class="rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50">
+                                <div class="rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-50 shadow-sm transition-shadow duration-300">
                                     <ImageGallery Images="@GetGalleryImages()" />
                                 </div>
                             </section>
 
                             @* RIGHT: Panel sticky con tabs + scroll interno + CTA bar *@
                             <section class="lg:sticky lg:top-[var(--cima-navbar-height)] lg:self-start">
-                                <div class="rounded-2xl border border-neutral-200 bg-white overflow-hidden
+                                <div class="rounded-2xl border border-neutral-200 bg-white overflow-hidden shadow-sm
                                                     lg:max-h-[calc(100vh-6rem)] lg:flex lg:flex-col">
 
                                     @* Header del panel *@
                                     <div class="p-6 border-b border-neutral-200">
                                         <div class="space-y-2">
-                                            <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900">
+                                            <h1 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 leading-tight tracking-tight">
                                                 @Listing!.Title
                                             </h1>
 
                                             <div class="flex flex-wrap items-end justify-between gap-3">
-                                                <div class="text-3xl font-bold text-navy-600">
+                                                <div class="text-3xl font-bold text-navy-600 tracking-tight leading-none">
                                                     @GetPriceDisplay()
                                                 </div>
 
@@ -106,7 +106,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="text-sm text-neutral-600">
+                                            <div class="text-sm text-neutral-700">
                                                 @(Listing!.Location?.ToString() ?? L["PropertyDetail:LocationNotAvailable"])
                                             </div>
                                         </div>
@@ -134,44 +134,39 @@
                                             case TabKey.Summary:
                                                 <div class="space-y-6">
                                                     <div class="grid grid-cols-3 gap-3">
-                                                        <div class="p-4 rounded-xl bg-navy-50">
+                                                        <div class="p-4 rounded-xl bg-navy-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Properties:Bedrooms"]</div>
                                                             <div class="text-lg font-semibold text-neutral-900">@Listing!.Bedrooms</div>
                                                         </div>
-                                                        <div class="p-4 rounded-xl bg-navy-50">
+                                                        <div class="p-4 rounded-xl bg-navy-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Properties:Bathrooms"]</div>
                                                             <div class="text-lg font-semibold text-neutral-900">@Listing!.Bathrooms</div>
                                                         </div>
-                                                        <div class="p-4 rounded-xl bg-navy-50">
+                                                        <div class="p-4 rounded-xl bg-navy-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Properties:Area"]</div>
                                                             <div class="text-lg font-semibold text-neutral-900">@Listing!.Area.ToString("N0") m²</div>
                                                         </div>
                                                     </div>
 
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Search:PropertyCategory"]</div>
-                                                            <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetPropertyCategoryName(Listing!.Category)</div>
+                                                            <div class="text-sm font-medium text-neutral-900">@Listing!.CategoryName</div>
                                                         </div>
 
-                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Search:PropertyType"]</div>
-                                                            <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetPropertyTypeName(Listing!.Type)</div>
+                                                            <div class="text-sm font-medium text-neutral-900">@Listing!.TypeName</div>
                                                         </div>
 
-                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <div class="text-xs text-neutral-600">@L["Search:TransactionType"]</div>
                                                             <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetTransactionTypeName(Listing!.TransactionType)</div>
                                                         </div>
 
-                                                        <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
-                                                            <div class="text-xs text-neutral-600">@L["Common:Status"]</div>
-                                                            <div class="text-sm font-medium text-neutral-900">@EnumLocalizer.GetListingStatusName(Listing!.Status)</div>
-                                                        </div>
-
                                                         @if (Listing!.LandArea > 0)
                                                         {
-                                                            <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                            <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                                 <div class="text-xs text-neutral-600">@L["Properties:LandArea"]</div>
                                                                 <div class="text-sm font-medium text-neutral-900">@Listing!.LandArea.ToString("N0") m²</div>
                                                             </div>
@@ -179,7 +174,7 @@
 
                                                         @if (Listing!.ConstructionArea > 0)
                                                         {
-                                                            <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                                                            <div class="p-4 rounded-xl bg-neutral-50 border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                                 <div class="text-xs text-neutral-600">@L["Properties:ConstructionArea"]</div>
                                                                 <div class="text-sm font-medium text-neutral-900">@Listing!.ConstructionArea.ToString("N0") m²</div>
                                                             </div>
@@ -210,27 +205,27 @@
                                                     </h2>
 
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                             </svg>
                                                             <div>
                                                                 <div class="font-medium text-neutral-900">@L["Search:PropertyCategory"]</div>
-                                                                <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyCategoryName(Listing!.Category)</div>
+                                                                <div class="text-sm text-neutral-600">@Listing!.CategoryName</div>
                                                             </div>
                                                         </div>
 
-                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                             </svg>
                                                             <div>
                                                                 <div class="font-medium text-neutral-900">@L["Search:PropertyType"]</div>
-                                                                <div class="text-sm text-neutral-600">@EnumLocalizer.GetPropertyTypeName(Listing!.Type)</div>
+                                                                <div class="text-sm text-neutral-600">@Listing!.TypeName</div>
                                                             </div>
                                                         </div>
 
-                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
+                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg border border-neutral-200 shadow-sm transition-shadow duration-200 hover:shadow-md">
                                                             <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                                             </svg>
@@ -240,15 +235,6 @@
                                                             </div>
                                                         </div>
 
-                                                        <div class="flex items-center gap-3 p-4 bg-neutral-50 rounded-lg">
-                                                            <svg class="w-5 h-5 text-navy-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                            <div>
-                                                                <div class="font-medium text-neutral-900">@L["Common:Status"]</div>
-                                                                <div class="text-sm text-neutral-600">@EnumLocalizer.GetListingStatusName(Listing!.Status)</div>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 </div>
                                                 break;
@@ -341,8 +327,8 @@
         var isActive = _activeTab == tab;
 
         return isActive
-            ? "px-4 py-2 rounded-lg text-sm font-medium bg-white text-neutral-900 shadow-sm"
-            : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:text-neutral-900";
+            ? "px-4 py-2 rounded-lg text-sm font-medium bg-white text-neutral-900 shadow-sm transition-colors duration-200"
+            : "px-4 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-white transition-colors duration-200";
     }
 
     private async Task OpenContactAsync()
@@ -396,8 +382,8 @@
         var keywords = new List<string>
         {
             Listing.Location?.ToString() ?? "",
-            EnumLocalizer.GetPropertyTypeName(Listing.Type),
-            EnumLocalizer.GetPropertyCategoryName(Listing.Category),
+            Listing.TypeName ?? "",
+            Listing.CategoryName ?? "",
             EnumLocalizer.GetTransactionTypeName(Listing.TransactionType),
             L["Common:Property"],
             L["Common:RealEstate"],

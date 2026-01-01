@@ -1,0 +1,176 @@
+@page "/admin/portfolio/{Id:guid}"
+@using cima.Portfolio
+@using cima.Blazor.Client.Components.Common
+@inject IPortfolioAppService PortfolioService
+@inject NavigationManager NavManager
+@inject IDialogService DialogService
+@inherits cimaComponentBase
+
+<PageTitle>@Project?.Title - @L["Portfolio:Title"]</PageTitle>
+
+@if (IsLoading)
+{
+    <div class="cima-container py-24 flex justify-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else if (Project == null)
+{
+    <div class="cima-container py-24 text-center">
+        <h2 class="text-2xl font-bold text-neutral-800">@L["Portfolio:ProjectNotFound"]</h2>
+        <MudButton Href="/admin/portfolio" Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4">
+            @L["Portfolio:BackToList"]
+        </MudButton>
+    </div>
+}
+else
+{
+    <!-- Hero Section con Cover -->
+    <div class="relative h-[60vh] md:h-[70vh] w-full bg-neutral-900">
+        @if (!string.IsNullOrEmpty(Project.CoverImage))
+        {
+            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('@Project.CoverImage'); opacity: 0.7;"></div>
+        }
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+        
+        <div class="absolute bottom-0 left-0 w-full pb-12 md:pb-20">
+            <div class="cima-container">
+                <MudButton Href="/admin/portfolio" Variant="Variant.Filled" Color="Color.Surface" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-6 rounded-full opacity-90 hover:opacity-100">
+                    @L["Portfolio:Details:Back"]
+                </MudButton>
+                
+                <span class="bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider mb-4 inline-block">
+                    @Project.CategoryName
+                </span>
+                
+                <h1 class="text-4xl md:text-6xl font-display font-bold text-white mb-2 leading-tight">
+                    @Project.Title
+                </h1>
+                
+                <div class="flex items-center gap-6 text-neutral-300 text-lg">
+                    <span class="flex items-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                        @Project.Location
+                    </span>
+                    @if (Project.CompletionDate.HasValue)
+                    {
+                        <span class="flex items-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Size="Size.Small" />
+                            @Project.CompletionDate.Value.ToString("MMMM yyyy")
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="cima-container py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Columna Principal: Descripción y Galería -->
+            <div class="lg:col-span-2 space-y-12">
+                <!-- Narrativa -->
+                <div>
+                    <h2 class="text-2xl font-bold text-neutral-900 mb-6 font-display">@L["Portfolio:Details:About"]</h2>
+                    <div class="prose prose-lg text-neutral-600 max-w-none">
+                        @((MarkupString)Project.Description.Replace("\n", "<br />"))
+                    </div>
+                </div>
+
+                <!-- Testimonio (si existe) -->
+                @if (!string.IsNullOrWhiteSpace(Project.Testimonial))
+                {
+                    <div class="bg-neutral-50 p-8 rounded-xl border-l-4 border-primary-500 italic">
+                        <p class="text-xl text-neutral-700 font-serif mb-4">"@Project.Testimonial"</p>
+                        <p class="text-sm font-bold text-neutral-900">— @Project.TestimonialAuthor</p>
+                    </div>
+                }
+
+                <!-- Galería -->
+                <div>
+                    <h2 class="text-2xl font-bold text-neutral-900 mb-6 font-display">@L["Portfolio:Details:Gallery"]</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach (var img in Project.Gallery)
+                        {
+                            <div class="rounded-lg overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all" 
+                                 @onclick="@(() => OpenImageDialog(img.Url))">
+                                <img src="@img.Url" alt="@img.AltText" class="w-full h-64 object-cover hover:scale-105 transition-transform duration-500" />
+                                @if (!string.IsNullOrEmpty(img.Caption))
+                                {
+                                    <div class="p-2 bg-white text-sm text-neutral-600 text-center">@img.Caption</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Lateral: Detalles -->
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-neutral-100 sticky top-24">
+                    <h3 class="font-bold text-lg text-neutral-900 mb-4 border-b pb-2">@L["Portfolio:Details:Specs"]</h3>
+                    
+                    <ul class="space-y-4">
+                        <li class="flex justify-between">
+                            <span class="text-neutral-500">@L["Portfolio:Details:Category"]</span>
+                            <span class="font-medium text-neutral-900 text-right">@Project.CategoryName</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span class="text-neutral-500">@L["Portfolio:Details:Location"]</span>
+                            <span class="font-medium text-neutral-900 text-right">@Project.Location</span>
+                        </li>
+                        @if (Project.CompletionDate.HasValue)
+                        {
+                            <li class="flex justify-between">
+                                <span class="text-neutral-500">@L["Portfolio:Details:Completed"]</span>
+                                <span class="font-medium text-neutral-900 text-right">@Project.CompletionDate.Value.ToShortDateString()</span>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="mt-8">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Href="/contact" EndIcon="@Icons.Material.Filled.ArrowForward">
+                            @L["Portfolio:Details:StartProject"]
+                        </MudButton>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private PortfolioProjectDto? Project { get; set; }
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            Project = await PortfolioService.GetAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void OpenImageDialog(string imageUrl)
+    {
+        var parameters = new DialogParameters { ["ImageUrl"] = imageUrl };
+        var options = new DialogOptions 
+        { 
+            CloseButton = true, 
+            MaxWidth = MaxWidth.ExtraLarge, 
+            FullWidth = true, 
+            NoHeader = true,
+            CloseOnEscapeKey = true
+        };
+        DialogService.Show<ImagePreviewDialog>("", parameters, options);
+    }
+}

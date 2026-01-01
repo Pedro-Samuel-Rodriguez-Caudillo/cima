@@ -1,9 +1,12 @@
 @using MudBlazor
 @using cima.Listings
+@using cima.Listings.Inputs
+@using System.IO
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Localization
 @using cima.Localization
 @inject IStringLocalizer<cimaResource> L
+@inject ISnackbar Snackbar
 
 <MudPaper Class="p-4" Elevation="0" Outlined="true">
     <MudText Typo="Typo.h6" Class="mb-4">@L["ImageUploader:Title"]</MudText>
@@ -48,16 +51,18 @@
 </MudPaper>
 
 @code {
-    [Parameter] public List<ListingImageDto> InitialImages { get; set; } = new();
-    [Parameter] public EventCallback<List<ListingImageDto>> OnImagesChanged { get; set; }
+    private const long MaxFileSize = 5 * 1024 * 1024;
 
-    private List<ListingImageDto> uploadedImages = new();
+    [Parameter] public List<AddListingImageDto> InitialImages { get; set; } = new();
+    [Parameter] public EventCallback<List<AddListingImageDto>> OnImagesChanged { get; set; }
+
+    private List<AddListingImageDto> uploadedImages = new();
 
     protected override void OnInitialized()
     {
         if (InitialImages != null)
         {
-            uploadedImages = new List<ListingImageDto>(InitialImages);
+            uploadedImages = new List<AddListingImageDto>(InitialImages);
         }
     }
 
@@ -65,22 +70,32 @@
     {
         foreach (var file in e.GetMultipleFiles())
         {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
-            var base64 = Convert.ToBase64String(buffer);
+            if (file.Size > MaxFileSize)
+            {
+                Snackbar.Add(L["GalleryManager:FileTooLarge", file.Name], Severity.Warning);
+                continue;
+            }
+
+            await using var stream = file.OpenReadStream(maxAllowedSize: MaxFileSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var base64 = Convert.ToBase64String(ms.ToArray());
             var url = $"data:{file.ContentType};base64,{base64}";
             
-            uploadedImages.Add(new ListingImageDto 
-            { 
+            uploadedImages.Add(new AddListingImageDto
+            {
+                ListingId = Guid.Empty,
                 Url = url,
-                AltText = file.Name
+                AltText = Path.GetFileNameWithoutExtension(file.Name),
+                FileSize = file.Size,
+                ContentType = file.ContentType
             });
         }
         
         await OnImagesChanged.InvokeAsync(uploadedImages);
     }
 
-    private async Task RemoveImage(ListingImageDto image)
+    private async Task RemoveImage(AddListingImageDto image)
     {
         uploadedImages.Remove(image);
         await OnImagesChanged.InvokeAsync(uploadedImages);

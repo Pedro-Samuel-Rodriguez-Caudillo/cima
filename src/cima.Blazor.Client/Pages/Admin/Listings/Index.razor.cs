@@ -7,8 +7,10 @@ using System.Timers;
 using cima.Blazor.Client;
 using cima.Blazor.Client.Components.Common;
 using cima.Blazor.Client.Services;
+using cima.Categories;
 using cima.Domain.Shared;
 using cima.Listings;
+using cima.Portfolio;
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
 using Microsoft.AspNetCore.Components;
@@ -22,6 +24,7 @@ public partial class Index : cimaComponentBase
 
     private List<ListingSummaryDto> Listings { get; set; } = new();
     private HashSet<Guid> SelectedIds { get; set; } = new();
+    private List<PropertyCategoryDto> Categories { get; set; } = new();
     private int TotalCount { get; set; }
     private int CurrentPage { get; set; } = 1;
     private int PageSize { get; set; } = 10;
@@ -39,13 +42,16 @@ public partial class Index : cimaComponentBase
     private static readonly CultureInfo MexicoCulture = new("es-MX");
 
     [Inject] private IListingAppService ListingService { get; set; } = default!;
+    [Inject] private IPortfolioAppService PortfolioService { get; set; } = default!;
     [Inject] private IFeaturedListingAppService FeaturedListingService { get; set; } = default!;
+    [Inject] private ICategoryAppService CategoryService { get; set; } = default!;
     [Inject] protected EnumLocalizationService EnumLocalizer { get; set; } = default!;
     [Inject] private IDialogService DialogService { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
         _searchTimer.Elapsed += OnSearchElapsed;
+        await LoadCategoriesAsync();
         await LoadListings();
     }
 
@@ -100,6 +106,22 @@ public partial class Index : cimaComponentBase
         {
             FeaturedListingIds = new HashSet<Guid>();
             FeaturedListingCount = 0;
+        }
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        try
+        {
+            var categories = await CategoryService.GetCategoriesAsync();
+            Categories = categories
+                .Where(category => category.IsActive)
+                .OrderBy(category => category.SortOrder)
+                .ToList();
+        }
+        catch
+        {
+            Categories = new List<PropertyCategoryDto>();
         }
     }
 
@@ -177,13 +199,16 @@ public partial class Index : cimaComponentBase
             Sorting = "CreatedAt DESC",
             SearchTerm = SearchTerm,
             Status = ParseNullable(StatusFilter),
-            PropertyCategory = ParseNullable(CategoryFilter),
+            CategoryId = ParseNullableGuid(CategoryFilter),
             TransactionType = ParseNullable(TransactionFilter),
             FeaturedOnly = string.Equals(FeaturedFilter, "featured", StringComparison.OrdinalIgnoreCase)
         };
 
     private static int? ParseNullable(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : int.Parse(value);
+
+    private static Guid? ParseNullableGuid(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : Guid.Parse(value);
 
     private async Task HandleFilterChanged()
     {
@@ -221,44 +246,177 @@ public partial class Index : cimaComponentBase
         }
     }
 
+    private const string BulkSkippedMessage = "Se omitieron {0} propiedades no elegibles.";
+
     private void ClearSelection() => SelectedIds.Clear();
 
-    private async Task BulkPublish() =>
+    private List<ListingSummaryDto> GetSelectedListings() =>
+        Listings.Where(listing => SelectedIds.Contains(listing.Id)).ToList();
+
+    private static bool HasImages(ListingSummaryDto listing) => listing.ImageCount > 0;
+
+    private static bool CanMoveToDraft(ListingSummaryDto listing) =>
+        listing.Status == ListingStatus.Published || listing.Status == ListingStatus.Portfolio;
+
+    private static bool CanUnarchive(ListingSummaryDto listing) =>
+        listing.Status == ListingStatus.Archived;
+
+    private static bool CanArchive(ListingSummaryDto listing) =>
+        listing.Status != ListingStatus.Archived;
+
+    private static bool CanPublish(ListingSummaryDto listing) =>
+        listing.Status != ListingStatus.Published && HasImages(listing);
+
+    private static bool CanMoveToPortfolio(ListingSummaryDto listing) =>
+        listing.Status != ListingStatus.Portfolio && HasImages(listing);
+
+    private async Task BulkPublish()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(CanPublish).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
         await ConfirmAndExecuteBulk(
             "Publicar propiedades",
-            $"�Publicar {SelectedIds.Count} propiedades seleccionadas?",
+            $"¿Publicar {eligible.Count} propiedades seleccionadas?",
+            eligible,
             id => ListingService.PublishAsync(new PublishListingDto { ListingId = id }),
-            count => $"{count} propiedades publicadas");
+            count => $"{count} propiedades publicadas",
+            skipped);
+    }
 
-    private async Task BulkArchive() =>
+    private async Task BulkArchive()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(CanArchive).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
         await ConfirmAndExecuteBulk(
             "Archivar propiedades",
-            $"�Archivar {SelectedIds.Count} propiedades seleccionadas?",
+            $"¿Archivar {eligible.Count} propiedades seleccionadas?",
+            eligible,
             id => ListingService.ArchiveAsync(id),
-            count => $"{count} propiedades archivadas");
+            count => $"{count} propiedades archivadas",
+            skipped);
+    }
 
-    private async Task BulkMoveToPortfolio() =>
+    private async Task BulkMoveToPortfolio()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(CanMoveToPortfolio).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
         await ConfirmAndExecuteBulk(
             "Mover a Portafolio",
-            $"�Mover {SelectedIds.Count} propiedades al portafolio?",
-            id => ListingService.MoveToPortfolioAsync(id),
-            count => $"{count} propiedades movidas al portafolio");
+            $"¿Mover {eligible.Count} propiedades al portafolio?",
+            eligible,
+            id => PortfolioService.CreateFromListingAsync(id),
+            count => $"{count} propiedades movidas al portafolio",
+            skipped);
+    }
 
-    private async Task BulkDelete() =>
+    private async Task BulkUnpublish()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(CanMoveToDraft).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
+        await ConfirmAndExecuteBulk(
+            "Mover a borrador",
+            $"¿Mover {eligible.Count} propiedades a borrador?",
+            eligible,
+            id => ListingService.UnpublishAsync(id),
+            count => $"{count} propiedades enviadas a borrador",
+            skipped);
+    }
+
+    private async Task BulkUnarchive()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(CanUnarchive).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
+        await ConfirmAndExecuteBulk(
+            "Desarchivar propiedades",
+            $"¿Desarchivar {eligible.Count} propiedades seleccionadas?",
+            eligible,
+            id => ListingService.UnarchiveAsync(id),
+            count => $"{count} propiedades desarchivadas",
+            skipped);
+    }
+
+    private async Task BulkFeature()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected
+            .Where(listing => !IsFeatured(listing.Id) && CanToggleFeatured(listing))
+            .ToList();
+
+        if (!eligible.Any())
+        {
+            Snackbar.Add("No hay propiedades elegibles para destacar.", Severity.Warning);
+            return;
+        }
+
+        var availableSlots = Math.Max(0, MaxFeaturedListings - FeaturedListingCount);
+        if (availableSlots == 0)
+        {
+            Snackbar.Add(string.Format(L["Admin:Listings:Featured:LimitReached"], MaxFeaturedListings), Severity.Warning);
+            return;
+        }
+
+        var toFeature = eligible.Take(availableSlots).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - toFeature.Count;
+
+        await ConfirmAndExecuteBulk(
+            "Destacar propiedades",
+            $"¿Destacar {toFeature.Count} propiedades seleccionadas?",
+            toFeature,
+            id => FeaturedListingService.AddAsync(new CreateFeaturedListingDto { ListingId = id }),
+            count => $"{count} propiedades destacadas",
+            skipped);
+    }
+
+    private async Task BulkUnfeature()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Where(listing => IsFeatured(listing.Id)).Select(listing => listing.Id).ToList();
+        var skipped = selected.Count - eligible.Count;
+
+        await ConfirmAndExecuteBulk(
+            "Quitar destacados",
+            $"¿Quitar destacado a {eligible.Count} propiedades?",
+            eligible,
+            id => FeaturedListingService.RemoveByListingIdAsync(id),
+            count => $"{count} propiedades actualizadas",
+            skipped);
+    }
+
+    private async Task BulkDelete()
+    {
+        var selected = GetSelectedListings();
+        var eligible = selected.Select(listing => listing.Id).ToList();
+
         await ConfirmAndExecuteBulk(
             "Eliminar propiedades",
-            $"�Eliminar {SelectedIds.Count} propiedades? Esta acción no se puede deshacer.",
+            $"¿Eliminar {eligible.Count} propiedades? Esta acción no se puede deshacer.",
+            eligible,
             id => ListingService.DeleteAsync(id),
-            count => $"{count} propiedades eliminadas");
+            count => $"{count} propiedades eliminadas",
+            skippedCount: 0);
+    }
 
     private async Task ConfirmAndExecuteBulk(
         string title,
         string message,
+        IReadOnlyCollection<Guid> ids,
         Func<Guid, Task> action,
-        Func<int, string> successMessage)
+        Func<int, string> successMessage,
+        int skippedCount = 0)
     {
-        if (!SelectedIds.Any())
+        if (!ids.Any())
         {
+            Snackbar.Add("No hay propiedades elegibles para esta acción.", Severity.Warning);
             return;
         }
 
@@ -269,7 +427,8 @@ public partial class Index : cimaComponentBase
         }
 
         var success = 0;
-        foreach (var id in SelectedIds.ToList())
+        var failed = 0;
+        foreach (var id in ids.ToList())
         {
             try
             {
@@ -278,11 +437,22 @@ public partial class Index : cimaComponentBase
             }
             catch
             {
-                // Ignorar errores individuales para no interrumpir el lote
+                failed++;
             }
         }
 
         Snackbar.Add(successMessage(success), Severity.Success);
+
+        if (skippedCount > 0)
+        {
+            Snackbar.Add(string.Format(BulkSkippedMessage, skippedCount), Severity.Warning);
+        }
+
+        if (failed > 0)
+        {
+            Snackbar.Add($"No se pudieron procesar {failed} propiedades.", Severity.Warning);
+        }
+
         ClearSelection();
         await LoadListings();
     }
@@ -302,7 +472,7 @@ public partial class Index : cimaComponentBase
     private async Task MoveListingToPortfolio(ListingSummaryDto listing) =>
         await ExecuteWithReload(async () =>
             {
-                await ListingService.MoveToPortfolioAsync(listing.Id);
+                await PortfolioService.CreateFromListingAsync(listing.Id);
                 await SuggestSaleRegistrationAsync(listing);
             },
             "Propiedad movida al portafolio");
