@@ -24,8 +24,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
         decimal constructionArea = 150m,
         int bedrooms = 3,
         int bathrooms = 2,
-        PropertyCategory category = PropertyCategory.Residential,
-        PropertyType type = PropertyType.House,
+        Guid? categoryId = null,
+        Guid? typeId = null,
         TransactionType transactionType = TransactionType.Sale,
         Guid? architectId = null,
         Guid? createdBy = null)
@@ -40,8 +40,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             constructionArea,
             bedrooms,
             bathrooms,
-            category,
-            type,
+            categoryId ?? PropertyCatalogIds.Categories.Residential,
+            typeId ?? PropertyCatalogIds.Types.House,
             transactionType,
             architectId ?? Guid.NewGuid(),
             createdBy
@@ -108,8 +108,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             constructionArea,
             listing.Bedrooms,
             listing.Bathrooms,
-            listing.Category,
-            listing.Type,
+            listing.CategoryId,
+            listing.TypeId,
             listing.TransactionType,
             modifiedBy
         );
@@ -142,8 +142,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             listing.ConstructionArea,
             bedrooms,
             bathrooms,
-            listing.Category,
-            listing.Type,
+            listing.CategoryId,
+            listing.TypeId,
             listing.TransactionType,
             null
         );
@@ -192,7 +192,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     {
         // Arrange
         var listing = CreateTestListing();
-        var category = PropertyCategory.Commercial;
+        var categoryId = PropertyCatalogIds.Categories.Commercial;
 
         // Act
         listing.UpdateInfo(
@@ -204,14 +204,14 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             listing.ConstructionArea,
             listing.Bedrooms,
             listing.Bathrooms,
-            category,
-            listing.Type,
+            categoryId,
+            listing.TypeId,
             listing.TransactionType,
             null
         );
 
         // Assert
-        listing.Category.ShouldBe(category);
+        listing.CategoryId.ShouldBe(categoryId);
     }
 
     [Fact]
@@ -219,7 +219,7 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
     {
         // Arrange
         var listing = CreateTestListing();
-        var type = PropertyType.Office;
+        var typeId = PropertyCatalogIds.Types.Office;
 
         // Act
         listing.UpdateInfo(
@@ -231,14 +231,14 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             listing.ConstructionArea,
             listing.Bedrooms,
             listing.Bathrooms,
-            listing.Category,
-            type,
+            listing.CategoryId,
+            typeId,
             listing.TransactionType,
             null
         );
 
         // Assert
-        listing.Type.ShouldBe(type);
+        listing.TypeId.ShouldBe(typeId);
     }
 
     [Fact]
@@ -258,8 +258,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             listing.ConstructionArea,
             listing.Bedrooms,
             listing.Bathrooms,
-            listing.Category,
-            listing.Type,
+            listing.CategoryId,
+            listing.TypeId,
             transactionType,
             null
         );
@@ -297,8 +297,8 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
             listing.ConstructionArea,
             listing.Bedrooms,
             listing.Bathrooms,
-            listing.Category,
-            listing.Type,
+            listing.CategoryId,
+            listing.TypeId,
             listing.TransactionType,
             modifiedBy
         );

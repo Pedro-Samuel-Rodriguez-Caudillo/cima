@@ -68,7 +68,7 @@ public sealed class ListingAppService_Images_Tests : cimaApplicationTestBase<cim
                     "Description long enough for validation",
                     new Address("Location"),
                     1000, 100, 100, 1, 1,
-                    PropertyCategory.Residential, PropertyType.House, TransactionType.Sale,
+                    PropertyCatalogIds.Categories.Residential, PropertyCatalogIds.Types.House, TransactionType.Sale,
                     architectId, userId
                 );
                 await _listingRepository.InsertAsync(listing, autoSave: true);
@@ -152,7 +152,7 @@ public sealed class ListingAppService_Images_Tests : cimaApplicationTestBase<cim
                     "Description long enough for validation",
                     new Address("Location"),
                     1000, 100, 100, 1, 1,
-                    PropertyCategory.Residential, PropertyType.House, TransactionType.Sale,
+                    PropertyCatalogIds.Categories.Residential, PropertyCatalogIds.Types.House, TransactionType.Sale,
                     savedA.Id, userId
                 );
                 await _listingRepository.InsertAsync(listing, autoSave: true);

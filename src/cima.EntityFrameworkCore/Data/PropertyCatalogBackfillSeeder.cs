@@ -27,6 +27,12 @@ public class PropertyCatalogBackfillSeeder : IDataSeedContributor, ITransientDep
     public async Task SeedAsync(DataSeedContext context)
     {
         var dbContext = await _dbContextProvider.GetDbContextAsync();
+        if (dbContext.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            _logger.LogInformation("Skipping PropertyCatalogBackfillSeeder for SQLite.");
+            return;
+        }
+
         var connection = dbContext.Database.GetDbConnection();
         var opened = false;
 
@@ -73,6 +79,26 @@ public class PropertyCatalogBackfillSeeder : IDataSeedContributor, ITransientDep
     private static async Task<bool> ColumnExistsAsync(DbConnection connection, string tableName, string columnName)
     {
         await using var command = connection.CreateCommand();
+        var providerName = connection.GetType().Name;
+
+        if (providerName.Equals("SqliteConnection", StringComparison.OrdinalIgnoreCase))
+        {
+            command.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+            await using var reader = await command.ExecuteReaderAsync();
+            var nameIndex = reader.GetOrdinal("name");
+
+            while (await reader.ReadAsync())
+            {
+                var name = reader.GetString(nameIndex);
+                if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         command.CommandText = @"
 SELECT 1
 FROM information_schema.columns

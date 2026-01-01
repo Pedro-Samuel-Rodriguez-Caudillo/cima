@@ -66,8 +66,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             ConstructionArea = 100m,
             Bedrooms = 3,
             Bathrooms = 2,
-            Category = PropertyCategory.Residential,
-            Type = PropertyType.House,
+            CategoryId = PropertyCatalogIds.Categories.Residential,
+            TypeId = PropertyCatalogIds.Types.House,
             TransactionType = TransactionType.Sale,
             Address = new AddressDto { Value = "Test Location Guadalajara" },
             ArchitectId = architect.Id
@@ -98,8 +98,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             ConstructionArea = listing.ConstructionArea,
             Bedrooms = listing.Bedrooms,
             Bathrooms = listing.Bathrooms,
-            Category = listing.Category,
-            Type = listing.Type,
+            CategoryId = listing.CategoryId,
+            TypeId = listing.TypeId,
             TransactionType = listing.TransactionType,
             Address = new AddressDto { Value = "Nueva Ubicación" }
         };
@@ -286,12 +286,12 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
     public async Task SearchAsync_Should_Filter_By_Category()
     {
         // Arrange
-        await CreateTestListingAsync(category: PropertyCategory.Residential, status: ListingStatus.Published);
-        await CreateTestListingAsync(category: PropertyCategory.Commercial, status: ListingStatus.Published);
+        await CreateTestListingAsync(categoryId: PropertyCatalogIds.Categories.Residential, status: ListingStatus.Published);
+        await CreateTestListingAsync(categoryId: PropertyCatalogIds.Categories.Commercial, status: ListingStatus.Published);
 
         var searchDto = new PropertySearchDto
         {
-            Category = PropertyCategory.Residential,
+            CategoryId = PropertyCatalogIds.Categories.Residential,
             PageSize = 100
         };
 
@@ -299,7 +299,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         var result = await _listingAppService.SearchAsync(searchDto);
 
         // Assert
-        result.Items.ShouldAllBe(l => l.Category == PropertyCategory.Residential);
+        result.Items.ShouldAllBe(l => l.CategoryId == PropertyCatalogIds.Categories.Residential);
     }
 
     #endregion
@@ -310,7 +310,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         string title = "Test Listing Property",
         decimal price = 1500000m,
         ListingStatus status = ListingStatus.Published,
-        PropertyCategory category = PropertyCategory.Residential)
+        Guid? categoryId = null)
     {
         var architect = await CreateTestArchitectAsync();
 
@@ -324,8 +324,8 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
             120m,
             3,
             2,
-            category,
-            PropertyType.House,
+            categoryId ?? PropertyCatalogIds.Categories.Residential,
+            PropertyCatalogIds.Types.House,
             TransactionType.Sale,
             architect.Id,
             _currentUser.Id
@@ -342,6 +342,7 @@ public sealed class ListingAppServiceTests : cimaApplicationTestBase<cimaApplica
         }
         else if (status == ListingStatus.Portfolio)
         {
+            listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
             listing.MoveToPortfolio(_currentUser.Id);
         }
 

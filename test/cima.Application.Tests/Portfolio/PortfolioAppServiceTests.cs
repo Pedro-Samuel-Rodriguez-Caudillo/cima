@@ -43,8 +43,8 @@ public class PortfolioAppServiceTests : cimaApplicationTestBase<cimaApplicationT
         portfolioDto.Title.ShouldBe(listing.Title);
         portfolioDto.Description.ShouldBe(listing.Description);
         
-        // Verificar mapeo de categorias (Residencial -> ResidentialConstruction)
-        portfolioDto.Category.ShouldBe(PortfolioCategory.ResidentialConstruction);
+        // Verificar mapeo de categorias
+        portfolioDto.CategoryId.ShouldBe(listing.CategoryId);
 
         // Verificar imagenes
         portfolioDto.Gallery.Count.ShouldBe(listing.Images.Count);
@@ -82,8 +82,8 @@ public class PortfolioAppServiceTests : cimaApplicationTestBase<cimaApplicationT
             180,
             3,
             2,
-            PropertyCategory.Residential,
-            PropertyType.House,
+            PropertyCatalogIds.Categories.Residential,
+            PropertyCatalogIds.Types.House,
             TransactionType.Sale,
             architectId,
             Guid.NewGuid()

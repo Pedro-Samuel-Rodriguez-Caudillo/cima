@@ -72,9 +72,9 @@ public sealed class ContactRequestAppService_Tests : cimaApplicationTestBase<cim
                 "Description long enough",
                 new Address("Location"),
                 1000, 100, 100, 1, 1,
-                PropertyCategory.Residential, PropertyType.House, TransactionType.Sale,
-                architectId, Guid.NewGuid()
-            );
+                    PropertyCatalogIds.Categories.Residential, PropertyCatalogIds.Types.House, TransactionType.Sale,
+                    architectId, Guid.NewGuid()
+                );
             
             // WE MUST PUBLISH OR PORTFOLIO FOR CONTACT REQUESTS TO WORK
             listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
@@ -119,8 +119,8 @@ public sealed class ContactRequestAppService_Tests : cimaApplicationTestBase<cim
 
             var listing = new Listing(
                 listingId, "Prop", "Desc long enough", new Address("Loc"), 1000, 100, 100, 1, 1,
-                PropertyCategory.Residential, PropertyType.House, TransactionType.Sale, architectId, userId
-            );
+                    PropertyCatalogIds.Categories.Residential, PropertyCatalogIds.Types.House, TransactionType.Sale, architectId, userId
+                );
             listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
             listing.Publish(userId);
             await _listingRepository.InsertAsync(listing, autoSave: true);

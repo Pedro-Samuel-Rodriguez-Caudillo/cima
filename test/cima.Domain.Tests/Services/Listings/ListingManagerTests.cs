@@ -43,8 +43,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
             constructionArea: 250m,
             bedrooms: 4,
             bathrooms: 3,
-            category: PropertyCategory.Residential,
-            type: PropertyType.House,
+            categoryId: PropertyCatalogIds.Categories.Residential,
+            typeId: PropertyCatalogIds.Types.House,
             transactionType: TransactionType.Sale,
             architectId: architectId,
             createdBy: createdBy
@@ -72,8 +72,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
                 constructionArea: 100m,
                 bedrooms: 1,
                 bathrooms: 1,
-                category: PropertyCategory.Residential,
-                type: PropertyType.House,
+                categoryId: PropertyCatalogIds.Categories.Residential,
+                typeId: PropertyCatalogIds.Types.House,
                 transactionType: TransactionType.Sale,
                 architectId: Guid.NewGuid(),
                 createdBy: Guid.NewGuid()
@@ -102,8 +102,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
             constructionArea: 300m,
             bedrooms: 5,
             bathrooms: 4,
-            category: PropertyCategory.Commercial,
-            type: PropertyType.Office,
+            categoryId: PropertyCatalogIds.Categories.Commercial,
+            typeId: PropertyCatalogIds.Types.Office,
             transactionType: TransactionType.Rent,
             modifiedBy: modifiedBy
         );
@@ -226,8 +226,8 @@ public sealed class ListingManagerTests : cimaDomainTestBase<cimaDomainTestModul
             150m,
             3,
             2,
-            PropertyCategory.Residential,
-            PropertyType.House,
+            PropertyCatalogIds.Categories.Residential,
+            PropertyCatalogIds.Types.House,
             TransactionType.Sale,
             Guid.NewGuid(),
             Guid.NewGuid()

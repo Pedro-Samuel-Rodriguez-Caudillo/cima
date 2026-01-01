@@ -130,7 +130,7 @@ public sealed class ListingSpecificationsTests : cimaDomainTestBase<cimaDomainTe
         var listings = CreateSearchTestListings();
         var spec = new ListingSearchSpecification(
             transactionType: TransactionType.Sale,
-            propertyCategory: PropertyCategory.Residential,
+            propertyCategoryId: PropertyCatalogIds.Categories.Residential,
             minPrice: 1000000m,
             maxPrice: 3000000m,
             minBedrooms: 2
@@ -143,7 +143,7 @@ public sealed class ListingSpecificationsTests : cimaDomainTestBase<cimaDomainTe
         result.ShouldAllBe(l =>
             l.Status == ListingStatus.Published &&
             l.TransactionType == TransactionType.Sale &&
-            l.Category == PropertyCategory.Residential &&
+            l.CategoryId == PropertyCatalogIds.Categories.Residential &&
             l.Price >= 1000000m && l.Price <= 3000000m &&
             l.Bedrooms >= 2);
     }
@@ -160,32 +160,32 @@ public sealed class ListingSpecificationsTests : cimaDomainTestBase<cimaDomainTe
             CreateListing("Casa Venta GDL", architectId, ListingStatus.Published,
                 price: 2500000m, bedrooms: 3, bathrooms: 2,
                 transactionType: TransactionType.Sale,
-                category: PropertyCategory.Residential,
-                type: PropertyType.House,
+                categoryId: PropertyCatalogIds.Categories.Residential,
+                typeId: PropertyCatalogIds.Types.House,
                 location: "Guadalajara, Jalisco",
                 landArea: 200m),
 
             CreateListing("Depto Renta CDMX", architectId, ListingStatus.Published,
                 price: 15000m, bedrooms: 2, bathrooms: 1,
                 transactionType: TransactionType.Rent,
-                category: PropertyCategory.Residential,
-                type: PropertyType.Apartment,
+                categoryId: PropertyCatalogIds.Categories.Residential,
+                typeId: PropertyCatalogIds.Types.Apartment,
                 location: "Ciudad de México",
                 landArea: 80m),
 
             CreateListing("Oficina Venta GDL", architectId, ListingStatus.Published,
                 price: 4000000m, bedrooms: 0, bathrooms: 2,
                 transactionType: TransactionType.Sale,
-                category: PropertyCategory.Commercial,
-                type: PropertyType.Office,
+                categoryId: PropertyCatalogIds.Categories.Commercial,
+                typeId: PropertyCatalogIds.Types.Office,
                 location: "Guadalajara, Jalisco",
                 landArea: 150m),
 
             CreateListing("Casa Venta MTY", architectId, ListingStatus.Published,
                 price: 1800000m, bedrooms: 4, bathrooms: 3,
                 transactionType: TransactionType.Sale,
-                category: PropertyCategory.Residential,
-                type: PropertyType.House,
+                categoryId: PropertyCatalogIds.Categories.Residential,
+                typeId: PropertyCatalogIds.Types.House,
                 location: "Monterrey, Nuevo León",
                 landArea: 250m),
 
@@ -202,8 +202,8 @@ public sealed class ListingSpecificationsTests : cimaDomainTestBase<cimaDomainTe
         int bedrooms = 2,
         int bathrooms = 1,
         TransactionType transactionType = TransactionType.Sale,
-        PropertyCategory category = PropertyCategory.Residential,
-        PropertyType type = PropertyType.House,
+        Guid? categoryId = null,
+        Guid? typeId = null,
         string? location = "Ubicación por defecto",
         decimal landArea = 100m)
     {
@@ -217,8 +217,8 @@ public sealed class ListingSpecificationsTests : cimaDomainTestBase<cimaDomainTe
             landArea * 0.75m,
             bedrooms,
             bathrooms,
-            category,
-            type,
+            categoryId ?? PropertyCatalogIds.Categories.Residential,
+            typeId ?? PropertyCatalogIds.Types.House,
             transactionType,
             architectId,
             Guid.NewGuid()

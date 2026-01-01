@@ -140,8 +140,8 @@ public sealed class ContactRequestAppServiceTests : cimaApplicationTestBase<cima
             120m,
             3,
             2,
-            PropertyCategory.Residential,
-            PropertyType.House,
+            PropertyCatalogIds.Categories.Residential,
+            PropertyCatalogIds.Types.House,
             TransactionType.Sale,
             architect.Id,
             _currentUser.Id

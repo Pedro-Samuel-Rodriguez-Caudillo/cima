@@ -90,8 +90,8 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
     public async Task GetListingStatsAsync_Should_Return_Stats_By_Type()
     {
         // Arrange
-        await CreateTestListingAsync(type: PropertyType.House);
-        await CreateTestListingAsync(type: PropertyType.Apartment);
+        await CreateTestListingAsync(typeId: PropertyCatalogIds.Types.House);
+        await CreateTestListingAsync(typeId: PropertyCatalogIds.Types.Apartment);
 
         // Act
         var result = await _statisticsAppService.GetListingStatsAsync();
@@ -141,7 +141,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
 
     private async Task<Listing> CreateTestListingAsync(
         ListingStatus status = ListingStatus.Published,
-        PropertyType type = PropertyType.House,
+        Guid? typeId = null,
         decimal price = 1500000m)
     {
         var architect = await CreateTestArchitectAsync();
@@ -156,8 +156,8 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
             120m,
             3,
             2,
-            PropertyCategory.Residential,
-            type,
+            PropertyCatalogIds.Categories.Residential,
+            typeId ?? PropertyCatalogIds.Types.House,
             TransactionType.Sale,
             architect.Id,
             _currentUser.Id
@@ -174,6 +174,7 @@ public sealed class StatisticsAppServiceTests : cimaApplicationTestBase<cimaAppl
         }
         else if (status == ListingStatus.Portfolio)
         {
+            listing.AddImage(Guid.NewGuid(), "url", "thumb", "alt", 1024, "image/jpeg");
             listing.MoveToPortfolio(_currentUser.Id);
         }
 
