@@ -11,6 +11,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using Volo.Abp.Http.Client;
+using Volo.Abp;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace cima.Blazor.Client;
 
@@ -52,7 +55,7 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
             _currentUser = new CurrentUserWrapper(AuthenticationStateProvider);
             await _currentUser.InitializeAsync();
         }
-        
+
         await base.OnInitializedAsync();
     }
 
@@ -77,7 +80,7 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
         {
             // En WASM, simplemente logueamos a la consola del navegador
             await JSRuntime.InvokeVoidAsync("console.error", $"Error: {exception.Message}", exception.ToString());
-            
+
             // Try to display error to user via Snackbar if available
             if (Snackbar != null)
             {
@@ -104,15 +107,41 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
     /// </summary>
     protected virtual string GetUserFriendlyErrorMessage(Exception exception)
     {
+        if (exception is AggregateException aggregateException)
+        {
+            var innerMessages = aggregateException.Flatten().InnerExceptions
+                .Select(GetUserFriendlyErrorMessage)
+                .Where(message => !string.IsNullOrWhiteSpace(message))
+                .Distinct()
+                .ToList();
+
+            if (innerMessages.Count > 0)
+            {
+                return string.Join(Environment.NewLine, innerMessages);
+            }
+        }
+
         if (exception is AbpRemoteCallException remoteCallException)
         {
-            var remoteMessage = remoteCallException.Error?.Message;
-            var remoteDetails = remoteCallException.Error?.Details;
-
-            if (!string.IsNullOrWhiteSpace(remoteMessage) && !string.IsNullOrWhiteSpace(remoteDetails))
+            var errorInfo = remoteCallException.Error;
+            var validationMessages = ExtractRemoteValidationMessages(errorInfo);
+            if (validationMessages.Count > 0)
             {
-                return $"{remoteMessage} {remoteDetails}";
+                return string.Join(Environment.NewLine, validationMessages);
             }
+
+            var remoteCode = GetRemoteErrorCode(errorInfo);
+            if (!string.IsNullOrWhiteSpace(remoteCode))
+            {
+                var localized = L[remoteCode!];
+                if (localized.ResourceNotFound == false)
+                {
+                    return localized.Value;
+                }
+            }
+
+            var remoteMessage = errorInfo?.Message;
+            var remoteDetails = errorInfo?.Details;
 
             if (!string.IsNullOrWhiteSpace(remoteMessage))
             {
@@ -125,31 +154,20 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
             }
         }
 
-        // Try to extract error code from exception message or data
-        // ABP exceptions typically include the code in the message or Data dictionary
-        
-        // Check for Volo.Abp.BusinessException
-        var exType = exception.GetType();
-        if (exType.FullName == "Volo.Abp.BusinessException")
+        if (exception is BusinessException businessException)
         {
-            // Use reflection to get Code property
-            var codeProp = exType.GetProperty("Code");
-            if (codeProp != null)
+            if (!string.IsNullOrWhiteSpace(businessException.Code))
             {
-                var code = codeProp.GetValue(exception) as string;
-                if (!string.IsNullOrEmpty(code))
+                var localizedMessage = L[businessException.Code];
+                if (localizedMessage.ResourceNotFound == false)
                 {
-                    // Try to get localized message
-                    var localizedMessage = L[code];
-                    if (localizedMessage.ResourceNotFound == false)
-                    {
-                        return localizedMessage.Value;
-                    }
-                    return $"[{code}] {exception.Message}";
+                    return localizedMessage.Value;
                 }
+
+                return $"[{businessException.Code}] {businessException.Message}";
             }
         }
-        
+
         // Check if message contains error code pattern like "[Code] Message"
         if (exception.Message.StartsWith("[") && exception.Message.Contains("]"))
         {
@@ -162,6 +180,83 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
         }
 
         return exception.Message;
+    }
+
+    private static List<string> ExtractRemoteValidationMessages(object? errorInfo)
+    {
+        var messages = new List<string>();
+        if (errorInfo == null)
+        {
+            return messages;
+        }
+
+        var validationErrors = GetPropertyValue<IEnumerable?>(errorInfo, "ValidationErrors");
+        if (validationErrors != null)
+        {
+            foreach (var error in validationErrors)
+            {
+                if (error == null)
+                {
+                    continue;
+                }
+
+                var message = GetPropertyValue<string?>(error, "Message")
+                    ?? GetPropertyValue<string?>(error, "ErrorMessage");
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    messages.Add(message);
+                }
+            }
+        }
+
+        var data = GetPropertyValue<IDictionary?>(errorInfo, "Data");
+        if (data != null)
+        {
+            foreach (var entry in data.Values)
+            {
+                if (entry is IEnumerable entryList and not string)
+                {
+                    foreach (var item in entryList)
+                    {
+                        var message = item?.ToString();
+                        if (!string.IsNullOrWhiteSpace(message))
+                        {
+                            messages.Add(message);
+                        }
+                    }
+                }
+            }
+        }
+
+        return messages.Distinct().ToList();
+    }
+
+    private static string? GetRemoteErrorCode(object? errorInfo)
+    {
+        if (errorInfo == null)
+        {
+            return null;
+        }
+
+        return GetPropertyValue<string?>(errorInfo, "Code");
+    }
+
+    private static T? GetPropertyValue<T>(object instance, string propertyName)
+    {
+        var property = instance.GetType().GetProperty(propertyName);
+        if (property == null)
+        {
+            return default;
+        }
+
+        var value = property.GetValue(instance);
+        if (value is T typedValue)
+        {
+            return typedValue;
+        }
+
+        return default;
     }
 
     public void Dispose()
@@ -181,7 +276,7 @@ public abstract class cimaComponentBase : ComponentBase, IDisposable
 
 /// <summary>
 /// Wrapper simple para ICurrentUser en Blazor WASM
-/// IMPORTANTE: No puede usar operaciones bloqueantes como .GetAwaiter().GetResult() 
+/// IMPORTANTE: No puede usar operaciones bloqueantes como .GetAwaiter().GetResult()
 /// porque el runtime de WebAssembly es single-threaded
 /// </summary>
 public class CurrentUserWrapper : ICurrentUser
@@ -240,13 +335,13 @@ public class CurrentUserWrapper : ICurrentUser
     public string? PhoneNumber => GetPrincipal().FindFirst(ClaimTypes.MobilePhone)?.Value;
 
     public bool PhoneNumberVerified => bool.TryParse(
-        GetPrincipal().FindFirst("phone_number_verified")?.Value, 
+        GetPrincipal().FindFirst("phone_number_verified")?.Value,
         out var verified) && verified;
 
     public string? Email => GetPrincipal().FindFirst(ClaimTypes.Email)?.Value;
 
     public bool EmailVerified => bool.TryParse(
-        GetPrincipal().FindFirst("email_verified")?.Value, 
+        GetPrincipal().FindFirst("email_verified")?.Value,
         out var verified) && verified;
 
     public Guid? TenantId
