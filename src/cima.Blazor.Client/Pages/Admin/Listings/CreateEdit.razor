@@ -157,11 +157,8 @@
                         else
                         {
                             <MudCard Class="p-6">
-                                <ImageUploader InitialImages="PendingImages"
+                                <ImageUploader InitialImages="PendingImages"    
                                                OnImagesChanged="HandlePendingImagesChanged" />
-                                <p class="text-sm text-neutral-500 mt-3">
-                                    @L["Admin:Listings:Form:GalleryPlaceholderDescription"]
-                                </p>
                             </MudCard>
                         }
                     </div>
@@ -728,6 +725,7 @@
 
         var success = 0;
         var failed = 0;
+        var uploadedImages = new List<ListingImageDto>();
 
         foreach (var image in PendingImages.ToList())
         {
@@ -742,8 +740,9 @@
 
             try
             {
-                await ListingService.AddImageAsync(input);
+                var createdImage = await ListingService.AddImageAsync(input);
                 success++;
+                uploadedImages.Add(createdImage);
             }
             catch
             {
@@ -753,9 +752,18 @@
 
         PendingImages.Clear();
 
+        if (ExistingListing != null && uploadedImages.Count > 0)
+        {
+            ExistingListing.Images.AddRange(uploadedImages);
+            ExistingListing.Images = ExistingListing.Images
+                .OrderBy(image => image.SortOrder)
+                .ToList();
+            StateHasChanged();
+        }
+
         if (success > 0)
         {
-            Snackbar.Add(L["GalleryManager:UploadSuccess"], Severity.Success);
+            Snackbar.Add(L["GalleryManager:UploadSuccess"], Severity.Success);  
         }
 
         if (failed > 0)

@@ -446,7 +446,7 @@
     "Admin:Listings:Form:ArchitectsLoadError": "Error al cargar arquitectos: {0}",
     "Admin:Listings:Form:LoadError": "Error al cargar propiedad: {0}",
     "Admin:Listings:Form:UpdateSuccess": "Propiedad actualizada correctamente",
-    "Admin:Listings:Form:CreateSuccess": "Propiedad creada. Ahora puedes agregar imágenes.",
+    "Admin:Listings:Form:CreateSuccess": "Propiedad creada correctamente.",
     "Admin:Listings:Form:SaveError": "Error al guardar: {0}",
     "Admin:Listings:Form:PublishSuccess": "Propiedad publicada correctamente",
     "Admin:Listings:Form:PublishError": "Error al publicar: {0}",
