@@ -28,23 +28,31 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
     private readonly IImageStorageService _imageStorageService;
     private readonly IListingRepository _listingRepository;
     private readonly IListingManager _listingManager;
+    private readonly IPortfolioSyncService _portfolioSyncService;
+    private readonly IRepository<PropertyCategoryEntity, Guid> _categoryRepository;
 
     public PortfolioAppService(
         IRepository<PortfolioProject, Guid> portfolioRepository,
         IImageStorageService imageStorageService,
         IListingRepository listingRepository,
-        IListingManager listingManager)
+        IListingManager listingManager,
+        IPortfolioSyncService portfolioSyncService,
+        IRepository<PropertyCategoryEntity, Guid> categoryRepository)
     {
         _portfolioRepository = portfolioRepository;
         _imageStorageService = imageStorageService;
         _listingRepository = listingRepository;
         _listingManager = listingManager;
+        _portfolioSyncService = portfolioSyncService;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<PortfolioProjectDto> GetAsync(Guid id)
     {
         var project = await _portfolioRepository.GetAsync(id);
-        return ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        var dto = ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        await ApplyCategoryNameAsync(dto);
+        return dto;
     }
 
     public async Task<PagedResultDto<PortfolioProjectDto>> GetListAsync(GetPortfolioListDto input)
@@ -56,9 +64,9 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
             queryable = queryable.Where(x => x.Title.Contains(input.Filter) || x.Description.Contains(input.Filter));
         }
 
-        if (input.Category.HasValue)
+        if (input.CategoryId.HasValue)
         {
-            queryable = queryable.Where(x => x.Category == input.Category.Value);
+            queryable = queryable.Where(x => x.CategoryId == input.CategoryId.Value);
         }
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
@@ -70,10 +78,10 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
 
         var projects = await AsyncExecuter.ToListAsync(queryable);
 
-        return new PagedResultDto<PortfolioProjectDto>(
-            totalCount,
-            ObjectMapper.Map<List<PortfolioProject>, List<PortfolioProjectDto>>(projects)
-        );
+        var dtos = ObjectMapper.Map<List<PortfolioProject>, List<PortfolioProjectDto>>(projects);
+        await ApplyCategoryNamesAsync(dtos);
+
+        return new PagedResultDto<PortfolioProjectDto>(totalCount, dtos);
     }
 
     public async Task<PortfolioProjectDto> CreateAsync(CreateUpdatePortfolioProjectDto input)
@@ -84,7 +92,7 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
             input.Description,
             input.Location,
             input.CompletionDate,
-            input.Category
+            input.CategoryId
         );
 
         project.SetTestimonial(input.Testimonial, input.TestimonialAuthor);
@@ -92,7 +100,9 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
 
         await _portfolioRepository.InsertAsync(project);
 
-        return ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        var dto = ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        await ApplyCategoryNameAsync(dto);
+        return dto;
     }
 
     public async Task<PortfolioProjectDto> UpdateAsync(Guid id, CreateUpdatePortfolioProjectDto input)
@@ -104,7 +114,7 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
             input.Description,
             input.Location,
             input.CompletionDate,
-            input.Category
+            input.CategoryId
         );
 
         project.SetTestimonial(input.Testimonial, input.TestimonialAuthor);
@@ -112,7 +122,9 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
 
         await _portfolioRepository.UpdateAsync(project);
 
-        return ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        var dto = ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        await ApplyCategoryNameAsync(dto);
+        return dto;
     }
 
     public async Task DeleteAsync(Guid id)
@@ -179,45 +191,13 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
             throw new EntityNotFoundException(typeof(Listing), listingId);
         }
 
-        // 1. Create Portfolio Project based on Listing Data
-        var portfolioCategory = MapCategory(listing.Category, listing.Type);
-        var locationString = listing.Location?.Value ?? string.Empty;
+        var project = await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: true,
+            requireImages: true,
+            allowCreate: true);
 
-        var project = new PortfolioProject(
-            GuidGenerator.Create(),
-            listing.Title,
-            listing.Description,
-            locationString,
-            DateTime.UtcNow, // Completion date defaults to now (can be edited later)
-            portfolioCategory
-        );
-
-        // 2. Copy Images
-        // ListingImage -> PortfolioImage
-        // We reuse the URLs so we don't need to duplicate blobs, just references.
-        foreach (var img in listing.Images.OrderBy(x => x.SortOrder))
-        {
-            project.AddImage(
-                GuidGenerator.Create(),
-                img.Url,
-                img.ThumbnailUrl,
-                img.AltText,
-                caption: "", // Default empty
-                tags: "Imported" // Tag to know source
-            );
-
-            // Set first image as cover by default if not set
-            if (string.IsNullOrEmpty(project.CoverImage))
-            {
-                project.SetCoverImage(img.Url);
-            }
-        }
-        
-        // 3. Save Portfolio Project
-        await _portfolioRepository.InsertAsync(project);
-
-        // 4. Update Listing Status to Portfolio
-        // This removes it from active sales lists
+        // Update Listing Status to Portfolio
         if (listing.Status != ListingStatus.Portfolio)
         {
             if (CurrentUser.Id.HasValue)
@@ -233,20 +213,39 @@ public class PortfolioAppService : ApplicationService, IPortfolioAppService
             await _listingRepository.UpdateAsync(listing);
         }
 
-        return ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project);
+        var dto = ObjectMapper.Map<PortfolioProject, PortfolioProjectDto>(project!);
+        await ApplyCategoryNameAsync(dto);
+        return dto;
     }
 
-    private static PortfolioCategory MapCategory(PropertyCategory category, PropertyType type)
+    private async Task<Dictionary<Guid, string>> GetCategoryNamesAsync()
     {
-        // Simple mapping logic - can be refined
-        return category switch
+        var categories = await _categoryRepository.GetListAsync();
+        return categories.ToDictionary(c => c.Id, c => c.Name);
+    }
+
+    private static void ApplyCategoryName(PortfolioProjectDto dto, Dictionary<Guid, string> names)
+    {
+        dto.CategoryName = names.GetValueOrDefault(dto.CategoryId);
+    }
+
+    private async Task ApplyCategoryNameAsync(PortfolioProjectDto dto)
+    {
+        var names = await GetCategoryNamesAsync();
+        ApplyCategoryName(dto, names);
+    }
+
+    private async Task ApplyCategoryNamesAsync(List<PortfolioProjectDto> dtos)
+    {
+        if (dtos.Count == 0)
         {
-            PropertyCategory.Residential => PortfolioCategory.ResidentialConstruction,
-            PropertyCategory.Commercial => PortfolioCategory.CommercialConstruction,
-            PropertyCategory.Industrial => PortfolioCategory.CommercialConstruction,
-            PropertyCategory.Land => PortfolioCategory.Other, // Selling land isn't usually a "construction project" unless landscaping
-            PropertyCategory.Mixed => PortfolioCategory.ArchitecturalDesign,
-            _ => PortfolioCategory.Other
-        };
+            return;
+        }
+
+        var names = await GetCategoryNamesAsync();
+        foreach (var dto in dtos)
+        {
+            ApplyCategoryName(dto, names);
+        }
     }
 }

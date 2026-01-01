@@ -6,7 +6,7 @@ using cima.Domain.Shared;
 namespace cima.Listings;
 
 /// <summary>
-/// Input para obtener listings con paginación basada en cursor
+/// Input para obtener listings con paginacion basada en cursor
 /// </summary>
 public class GetListingsCursorInput : CursorPagedRequestDto
 {
@@ -29,9 +29,9 @@ public class GetListingsCursorInput : CursorPagedRequestDto
 
     public Guid? ArchitectId { get; set; }
 
-    public PropertyType? PropertyType { get; set; }
+    public Guid? TypeId { get; set; }
 
-    public PropertyCategory? Category { get; set; }
+    public Guid? CategoryId { get; set; }
 
     public TransactionType? TransactionType { get; set; }
 
@@ -54,8 +54,10 @@ public class ListingCursorDto
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyType Type { get; set; }
-    public PropertyCategory Category { get; set; }
+    public Guid TypeId { get; set; }
+    public string? TypeName { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
     public TransactionType TransactionType { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? MainImageUrl { get; set; }

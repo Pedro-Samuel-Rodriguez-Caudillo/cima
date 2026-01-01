@@ -17,8 +17,8 @@ public interface IListingManager
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid architectId,
         Guid? createdBy);
@@ -33,8 +33,8 @@ public interface IListingManager
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid modifiedBy);
         

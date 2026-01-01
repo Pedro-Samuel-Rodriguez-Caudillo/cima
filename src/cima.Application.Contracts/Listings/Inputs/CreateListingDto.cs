@@ -41,10 +41,10 @@ public class CreateListingDto : IValidatableObject
     public ListingStatus Status { get; set; } = ListingStatus.Draft;
 
     [Required]
-    public PropertyCategory Category { get; set; }
+    public Guid CategoryId { get; set; }
 
     [Required]
-    public PropertyType Type { get; set; }
+    public Guid TypeId { get; set; }
 
     [Required]
     public TransactionType TransactionType { get; set; }

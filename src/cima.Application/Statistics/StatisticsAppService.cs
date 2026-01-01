@@ -13,8 +13,8 @@ using Volo.Abp.Domain.Repositories;
 namespace cima.Statistics;
 
 /// <summary>
-/// Implementación del servicio de estadísticas
-/// Requiere permisos administrativos para todos los métodos
+/// Implementaciï¿½n del servicio de estadï¿½sticas
+/// Requiere permisos administrativos para todos los mï¿½todos
 /// </summary>
 [Authorize(cimaPermissions.Listings.Default)]
 public class StatisticsAppService : ApplicationService, IStatisticsAppService
@@ -23,21 +23,25 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
     private readonly IRepository<Architect, Guid> _architectRepository;
     private readonly IRepository<ContactRequest, Guid> _contactRequestRepository;
     private readonly IRepository<ListingSale, Guid> _listingSaleRepository;
+    private readonly IRepository<PropertyTypeEntity, Guid> _typeRepository;
 
     public StatisticsAppService(
         IRepository<Listing, Guid> listingRepository,
         IRepository<Architect, Guid> architectRepository,
         IRepository<ContactRequest, Guid> contactRequestRepository,
-        IRepository<ListingSale, Guid> listingSaleRepository)
+        IRepository<ListingSale, Guid> listingSaleRepository,
+        IRepository<PropertyTypeEntity, Guid> typeRepository)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _contactRequestRepository = contactRequestRepository;
         _listingSaleRepository = listingSaleRepository;
+        _typeRepository = typeRepository;
+
     }
 
     /// <summary>
-    /// Obtiene estadísticas generales del dashboard
+    /// Obtiene estadï¿½sticas generales del dashboard
     /// </summary>
     public async Task<DashboardStatsDto> GetDashboardAsync()
     {
@@ -45,7 +49,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
     }
 
     /// <summary>
-    /// Obtiene estadísticas del dashboard por rango de fechas
+    /// Obtiene estadï¿½sticas del dashboard por rango de fechas
     /// </summary>
     public async Task<DashboardStatsDto> GetDashboardByRangeAsync(DashboardStatsRequestDto input)
     {
@@ -56,7 +60,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
         var salesQuery = await _listingSaleRepository.GetQueryableAsync();
         salesQuery = salesQuery.Where(sale => sale.SoldAt >= rangeStart && sale.SoldAt <= rangeEnd);
 
-        // Estadísticas de Listings
+        // Estadï¿½sticas de Listings
         var totalListings = await AsyncExecuter.CountAsync(listingsQuery);      
         var publishedListings = await AsyncExecuter.CountAsync(
             listingsQuery.Where(l => l.Status == ListingStatus.Published)       
@@ -71,7 +75,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             listingsQuery.Where(l => l.Status == ListingStatus.Portfolio)       
         );
 
-        // Estadísticas de Arquitectos
+        // Estadï¿½sticas de Arquitectos
         var totalArchitects = await AsyncExecuter.CountAsync(architectsQuery);  
         var activeArchitects = await AsyncExecuter.CountAsync(
             architectsQuery.Where(a =>
@@ -79,7 +83,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             )
         );
 
-        // Estadísticas de ContactRequests
+        // Estadï¿½sticas de ContactRequests
         var totalContactRequests = await AsyncExecuter.CountAsync(contactRequestsQuery);
         var pendingContactRequests = await AsyncExecuter.CountAsync(
             contactRequestsQuery.Where(cr => cr.Status == ContactRequestStatus.New)
@@ -111,22 +115,25 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             LastUpdated = DateTime.UtcNow
         };
     }
+
     /// <summary>
-    /// Obtiene estadísticas detalladas de propiedades
+    /// Obtiene estadisticas detalladas de propiedades
     /// </summary>
     public async Task<ListingStatsDto> GetListingStatsAsync()
     {
         var query = await _listingRepository.GetQueryableAsync();
         var listings = await AsyncExecuter.ToListAsync(query);
+        var types = await _typeRepository.GetListAsync();
+        var typeLookup = types.ToDictionary(t => t.Id, t => t.Name);
 
         var stats = new ListingStatsDto();
 
         // Agrupar por tipo
         stats.ByType = listings
-            .GroupBy(l => l.Type.ToString())
+            .GroupBy(l => typeLookup.TryGetValue(l.TypeId, out var name) ? name : l.TypeId.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // Agrupar por transacción
+        // Agrupar por transaccion
         stats.ByTransaction = listings
             .GroupBy(l => l.TransactionType.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
@@ -136,21 +143,21 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             .GroupBy(l => l.Status.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // Propiedades creadas en últimos 30 días
+        // Propiedades creadas en ultimos 30 dias
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
         stats.CreatedLast30Days = listings.Count(l => l.CreatedAt >= thirtyDaysAgo);
 
         // Precio promedio (solo publicadas)
         var publishedListings = listings.Where(l => l.Status == ListingStatus.Published).ToList();
-        stats.AveragePrice = publishedListings.Any() 
-            ? publishedListings.Average(l => l.Price) 
+        stats.AveragePrice = publishedListings.Any()
+            ? publishedListings.Average(l => l.Price)
             : 0;
 
         return stats;
     }
 
     /// <summary>
-    /// Obtiene estadísticas de solicitudes de contacto
+    /// Obtiene estadisticas de solicitudes de contacto
     /// </summary>
     public async Task<ContactRequestStatsDto> GetContactRequestStatsAsync()
     {
@@ -159,7 +166,7 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
 
         var stats = new ContactRequestStatsDto();
 
-        // Solicitudes por día (últimos 30 días)
+        // Solicitudes por dï¿½a (ï¿½ltimos 30 dï¿½as)
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
         stats.RequestsPerDay = contactRequests
             .Where(cr => cr.CreatedAt >= thirtyDaysAgo)
@@ -182,11 +189,14 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
             var totalHours = repliedRequests
                 .Sum(cr => (cr.RepliedAt!.Value - cr.CreatedAt).TotalHours);
             stats.AverageResponseTimeHours = totalHours / repliedRequests.Count;
-        }
+
+    }
+
         else
         {
             stats.AverageResponseTimeHours = 0;
-        }
+
+    }
 
         // Solicitudes sin responder (New)
         stats.UnrepliedCount = contactRequests.Count(cr => cr.Status == ContactRequestStatus.New);
@@ -230,3 +240,8 @@ public class StatisticsAppService : ApplicationService, IStatisticsAppService
         return result;
     }
 }
+
+
+
+
+

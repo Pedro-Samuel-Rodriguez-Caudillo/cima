@@ -18,14 +18,14 @@ public class ListingCursorPaginationService : DomainService
             query = query.Where(x => x.TransactionType == input.TransactionType.Value);
         }
 
-        if (input.Category.HasValue)
+        if (input.CategoryId.HasValue)
         {
-            query = query.Where(x => x.Category == input.Category.Value);
+            query = query.Where(x => x.CategoryId == input.CategoryId.Value);
         }
 
-        if (input.Type.HasValue)
+        if (input.TypeId.HasValue)
         {
-            query = query.Where(x => x.Type == input.Type.Value);
+            query = query.Where(x => x.TypeId == input.TypeId.Value);
         }
 
         if (input.MinPrice.HasValue)

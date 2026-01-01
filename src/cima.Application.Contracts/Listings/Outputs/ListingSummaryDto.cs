@@ -15,8 +15,10 @@ public class ListingSummaryDto
     public bool IsPriceOnRequest { get; set; }
     public decimal? Price { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyCategory Category { get; set; }
-    public PropertyType Type { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public Guid TypeId { get; set; }
+    public string? TypeName { get; set; }
     public TransactionType TransactionType { get; set; }
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }

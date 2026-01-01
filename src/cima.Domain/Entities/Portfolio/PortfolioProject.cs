@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using cima.Domain.Shared;
+using cima.Domain.Entities;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
@@ -21,7 +21,9 @@ public class PortfolioProject : FullAuditedAggregateRoot<Guid>
     public string Location { get; private set; } = string.Empty; // e.g. "Zapopan, Jal.", not full address
     
     public DateTime? CompletionDate { get; private set; }
-    public PortfolioCategory Category { get; private set; }
+    public Guid CategoryId { get; private set; }
+    public virtual PropertyCategoryEntity? Category { get; private set; }       
+    public Guid? ListingId { get; private set; }
     
     // Testimonial Section
     public string Testimonial { get; private set; } = string.Empty;
@@ -45,14 +47,14 @@ public class PortfolioProject : FullAuditedAggregateRoot<Guid>
         string description,
         string location,
         DateTime? completionDate,
-        PortfolioCategory category)
+        Guid categoryId)
         : base(id)
     {
         SetTitle(title);
         Description = description;
         Location = location;
         CompletionDate = completionDate;
-        Category = category;
+        CategoryId = categoryId;
         IsVisible = false; // Draft by default
     }
     #endregion
@@ -64,13 +66,13 @@ public class PortfolioProject : FullAuditedAggregateRoot<Guid>
         string description,
         string location,
         DateTime? completionDate,
-        PortfolioCategory category)
+        Guid categoryId)
     {
         SetTitle(title);
         Description = description;
         Location = location;
         CompletionDate = completionDate;
-        Category = category;
+        CategoryId = categoryId;
     }
 
     public void SetTestimonial(string testimonial, string author)
@@ -138,6 +140,11 @@ public class PortfolioProject : FullAuditedAggregateRoot<Guid>
     public void SetVisibility(bool isVisible)
     {
         IsVisible = isVisible;
+    }
+
+    public void SetListingReference(Guid listingId)
+    {
+        ListingId = listingId;
     }
 
     private void SetTitle(string title)

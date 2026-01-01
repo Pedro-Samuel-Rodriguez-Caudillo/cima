@@ -53,7 +53,7 @@ public interface IListingAppService : IApplicationService
     Task<ListingDetailDto> ArchiveAsync(Guid id);
     
     /// <summary>
-    /// Reactiva una propiedad archivada a estado Published
+    /// Reactiva una propiedad archivada a estado Draft
     /// </summary>
     Task<ListingDetailDto> UnarchiveAsync(Guid id);
     
@@ -132,8 +132,8 @@ public class GetListingsInput : PagedAndSortedResultRequestDto
     public int? MinBedrooms { get; set; }
     public int? MinBathrooms { get; set; }
     public Guid? ArchitectId { get; set; }
-    public int? PropertyType { get; set; }
-    public int? PropertyCategory { get; set; }
+    public Guid? TypeId { get; set; }
+    public Guid? CategoryId { get; set; }
     public int? TransactionType { get; set; }
     public bool? FeaturedOnly { get; set; }
 }

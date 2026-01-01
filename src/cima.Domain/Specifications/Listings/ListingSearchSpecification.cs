@@ -16,8 +16,8 @@ public class ListingSearchSpecification : Specification<Listing>
     private readonly decimal? _maxArea;
     private readonly int? _minBedrooms;
     private readonly int? _minBathrooms;
-    private readonly PropertyType? _propertyType;
-    private readonly PropertyCategory? _propertyCategory;
+    private readonly Guid? _propertyTypeId;
+    private readonly Guid? _propertyCategoryId;
     private readonly TransactionType? _transactionType;
     private readonly string? _location;
 
@@ -29,8 +29,8 @@ public class ListingSearchSpecification : Specification<Listing>
         decimal? maxArea = null,
         int? minBedrooms = null,
         int? minBathrooms = null,
-        PropertyType? propertyType = null,
-        PropertyCategory? propertyCategory = null,
+        Guid? propertyTypeId = null,
+        Guid? propertyCategoryId = null,
         TransactionType? transactionType = null,
         string? location = null)
     {
@@ -41,8 +41,8 @@ public class ListingSearchSpecification : Specification<Listing>
         _maxArea = maxArea;
         _minBedrooms = minBedrooms;
         _minBathrooms = minBathrooms;
-        _propertyType = propertyType;
-        _propertyCategory = propertyCategory;
+        _propertyTypeId = propertyTypeId;
+        _propertyCategoryId = propertyCategoryId;
         _transactionType = transactionType;
         _location = location;
     }
@@ -60,8 +60,8 @@ public class ListingSearchSpecification : Specification<Listing>
             (!_maxArea.HasValue || listing.LandArea <= _maxArea.Value) &&
             (!_minBedrooms.HasValue || listing.Bedrooms >= _minBedrooms.Value) &&
             (!_minBathrooms.HasValue || listing.Bathrooms >= _minBathrooms.Value) &&
-            (!_propertyType.HasValue || listing.Type == _propertyType.Value) &&
-            (!_propertyCategory.HasValue || listing.Category == _propertyCategory.Value) &&
+            (!_propertyTypeId.HasValue || listing.TypeId == _propertyTypeId.Value) &&
+            (!_propertyCategoryId.HasValue || listing.CategoryId == _propertyCategoryId.Value) &&
             (!_transactionType.HasValue || listing.TransactionType == _transactionType.Value) &&
             (string.IsNullOrWhiteSpace(_location) || (listing.Location != null && listing.Location.Value.Contains(_location)));
     }

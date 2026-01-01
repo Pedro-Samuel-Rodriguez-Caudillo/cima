@@ -27,6 +27,7 @@ using Volo.Abp.EventBus.Local;
 using Volo.Abp.Uow;
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
+using cima.Portfolio;
 
 
 namespace cima.Listings;
@@ -42,13 +43,16 @@ public class ListingAppService : cimaAppService, IListingAppService
     private readonly IDistributedCache _distributedCache;
     private readonly IRepository<FeaturedListing, Guid> _featuredListingRepository;
     private readonly IListingManager _listingManager;
+    private readonly IPortfolioSyncService _portfolioSyncService;
     private readonly Images.IImageStorageService _imageStorageService;
     private readonly IUnitOfWorkManager _unitOfWorkManager;
     private readonly IListingImageLockService _listingImageLockService;
     private readonly IHostEnvironment _hostEnvironment;
     private readonly ILocalEventBus _localEventBus;
-    private readonly IListingPriceHistoryRepository _priceHistoryRepository;
+    private readonly IListingPriceHistoryRepository _priceHistoryRepository;    
     private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor _httpContextAccessor;
+    private readonly IRepository<PropertyCategoryEntity, Guid> _categoryRepository;
+    private readonly IRepository<PropertyTypeEntity, Guid> _typeRepository;
     private const string FeaturedListingsCacheKey = "FeaturedListingsForHomepage";
 
     public ListingAppService(
@@ -57,19 +61,23 @@ public class ListingAppService : cimaAppService, IListingAppService
         IRepository<FeaturedListing, Guid> featuredListingRepository,
         IDistributedCache distributedCache,
         IListingManager listingManager,
+        IPortfolioSyncService portfolioSyncService,
         Images.IImageStorageService imageStorageService,
         IUnitOfWorkManager unitOfWorkManager,
         IListingImageLockService listingImageLockService,
         IHostEnvironment hostEnvironment,
         ILocalEventBus localEventBus,
         IListingPriceHistoryRepository priceHistoryRepository,
-        Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor)
+        Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor,
+        IRepository<PropertyCategoryEntity, Guid> categoryRepository,
+        IRepository<PropertyTypeEntity, Guid> typeRepository)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
         _featuredListingRepository = featuredListingRepository;
         _distributedCache = distributedCache;
         _listingManager = listingManager;
+        _portfolioSyncService = portfolioSyncService;
         _imageStorageService = imageStorageService;
         _unitOfWorkManager = unitOfWorkManager;
         _listingImageLockService = listingImageLockService;
@@ -77,6 +85,8 @@ public class ListingAppService : cimaAppService, IListingAppService
         _localEventBus = localEventBus;
         _priceHistoryRepository = priceHistoryRepository;
         _httpContextAccessor = httpContextAccessor;
+        _categoryRepository = categoryRepository;
+        _typeRepository = typeRepository;
     }
 
     /// <summary>
@@ -122,10 +132,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingSummaryDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
-        );
+        var dtoItems = await MapSummariesAsync(listings);
+
+        return new PagedResultDto<ListingSummaryDto>(totalCount, dtoItems);
     }
 
 
@@ -162,9 +171,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             queryable = queryable.Where(p => p.Bathrooms >= input.MinBathrooms.Value);
         }
 
-        if (input.PropertyType.HasValue)
+        if (input.TypeId.HasValue)
         {
-            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
+            queryable = queryable.Where(p => p.TypeId == input.TypeId.Value);
+        }
+
+        if (input.CategoryId.HasValue)
+        {
+            queryable = queryable.Where(p => p.CategoryId == input.CategoryId.Value);
         }
 
         if (input.TransactionType.HasValue)
@@ -216,6 +230,59 @@ public class ListingAppService : cimaAppService, IListingAppService
         };
     }
 
+    private sealed record CategoryLookup(
+        Dictionary<Guid, string> Categories,
+        Dictionary<Guid, string> Types);
+
+    private async Task<CategoryLookup> GetCategoryLookupAsync()
+    {
+        var categories = await _categoryRepository.GetListAsync();
+        var types = await _typeRepository.GetListAsync();
+
+        return new CategoryLookup(
+            categories.ToDictionary(c => c.Id, c => c.Name),
+            types.ToDictionary(t => t.Id, t => t.Name));
+    }
+
+    private static void ApplyCategoryNames(ListingSummaryDto dto, CategoryLookup lookup)
+    {
+        dto.CategoryName = lookup.Categories.GetValueOrDefault(dto.CategoryId);
+        dto.TypeName = lookup.Types.GetValueOrDefault(dto.TypeId);
+    }
+
+    private static void ApplyCategoryNames(ListingDetailDto dto, CategoryLookup lookup)
+    {
+        dto.CategoryName = lookup.Categories.GetValueOrDefault(dto.CategoryId);
+        dto.TypeName = lookup.Types.GetValueOrDefault(dto.TypeId);
+    }
+
+    private static void ApplyCategoryNames(ListingDto dto, CategoryLookup lookup)
+    {
+        dto.CategoryName = lookup.Categories.GetValueOrDefault(dto.CategoryId);
+        dto.TypeName = lookup.Types.GetValueOrDefault(dto.TypeId);
+    }
+
+    private async Task<List<ListingSummaryDto>> MapSummariesAsync(List<Listing> listings)
+    {
+        var dtos = ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings);
+        var lookup = await GetCategoryLookupAsync();
+
+        foreach (var dto in dtos)
+        {
+            ApplyCategoryNames(dto, lookup);
+        }
+
+        return dtos;
+    }
+
+    private async Task<ListingDetailDto> MapDetailAsync(Listing listing)
+    {
+        var dto = ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+        var lookup = await GetCategoryLookupAsync();
+        ApplyCategoryNames(dto, lookup);
+        return dto;
+    }
+
     /// <summary>
     /// Obtiene detalle de una propiedad por Id
     /// </summary>
@@ -254,16 +321,18 @@ public class ListingAppService : cimaAppService, IListingAppService
             }
         }
 
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
     /// Crea nueva propiedad en estado Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Create)]
-    public async Task<ListingDetailDto> CreateAsync(CreateListingDto input)
+    public async Task<ListingDetailDto> CreateAsync(CreateListingDto input)     
     {
-        var resolvedPrice = ResolvePrice(input.IsPriceOnRequest, input.Price);
+        var resolvedPrice = ResolvePrice(input.IsPriceOnRequest, input.Price);  
+
+        await ValidateCategoryAndTypeAsync(input.CategoryId, input.TypeId);
 
         // Usar ListingManager para crear con validaciones y eventos de dominio
         var listing = await _listingManager.CreateAsync(
@@ -275,14 +344,14 @@ public class ListingAppService : cimaAppService, IListingAppService
             constructionArea: input.ConstructionArea,
             bedrooms: input.Bedrooms,
             bathrooms: input.Bathrooms,
-            category: input.Category,
-            type: input.Type,
+            categoryId: input.CategoryId,
+            typeId: input.TypeId,
             transactionType: input.TransactionType,
             architectId: input.ArchitectId,
             createdBy: GetCurrentUserIdOrThrow());
 
         await _listingRepository.InsertAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
@@ -292,8 +361,15 @@ public class ListingAppService : cimaAppService, IListingAppService
     public async Task<ListingDetailDto> UpdateAsync(Guid id, UpdateListingDto input)
     {
         if (id != input.Id) throw new UserFriendlyException("ID mismatch");
+        var queryable = await _listingRepository.WithDetailsAsync(l => l.Images);
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(queryable.Where(l => l.Id == id));
 
-        var listing = await _listingRepository.GetAsync(id);
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), id);
+        }
+
+        await ValidateCategoryAndTypeAsync(input.CategoryId, input.TypeId);
 
         // Capturar precio anterior para detectar cambios
         var oldPrice = listing.Price;
@@ -316,8 +392,8 @@ public class ListingAppService : cimaAppService, IListingAppService
             input.ConstructionArea,
             input.Bedrooms,
             input.Bathrooms,
-            input.Category,
-            input.Type,
+            input.CategoryId,
+            input.TypeId,
             input.TransactionType,
             GetCurrentUserIdOrThrow()
         );
@@ -330,7 +406,13 @@ public class ListingAppService : cimaAppService, IListingAppService
             await RecordPriceChangeAsync(listing.Id, oldPrice, resolvedPrice);
         }
         
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: listing.Status == ListingStatus.Portfolio,
+            requireImages: listing.Status == ListingStatus.Portfolio,
+            allowCreate: listing.Status == ListingStatus.Portfolio);
+
+        return await MapDetailAsync(listing);
     }
     
     /// <summary>
@@ -412,6 +494,12 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         await _listingRepository.UpdateAsync(listing);
 
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: false,
+            requireImages: false,
+            allowCreate: false);
+
         // Publicar evento de aplicacion para handlers adicionales
         await _localEventBus.PublishAsync(new ListingPublishedEto
         {
@@ -421,7 +509,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             PublishedAt = Clock.Now
         });
 
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
@@ -439,11 +527,17 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.ArchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: false,
+            requireImages: false,
+            allowCreate: false);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
-    /// Reactiva una propiedad archivada a estado Published usando ListingManager
+    /// Reactiva una propiedad archivada a estado Draft usando ListingManager
     /// </summary>
     [Authorize(cimaPermissions.Listings.Publish)]
     public async Task<ListingDetailDto> UnarchiveAsync(Guid id)
@@ -460,7 +554,13 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.UnarchiveAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: false,
+            requireImages: false,
+            allowCreate: false);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
@@ -478,7 +578,13 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.UnpublishAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: false,
+            requireImages: false,
+            allowCreate: false);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
@@ -487,7 +593,13 @@ public class ListingAppService : cimaAppService, IListingAppService
     [Authorize(cimaPermissions.Listings.Edit)]
     public async Task<ListingDetailDto> MoveToPortfolioAsync(Guid id)
     {
-        var listing = await _listingRepository.GetAsync(id);
+        var query = await _listingRepository.WithDetailsAsync(l => l.Images);
+        var listing = await AsyncExecuter.FirstOrDefaultAsync(query.Where(l => l.Id == id));
+
+        if (listing == null)
+        {
+            throw new EntityNotFoundException(typeof(Listing), id);
+        }
 
         // Validacion de propiedad
         await ValidateListingOwnershipAsync(listing.ArchitectId, "mover a portafolio");
@@ -496,7 +608,13 @@ public class ListingAppService : cimaAppService, IListingAppService
         await _listingManager.MoveToPortfolioAsync(listing, GetCurrentUserIdOrThrow());
 
         await _listingRepository.UpdateAsync(listing);
-        return ObjectMapper.Map<Listing, ListingDetailDto>(listing);
+
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: true,
+            requireImages: true,
+            allowCreate: true);
+        return await MapDetailAsync(listing);
     }
 
     /// <summary>
@@ -521,8 +639,8 @@ public class ListingAppService : cimaAppService, IListingAppService
             constructionArea: original.ConstructionArea,
             bedrooms: original.Bedrooms,
             bathrooms: original.Bathrooms,
-            category: original.Category,
-            type: original.Type,
+            categoryId: original.CategoryId,
+            typeId: original.TypeId,
             transactionType: original.TransactionType,
             architectId: original.ArchitectId,
             createdBy: GetCurrentUserIdOrThrow());
@@ -533,7 +651,7 @@ public class ListingAppService : cimaAppService, IListingAppService
             "Propiedad {OriginalId} duplicada a {NewId} por usuario {UserId}",
             id, duplicatedListing.Id, GetCurrentUserIdOrThrow());
 
-        return ObjectMapper.Map<Listing, ListingDetailDto>(duplicatedListing);
+        return await MapDetailAsync(duplicatedListing);
     }
 
     /// <summary>
@@ -563,10 +681,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingSummaryDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
-        );
+        var dtoItems = await MapSummariesAsync(listings);
+
+        return new PagedResultDto<ListingSummaryDto>(totalCount, dtoItems);
     }
 
     /// <summary>
@@ -588,10 +705,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(maxResultCount)
         );
 
-        return new PagedResultDto<ListingSummaryDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
-        );
+        var dtoItems = await MapSummariesAsync(listings);
+
+        return new PagedResultDto<ListingSummaryDto>(totalCount, dtoItems);
     }
 
     /// <summary>
@@ -614,6 +730,30 @@ public class ListingAppService : cimaAppService, IListingAppService
             throw new AbpAuthorizationException($"Solo puedes {operationName} tus propias propiedades");
         }
         return architect;
+    }
+
+    private async Task ValidateCategoryAndTypeAsync(Guid categoryId, Guid typeId)
+    {
+        var category = await _categoryRepository.FindAsync(categoryId);
+        if (category == null || !category.IsActive)
+        {
+            throw new BusinessException("Listing:CategoryNotFound")
+                .WithData("CategoryId", categoryId);
+        }
+
+        var type = await _typeRepository.FindAsync(typeId);
+        if (type == null || !type.IsActive)
+        {
+            throw new BusinessException("Listing:TypeNotFound")
+                .WithData("TypeId", typeId);
+        }
+
+        if (type.CategoryId != categoryId)
+        {
+            throw new BusinessException("Listing:TypeCategoryMismatch")
+                .WithData("TypeId", typeId)
+                .WithData("CategoryId", categoryId);
+        }
     }
 
     /// <summary>
@@ -684,8 +824,15 @@ public class ListingAppService : cimaAppService, IListingAppService
 
         // 4. Guardar cambios
         await _listingRepository.UpdateAsync(listing);
-        
-        var newImage = listing.Images.Last(); 
+
+        var isPortfolio = listing.Status == ListingStatus.Portfolio;
+        await _portfolioSyncService.SyncFromListingAsync(
+            listing,
+            setVisible: isPortfolio,
+            requireImages: isPortfolio,
+            allowCreate: isPortfolio);
+
+        var newImage = listing.Images.Last();
 
         return new ListingImageDto
         {
@@ -754,8 +901,15 @@ public class ListingAppService : cimaAppService, IListingAppService
         var imageUrl = image?.Url;
 
         entity.RemoveImage(imageId);
-        
+
         await _listingRepository.UpdateAsync(entity);
+
+        var isPortfolio = entity.Status == ListingStatus.Portfolio;
+        await _portfolioSyncService.SyncFromListingAsync(
+            entity,
+            setVisible: isPortfolio,
+            requireImages: isPortfolio,
+            allowCreate: isPortfolio);
 
         if (!string.IsNullOrEmpty(imageUrl))
         {
@@ -786,8 +940,15 @@ public class ListingAppService : cimaAppService, IListingAppService
         var orderedIds = input.OrderBy(x => x.DisplayOrder).Select(x => x.ImageId).ToList();
         
         entity.ReorderImages(orderedIds);
-        
+
         await _listingRepository.UpdateAsync(entity);
+
+        var isPortfolio = entity.Status == ListingStatus.Portfolio;
+        await _portfolioSyncService.SyncFromListingAsync(
+            entity,
+            setVisible: isPortfolio,
+            requireImages: isPortfolio,
+            allowCreate: isPortfolio);
     }
 
     public async Task<PagedResultDto<ListingSummaryDto>> SearchAsync(PropertySearchDto searchDto)
@@ -805,15 +966,15 @@ public class ListingAppService : cimaAppService, IListingAppService
         }
 
         // Filtro por categoría
-        if (searchDto.Category.HasValue)
+        if (searchDto.CategoryId.HasValue)
         {
-            queryable = queryable.Where(p => p.Category == searchDto.Category.Value);
+            queryable = queryable.Where(p => p.CategoryId == searchDto.CategoryId.Value);
         }
 
         // Filtro por tipo de propiedad
-        if (searchDto.Type.HasValue)
+        if (searchDto.TypeId.HasValue)
         {
-            queryable = queryable.Where(p => p.Type == searchDto.Type.Value);
+            queryable = queryable.Where(p => p.TypeId == searchDto.TypeId.Value);
         }
 
         // Filtro por ubicación (ya validado por RegEx en DTO)
@@ -873,10 +1034,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(searchDto.PageSize)
         );
 
-        return new PagedResultDto<ListingSummaryDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
-        );
+        var dtoItems = await MapSummariesAsync(listings);
+
+        return new PagedResultDto<ListingSummaryDto>(totalCount, dtoItems);
     }
 
     /// <summary>
@@ -899,14 +1059,14 @@ public class ListingAppService : cimaAppService, IListingAppService
                 (p.Location != null && p.Location.Value.Contains(input.SearchTerm)));  // ? null check
         }
 
-        if (input.PropertyType.HasValue)
+        if (input.TypeId.HasValue)
         {
-            queryable = queryable.Where(p => (int)p.Type == input.PropertyType.Value);
+            queryable = queryable.Where(p => p.TypeId == input.TypeId.Value);
         }
 
-        if (input.PropertyCategory.HasValue)
+        if (input.CategoryId.HasValue)
         {
-            queryable = queryable.Where(p => (int)p.Category == input.PropertyCategory.Value);
+            queryable = queryable.Where(p => p.CategoryId == input.CategoryId.Value);
         }
 
         // Ordenamiento
@@ -920,10 +1080,9 @@ public class ListingAppService : cimaAppService, IListingAppService
                 .Take(input.MaxResultCount)
         );
 
-        return new PagedResultDto<ListingSummaryDto>(
-            totalCount,
-            ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(listings)
-        );
+        var dtoItems = await MapSummariesAsync(listings);
+
+        return new PagedResultDto<ListingSummaryDto>(totalCount, dtoItems);
     }
 
     /// <summary>

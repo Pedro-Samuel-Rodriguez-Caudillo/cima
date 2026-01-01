@@ -18,25 +18,36 @@ public class ExportAppService : ApplicationService, IExportAppService
 {
     private readonly IRepository<Listing, Guid> _listingRepository;
     private readonly IRepository<Architect, Guid> _architectRepository;
+    private readonly IRepository<PropertyCategoryEntity, Guid> _categoryRepository;
+    private readonly IRepository<PropertyTypeEntity, Guid> _typeRepository;
 
     public ExportAppService(
         IRepository<Listing, Guid> listingRepository,
-        IRepository<Architect, Guid> architectRepository)
+        IRepository<Architect, Guid> architectRepository,
+        IRepository<PropertyCategoryEntity, Guid> categoryRepository,
+        IRepository<PropertyTypeEntity, Guid> typeRepository)
     {
         _listingRepository = listingRepository;
         _architectRepository = architectRepository;
+        _categoryRepository = categoryRepository;
+        _typeRepository = typeRepository;
     }
 
     public async Task<byte[]> ExportPropertiesToExcelAsync(CancellationToken cancellationToken = default)
     {
         var listings = await _listingRepository.GetListAsync(cancellationToken: cancellationToken);
         var architects = await _architectRepository.GetListAsync(cancellationToken: cancellationToken);
+        var categories = await _categoryRepository.GetListAsync(cancellationToken: cancellationToken);
+        var types = await _typeRepository.GetListAsync(cancellationToken: cancellationToken);
+
+        var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
+        var typeNames = types.ToDictionary(t => t.Id, t => t.Name);
 
         using var workbook = new XLWorkbook();
-        
+
         // Sheet 1: Properties List
         var propertiesSheet = workbook.Worksheets.Add("Propiedades");
-        CreatePropertiesSheet(propertiesSheet, listings, architects);
+        CreatePropertiesSheet(propertiesSheet, listings, architects, categoryNames, typeNames);
 
         // Sheet 2: Summary by Status
         var summarySheet = workbook.Worksheets.Add("Resumen");
@@ -51,7 +62,12 @@ public class ExportAppService : ApplicationService, IExportAppService
         return stream.ToArray();
     }
 
-    private void CreatePropertiesSheet(IXLWorksheet sheet, System.Collections.Generic.List<Listing> listings, System.Collections.Generic.List<Architect> architects)
+    private void CreatePropertiesSheet(
+        IXLWorksheet sheet,
+        System.Collections.Generic.List<Listing> listings,
+        System.Collections.Generic.List<Architect> architects,
+        System.Collections.Generic.Dictionary<Guid, string> categoryNames,
+        System.Collections.Generic.Dictionary<Guid, string> typeNames)
     {
         // Headers
         var headers = new[] { "ID", "Título", "Tipo", "Categoría", "Transacción", "Estado", "Precio", "Área (m²)", "Recámaras", "Baños", "Ubicación", "Arquitecto", "Fecha Creación" };
@@ -70,8 +86,12 @@ public class ExportAppService : ApplicationService, IExportAppService
             
             sheet.Cell(row, 1).Value = listing.Id.ToString();
             sheet.Cell(row, 2).Value = listing.Title;
-            sheet.Cell(row, 3).Value = GetPropertyTypeName(listing.Type);
-            sheet.Cell(row, 4).Value = GetPropertyCategoryName(listing.Category);
+            sheet.Cell(row, 3).Value = typeNames.TryGetValue(listing.TypeId, out var typeName)
+                ? typeName
+                : "";
+            sheet.Cell(row, 4).Value = categoryNames.TryGetValue(listing.CategoryId, out var categoryName)
+                ? categoryName
+                : "";
             sheet.Cell(row, 5).Value = GetTransactionTypeName(listing.TransactionType);
             sheet.Cell(row, 6).Value = GetListingStatusName(listing.Status);
             sheet.Cell(row, 7).Value = listing.Price;
@@ -167,35 +187,6 @@ public class ExportAppService : ApplicationService, IExportAppService
 
         sheet.Columns().AdjustToContents();
     }
-
-    private static string GetPropertyTypeName(PropertyType type) => type switch
-    {
-        PropertyType.House => "Casa",
-        PropertyType.Apartment => "Departamento",
-        PropertyType.Condo => "Condominio",
-        PropertyType.Townhouse => "Casa Adosada",
-        PropertyType.Villa => "Villa",
-        PropertyType.Office => "Oficina",
-        PropertyType.Warehouse => "Bodega",
-        PropertyType.RetailSpace => "Local Comercial",
-        PropertyType.Restaurant => "Restaurante",
-        PropertyType.Hotel => "Hotel",
-        PropertyType.MixedUseBuilding => "Edificio Mixto",
-        PropertyType.LiveWorkSpace => "Live/Work",
-        PropertyType.ResidentialLand => "Terreno Residencial",
-        PropertyType.CommercialLand => "Terreno Comercial",
-        PropertyType.AgriculturalLand => "Terreno Agrícola",
-        _ => type.ToString()
-    };
-
-    private static string GetPropertyCategoryName(PropertyCategory category) => category switch
-    {
-        PropertyCategory.Residential => "Residencial",
-        PropertyCategory.Commercial => "Comercial",
-        PropertyCategory.Industrial => "Industrial",
-        _ => category.ToString()
-    };
-
     private static string GetTransactionTypeName(TransactionType type) => type switch
     {
         TransactionType.Sale => "Venta",
@@ -212,3 +203,4 @@ public class ExportAppService : ApplicationService, IExportAppService
         _ => status.ToString()
     };
 }
+

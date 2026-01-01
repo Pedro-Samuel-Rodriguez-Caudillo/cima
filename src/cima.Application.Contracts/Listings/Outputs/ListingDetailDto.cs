@@ -22,8 +22,10 @@ public class ListingDetailDto
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyCategory Category { get; set; }
-    public PropertyType Type { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public Guid TypeId { get; set; }
+    public string? TypeName { get; set; }
     public TransactionType TransactionType { get; set; }
     
     public Guid ArchitectId { get; set; }

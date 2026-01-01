@@ -54,5 +54,14 @@ namespace cima.Domain.Entities
         /// </summary>
         public virtual ICollection<Listing> Listings { get; set; } = new List<Listing>();
         #endregion
+
+        public Architect() { }
+
+        public Architect(Guid id, Guid userId) : base(id)
+        {
+            UserId = userId;
+            RegistrationDate = DateTime.UtcNow;
+            IsActive = true;
+        }
     }
 }

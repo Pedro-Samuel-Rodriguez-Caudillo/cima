@@ -1,5 +1,6 @@
 using System;
 using Shouldly;
+using Volo.Abp;
 using Volo.Abp.Domain.Entities;
 using Xunit;
 using cima.Domain.Entities;
@@ -174,6 +175,16 @@ public sealed class ListingTests : cimaDomainTestBase<cimaDomainTestModule>
 
         listing.MoveToPortfolio(Guid.NewGuid());
         listing.Status.ShouldBe(ListingStatus.Portfolio);
+    }
+
+    [Fact]
+    public void Should_Not_Move_To_Portfolio_Without_Images()
+    {
+        var listing = CreateTestListing();
+
+        var exception = Should.Throw<BusinessException>(() => listing.MoveToPortfolio(Guid.NewGuid()));
+
+        exception.Code.ShouldBe("Listing:NoImages");
     }
 
     [Fact]

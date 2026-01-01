@@ -44,10 +44,12 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
     public int Bathrooms { get; private set; }
     public ListingStatus Status { get; private set; }
     
-    public PropertyCategory Category { get; private set; }
-    public PropertyType Type { get; private set; }
+    public Guid CategoryId { get; private set; }
+    public Guid TypeId { get; private set; }
     public TransactionType TransactionType { get; private set; }
     public Guid ArchitectId { get; private set; }
+    public virtual PropertyCategoryEntity? Category { get; private set; }
+    public virtual PropertyTypeEntity? PropertyType { get; private set; }
 
     // Auditoría
     public DateTime CreatedAt { get; private set; }
@@ -92,8 +94,8 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid architectId,
         Guid? createdBy)
@@ -109,8 +111,8 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
         ConstructionArea = constructionArea;
         Bedrooms = bedrooms;
         Bathrooms = bathrooms;
-        Category = category;
-        Type = type;
+        CategoryId = categoryId;
+        TypeId = typeId;
         TransactionType = transactionType;
         ArchitectId = architectId;
         
@@ -131,8 +133,8 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid? modifiedBy)
     {
@@ -147,8 +149,8 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
         ConstructionArea = constructionArea;
         Bedrooms = bedrooms;
         Bathrooms = bathrooms;
-        Category = category;
-        Type = type;
+        CategoryId = categoryId;
+        TypeId = typeId;
         TransactionType = transactionType;
         
         LastModifiedAt = DateTime.UtcNow;
@@ -203,7 +205,12 @@ public class Listing : AggregateRoot<Guid>, ISoftDelete
     
     public void MoveToPortfolio(Guid? movedBy)
     {
-        Status = ListingStatus.Portfolio; 
+        if (Images.Count == 0)
+        {
+            throw new BusinessException("Listing:NoImages");
+        }
+
+        Status = ListingStatus.Portfolio;
         UpdateAudit(movedBy);
     }
 

@@ -23,8 +23,8 @@ public class ListingManager : DomainService, IListingManager
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid architectId,
         Guid? createdBy)
@@ -44,8 +44,8 @@ public class ListingManager : DomainService, IListingManager
             constructionArea,
             bedrooms,
             bathrooms,
-            category,
-            type,
+            categoryId,
+            typeId,
             transactionType,
             architectId,
             createdBy
@@ -64,8 +64,8 @@ public class ListingManager : DomainService, IListingManager
         decimal constructionArea,
         int bedrooms,
         int bathrooms,
-        PropertyCategory category,
-        PropertyType type,
+        Guid categoryId,
+        Guid typeId,
         TransactionType transactionType,
         Guid modifiedBy)
     {
@@ -84,8 +84,8 @@ public class ListingManager : DomainService, IListingManager
             constructionArea,
             bedrooms,
             bathrooms,
-            category,
-            type,
+            categoryId,
+            typeId,
             transactionType,
             modifiedBy
         );

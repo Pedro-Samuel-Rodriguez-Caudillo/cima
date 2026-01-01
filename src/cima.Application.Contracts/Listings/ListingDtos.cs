@@ -37,8 +37,10 @@ public class ListingDto : AuditedEntityDto<Guid>
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyCategory Category { get; set; }
-    public PropertyType Type { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public Guid TypeId { get; set; }
+    public string? TypeName { get; set; }
     public TransactionType TransactionType { get; set; }
     public Guid ArchitectId { get; set; }
     public ArchitectDto? Architect { get; set; }
@@ -56,7 +58,8 @@ public class ListingListDto : EntityDto<Guid>
     public LocationDto? Location { get; set; }
     public decimal Price { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyCategory Category { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
     public TransactionType TransactionType { get; set; }
     public ListingImageDto? MainImage { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -75,8 +78,8 @@ public class CreateUpdateListingDto
     public int Bedrooms { get; set; }
     public int Bathrooms { get; set; }
     public ListingStatus Status { get; set; }
-    public PropertyCategory Category { get; set; }
-    public PropertyType Type { get; set; }
+    public Guid CategoryId { get; set; }
+    public Guid TypeId { get; set; }
     public TransactionType TransactionType { get; set; }
     public Guid ArchitectId { get; set; }
 }
@@ -129,8 +132,8 @@ public class GetFeaturedListingsDto : PagedAndSortedResultRequestDto
 public class PropertySearchDto : PagedAndSortedResultRequestDto
 {
     public TransactionType? TransactionType { get; set; }
-    public PropertyCategory? Category { get; set; }
-    public PropertyType? Type { get; set; }
+    public Guid? CategoryId { get; set; }
+    public Guid? TypeId { get; set; }
     public string? Location { get; set; }
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }

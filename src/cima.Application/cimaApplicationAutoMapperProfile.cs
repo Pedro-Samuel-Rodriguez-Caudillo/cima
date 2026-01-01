@@ -49,8 +49,14 @@ public class cimaApplicationAutoMapperProfile : Profile
             .ForMember(dest => dest.IsPriceOnRequest, opt => opt.MapFrom(src => src.Price == -1))
             .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price == -1 ? (decimal?)null : src.Price));
 
+        CreateMap<Listing, ListingDto>()
+            .ForMember(dest => dest.Architect, opt => opt.MapFrom(src => src.Architect))
+            .ForMember(dest => dest.Images, opt => opt.MapFrom(src => src.Images.OrderBy(i => i.SortOrder)))
+            .ForMember(dest => dest.Area, opt => opt.MapFrom(src => src.LandArea))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => DeserializeLocation(src.Location != null ? src.Location.Value : null)));
+
         CreateMap<Listing, ListingSummaryDto>()
-            .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src =>
+            .ForMember(dest => dest.MainImage, opt => opt.MapFrom(src =>        
                 src.Images != null && src.Images.Any()
                     ? src.Images.OrderBy(i => i.SortOrder).FirstOrDefault()
                     : null))

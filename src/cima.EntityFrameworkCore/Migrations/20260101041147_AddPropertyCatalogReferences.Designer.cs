@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Volo.Abp.EntityFrameworkCore;
@@ -12,9 +13,11 @@ using cima.EntityFrameworkCore;
 namespace cima.Migrations
 {
     [DbContext(typeof(cimaDbContext))]
-    partial class cimaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260101041147_AddPropertyCatalogReferences")]
+    partial class AddPropertyCatalogReferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2349,9 +2352,6 @@ namespace cima.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Category");
 
-                    b.Property<Guid?>("ListingId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -2373,9 +2373,6 @@ namespace cima.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("ListingId")
-                        .IsUnique();
 
                     b.ToTable("PortfolioProjects", (string)null);
                 });
@@ -3116,11 +3113,6 @@ namespace cima.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("cima.Domain.Entities.Listing", null)
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsMany("cima.Domain.Entities.Portfolio.PortfolioImage", "Gallery", b1 =>
                         {

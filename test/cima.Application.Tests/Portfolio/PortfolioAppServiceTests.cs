@@ -63,14 +63,7 @@ public class PortfolioAppServiceTests : cimaApplicationTestBase<cimaApplicationT
         // En TestBase suele haber un usuario default.
         var userId = Guid.NewGuid(); 
 
-        var architect = new Architect(
-            architectId,
-            userId,
-            "Test Architect",
-            "Test Bio",
-            "http://test.com/avatar.jpg",
-            true
-        );
+        var architect = new Architect(architectId, userId);
         
         await _architectRepository.InsertAsync(architect);
         return architectId;

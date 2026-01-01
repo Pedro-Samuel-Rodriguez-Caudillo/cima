@@ -23,6 +23,8 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 {
     private readonly IRepository<FeaturedListing, Guid> _featuredListingRepository;
     private readonly IRepository<Listing, Guid> _listingRepository;
+    private readonly IRepository<PropertyCategoryEntity, Guid> _categoryRepository;
+    private readonly IRepository<PropertyTypeEntity, Guid> _typeRepository;
     private readonly IDistributedCache<List<ListingSummaryDto>> _cache;
     private const int MAX_FEATURED_LISTINGS = 12;
     private const string CACHE_KEY = "FeaturedListingsForHomepage";
@@ -35,10 +37,14 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     public FeaturedListingAppService(
         IRepository<FeaturedListing, Guid> featuredListingRepository,
         IRepository<Listing, Guid> listingRepository,
+        IRepository<PropertyCategoryEntity, Guid> categoryRepository,
+        IRepository<PropertyTypeEntity, Guid> typeRepository,
         IDistributedCache<List<ListingSummaryDto>> cache)
     {
         _featuredListingRepository = featuredListingRepository;
         _listingRepository = listingRepository;
+        _categoryRepository = categoryRepository;
+        _typeRepository = typeRepository;
         _cache = cache;
     }
 
@@ -53,7 +59,9 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         var featuredListings = await AsyncExecuter.ToListAsync(
             queryable.OrderBy(fl => Guid.NewGuid()));
 
-        return ObjectMapper.Map<List<FeaturedListing>, List<FeaturedListingDto>>(featuredListings);
+        var dtos = ObjectMapper.Map<List<FeaturedListing>, List<FeaturedListingDto>>(featuredListings);
+        await ApplyCategoryNamesAsync(dtos);
+        return dtos;
     }
 
     /// <summary>
@@ -85,10 +93,10 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             .Take(input.PageSize)
             .ToList();
 
-        return new PagedResultDto<FeaturedListingDto>(
-            totalCount,
-            ObjectMapper.Map<List<FeaturedListing>, List<FeaturedListingDto>>(pagedFeatured)
-        );
+        var dtoItems = ObjectMapper.Map<List<FeaturedListing>, List<FeaturedListingDto>>(pagedFeatured);
+        await ApplyCategoryNamesAsync(dtoItems);
+
+        return new PagedResultDto<FeaturedListingDto>(totalCount, dtoItems);
     }
 
     /// <summary>
@@ -145,6 +153,7 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
 
         var listings = ObjectMapper.Map<List<Listing>, List<ListingSummaryDto>>(allListings)
                         ?? new List<ListingSummaryDto>();
+        await ApplyCategoryNamesAsync(listings);
 
         // Guardar TODOS en caché (sin orden específico)
         // El orden se aleatoriza al recuperar
@@ -216,7 +225,9 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
         await _cache.RemoveAsync(CACHE_KEY);
 
         featuredListing.Listing = listing;
-        return ObjectMapper.Map<FeaturedListing, FeaturedListingDto>(featuredListing);
+        var dto = ObjectMapper.Map<FeaturedListing, FeaturedListingDto>(featuredListing);
+        await ApplyCategoryNamesAsync(new List<FeaturedListingDto> { dto });
+        return dto;
     }
 
     /// <summary>
@@ -261,6 +272,63 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
     public async Task<int> GetCountAsync()
     {
         return await _featuredListingRepository.CountAsync();
+    }
+
+    private sealed record CategoryLookup(
+        Dictionary<Guid, string> Categories,
+        Dictionary<Guid, string> Types);
+
+    private async Task<CategoryLookup> GetCategoryLookupAsync()
+    {
+        var categories = await _categoryRepository.GetListAsync();
+        var types = await _typeRepository.GetListAsync();
+
+        return new CategoryLookup(
+            categories.ToDictionary(c => c.Id, c => c.Name),
+            types.ToDictionary(t => t.Id, t => t.Name));
+    }
+
+    private static void ApplyCategoryNames(ListingSummaryDto dto, CategoryLookup lookup)
+    {
+        dto.CategoryName = lookup.Categories.GetValueOrDefault(dto.CategoryId);
+        dto.TypeName = lookup.Types.GetValueOrDefault(dto.TypeId);
+    }
+
+    private static void ApplyCategoryNames(ListingDto dto, CategoryLookup lookup)
+    {
+        dto.CategoryName = lookup.Categories.GetValueOrDefault(dto.CategoryId);
+        dto.TypeName = lookup.Types.GetValueOrDefault(dto.TypeId);
+    }
+
+    private async Task ApplyCategoryNamesAsync(List<ListingSummaryDto> listings)
+    {
+        if (listings.Count == 0)
+        {
+            return;
+        }
+
+        var lookup = await GetCategoryLookupAsync();
+        foreach (var listing in listings)
+        {
+            ApplyCategoryNames(listing, lookup);
+        }
+    }
+
+    private async Task ApplyCategoryNamesAsync(List<FeaturedListingDto> listings)
+    {
+        if (listings.Count == 0)
+        {
+            return;
+        }
+
+        var lookup = await GetCategoryLookupAsync();
+        foreach (var featured in listings)
+        {
+            if (featured.Listing != null)
+            {
+                ApplyCategoryNames(featured.Listing, lookup);
+            }
+        }
     }
 
     /// <summary>

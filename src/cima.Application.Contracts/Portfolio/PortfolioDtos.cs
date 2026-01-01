@@ -11,7 +11,9 @@ public class PortfolioProjectDto : FullAuditedEntityDto<Guid>
     public string Description { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public DateTime? CompletionDate { get; set; }
-    public PortfolioCategory Category { get; set; }
+    public Guid CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    public Guid? ListingId { get; set; }
     public string Testimonial { get; set; } = string.Empty;
     public string TestimonialAuthor { get; set; } = string.Empty;
     public string CoverImage { get; set; } = string.Empty;
@@ -35,7 +37,7 @@ public class CreateUpdatePortfolioProjectDto
     public string Description { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
     public DateTime? CompletionDate { get; set; }
-    public PortfolioCategory Category { get; set; }
+    public Guid CategoryId { get; set; }
     public string Testimonial { get; set; } = string.Empty;
     public string TestimonialAuthor { get; set; } = string.Empty;
     public bool IsVisible { get; set; }
@@ -52,5 +54,5 @@ public class CreatePortfolioImageDto
 public class GetPortfolioListDto : PagedAndSortedResultRequestDto
 {
     public string? Filter { get; set; }
-    public PortfolioCategory? Category { get; set; }
+    public Guid? CategoryId { get; set; }
 }
