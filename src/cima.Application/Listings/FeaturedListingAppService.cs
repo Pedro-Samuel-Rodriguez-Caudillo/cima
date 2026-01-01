@@ -210,23 +210,13 @@ public class FeaturedListingAppService : cimaAppService, IFeaturedListingAppServ
             input.ListingId,
             GetCurrentUserIdOrThrow());
 
-        await _featuredListingRepository.InsertAsync(featuredListing);
+        await _featuredListingRepository.InsertAsync(featuredListing, autoSave: true);
 
         // Invalidar caché para que se recarguen las destacadas
         await _cache.RemoveAsync(CACHE_KEY);
 
-        // Cargar con detalles para retornar
-        var queryable = await _featuredListingRepository.WithDetailsAsync(fl => fl.Listing!);
-        var result = await AsyncExecuter.FirstOrDefaultAsync(
-            queryable.Where(fl => fl.Id == featuredListing.Id));
-
-        if (result == null)
-        {
-            throw new BusinessException("FeaturedListing:NotFoundAfterCreation")
-                .WithData("Id", featuredListing.Id);
-        }
-
-        return ObjectMapper.Map<FeaturedListing, FeaturedListingDto>(result);
+        featuredListing.Listing = listing;
+        return ObjectMapper.Map<FeaturedListing, FeaturedListingDto>(featuredListing);
     }
 
     /// <summary>
