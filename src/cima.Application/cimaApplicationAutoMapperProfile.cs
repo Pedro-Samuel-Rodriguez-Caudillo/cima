@@ -9,6 +9,8 @@ using Volo.Abp;
 
 using cima.Listings.Inputs;
 using cima.Listings.Outputs;
+using cima.Domain.Entities.Portfolio;
+using cima.Portfolio;
 
 namespace cima;
 
@@ -91,6 +93,12 @@ public class cimaApplicationAutoMapperProfile : Profile
         CreateMap<UpdateArchitectDto, Architect>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore());
+
+        // Portfolio
+        CreateMap<PortfolioProject, PortfolioProjectDto>()
+            .ForMember(dest => dest.Gallery, opt => opt.MapFrom(src => src.Gallery.OrderBy(i => i.SortOrder)));
+
+        CreateMap<PortfolioImage, PortfolioImageDto>();
     }
 
     private static LocationDto? DeserializeLocation(string? json)

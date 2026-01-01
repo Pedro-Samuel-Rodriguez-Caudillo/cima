@@ -50,6 +50,17 @@ namespace cima.Domain.Shared
         Lease = 2
     }
 
+    public enum PortfolioCategory
+    {
+        ResidentialConstruction = 0,
+        CommercialConstruction = 1,
+        Renovation = 2,
+        InteriorDesign = 3,
+        ArchitecturalDesign = 4,
+        Landscaping = 5,
+        Other = 99
+    }
+
     public enum ContactRequestStatus
     {
         New = 0,

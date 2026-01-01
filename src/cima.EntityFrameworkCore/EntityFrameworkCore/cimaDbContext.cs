@@ -16,6 +16,7 @@ using Volo.Abp.TenantManagement;
 using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using cima.Domain.Entities;
 using cima.Domain.Entities.Listings;
+using cima.Domain.Entities.Portfolio;
 
 namespace cima.EntityFrameworkCore;
 
@@ -36,6 +37,7 @@ public class cimaDbContext :
     public DbSet<PropertyCategoryEntity> PropertyCategories { get; set; }
     public DbSet<PropertyTypeEntity> PropertyTypes { get; set; }
     public DbSet<TransactionTypeEntity> TransactionTypes { get; set; }
+    public DbSet<PortfolioProject> PortfolioProjects { get; set; }
 
     #region Entities from the modules
 
@@ -89,6 +91,33 @@ public class cimaDbContext :
         builder.ConfigureBlobStoring();
         
         /* Configure your own tables/entities inside here */
+
+        builder.Entity<PortfolioProject>(b =>
+        {
+            b.ToTable("PortfolioProjects");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Title).IsRequired().HasMaxLength(200);
+            b.Property(x => x.Description).HasMaxLength(5000); // Rich text
+            b.Property(x => x.Location).HasMaxLength(200);
+            b.Property(x => x.CoverImage).HasMaxLength(2048);
+            
+            b.OwnsMany(x => x.Gallery, ib =>
+            {
+                ib.ToTable("PortfolioImages");
+                ib.WithOwner().HasForeignKey("PortfolioProjectId");
+                ib.HasKey("PortfolioProjectId", "ImageId");
+                
+                ib.Property(i => i.ImageId).IsRequired().ValueGeneratedNever();
+                ib.Property(i => i.Url).IsRequired().HasMaxLength(2048);
+                ib.Property(i => i.ThumbnailUrl).HasMaxLength(2048).HasDefaultValue("");
+                ib.Property(i => i.AltText).HasMaxLength(500);
+                ib.Property(i => i.Caption).HasMaxLength(500);
+                ib.Property(i => i.Tags).HasMaxLength(200);
+                ib.Property(i => i.SortOrder).IsRequired().HasDefaultValue(0);
+            });
+            
+            b.HasIndex(x => x.Category);
+        });
 
         var b = builder.Entity<Listing>();
         b.ToTable("Listings");
